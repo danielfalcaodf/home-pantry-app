@@ -62,8 +62,8 @@
 
 ## 7. Conformidade
 
-- [ ] 7.1 Executar lint, typecheck e verificação de fronteiras
-- [ ] 7.2 Confirmar que nenhum literal de cor foi introduzido fora dos tokens
-- [ ] 7.3 Confirmar que a aba Lista deixou de ser marcador na barra de abas
-- [ ] 7.4 Verificar a tela com escala de fonte do sistema em 200 por cento
-- [ ] 7.5 Verificar visualmente o alinhamento da coluna de preço com valores de larguras diferentes
+- [x] 7.1 Executar lint, typecheck e verificação de fronteiras
+- [x] 7.2 Confirmar que nenhum literal de cor foi introduzido fora dos tokens
+- [x] 7.3 Confirmar que a aba Lista deixou de ser marcador na barra de abas
+- [ ] 7.4 Verificar a tela com escala de fonte do sistema em 200 por cento — pendente de aparelho, ver STATUS.md
+- [ ] 7.5 Verificar visualmente o alinhamento da coluna de preço com valores de larguras diferentes — pendente de aparelho, ver STATUS.md
