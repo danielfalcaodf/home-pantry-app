@@ -47,16 +47,16 @@
 
 ## 5. Cadastro de produto
 
-- [ ] 5.1 Implementar `app/produto/novo.tsx` com nome, unidade e quantidade necessária em primeiro plano
-- [ ] 5.2 Implementar a seção recolhida de mais opções com quantidade atual, valor unitário, categoria, marca preferida e observação
-- [ ] 5.3 Rotular os campos com o vocabulário de interface, sem termos de sistema
-- [ ] 5.4 Ligar a validação de domínio, exibindo os erros em texto no campo correspondente
-- [ ] 5.5 Implementar o campo de categoria com autocomplete a partir das categorias existentes, permitindo digitar uma nova
-- [ ] 5.6 Aplicar a normalização de categoria do domínio antes de gravar
-- [ ] 5.7 Implementar a detecção de nome duplicado, disparada após a parada da digitação e não a cada tecla
-- [ ] 5.8 Exibir a mensagem de item já existente com as ações de ver o item e de diferenciar o nome
-- [ ] 5.9 Confirmar que a criação com nome idêntico ao de um item ativo não é concluída
-- [ ] 5.10 Confirmar que reutilizar o nome de um item removido é permitido
+- [x] 5.1 Implementar `app/produto/novo.tsx` com nome, unidade e quantidade necessária em primeiro plano
+- [x] 5.2 Implementar a seção recolhida de mais opções com quantidade atual, valor unitário, categoria, marca preferida e observação
+- [x] 5.3 Rotular os campos com o vocabulário de interface, sem termos de sistema
+- [x] 5.4 Ligar a validação de domínio, exibindo os erros em texto no campo correspondente
+- [x] 5.5 Implementar o campo de categoria com autocomplete a partir das categorias existentes, permitindo digitar uma nova
+- [x] 5.6 Aplicar a normalização de categoria do domínio antes de gravar
+- [x] 5.7 Implementar a detecção de nome duplicado, disparada após a parada da digitação e não a cada tecla
+- [x] 5.8 Exibir a mensagem de item já existente com as ações de ver o item e de diferenciar o nome
+- [x] 5.9 Confirmar que a criação com nome idêntico ao de um item ativo não é concluída
+- [x] 5.10 Confirmar que reutilizar o nome de um item removido é permitido
 
 ## 6. Detalhe e edição
 
