@@ -1,5 +1,5 @@
 import { CompraItem } from '../compra/compra';
-import { FaltanteBruto } from '../../ports/produto.repository';
+import { FaltanteBruto } from '../produto/produto';
 import { centavos, multiplicarQuantidadePorPreco } from '../shared/dinheiro';
 import { custoReposicao, quantidadeAComprar } from '../produto/estoque.rules';
 import { ItemDaLista, TotalDaListaDeCompras } from './lista';

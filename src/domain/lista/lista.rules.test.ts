@@ -1,7 +1,7 @@
 import { CompraItem } from '../compra/compra';
+import { FaltanteBruto } from '../produto/produto';
 import { centavos } from '../shared/dinheiro';
 import { milesimos } from '../shared/quantidade';
-import { FaltanteBruto } from '../../ports/produto.repository';
 import { compuserLista, itemDeAvulso, itemDeFaltante, totalDaListaDeCompras } from './lista.rules';
 
 function faltante(sobrescreve: Partial<FaltanteBruto> = {}): FaltanteBruto {

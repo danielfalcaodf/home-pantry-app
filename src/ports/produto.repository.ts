@@ -1,24 +1,12 @@
-import { Produto } from '../domain/produto/produto';
+import { FaltanteBruto, Produto } from '../domain/produto/produto';
 import { ProdutoValidado } from '../domain/produto/validacao';
-import { Centavos } from '../domain/shared/dinheiro';
 import { Milesimos } from '../domain/shared/quantidade';
 import { Unidade } from '../domain/shared/unidade';
 import { Result } from '../shared/result';
 
-export type ErroEscritaProduto = 'nome_duplicado' | 'nao_encontrado';
+export type { FaltanteBruto } from '../domain/produto/produto';
 
-// Valores brutos de banco: sem arredondamento e sem conversão de moeda —
-// o domínio arredonda e converte (DATABASE §6.2).
-export type FaltanteBruto = {
-  id: string;
-  nome: string;
-  categoria: string | null;
-  unidade: Unidade;
-  valorUnitario: Centavos;
-  quantidadeAtual: Milesimos;
-  quantidadeNecessaria: Milesimos;
-  faltaBruta: Milesimos;
-};
+export type ErroEscritaProduto = 'nome_duplicado' | 'nao_encontrado';
 
 export type ComandoBaixa = {
   produtoId: string;
