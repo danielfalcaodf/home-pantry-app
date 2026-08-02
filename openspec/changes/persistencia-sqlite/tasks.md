@@ -27,11 +27,11 @@
 
 ## 4. Aplicação de migrations na abertura
 
-- [ ] 4.1 Ligar a aplicação de migrations no layout raiz, antes de qualquer tela de dados renderizar
-- [ ] 4.2 Renderizar tela de erro explícita quando a migration falhar, sem prosseguir para a interface normal
-- [ ] 4.3 Renderizar tela de carregamento enquanto as migrations são aplicadas
-- [ ] 4.4 Implementar a cópia de segurança do arquivo de banco antes de aplicar migration pendente, mantendo as duas cópias mais recentes
-- [ ] 4.5 Registrar no guia do repositório a regra de nunca editar migration já publicada
+- [x] 4.1 Ligar a aplicação de migrations no layout raiz, antes de qualquer tela de dados renderizar
+- [x] 4.2 Renderizar tela de erro explícita quando a migration falhar, sem prosseguir para a interface normal
+- [x] 4.3 Renderizar tela de carregamento enquanto as migrations são aplicadas
+- [x] 4.4 Implementar a cópia de segurança do arquivo de banco antes de aplicar migration pendente, mantendo as duas cópias mais recentes
+- [x] 4.5 Registrar no guia do repositório a regra de nunca editar migration já publicada
 
 ## 5. Contratos de persistência
 

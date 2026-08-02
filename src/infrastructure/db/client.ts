@@ -26,3 +26,6 @@ if (fk?.foreign_keys !== 1) {
 }
 
 export const db = drizzle(sqlite, { schema });
+
+// Acesso bruto só para operações de arquivo/PRAGMA (backup pré-migration).
+export const sqliteBruto = sqlite;
