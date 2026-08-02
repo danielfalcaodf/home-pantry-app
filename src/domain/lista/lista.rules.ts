@@ -27,6 +27,7 @@ export function itemDeAvulso(item: CompraItem): ItemDaLista {
     categoria: null,
     unidade: item.unidade,
     quantidadeAComprar: item.quantidadePlanejada,
+    valorUnitario: item.valorEstimadoUnit,
     custo: semPreco
       ? centavos(0)
       : multiplicarQuantidadePorPreco(item.quantidadePlanejada, item.valorEstimadoUnit),

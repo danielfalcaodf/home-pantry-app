@@ -20,6 +20,8 @@ export type ItemListaAvulso = {
   categoria: null;
   unidade: Unidade;
   quantidadeAComprar: Milesimos;
+  /** Preço por unidade, como cadastrado — evita recalcular a partir do custo ao editar. */
+  valorUnitario: Centavos;
   custo: Centavos;
   semPreco: boolean;
 };
