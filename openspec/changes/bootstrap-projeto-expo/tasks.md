@@ -19,8 +19,8 @@
 
 ## 4. Development build (EAS)
 
-- [ ] 4.1 Configurar `app.json`/`app.config.ts` com nome, slug, identificador de pacote Android e bundle identifier iOS
-- [ ] 4.2 Criar `eas.json` com os perfis `development` (cliente de desenvolvimento + distribuição interna), `preview` e `production`
+- [x] 4.1 Configurar `app.json`/`app.config.ts` com nome, slug, identificador de pacote Android e bundle identifier iOS
+- [x] 4.2 Criar `eas.json` com os perfis `development` (cliente de desenvolvimento + distribuição interna), `preview` e `production`
 - [ ] 4.3 Gerar o primeiro development build e instalá-lo no aparelho de desenvolvimento
 - [ ] 4.4 Confirmar que o app abre pelo development build conectado ao Metro local
 
