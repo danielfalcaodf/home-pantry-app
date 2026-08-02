@@ -1,7 +1,8 @@
 import { Produto } from '../../../domain/produto/produto';
 import { ProdutoValidado } from '../../../domain/produto/validacao';
 import { centavos } from '../../../domain/shared/dinheiro';
-import { milesimos } from '../../../domain/shared/quantidade';
+import { Milesimos, milesimos } from '../../../domain/shared/quantidade';
+import { MovimentoRepository } from '../../../ports/movimento.repository';
 import { ObservadorDeMudancas } from '../../../ports/observador-de-mudancas';
 import {
   ComandoBaixa,
@@ -116,8 +117,43 @@ export class ProdutoRepositorioFalso implements ProdutoRepository {
     return this.produtos.find((p) => p.id === id) ?? null;
   }
 
-  async darBaixa(_comando: ComandoBaixa): Promise<Result<ResultadoBaixa, 'nao_encontrado'>> {
-    return falha('nao_encontrado');
+  /** Registro de cada movimento, para os testes de desfazer. */
+  movimentos: { id: string; produtoId: string; tipo: 'baixa' | 'reposicao'; delta: number }[] =
+    [];
+
+  private aplicar(
+    comando: ComandoBaixa,
+    tipo: 'baixa' | 'reposicao',
+  ): Result<ResultadoBaixa, 'nao_encontrado'> {
+    const indice = this.produtos.findIndex(
+      (p) => p.id === comando.produtoId && p.deletadoEm === null,
+    );
+    if (indice === -1) {
+      return falha('nao_encontrado');
+    }
+    const atual = this.produtos[indice].quantidadeAtual;
+    if (tipo === 'baixa' && atual <= 0) {
+      return sucesso({ gravou: false, motivo: 'estoque_zerado' });
+    }
+    const saldo =
+      tipo === 'baixa' ? Math.max(0, atual - comando.quantidade) : atual + comando.quantidade;
+    this.produtos[indice] = {
+      ...this.produtos[indice],
+      quantidadeAtual: milesimos(saldo),
+      syncStatus: 'pendente',
+    };
+    this.proximoId += 1;
+    const id = `mov-${this.proximoId}`;
+    this.movimentos.push({ id, produtoId: comando.produtoId, tipo, delta: saldo - atual });
+    return sucesso({ gravou: true, saldoResultante: milesimos(saldo), movimentoId: id });
+  }
+
+  async darBaixa(comando: ComandoBaixa): Promise<Result<ResultadoBaixa, 'nao_encontrado'>> {
+    return this.aplicar(comando, 'baixa');
+  }
+
+  async repor(comando: ComandoBaixa): Promise<Result<ResultadoBaixa, 'nao_encontrado'>> {
+    return this.aplicar(comando, 'reposicao');
   }
 
   async adotarListaBase(casaId: string, itens: ItemListaBase[]): Promise<Produto[]> {
@@ -135,6 +171,47 @@ export class ProdutoRepositorioFalso implements ProdutoRepository {
     );
     this.produtos.push(...criados);
     return criados;
+  }
+}
+
+/** Espelha o append-only do real: desfazer insere o inverso, nunca apaga. */
+export class MovimentoRepositorioFalso implements MovimentoRepository {
+  constructor(private readonly produtos: ProdutoRepositorioFalso) {}
+
+  async historicoPorProduto(): Promise<never[]> {
+    return [];
+  }
+
+  async historicoPorCasa(): Promise<never[]> {
+    return [];
+  }
+
+  async desfazer(
+    movimentoOriginalId: string,
+  ): Promise<Result<{ movimentoInversoId: string; saldoResultante: Milesimos }, 'nao_encontrado'>> {
+    const original = this.produtos.movimentos.find((m) => m.id === movimentoOriginalId);
+    if (!original) {
+      return falha('nao_encontrado');
+    }
+    const indice = this.produtos.produtos.findIndex((p) => p.id === original.produtoId);
+    const atual = this.produtos.produtos[indice].quantidadeAtual;
+    const saldo = milesimos(Math.max(0, atual - original.delta));
+    this.produtos.produtos[indice] = {
+      ...this.produtos.produtos[indice],
+      quantidadeAtual: saldo,
+    };
+    const inversoId = `${movimentoOriginalId}-inverso`;
+    this.produtos.movimentos.push({
+      id: inversoId,
+      produtoId: original.produtoId,
+      tipo: original.tipo === 'baixa' ? 'reposicao' : 'baixa',
+      delta: -original.delta,
+    });
+    return sucesso({ movimentoInversoId: inversoId, saldoResultante: saldo });
+  }
+
+  async reconciliar(): Promise<never[]> {
+    return [];
   }
 }
 

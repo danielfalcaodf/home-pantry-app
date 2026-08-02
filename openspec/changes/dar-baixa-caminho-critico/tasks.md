@@ -1,11 +1,11 @@
 ## 1. Casos de uso
 
-- [ ] 1.1 Criar `src/application/estoque/use-dar-baixa.ts` chamando a regra de domínio para obter saldo resultante e variação aplicada, e delegando a persistência ao repositório em transação única
-- [ ] 1.2 Tratar o retorno "nada a gravar" da regra quando o item já está zerado, sem chamar o repositório
-- [ ] 1.3 Criar `use-repor-pontual.ts` para a reposição sem compra associada
-- [ ] 1.4 Criar `use-desfazer-movimento.ts` recebendo o identificador do movimento e inserindo o inverso em transação única
-- [ ] 1.5 Serializar as escritas por item para que toques rápidos sucessivos produzam um registro cada, sem agrupar
-- [ ] 1.6 Escrever testes dos hooks com repositório falso, cobrindo consumo normal, consumo maior que o saldo, item já zerado e desfazer
+- [x] 1.1 Criar `src/application/estoque/use-dar-baixa.ts` chamando a regra de domínio para obter saldo resultante e variação aplicada, e delegando a persistência ao repositório em transação única
+- [x] 1.2 Tratar o retorno "nada a gravar" da regra quando o item já está zerado, sem chamar o repositório
+- [x] 1.3 Criar `use-repor-pontual.ts` para a reposição sem compra associada
+- [x] 1.4 Criar `use-desfazer-movimento.ts` recebendo o identificador do movimento e inserindo o inverso em transação única
+- [x] 1.5 Serializar as escritas por item para que toques rápidos sucessivos produzam um registro cada, sem agrupar
+- [x] 1.6 Escrever testes dos hooks com repositório falso, cobrindo consumo normal, consumo maior que o saldo, item já zerado e desfazer
 
 ## 2. Stepper de consumo
 

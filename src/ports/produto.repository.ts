@@ -30,6 +30,8 @@ export type ComandoBaixa = {
 
 export type ResultadoBaixa =
   | { gravou: true; saldoResultante: Milesimos; movimentoId: string }
+  /** Baixa sobre saldo já zerado: variação 0 é rejeitada pelo banco e
+   *  poluiria a trilha append-only. */
   | { gravou: false; motivo: 'estoque_zerado' };
 
 export type ItemListaBase = {
@@ -63,6 +65,8 @@ export interface ProdutoRepository {
   obterPorId(id: string): Promise<Produto | null>;
   /** Registro de consumo: UPDATE + INSERT do movimento na MESMA transação. */
   darBaixa(comando: ComandoBaixa): Promise<Result<ResultadoBaixa, 'nao_encontrado'>>;
+  /** Reposição sem compra associada, na mesma transação única. */
+  repor(comando: ComandoBaixa): Promise<Result<ResultadoBaixa, 'nao_encontrado'>>;
   /** Adoção da lista base: insere o subconjunto escolhido em uma transação. */
   adotarListaBase(casaId: string, itens: ItemListaBase[]): Promise<Produto[]>;
 }

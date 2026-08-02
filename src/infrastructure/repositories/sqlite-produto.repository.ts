@@ -4,7 +4,7 @@ import { normalizarCategoria } from '../../domain/produto/categoria';
 import { Produto } from '../../domain/produto/produto';
 import { ProdutoValidado } from '../../domain/produto/validacao';
 import { centavos } from '../../domain/shared/dinheiro';
-import { Milesimos, milesimos } from '../../domain/shared/quantidade';
+import { milesimos } from '../../domain/shared/quantidade';
 import { Unidade } from '../../domain/shared/unidade';
 import { Clock } from '../../ports/clock';
 import {
@@ -298,6 +298,57 @@ export class SQLiteProdutoRepository implements ProdutoRepository {
           usuarioId,
           tipo: 'baixa',
           quantidadeDelta: variacaoAplicada,
+          quantidadeResultante: depois.quantidadeAtual,
+          criadoEm,
+        })
+        .run();
+
+      return sucesso({
+        gravou: true,
+        saldoResultante: milesimos(depois.quantidadeAtual),
+        movimentoId,
+      });
+    });
+  }
+
+  // Mesma forma da baixa, sinal invertido e sem o caso "estoque zerado":
+  // repor sobre zero é justamente o caso normal.
+  async repor(comando: ComandoBaixa): Promise<Result<ResultadoBaixa, 'nao_encontrado'>> {
+    const { produtoId, quantidade, usuarioId, criadoEm } = comando;
+    return this.db.transaction((tx): Result<ResultadoBaixa, 'nao_encontrado'> => {
+      const atual = tx
+        .select({ casaId: tabelaProduto.casaId })
+        .from(tabelaProduto)
+        .where(and(eq(tabelaProduto.id, produtoId), naoRemovido))
+        .get();
+      if (!atual) {
+        return falha('nao_encontrado');
+      }
+
+      tx.update(tabelaProduto)
+        .set({
+          quantidadeAtual: sql`${tabelaProduto.quantidadeAtual} + ${quantidade}`,
+          atualizadoEm: criadoEm,
+          syncStatus: 'pendente',
+        })
+        .where(eq(tabelaProduto.id, produtoId))
+        .run();
+
+      const depois = tx
+        .select({ quantidadeAtual: tabelaProduto.quantidadeAtual })
+        .from(tabelaProduto)
+        .where(eq(tabelaProduto.id, produtoId))
+        .get() as { quantidadeAtual: number };
+
+      const movimentoId = gerarId(() => criadoEm);
+      tx.insert(movimentoEstoque)
+        .values({
+          id: movimentoId,
+          casaId: atual.casaId,
+          produtoId,
+          usuarioId,
+          tipo: 'reposicao',
+          quantidadeDelta: quantidade,
           quantidadeResultante: depois.quantidadeAtual,
           criadoEm,
         })
