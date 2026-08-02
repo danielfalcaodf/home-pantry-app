@@ -1,9 +1,9 @@
 ## 1. Unidades
 
-- [ ] 1.1 Criar `src/domain/shared/unidade.ts` com o tipo união das sete unidades (`un`, `kg`, `g`, `L`, `ml`, `pacote`, `caixa`)
-- [ ] 1.2 Implementar `ehIndivisivel(unidade)` classificando `un`, `pacote` e `caixa` como indivisíveis
-- [ ] 1.3 Implementar o rótulo de exibição de cada unidade, no singular e no plural
-- [ ] 1.4 Escrever testes de classificação e de rotulagem cobrindo as sete unidades
+- [x] 1.1 Criar `src/domain/shared/unidade.ts` com o tipo união das sete unidades (`un`, `kg`, `g`, `L`, `ml`, `pacote`, `caixa`)
+- [x] 1.2 Implementar `ehIndivisivel(unidade)` classificando `un`, `pacote` e `caixa` como indivisíveis
+- [x] 1.3 Implementar o rótulo de exibição de cada unidade, no singular e no plural
+- [x] 1.4 Escrever testes de classificação e de rotulagem cobrindo as sete unidades
 
 ## 2. Quantidade em milésimos
 
