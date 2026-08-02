@@ -28,7 +28,7 @@ Para implementar uma delas: `/opsx:apply <nome>`. Para arquivar após concluir: 
 
 | # | Change | Estado | Entrega | Por que nessa posição |
 |---|---|---|---|---|
-| 5 | `despensa-e-cadastro-produto` | ⬜ | Linha d'água, tela Despensa, filtros, busca, CRUD de produto, adoção da lista base | Primeira coisa utilizável. Resolve o risco Alto de cadastro inicial pesado. |
+| 5 | `despensa-e-cadastro-produto` | ✅ | Linha d'água, tela Despensa, filtros, busca, CRUD de produto, adoção da lista base | Primeira coisa utilizável. Resolve o risco Alto de cadastro inicial pesado. |
 | 6 | `dar-baixa-caminho-critico` | ⬜ | Stepper funcional, coreografia de movimento, teclado de quantidade, toast de desfazer, **medição do KPI K4** | O KPI que decide o produto. ARQUITETURA §11 o isola porque "merece iteração de UX própria". |
 | 7 | `lista-de-compras` | ⬜ | Lista derivada, itens avulsos, custo estimado, agrupar por categoria, exportar texto | Só faz sentido com estoque real dentro. |
 | 8 | `modo-compra-e-fechamento` | ⬜ | Modo corredor de mercado, marcação, preço pago, fechamento atômico, atualização de preço de referência | Fecha o ciclo: consome → falta → lista → compra → repõe. |
