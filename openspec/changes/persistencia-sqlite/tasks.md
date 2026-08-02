@@ -18,12 +18,12 @@
 
 ## 3. Migration inicial
 
-- [ ] 3.1 Criar `drizzle.config.ts` com dialeto SQLite e driver do Expo
-- [ ] 3.2 Gerar a migration `0000_init` e revisar integralmente o SQL produzido
-- [ ] 3.3 Completar manualmente no SQL gerado tudo que o gerador não emitir: restrições, índices parciais, ordenação decrescente e agrupamento insensível a caixa
-- [ ] 3.4 Escrever teste que aplica todas as migrations sobre um banco vazio e compara o schema resultante com o declarado
-- [ ] 3.5 Escrever teste que tenta violar cada restrição declarada e confirma que o banco rejeita
-- [ ] 3.6 Escrever teste do índice parcial: inspecionar o plano de execução da consulta de faltantes e falhar se houver varredura completa
+- [x] 3.1 Criar `drizzle.config.ts` com dialeto SQLite e driver do Expo
+- [x] 3.2 Gerar a migration `0000_init` e revisar integralmente o SQL produzido
+- [x] 3.3 Completar manualmente no SQL gerado tudo que o gerador não emitir: restrições, índices parciais, ordenação decrescente e agrupamento insensível a caixa
+- [x] 3.4 Escrever teste que aplica todas as migrations sobre um banco vazio e compara o schema resultante com o declarado
+- [x] 3.5 Escrever teste que tenta violar cada restrição declarada e confirma que o banco rejeita
+- [x] 3.6 Escrever teste do índice parcial: inspecionar o plano de execução da consulta de faltantes e falhar se houver varredura completa
 
 ## 4. Aplicação de migrations na abertura
 
