@@ -10,10 +10,10 @@
 
 ## 2. Tokens de espaço, raio e tipografia
 
-- [ ] 2.1 Criar `src/presentation/theme/espaco.ts` com a escala de 4, 8, 12, 16, 24, 32 e 48, e os raios 0, 8, 12 e 999
-- [ ] 2.2 Criar `src/presentation/theme/tipografia.ts` com os oito papéis da escala, cada um declarando família, tamanho, altura de linha, peso e espaçamento entre letras
-- [ ] 2.3 Marcar os papéis de dado como monoespaçados com figuras tabulares
-- [ ] 2.4 Escrever teste confirmando que nenhum tamanho da escala excede 34 pontos
+- [x] 2.1 Criar `src/presentation/theme/espaco.ts` com a escala de 4, 8, 12, 16, 24, 32 e 48, e os raios 0, 8, 12 e 999
+- [x] 2.2 Criar `src/presentation/theme/tipografia.ts` com os oito papéis da escala, cada um declarando família, tamanho, altura de linha, peso e espaçamento entre letras
+- [x] 2.3 Marcar os papéis de dado como monoespaçados com figuras tabulares
+- [x] 2.4 Escrever teste confirmando que nenhum tamanho da escala excede 34 pontos
 
 ## 3. Fontes
 
