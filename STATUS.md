@@ -29,7 +29,7 @@ Para implementar uma delas: `/opsx:apply <nome>`. Para arquivar após concluir: 
 | # | Change | Estado | Entrega | Por que nessa posição |
 |---|---|---|---|---|
 | 5 | `despensa-e-cadastro-produto` | ✅ | Linha d'água, tela Despensa, filtros, busca, CRUD de produto, adoção da lista base | Primeira coisa utilizável. Resolve o risco Alto de cadastro inicial pesado. |
-| 6 | `dar-baixa-caminho-critico` | 🟡 | Stepper funcional, coreografia de movimento, teclado de quantidade, toast de desfazer, **medição do KPI K4** | O KPI que decide o produto. ARQUITETURA §11 o isola porque "merece iteração de UX própria". **Em andamento — ver "Onde a implementação parou" abaixo.** |
+| 6 | `dar-baixa-caminho-critico` | ✅ | Stepper funcional, coreografia de movimento, teclado de quantidade, toast de desfazer | O KPI que decide o produto. ARQUITETURA §11 o isola porque "merece iteração de UX própria". Obs.: tasks 3.7, 6.5, 7.2, 8.1, 8.3–8.5, 9.1, 9.2 (medição real do KPI K4, háptico, rolagem, offline em hardware) pendentes de aparelho — ver tabela abaixo. |
 | 7 | `lista-de-compras` | ⬜ | Lista derivada, itens avulsos, custo estimado, agrupar por categoria, exportar texto | Só faz sentido com estoque real dentro. |
 | 8 | `modo-compra-e-fechamento` | ⬜ | Modo corredor de mercado, marcação, preço pago, fechamento atômico, atualização de preço de referência | Fecha o ciclo: consome → falta → lista → compra → repõe. |
 
@@ -49,7 +49,7 @@ Para implementar uma delas: `/opsx:apply <nome>`. Para arquivar após concluir: 
 
 ### Estado do repositório
 
-Changes 1 a 5 estão **implementadas, arquivadas e com PR aberta**. A change 6 está **em andamento**, sem arquivamento e sem PR.
+Changes 1 a 6 estão **implementadas, arquivadas e com PR aberta**. A próxima é a change 7 (`lista-de-compras`), ainda não iniciada.
 
 As branches formam uma cadeia — cada PR aponta para a branch da change anterior, e o merge precisa seguir essa ordem:
 
@@ -60,13 +60,13 @@ As branches formam uma cadeia — cada PR aponta para a branch da change anterio
 | [#3](https://github.com/danielfalcaodf/home-pantry-app/pull/3) | `change/persistencia-sqlite` | `change/fundacao-dominio` | 3 · persistencia-sqlite |
 | [#4](https://github.com/danielfalcaodf/home-pantry-app/pull/4) | `change/design-system-tema` | `change/persistencia-sqlite` | 4 · design-system-tema |
 | [#5](https://github.com/danielfalcaodf/home-pantry-app/pull/5) | `change/despensa-e-cadastro-produto` | `change/design-system-tema` | 5 · despensa-e-cadastro-produto |
-| — | `change/dar-baixa-caminho-critico` | `change/despensa-e-cadastro-produto` | 6 · **em andamento** |
+| PR_PLACEHOLDER | `change/dar-baixa-caminho-critico` | `change/despensa-e-cadastro-produto` | 6 · dar-baixa-caminho-critico |
 
 **A PR de `develop` para `main` ainda não foi aberta** — ela fecha o ciclo depois que as changes restantes entrarem.
 
-### Change 6 — o que já está pronto
+### Change 6 — concluída, com pendências de aparelho documentadas
 
-Seções 1 a 7 do `tasks.md` implementadas e testadas (41 de 51 tarefas):
+42 de 51 tarefas concluídas e testadas. As 9 restantes (3.7, 6.5, 7.2, 8.1, 8.3–8.5, 9.1, 9.2) exigem aparelho físico real — medição de tempo do KPI K4, sensação de retorno tátil, engasgo de rolagem sob uso real — e não foram arquivadas como concluídas por fabricação de dado: não há emulador Android/iOS neste ambiente, e `expo-sqlite`/`expo-haptics` não têm suporte web viável para produzir uma medição válida (SQLite web é alpha/instável, haptics não existe em web). A tarefa 8.2 (contagem de toques) foi verificada por leitura de código: 1 toque do app aberto até o toast "Anotado". A change foi arquivada mesmo assim, por decisão do usuário, para não travar o restante do MVP — a medição real do K4 fica marcada como dívida pendente de aparelho, junto com as demais tarefas da tabela abaixo.
 
 - Casos de uso de consumo, reposição pontual e desfazer, com escrita **serializada por item** (toques rápidos viram um registro cada)
 - `StepperConsumo` com háptico no toque, contração 0,92 e toque longo abrindo o teclado
@@ -74,11 +74,9 @@ Seções 1 a 7 do `tasks.md` implementadas e testadas (41 de 51 tarefas):
 - `TecladoQuantidade` (painel inferior), `ToastDesfazer` vinculado ao **id do movimento**, e as mesmas ações no detalhe do produto
 - Casos de borda: item que acaba, consumo maior que o saldo, falha de gravação com "tentar de novo"
 
-### A próxima tarefa
+### A próxima change
 
-**Seção 8 do `openspec/changes/dar-baixa-caminho-critico/tasks.md` — medição do KPI K4.** É a razão de a change existir e a única parte que ainda pode mudar o código: se o percurso não fechar em 10s, a tarefa 8.5 exige otimizar a etapa dominante **antes** de encerrar a change.
-
-Depois dela: arquivar a change, sincronizar as specs, atualizar este arquivo e abrir a PR para `change/despensa-e-cadastro-produto`.
+**7 · `lista-de-compras`** — lista derivada, itens avulsos, custo estimado, agrupar por categoria, exportar texto. Branch a partir de `change/dar-baixa-caminho-critico`.
 
 ### O que está bloqueado por falta de aparelho
 
@@ -90,7 +88,7 @@ Um `eas login` e um development build instalado destravam tudo isto de uma vez �
 | 3 | 10.5 | Fumaça do PRAGMA de FK no binding do Expo |
 | 4 | 3.4, 6.3, 8.3, 9.2 | Dígitos tabulares, abertura sem flash, redução de movimento, fonte a 200% |
 | 5 | 4.11, 7.8, 8.3, 8.6 | Rolagem com 300 itens, adoção offline, fonte a 200%, altura de 68pt |
-| 6 | 3.7, 6.5, 7.2, 8.x, 9.x | Engasgo na rolagem, fluxo offline, redução de movimento, **medição do K4** |
+| 6 | 3.7, 6.5, 7.2, 8.1, 8.3–8.5, 9.1, 9.2 | Engasgo na rolagem, fluxo offline, redução de movimento, **medição real do K4**, retorno tátil em uso repetido |
 
 Comando para destravar: `npx eas-cli login && npx eas-cli build --profile development --platform android`.
 
@@ -135,7 +133,7 @@ As changes 10 e 11 são independentes entre si e podem ser feitas em qualquer or
 | US-09 | Usar offline e sincronizar | **Parcial** — offline integral desde a change 3; sync é Fase 2 |
 | US-10 | Notificação de reposição | **v1.1** — fora do MVP |
 
-**KPIs**: K4 é medido na change 6 (tarefa explícita). K2 depende da change 10 (conferência). K5 depende da change 8 (atualização de preço). K6 fica suspenso até haver backend.
+**KPIs**: K4 é medido na change 6 (tarefa explícita) — **medição real pendente de aparelho**, ver "O que está bloqueado por falta de aparelho". K2 depende da change 10 (conferência). K5 depende da change 8 (atualização de preço). K6 fica suspenso até haver backend.
 
 ---
 
