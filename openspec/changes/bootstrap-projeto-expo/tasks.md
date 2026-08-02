@@ -3,7 +3,7 @@
 - [x] 1.1 Inicializar projeto Expo com template TypeScript + Expo Router na raiz do repositório, preservando os `.md` de design, o `LICENSE`, o `README.md` e a pasta `openspec/`
 - [x] 1.2 Ativar `strict: true` no `tsconfig.json` e configurar o alias de path `@/*` apontando para `src/*`
 - [x] 1.3 Ajustar `.gitignore` para o projeto Expo (`node_modules`, `.expo`, `ios/`, `android/`, `*.db`), mantendo as entradas já existentes
-- [ ] 1.4 Criar `app/_layout.tsx` mínimo com a raiz do Expo Router e verificar que o app abre
+- [x] 1.4 Criar `app/_layout.tsx` mínimo com a raiz do Expo Router e verificar que o app abre
 
 ## 2. Estrutura de camadas
 
