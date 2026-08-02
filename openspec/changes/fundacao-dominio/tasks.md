@@ -24,10 +24,10 @@
 
 ## 4. Tipos de entidade
 
-- [ ] 4.1 Criar `src/domain/produto/produto.ts` com o tipo `Produto` refletindo as colunas de DATABASE §4, usando os tipos nominais de quantidade e dinheiro
-- [ ] 4.2 Criar `src/domain/movimento/movimento.ts` com o tipo `MovimentoEstoque` e a união dos três tipos de movimento
-- [ ] 4.3 Criar `src/domain/compra/compra.ts` com os tipos `Compra` e `CompraItem`, incluindo o caso de item avulso sem produto associado
-- [ ] 4.4 Criar `src/ports/clock.ts` com a interface de fonte de tempo injetável
+- [x] 4.1 Criar `src/domain/produto/produto.ts` com o tipo `Produto` refletindo as colunas de DATABASE §4, usando os tipos nominais de quantidade e dinheiro
+- [x] 4.2 Criar `src/domain/movimento/movimento.ts` com o tipo `MovimentoEstoque` e a união dos três tipos de movimento
+- [x] 4.3 Criar `src/domain/compra/compra.ts` com os tipos `Compra` e `CompraItem`, incluindo o caso de item avulso sem produto associado
+- [x] 4.4 Criar `src/ports/clock.ts` com a interface de fonte de tempo injetável
 
 ## 5. Regras de estoque
 
