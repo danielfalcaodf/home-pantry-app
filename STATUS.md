@@ -29,7 +29,7 @@ Para implementar uma delas: `/opsx:apply <nome>`. Para arquivar após concluir: 
 | # | Change | Estado | Entrega | Por que nessa posição |
 |---|---|---|---|---|
 | 5 | `despensa-e-cadastro-produto` | ✅ | Linha d'água, tela Despensa, filtros, busca, CRUD de produto, adoção da lista base | Primeira coisa utilizável. Resolve o risco Alto de cadastro inicial pesado. |
-| 6 | `dar-baixa-caminho-critico` | ⬜ | Stepper funcional, coreografia de movimento, teclado de quantidade, toast de desfazer, **medição do KPI K4** | O KPI que decide o produto. ARQUITETURA §11 o isola porque "merece iteração de UX própria". |
+| 6 | `dar-baixa-caminho-critico` | 🟡 | Stepper funcional, coreografia de movimento, teclado de quantidade, toast de desfazer, **medição do KPI K4** | O KPI que decide o produto. ARQUITETURA §11 o isola porque "merece iteração de UX própria". **Em andamento — ver "Onde a implementação parou" abaixo.** |
 | 7 | `lista-de-compras` | ⬜ | Lista derivada, itens avulsos, custo estimado, agrupar por categoria, exportar texto | Só faz sentido com estoque real dentro. |
 | 8 | `modo-compra-e-fechamento` | ⬜ | Modo corredor de mercado, marcação, preço pago, fechamento atômico, atualização de preço de referência | Fecha o ciclo: consome → falta → lista → compra → repõe. |
 
@@ -40,6 +40,63 @@ Para implementar uma delas: `/opsx:apply <nome>`. Para arquivar após concluir: 
 | 9 | `backup-restore-json` | ⬜ | Backup JSON versionado, restauração transacional, reconciliação, tela de configurações | ARQUITETURA §9: **obrigatório antes de qualquer feature nova**. Sem backend, é a única proteção contra perda total — e o único caminho de recuperação de migration ruim. |
 | 10 | `ajuste-e-conferencia-estoque` | ⬜ | Ajuste com motivo, modo conferência, diagnóstico de integridade, histórico do produto | Compensa a ausência de US-08. ARQUITETURA §1.1: sem sync, K2 depende da conferência semanal. |
 | 11 | `resumo-valores-e-historico` | ⬜ | Valor do estoque, valor da lista, gasto mensal, histórico de compras | Camada de leitura sobre dados existentes. Não bloqueia nada. |
+
+---
+
+## Onde a implementação parou
+
+**Última atualização: 2026-08-02.** Retomada em outra máquina começa por aqui.
+
+### Estado do repositório
+
+Changes 1 a 5 estão **implementadas, arquivadas e com PR aberta**. A change 6 está **em andamento**, sem arquivamento e sem PR.
+
+As branches formam uma cadeia — cada PR aponta para a branch da change anterior, e o merge precisa seguir essa ordem:
+
+| PR | Branch | Base | Change |
+|---|---|---|---|
+| [#1](https://github.com/danielfalcaodf/home-pantry-app/pull/1) | `change/bootstrap-projeto-expo` | `develop` | 1 · bootstrap-projeto-expo |
+| [#2](https://github.com/danielfalcaodf/home-pantry-app/pull/2) | `change/fundacao-dominio` | `change/bootstrap-projeto-expo` | 2 · fundacao-dominio |
+| [#3](https://github.com/danielfalcaodf/home-pantry-app/pull/3) | `change/persistencia-sqlite` | `change/fundacao-dominio` | 3 · persistencia-sqlite |
+| [#4](https://github.com/danielfalcaodf/home-pantry-app/pull/4) | `change/design-system-tema` | `change/persistencia-sqlite` | 4 · design-system-tema |
+| [#5](https://github.com/danielfalcaodf/home-pantry-app/pull/5) | `change/despensa-e-cadastro-produto` | `change/design-system-tema` | 5 · despensa-e-cadastro-produto |
+| — | `change/dar-baixa-caminho-critico` | `change/despensa-e-cadastro-produto` | 6 · **em andamento** |
+
+**A PR de `develop` para `main` ainda não foi aberta** — ela fecha o ciclo depois que as changes restantes entrarem.
+
+### Change 6 — o que já está pronto
+
+Seções 1 a 7 do `tasks.md` implementadas e testadas (41 de 51 tarefas):
+
+- Casos de uso de consumo, reposição pontual e desfazer, com escrita **serializada por item** (toques rápidos viram um registro cada)
+- `StepperConsumo` com háptico no toque, contração 0,92 e toque longo abrindo o teclado
+- Nível animado por *shared value* na thread de interface, mola redirecionável, cross-fade dos números
+- `TecladoQuantidade` (painel inferior), `ToastDesfazer` vinculado ao **id do movimento**, e as mesmas ações no detalhe do produto
+- Casos de borda: item que acaba, consumo maior que o saldo, falha de gravação com "tentar de novo"
+
+### A próxima tarefa
+
+**Seção 8 do `openspec/changes/dar-baixa-caminho-critico/tasks.md` — medição do KPI K4.** É a razão de a change existir e a única parte que ainda pode mudar o código: se o percurso não fechar em 10s, a tarefa 8.5 exige otimizar a etapa dominante **antes** de encerrar a change.
+
+Depois dela: arquivar a change, sincronizar as specs, atualizar este arquivo e abrir a PR para `change/despensa-e-cadastro-produto`.
+
+### O que está bloqueado por falta de aparelho
+
+Um `eas login` e um development build instalado destravam tudo isto de uma vez — nenhuma dessas tarefas exige código novo:
+
+| Change | Tarefas | O que falta |
+|---|---|---|
+| 1 | 4.3, 4.4 | Primeiro build EAS e abertura pelo Metro |
+| 3 | 10.5 | Fumaça do PRAGMA de FK no binding do Expo |
+| 4 | 3.4, 6.3, 8.3, 9.2 | Dígitos tabulares, abertura sem flash, redução de movimento, fonte a 200% |
+| 5 | 4.11, 7.8, 8.3, 8.6 | Rolagem com 300 itens, adoção offline, fonte a 200%, altura de 68pt |
+| 6 | 3.7, 6.5, 7.2, 8.x, 9.x | Engasgo na rolagem, fluxo offline, redução de movimento, **medição do K4** |
+
+Comando para destravar: `npx eas-cli login && npx eas-cli build --profile development --platform android`.
+
+### Verificação atual
+
+`npm test` → **314 testes, todos verdes** · `npm run verificar` (fronteiras + lint + typecheck) → **verde, zero avisos** · `npx expo export` fecha o bundle.
 
 ---
 
