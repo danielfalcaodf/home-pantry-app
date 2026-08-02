@@ -41,10 +41,10 @@
 
 ## 6. Abertura sem flash
 
-- [ ] 6.1 Ordenar a inicialização no layout raiz: aplicar migrations, ler a preferência de tema, carregar as fontes, e só então esconder a tela de abertura
-- [ ] 6.2 Manter a tela de abertura visível enquanto qualquer uma dessas etapas estiver pendente
+- [x] 6.1 Ordenar a inicialização no layout raiz: aplicar migrations, ler a preferência de tema, carregar as fontes, e só então esconder a tela de abertura
+- [x] 6.2 Manter a tela de abertura visível enquanto qualquer uma dessas etapas estiver pendente
 - [ ] 6.3 Verificar no aparelho, com preferência escura, que nenhum quadro de fundo claro aparece na abertura
-- [ ] 6.4 Verificar que a tela de erro de migration usa o tema resolvido, e não um fundo padrão
+- [x] 6.4 Verificar que a tela de erro de migration usa o tema resolvido, e não um fundo padrão
 
 ## 7. Componentes-base
 
