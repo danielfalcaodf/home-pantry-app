@@ -1,12 +1,12 @@
 ## 1. Tokens de cor
 
-- [ ] 1.1 Criar `src/presentation/theme/tokens.ts` com o tipo `Theme` declarando fundo, divisor, texto, estados, ação e opacidade de preenchimento
-- [ ] 1.2 Preencher o tema escuro **Despensa** com os valores hexadecimais exatos da tabela do documento de frontend
-- [ ] 1.3 Preencher o tema claro **Porcelana** com os valores hexadecimais exatos da tabela do documento de frontend
-- [ ] 1.4 Definir a opacidade de preenchimento em 0,12 no escuro e 0,10 no claro
-- [ ] 1.5 Escrever teste verificando que os dois temas expõem exatamente o mesmo conjunto de chaves
-- [ ] 1.6 Escrever teste de contraste calculando a razão de cada par texto sobre fundo e falhando abaixo do nível AA
-- [ ] 1.7 Escrever teste de contraste do texto **sobre a tinta do medidor**, e não apenas sobre o fundo limpo
+- [x] 1.1 Criar `src/presentation/theme/tokens.ts` com o tipo `Theme` declarando fundo, divisor, texto, estados, ação e opacidade de preenchimento
+- [x] 1.2 Preencher o tema escuro **Despensa** com os valores hexadecimais exatos da tabela do documento de frontend
+- [x] 1.3 Preencher o tema claro **Porcelana** com os valores hexadecimais exatos da tabela do documento de frontend
+- [x] 1.4 Definir a opacidade de preenchimento em 0,12 no escuro e 0,10 no claro
+- [x] 1.5 Escrever teste verificando que os dois temas expõem exatamente o mesmo conjunto de chaves
+- [x] 1.6 Escrever teste de contraste calculando a razão de cada par texto sobre fundo e falhando abaixo do nível AA
+- [x] 1.7 Escrever teste de contraste do texto **sobre a tinta do medidor**, e não apenas sobre o fundo limpo
 
 ## 2. Tokens de espaço, raio e tipografia
 
