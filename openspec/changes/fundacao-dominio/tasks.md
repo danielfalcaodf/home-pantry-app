@@ -45,12 +45,12 @@
 
 ## 6. Categoria e validação de produto
 
-- [ ] 6.1 Criar `src/domain/produto/categoria.ts` com `normalizarCategoria(texto)` aplicando trim, colapso de espaços e capitalização
-- [ ] 6.2 Fazer `normalizarCategoria` retornar ausência de categoria quando o texto for só espaços
-- [ ] 6.3 Criar `src/domain/produto/validacao.ts` com `validarCadastroProduto(entrada)` retornando `Result`, exigindo nome não vazio, unidade suportada e quantidade necessária maior que zero
-- [ ] 6.4 Aplicar os padrões de quantidade atual 0 e valor unitário 0 quando não fornecidos
-- [ ] 6.5 Escrever testes de normalização de categoria cobrindo espaços nas pontas, caixa, espaços internos repetidos e texto vazio
-- [ ] 6.6 Escrever testes de validação cobrindo cadastro válido, nome vazio, quantidade necessária zero, quantidade necessária decimal e valor unitário negativo
+- [x] 6.1 Criar `src/domain/produto/categoria.ts` com `normalizarCategoria(texto)` aplicando trim, colapso de espaços e capitalização
+- [x] 6.2 Fazer `normalizarCategoria` retornar ausência de categoria quando o texto for só espaços
+- [x] 6.3 Criar `src/domain/produto/validacao.ts` com `validarCadastroProduto(entrada)` retornando `Result`, exigindo nome não vazio, unidade suportada e quantidade necessária maior que zero
+- [x] 6.4 Aplicar os padrões de quantidade atual 0 e valor unitário 0 quando não fornecidos
+- [x] 6.5 Escrever testes de normalização de categoria cobrindo espaços nas pontas, caixa, espaços internos repetidos e texto vazio
+- [x] 6.6 Escrever testes de validação cobrindo cadastro válido, nome vazio, quantidade necessária zero, quantidade necessária decimal e valor unitário negativo
 
 ## 7. Regras de movimento
 
