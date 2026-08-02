@@ -55,12 +55,12 @@
 
 ## 7. Repositório de movimento
 
-- [ ] 7.1 Implementar `sqlite-movimento.repository.ts` com inserção e as consultas de histórico por produto e por casa, ambas do mais recente para o mais antigo
-- [ ] 7.2 Implementar a inserção do movimento inverso para desfazer, sem tocar no movimento original
-- [ ] 7.3 Implementar a consulta de reconciliação comparando a quantidade materializada com a soma das variações dos movimentos
-- [ ] 7.4 Escrever teste de desfazer: movimento original permanece, novo movimento de sinal oposto é inserido
-- [ ] 7.5 Escrever teste de reconciliação retornando zero linhas em um banco coerente
-- [ ] 7.6 Escrever teste de reconciliação detectando divergência quando a quantidade é adulterada fora da transação
+- [x] 7.1 Implementar `sqlite-movimento.repository.ts` com inserção e as consultas de histórico por produto e por casa, ambas do mais recente para o mais antigo
+- [x] 7.2 Implementar a inserção do movimento inverso para desfazer, sem tocar no movimento original
+- [x] 7.3 Implementar a consulta de reconciliação comparando a quantidade materializada com a soma das variações dos movimentos
+- [x] 7.4 Escrever teste de desfazer: movimento original permanece, novo movimento de sinal oposto é inserido
+- [x] 7.5 Escrever teste de reconciliação retornando zero linhas em um banco coerente
+- [x] 7.6 Escrever teste de reconciliação detectando divergência quando a quantidade é adulterada fora da transação
 
 ## 8. Repositório de compra
 
