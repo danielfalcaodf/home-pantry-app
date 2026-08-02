@@ -60,7 +60,7 @@ As branches formam uma cadeia — cada PR aponta para a branch da change anterio
 | [#3](https://github.com/danielfalcaodf/home-pantry-app/pull/3) | `change/persistencia-sqlite` | `change/fundacao-dominio` | 3 · persistencia-sqlite |
 | [#4](https://github.com/danielfalcaodf/home-pantry-app/pull/4) | `change/design-system-tema` | `change/persistencia-sqlite` | 4 · design-system-tema |
 | [#5](https://github.com/danielfalcaodf/home-pantry-app/pull/5) | `change/despensa-e-cadastro-produto` | `change/design-system-tema` | 5 · despensa-e-cadastro-produto |
-| PR_PLACEHOLDER | `change/dar-baixa-caminho-critico` | `change/despensa-e-cadastro-produto` | 6 · dar-baixa-caminho-critico |
+| [#6](https://github.com/danielfalcaodf/home-pantry-app/pull/6) | `change/dar-baixa-caminho-critico` | `change/despensa-e-cadastro-produto` | 6 · dar-baixa-caminho-critico |
 
 **A PR de `develop` para `main` ainda não foi aberta** — ela fecha o ciclo depois que as changes restantes entrarem.
 
