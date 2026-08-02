@@ -20,7 +20,7 @@
 - [x] 3.1 Inspecionar os pacotes de fonte de Archivo, IBM Plex Sans e IBM Plex Mono e listar os pesos que cada um realmente exporta
 - [x] 3.2 Ajustar a escala tipográfica para referenciar apenas pesos existentes, corrigindo o documento de frontend se algum peso suposto não existir
 - [x] 3.3 Instalar os pacotes de fonte e carregar somente os pesos referenciados pela escala
-- [ ] 3.4 Habilitar as figuras tabulares na família monoespaçada e verificar no aparelho que os dígitos têm largura idêntica
+- [ ] 3.4 Habilitar as figuras tabulares na família monoespaçada e verificar no aparelho que os dígitos têm largura idêntica — **parcial: `fontVariant: tabular-nums` aplicado no componente `Texto` e travado por teste; a conferência visual no aparelho depende do development build (bloqueio das tasks 4.3/4.4 da change 1)**
 - [x] 3.5 Medir o peso total das fontes embarcadas e registrar o valor; se ultrapassar 400 quilobytes, remover a família de display e ajustar a escala
 
 ## 4. Persistência da preferência
@@ -43,7 +43,7 @@
 
 - [x] 6.1 Ordenar a inicialização no layout raiz: aplicar migrations, ler a preferência de tema, carregar as fontes, e só então esconder a tela de abertura
 - [x] 6.2 Manter a tela de abertura visível enquanto qualquer uma dessas etapas estiver pendente
-- [ ] 6.3 Verificar no aparelho, com preferência escura, que nenhum quadro de fundo claro aparece na abertura
+- [ ] 6.3 Verificar no aparelho, com preferência escura, que nenhum quadro de fundo claro aparece na abertura — **bloqueada: exige aparelho. A splash é retida programaticamente até banco+tema+fontes ficarem prontos (`app/_layout.tsx`), que é a condição que elimina o flash**
 - [x] 6.4 Verificar que a tela de erro de migration usa o tema resolvido, e não um fundo padrão
 
 ## 7. Componentes-base
@@ -62,11 +62,11 @@
 
 - [x] 8.1 Configurar as animações de mola para declararem respeito à preferência de redução de movimento do sistema
 - [x] 8.2 Confirmar que nenhum componente checa manualmente a preferência de redução de movimento
-- [ ] 8.3 Verificar no aparelho, com redução de movimento ligada, que a mudança de valor ocorre em esmaecimento curto e o retorno tátil permanece
+- [ ] 8.3 Verificar no aparelho, com redução de movimento ligada, que a mudança de valor ocorre em esmaecimento curto e o retorno tátil permanece — **bloqueada: exige aparelho. `ReduceMotion.System` já delega ao sistema; o gesto de baixa que usa essa configuração chega na change 6**
 
 ## 9. Conformidade
 
-- [ ] 9.1 Executar o lint e confirmar que nenhum literal de cor existe fora do arquivo de tokens
-- [ ] 9.2 Verificar a escala de fonte do sistema em 200 por cento, confirmando que o nome não trunca e os alvos de toque permanecem em 48 por 48
-- [ ] 9.3 Confirmar por lint de fronteira que os componentes-base não importam de `application/` nem de `infrastructure/`
-- [ ] 9.4 Atualizar o documento de frontend se qualquer valor de peso tipográfico ou de token tiver sido ajustado durante a implementação
+- [x] 9.1 Executar o lint e confirmar que nenhum literal de cor existe fora do arquivo de tokens
+- [ ] 9.2 Verificar a escala de fonte do sistema em 200 por cento, confirmando que o nome não trunca e os alvos de toque permanecem em 48 por 48 — **bloqueada: exige aparelho. Alvos de 48×48 são travados por teste; nenhum componente-base usa `numberOfLines`, então não há truncamento por construção**
+- [x] 9.3 Confirmar por lint de fronteira que os componentes-base não importam de `application/` nem de `infrastructure/`
+- [x] 9.4 Atualizar o documento de frontend se qualquer valor de peso tipográfico ou de token tiver sido ajustado durante a implementação
