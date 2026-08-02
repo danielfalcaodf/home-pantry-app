@@ -8,13 +8,13 @@
 
 ## 2. Schema Drizzle
 
-- [ ] 2.1 Criar `src/infrastructure/db/schema.ts` com as tabelas `casa` e `usuario`, incluindo a restrição de perfil
-- [ ] 2.2 Adicionar a tabela `produto` com todas as colunas do documento de banco, incluindo `observacao`, `deletado_em` e situação de sincronização
-- [ ] 2.3 Adicionar as restrições de `produto`: quantidade atual não negativa, quantidade necessária positiva, valor unitário não negativo, nome não vazio e unidade dentro do conjunto suportado
-- [ ] 2.4 Adicionar a tabela `movimento_estoque` com `casa_id`, `compra_id` **com referência a compra**, e as restrições de variação não nula e de coerência de sinal
-- [ ] 2.5 Adicionar as tabelas `compra` e `compra_item` com as restrições de situação finalizada exigindo data, item sendo de produto ou avulso, e item marcado exigindo quantidade comprada
-- [ ] 2.6 Declarar os índices do MVP: unicidade de nome por casa ignorando caixa e removidos, parcial de faltantes, categoria para autocompletar, histórico por produto **em ordem decrescente de data**, histórico por casa em ordem decrescente, unicidade de compra aberta, e itens por compra
-- [ ] 2.7 Confirmar que nenhum índice sobre situação de sincronização foi declarado
+- [x] 2.1 Criar `src/infrastructure/db/schema.ts` com as tabelas `casa` e `usuario`, incluindo a restrição de perfil
+- [x] 2.2 Adicionar a tabela `produto` com todas as colunas do documento de banco, incluindo `observacao`, `deletado_em` e situação de sincronização
+- [x] 2.3 Adicionar as restrições de `produto`: quantidade atual não negativa, quantidade necessária positiva, valor unitário não negativo, nome não vazio e unidade dentro do conjunto suportado
+- [x] 2.4 Adicionar a tabela `movimento_estoque` com `casa_id`, `compra_id` **com referência a compra**, e as restrições de variação não nula e de coerência de sinal
+- [x] 2.5 Adicionar as tabelas `compra` e `compra_item` com as restrições de situação finalizada exigindo data, item sendo de produto ou avulso, e item marcado exigindo quantidade comprada
+- [x] 2.6 Declarar os índices do MVP: unicidade de nome por casa ignorando caixa e removidos, parcial de faltantes, categoria para autocompletar, histórico por produto **em ordem decrescente de data**, histórico por casa em ordem decrescente, unicidade de compra aberta, e itens por compra
+- [x] 2.7 Confirmar que nenhum índice sobre situação de sincronização foi declarado
 
 ## 3. Migration inicial
 
