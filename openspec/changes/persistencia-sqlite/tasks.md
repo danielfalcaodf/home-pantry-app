@@ -1,10 +1,10 @@
 ## 1. Cliente de banco
 
-- [ ] 1.1 Criar `src/infrastructure/db/client.ts` abrindo `expo-sqlite` como módulo singleton, com a escuta de alterações habilitada
-- [ ] 1.2 Executar na abertura os PRAGMAs de journal WAL, chaves estrangeiras ligadas, sincronismo normal e tempo limite de ocupação
-- [ ] 1.3 Exportar a instância do Drizzle vinculada ao schema
-- [ ] 1.4 Escrever teste que consulta o PRAGMA de chaves estrangeiras e falha se ele não estiver ligado
-- [ ] 1.5 Escrever teste que tenta inserir uma linha com referência inexistente e espera falha por restrição de chave estrangeira
+- [x] 1.1 Criar `src/infrastructure/db/client.ts` abrindo `expo-sqlite` como módulo singleton, com a escuta de alterações habilitada
+- [x] 1.2 Executar na abertura os PRAGMAs de journal WAL, chaves estrangeiras ligadas, sincronismo normal e tempo limite de ocupação
+- [x] 1.3 Exportar a instância do Drizzle vinculada ao schema
+- [x] 1.4 Escrever teste que consulta o PRAGMA de chaves estrangeiras e falha se ele não estiver ligado
+- [x] 1.5 Escrever teste que tenta inserir uma linha com referência inexistente e espera falha por restrição de chave estrangeira
 
 ## 2. Schema Drizzle
 

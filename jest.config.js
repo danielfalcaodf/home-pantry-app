@@ -33,11 +33,16 @@ module.exports = {
       transform: transformTsPuro,
     },
     {
+      displayName: 'infra',
+      testEnvironment: 'node',
+      testMatch: ['<rootDir>/src/infrastructure/**/*.test.ts'],
+      transform: transformTsPuro,
+    },
+    {
       displayName: 'app',
       preset: 'jest-expo',
       testMatch: [
         '<rootDir>/src/application/**/*.test.{ts,tsx}',
-        '<rootDir>/src/infrastructure/**/*.test.{ts,tsx}',
         '<rootDir>/src/presentation/**/*.test.{ts,tsx}',
         '<rootDir>/app/**/*.test.{ts,tsx}',
       ],
