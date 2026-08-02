@@ -9,13 +9,13 @@
 
 ## 2. Medidor de linha d'água
 
-- [ ] 2.1 Implementar `MedidorNivel` como camada absoluta ancorada na base, com altura proporcional à fração recebida e cor de estado na opacidade do tema
-- [ ] 2.2 Desenhar a régua de 2 pontos na cor cheia do estado, no topo da tinta
-- [ ] 2.3 Tratar o caso zerado: nenhuma tinta, apenas a régua na base na cor crítica
-- [ ] 2.4 Tratar o caso cheio: tinta em altura total, régua rente ao topo, sem extravasar
-- [ ] 2.5 Tratar o caso com sobra: traço de 1 ponto acima da régua, sem número e sem etiqueta
-- [ ] 2.6 Confirmar que o componente não contém nenhuma aritmética sobre quantidade
-- [ ] 2.7 Escrever testes de renderização cobrindo os quatro casos de nível
+- [x] 2.1 Implementar `MedidorNivel` como camada absoluta ancorada na base, com altura proporcional à fração recebida e cor de estado na opacidade do tema
+- [x] 2.2 Desenhar a régua de 2 pontos na cor cheia do estado, no topo da tinta
+- [x] 2.3 Tratar o caso zerado: nenhuma tinta, apenas a régua na base na cor crítica
+- [x] 2.4 Tratar o caso cheio: tinta em altura total, régua rente ao topo, sem extravasar
+- [x] 2.5 Tratar o caso com sobra: traço de 1 ponto acima da régua, sem número e sem etiqueta
+- [x] 2.6 Confirmar que o componente não contém nenhuma aritmética sobre quantidade
+- [x] 2.7 Escrever testes de renderização cobrindo os quatro casos de nível
 
 ## 3. Linha de item
 
