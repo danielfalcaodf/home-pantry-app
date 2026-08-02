@@ -55,6 +55,9 @@ module.exports = defineConfig([
                 { element: { type: 'application' } },
                 { element: { type: 'domain' } },
                 { element: { type: 'ports' } },
+                // Só o ponto de composição, para o valor padrão do repositório
+                // injetável (design D5) — nunca uma implementação concreta.
+                { element: { type: 'composicao' } },
                 { element: { type: 'shared' } },
               ],
             },
@@ -131,6 +134,27 @@ module.exports = defineConfig([
                 '@react-native*',
               ],
               message: 'src/domain/ é TypeScript puro — sem React, Expo, Drizzle ou SQLite.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  // Texto sempre pelo componente da escala: `Text` cru reintroduz tamanho e
+  // família arbitrários, que é como a tipografia deriva tela a tela.
+  {
+    files: ['src/**/*.tsx', 'app/**/*.tsx'],
+    ignores: ['src/presentation/components/**'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: 'react-native',
+              importNames: ['Text'],
+              message:
+                'Use o componente Texto de presentation/components — ele aceita só papéis da escala.',
             },
           ],
         },

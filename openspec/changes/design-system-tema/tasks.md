@@ -33,11 +33,11 @@
 
 ## 5. Provedor de tema
 
-- [ ] 5.1 Criar `src/presentation/theme/provider.tsx` com `ThemeProvider` e `useTheme()`
-- [ ] 5.2 Resolver o tema efetivo a partir da preferência persistida e da aparência do sistema, com automático como padrão
-- [ ] 5.3 Fazer o modo automático reagir à mudança de aparência do sistema sem reinício do app
-- [ ] 5.4 Escrever teste de resolução do tema efetivo cobrindo automático, claro forçado e escuro forçado
-- [ ] 5.5 Escrever teste confirmando que a escolha explícita sobrevive ao fechamento e vence a preferência do sistema
+- [x] 5.1 Criar `src/presentation/theme/provider.tsx` com `ThemeProvider` e `useTheme()`
+- [x] 5.2 Resolver o tema efetivo a partir da preferência persistida e da aparência do sistema, com automático como padrão
+- [x] 5.3 Fazer o modo automático reagir à mudança de aparência do sistema sem reinício do app
+- [x] 5.4 Escrever teste de resolução do tema efetivo cobrindo automático, claro forçado e escuro forçado
+- [x] 5.5 Escrever teste confirmando que a escolha explícita sobrevive ao fechamento e vence a preferência do sistema
 
 ## 6. Abertura sem flash
 

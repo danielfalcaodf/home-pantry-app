@@ -2,12 +2,14 @@
 // pelas interfaces de ports/. Trocar SQLite por outra fonte na Fase 2 é
 // trocar estas linhas — nenhum caso de uso muda.
 import { Clock } from '../ports/clock';
+import { ConfiguracaoRepository } from '../ports/configuracao.repository';
 import { CompraRepository } from '../ports/compra.repository';
 import { MovimentoRepository } from '../ports/movimento.repository';
 import { ProdutoRepository } from '../ports/produto.repository';
 import { db } from '../infrastructure/db/client';
 import { garantirCasaEUsuario, IdentidadeLocal } from '../infrastructure/db/seed';
 import { SQLiteCompraRepository } from '../infrastructure/repositories/sqlite-compra.repository';
+import { SQLiteConfiguracaoRepository } from '../infrastructure/repositories/sqlite-configuracao.repository';
 import { SQLiteMovimentoRepository } from '../infrastructure/repositories/sqlite-movimento.repository';
 import { SQLiteProdutoRepository } from '../infrastructure/repositories/sqlite-produto.repository';
 
@@ -16,6 +18,8 @@ export const relogio: Clock = { agora: () => Date.now() };
 export const produtoRepository: ProdutoRepository = new SQLiteProdutoRepository(db, relogio);
 export const movimentoRepository: MovimentoRepository = new SQLiteMovimentoRepository(db);
 export const compraRepository: CompraRepository = new SQLiteCompraRepository(db);
+export const configuracaoRepository: ConfiguracaoRepository =
+  new SQLiteConfiguracaoRepository(db, relogio);
 
 let identidade: IdentidadeLocal | null = null;
 
