@@ -69,15 +69,15 @@
 
 ## 7. Adoção da lista base
 
-- [ ] 7.1 Implementar o estado vazio da despensa com o convite e o botão de começar pela lista básica
-- [ ] 7.2 Manter a ação de cadastrar do zero acessível no estado vazio
-- [ ] 7.3 Implementar a tela de adoção como tela única, com os itens já marcados e um botão de confirmar
-- [ ] 7.4 Permitir desmarcar item a item, criando apenas os marcados
-- [ ] 7.5 Definir a quantidade necessária sugerida de cada item da lista base por unidade
-- [ ] 7.6 Ligar a criação em bloco à transação única do repositório
-- [ ] 7.7 Tratar a falha da criação em bloco sem deixar despensa parcial, oferecendo tentar novamente
+- [x] 7.1 Implementar o estado vazio da despensa com o convite e o botão de começar pela lista básica
+- [x] 7.2 Manter a ação de cadastrar do zero acessível no estado vazio
+- [x] 7.3 Implementar a tela de adoção como tela única, com os itens já marcados e um botão de confirmar
+- [x] 7.4 Permitir desmarcar item a item, criando apenas os marcados
+- [x] 7.5 Definir a quantidade necessária sugerida de cada item da lista base por unidade
+- [x] 7.6 Ligar a criação em bloco à transação única do repositório
+- [x] 7.7 Tratar a falha da criação em bloco sem deixar despensa parcial, oferecendo tentar novamente
 - [ ] 7.8 Verificar que a adoção funciona com o aparelho sem conexão
-- [ ] 7.9 Escrever teste de adoção parcial e de adoção sem nenhum item marcado
+- [x] 7.9 Escrever teste de adoção parcial e de adoção sem nenhum item marcado
 
 ## 8. Conformidade e documentos
 
