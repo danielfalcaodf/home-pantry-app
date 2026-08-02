@@ -44,7 +44,7 @@
 - [x] 7.2 Configurar `eslint-plugin-boundaries` declarando as camadas `domain`, `ports`, `application`, `infrastructure`, `presentation` e as regras de import permitidas entre elas
 - [x] 7.3 Adicionar a regra que proíbe literal hexadecimal de cor fora de `src/presentation/theme/`
 - [x] 7.4 Criar `scripts/verificar-fronteiras.sh` executando o `grep` de conformidade sobre `src/domain/` e saindo com código diferente de 0 se houver qualquer casamento
-- [ ] 7.5 Adicionar o script agregado de verificação que roda fronteiras + lint + typecheck em sequência
+- [x] 7.5 Adicionar o script agregado de verificação que roda fronteiras + lint + typecheck em sequência
 - [ ] 7.6 Validar cada regra com um arquivo temporário que a viola deliberadamente, confirmar que o lint acusa, e remover o arquivo
 
 ## 8. Documentação
