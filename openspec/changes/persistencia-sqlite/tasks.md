@@ -35,10 +35,10 @@
 
 ## 5. Contratos de persistência
 
-- [ ] 5.1 Criar `src/ports/produto.repository.ts` com as operações de criação, edição, remoção lógica, consulta da despensa, consulta de faltantes, busca por nome e registro de consumo
-- [ ] 5.2 Criar `src/ports/movimento.repository.ts` **apenas** com inserção e consultas — sem nenhum método de atualização ou remoção
-- [ ] 5.3 Criar `src/ports/compra.repository.ts` com abertura de compra, gestão de itens, marcação e finalização
-- [ ] 5.4 Confirmar que nenhuma interface expõe tipo específico do Drizzle ou do SQLite na assinatura
+- [x] 5.1 Criar `src/ports/produto.repository.ts` com as operações de criação, edição, remoção lógica, consulta da despensa, consulta de faltantes, busca por nome e registro de consumo
+- [x] 5.2 Criar `src/ports/movimento.repository.ts` **apenas** com inserção e consultas — sem nenhum método de atualização ou remoção
+- [x] 5.3 Criar `src/ports/compra.repository.ts` com abertura de compra, gestão de itens, marcação e finalização
+- [x] 5.4 Confirmar que nenhuma interface expõe tipo específico do Drizzle ou do SQLite na assinatura
 
 ## 6. Repositório de produto
 
