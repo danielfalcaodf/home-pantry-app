@@ -27,7 +27,7 @@
 ## 5. Primitivos compartilhados
 
 - [x] 5.1 Implementar `src/shared/result.ts` com `Result<T, E>` como união discriminada, mais os construtores de sucesso e de falha
-- [ ] 5.2 Implementar `src/shared/id.ts` gerando **UUID v7**, com fonte de tempo injetável para teste determinístico
+- [x] 5.2 Implementar `src/shared/id.ts` gerando **UUID v7**, com fonte de tempo injetável para teste determinístico
 - [ ] 5.3 Escrever testes de `id.ts` cobrindo formato de 36 caracteres, campo de versão 7 e ordenação lexicográfica crescente entre dois identificadores gerados em instantes distintos
 - [ ] 5.4 Escrever testes de `result.ts` cobrindo discriminação de sucesso e de falha
 
