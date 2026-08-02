@@ -13,6 +13,8 @@ export type NovoItemCompra = {
   quantidadePlanejada: Milesimos;
   valorEstimadoUnit?: Centavos;
   ordem?: number;
+  /** Ver `CompraItem.excluido` — marca a exclusão de um faltante da lista. */
+  excluido?: boolean;
 };
 
 export type EdicaoItemCompra = Partial<

@@ -32,4 +32,10 @@ export type CompraItem = {
   valorPagoUnitario: Centavos | null;
   comprado: boolean;
   ordem: number;
+  /**
+   * Marca que este produto foi removido da lista derivada nesta compra
+   * (design `lista-de-compras` D1) — não é um item real, é a exclusão de um
+   * faltante. Sempre com `produtoId` preenchido e sem efeito de estoque.
+   */
+  excluido: boolean;
 };

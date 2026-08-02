@@ -15,6 +15,13 @@
       "when": 1785674075317,
       "tag": "0001_configuracao",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1785692531323,
+      "tag": "0002_compra_item_exclusao",
+      "breakpoints": true
     }
   ]
 }

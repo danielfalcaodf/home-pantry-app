@@ -53,6 +53,7 @@ function itemParaDominio(linha: LinhaItem): CompraItem {
       linha.valorPagoUnitario === null ? null : centavos(linha.valorPagoUnitario),
     comprado: linha.comprado,
     ordem: linha.ordem,
+    excluido: linha.excluido,
   };
 }
 
@@ -114,6 +115,7 @@ export class SQLiteCompraRepository implements CompraRepository {
         quantidadePlanejada: item.quantidadePlanejada,
         valorEstimadoUnit: item.valorEstimadoUnit ?? 0,
         ordem,
+        excluido: item.excluido ?? false,
       })
       .run();
     const linha = this.db

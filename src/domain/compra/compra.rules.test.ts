@@ -25,6 +25,7 @@ function item(sobrescreve: Partial<CompraItem> = {}): CompraItem {
     valorPagoUnitario: null,
     comprado: false,
     ordem: 0,
+    excluido: false,
     ...sobrescreve,
   };
 }
