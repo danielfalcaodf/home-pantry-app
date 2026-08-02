@@ -40,7 +40,7 @@
 
 ## 7. Lint e fronteiras
 
-- [ ] 7.1 Configurar ESLint + Prettier com o preset do Expo e formatação consistente
+- [x] 7.1 Configurar ESLint + Prettier com o preset do Expo e formatação consistente
 - [ ] 7.2 Configurar `eslint-plugin-boundaries` declarando as camadas `domain`, `ports`, `application`, `infrastructure`, `presentation` e as regras de import permitidas entre elas
 - [ ] 7.3 Adicionar a regra que proíbe literal hexadecimal de cor fora de `src/presentation/theme/`
 - [ ] 7.4 Criar `scripts/verificar-fronteiras.sh` executando o `grep` de conformidade sobre `src/domain/` e saindo com código diferente de 0 se houver qualquer casamento
