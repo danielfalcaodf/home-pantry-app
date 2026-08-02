@@ -9,23 +9,23 @@
 
 ## 2. Tela da lista
 
-- [ ] 2.1 Implementar `app/(tabs)/lista.tsx` com o título de tela e a alternância de agrupamento no cabeçalho
-- [ ] 2.2 Implementar `ItemLista` com nome, quantidade a comprar com unidade, e custo alinhado à direita no papel tipográfico de dado
-- [ ] 2.3 Implementar a visão agrupada por categoria, com cabeçalhos, e a visão contínua ordenada por nome
-- [ ] 2.4 Persistir a preferência de agrupamento na tabela de configuração
-- [ ] 2.5 Implementar o estado vazio afirmativo para quando nada estiver faltando, mantendo a ação de adicionar avulso acessível
-- [ ] 2.6 Confirmar que a lista reflete alterações da despensa sem recarregamento manual
+- [x] 2.1 Implementar `app/(tabs)/lista.tsx` com o título de tela e a alternância de agrupamento no cabeçalho
+- [x] 2.2 Implementar `ItemLista` com nome, quantidade a comprar com unidade, e custo alinhado à direita no papel tipográfico de dado
+- [x] 2.3 Implementar a visão agrupada por categoria, com cabeçalhos, e a visão contínua ordenada por nome
+- [x] 2.4 Persistir a preferência de agrupamento na tabela de configuração
+- [x] 2.5 Implementar o estado vazio afirmativo para quando nada estiver faltando, mantendo a ação de adicionar avulso acessível
+- [x] 2.6 Confirmar que a lista reflete alterações da despensa sem recarregamento manual
 
 ## 3. Custo e rodapé
 
-- [ ] 3.1 Implementar `RodapeTotal` com a contagem de itens e o total estimado, em família monoespaçada
-- [ ] 3.2 Exibir a contagem de itens sem preço cadastrado ao lado do total
-- [ ] 3.3 Marcar visualmente cada item sem preço, no lugar onde o valor apareceria
-- [ ] 3.4 Garantir que o custo de cada item é calculado sobre a quantidade **já arredondada**, e não sobre a diferença bruta
-- [ ] 3.5 Incluir os itens avulsos com preço no total
-- [ ] 3.6 Rotular o total de forma inequívoca como estimativa da compra, distinta do valor do estoque
-- [ ] 3.7 Confirmar que o total muda diretamente, sem animação de contagem progressiva
-- [ ] 3.8 Escrever teste do total com lista mista de itens com e sem preço, e de lista inteiramente sem preço
+- [x] 3.1 Implementar `RodapeTotal` com a contagem de itens e o total estimado, em família monoespaçada
+- [x] 3.2 Exibir a contagem de itens sem preço cadastrado ao lado do total
+- [x] 3.3 Marcar visualmente cada item sem preço, no lugar onde o valor apareceria
+- [x] 3.4 Garantir que o custo de cada item é calculado sobre a quantidade **já arredondada**, e não sobre a diferença bruta
+- [x] 3.5 Incluir os itens avulsos com preço no total
+- [x] 3.6 Rotular o total de forma inequívoca como estimativa da compra, distinta do valor do estoque
+- [x] 3.7 Confirmar que o total muda diretamente, sem animação de contagem progressiva
+- [x] 3.8 Escrever teste do total com lista mista de itens com e sem preço, e de lista inteiramente sem preço
 
 ## 4. Itens avulsos
 
@@ -51,14 +51,14 @@
 
 ## 6. Exportação em texto
 
-- [ ] 6.1 Criar o gerador de texto da lista em `src/presentation/format/`, produzindo nome e quantidade com unidade por linha
-- [ ] 6.2 Incluir o total estimado ao final do texto
-- [ ] 6.3 Sinalizar no texto os itens sem preço e refletir no total apenas os itens com preço
-- [ ] 6.4 Refletir o agrupamento por categoria no texto quando ele estiver ativo
-- [ ] 6.5 Ligar a exportação à folha de compartilhamento do sistema
-- [ ] 6.6 Tornar a ação indisponível ou informativa quando a lista estiver vazia
-- [ ] 6.7 Confirmar que o texto não contém identificadores internos, nomes de campo do banco nem termos de sistema
-- [ ] 6.8 Escrever testes do gerador de texto cobrindo lista agrupada, lista contínua e lista com itens sem preço
+- [x] 6.1 Criar o gerador de texto da lista em `src/presentation/format/`, produzindo nome e quantidade com unidade por linha
+- [x] 6.2 Incluir o total estimado ao final do texto
+- [x] 6.3 Sinalizar no texto os itens sem preço e refletir no total apenas os itens com preço
+- [x] 6.4 Refletir o agrupamento por categoria no texto quando ele estiver ativo
+- [x] 6.5 Ligar a exportação à folha de compartilhamento do sistema
+- [x] 6.6 Tornar a ação indisponível ou informativa quando a lista estiver vazia
+- [x] 6.7 Confirmar que o texto não contém identificadores internos, nomes de campo do banco nem termos de sistema
+- [x] 6.8 Escrever testes do gerador de texto cobrindo lista agrupada, lista contínua e lista com itens sem preço
 
 ## 7. Conformidade
 
