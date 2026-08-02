@@ -49,14 +49,14 @@
 
 ## 6. Fechamento
 
-- [ ] 6.1 Criar `use-finalizar-compra.ts` chamando a regra de domínio que calcula todos os efeitos de uma vez
-- [ ] 6.2 Delegar a aplicação ao repositório em transação única: reposições, movimentos, atualizações de preço confirmadas, situação e total pago
-- [ ] 6.3 Vincular cada movimento de reposição à compra de origem, registrando usuário, data e hora, variação e quantidade resultante
-- [ ] 6.4 Garantir que itens avulsos marcados não alteram nenhuma quantidade nem geram movimento
-- [ ] 6.5 Garantir que itens não marcados não geram reposição nem movimento
-- [ ] 6.6 Preencher a data de finalização ao mudar a situação para finalizada
-- [ ] 6.7 Permitir fechar compra sem nenhum item marcado, registrando total zero
-- [ ] 6.8 Implementar a mensagem de falha preservando as marcações e oferecendo tentar novamente
+- [x] 6.1 Criar `use-finalizar-compra.ts` chamando a regra de domínio que calcula todos os efeitos de uma vez
+- [x] 6.2 Delegar a aplicação ao repositório em transação única: reposições, movimentos, atualizações de preço confirmadas, situação e total pago
+- [x] 6.3 Vincular cada movimento de reposição à compra de origem, registrando usuário, data e hora, variação e quantidade resultante
+- [x] 6.4 Garantir que itens avulsos marcados não alteram nenhuma quantidade nem geram movimento
+- [x] 6.5 Garantir que itens não marcados não geram reposição nem movimento
+- [x] 6.6 Preencher a data de finalização ao mudar a situação para finalizada
+- [x] 6.7 Permitir fechar compra sem nenhum item marcado, registrando total zero
+- [x] 6.8 Implementar a mensagem de falha preservando as marcações e oferecendo tentar novamente
 - [ ] 6.9 Exibir a confirmação informando quantos itens foram repostos, em vocabulário de usuário
 - [ ] 6.10 Retornar à despensa com as quantidades atualizadas
 
