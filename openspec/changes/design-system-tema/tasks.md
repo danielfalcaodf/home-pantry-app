@@ -48,15 +48,15 @@
 
 ## 7. Componentes-base
 
-- [ ] 7.1 Implementar `Texto` aceitando apenas os papéis da escala, sem estilo de fonte arbitrário
-- [ ] 7.2 Adicionar regra de lint proibindo o componente de texto nativo fora de `src/presentation/components/`
-- [ ] 7.3 Implementar `Botao` com área tocável mínima de 48 por 48, e os estados normal, pressionado e desabilitado anunciados ao leitor de tela
-- [ ] 7.4 Implementar `CampoTexto` com rótulo sempre visível acima, divisor de 2 pontos na cor de ação em foco, e mensagem de erro em texto
-- [ ] 7.5 Implementar `ChipEstado` recebendo rótulo, contagem e cor de estado, sem conhecer o domínio de produto
-- [ ] 7.6 Implementar `Toast` ancorado acima da barra de abas, com barra de tempo, ação opcional, e política de substituição em vez de empilhamento
-- [ ] 7.7 Implementar `EstadoVazio` com texto de convite e ação sugerida
-- [ ] 7.8 Implementar `TelaErro` declarando o que houve e a ação de recuperação, sem pedido de desculpas
-- [ ] 7.9 Escrever testes de renderização dos componentes-base, confirmando que nenhum deles importa do domínio de produto
+- [x] 7.1 Implementar `Texto` aceitando apenas os papéis da escala, sem estilo de fonte arbitrário
+- [x] 7.2 Adicionar regra de lint proibindo o componente de texto nativo fora de `src/presentation/components/`
+- [x] 7.3 Implementar `Botao` com área tocável mínima de 48 por 48, e os estados normal, pressionado e desabilitado anunciados ao leitor de tela
+- [x] 7.4 Implementar `CampoTexto` com rótulo sempre visível acima, divisor de 2 pontos na cor de ação em foco, e mensagem de erro em texto
+- [x] 7.5 Implementar `ChipEstado` recebendo rótulo, contagem e cor de estado, sem conhecer o domínio de produto
+- [x] 7.6 Implementar `Toast` ancorado acima da barra de abas, com barra de tempo, ação opcional, e política de substituição em vez de empilhamento
+- [x] 7.7 Implementar `EstadoVazio` com texto de convite e ação sugerida
+- [x] 7.8 Implementar `TelaErro` declarando o que houve e a ação de recuperação, sem pedido de desculpas
+- [x] 7.9 Escrever testes de renderização dos componentes-base, confirmando que nenhum deles importa do domínio de produto
 
 ## 8. Movimento
 
