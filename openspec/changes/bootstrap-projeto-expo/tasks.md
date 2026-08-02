@@ -34,9 +34,9 @@
 ## 6. Testes
 
 - [x] 6.1 Configurar `jest.config.js` com dois projetos: `domain` (ambiente node puro, escopo `src/domain/` e `src/shared/`) e `app` (preset `jest-expo`)
-- [ ] 6.2 Adicionar scripts de teste separados: rodar só o domínio, e rodar tudo
-- [ ] 6.3 Configurar o relatório de cobertura restrito a `src/domain/` com limite mínimo de 90%
-- [ ] 6.4 Verificar que o comando de teste do domínio conclui sem exigir emulador, simulador ou Metro
+- [x] 6.2 Adicionar scripts de teste separados: rodar só o domínio, e rodar tudo
+- [x] 6.3 Configurar o relatório de cobertura restrito a `src/domain/` com limite mínimo de 90%
+- [x] 6.4 Verificar que o comando de teste do domínio conclui sem exigir emulador, simulador ou Metro
 
 ## 7. Lint e fronteiras
 
