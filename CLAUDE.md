@@ -34,10 +34,12 @@ Projeto ainda **não foi inicializado** (sem `package.json`, sem código — só
 Fluxo de schema já definido na arquitetura:
 ```
 alterar src/infrastructure/db/schema.ts
-→ npx drizzle-kit generate
+→ npx drizzle-kit generate --name <nome>
 → revisar o .sql gerado manualmente antes do commit
 → commit
 ```
+
+**Nunca editar uma migration já publicada.** A partir do primeiro build instalado existem dados reais no aparelho, migrations são forward-only e não há rollback executável lá — corrigir é sempre criar uma migration nova. O `.db` recebe cópia de segurança automática antes de aplicar migration pendente (`src/infrastructure/db/backup-pre-migration.ts`, duas cópias mais recentes).
 
 ## Arquitetura — regra de dependência (não violar)
 

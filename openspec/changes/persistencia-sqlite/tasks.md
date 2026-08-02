@@ -89,4 +89,4 @@
 - [ ] 10.2 Confirmar por lint de fronteira que nenhum arquivo fora da infraestrutura importa o cliente de banco ou o schema
 - [ ] 10.3 Revisar todas as consultas escritas, confirmando colunas explícitas e ausência de regra de arredondamento ou de conversão de moeda no SQL
 - [ ] 10.4 Atualizar `DATABASE-app-estoque-de-casa.md` §7 corrigindo a ordenação decrescente do índice de histórico e a referência de chave estrangeira do identificador de compra no movimento
-- [ ] 10.5 Rodar o teste de fumaça no aparelho confirmando que o PRAGMA de chaves estrangeiras está ligado no binding do Expo
+- [ ] 10.5 Rodar o teste de fumaça no aparelho confirmando que o PRAGMA de chaves estrangeiras está ligado no binding do Expo — **bloqueada: exige aparelho com development build (mesma dependência das tasks 4.3/4.4 da change 1). Mitigação já no código: `client.ts` consulta o PRAGMA na abertura e lança se não estiver ligado, então a falha aparece alto no primeiro uso real em vez de acumular órfãos**
