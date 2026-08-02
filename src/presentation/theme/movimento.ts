@@ -12,6 +12,9 @@ export const MOLA = {
 } as const;
 
 export const DURACAO_FADE = 100;
+/** Contração do stepper no toque: 0,92 e volta, em ~90ms. */
+export const ESCALA_PRESSIONADO = 0.92;
+export const DURACAO_CONTRACAO = 90;
 
 export function molar<T extends number>(destino: T) {
   return withSpring(destino, MOLA);

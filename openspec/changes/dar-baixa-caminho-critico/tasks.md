@@ -9,13 +9,13 @@
 
 ## 2. Stepper de consumo
 
-- [ ] 2.1 Implementar `StepperConsumo` como círculo de 40 pontos dentro de alvo de 48 por 48, alinhado à direita
-- [ ] 2.2 Ligar o toque simples ao registro de consumo de uma unidade, sem confirmação, sem navegação e sem indicador de carregamento
-- [ ] 2.3 Disparar o retorno tátil leve no instante do toque
-- [ ] 2.4 Implementar a contração do círculo para 0,92 e retorno, em cerca de 90 milissegundos
-- [ ] 2.5 Manter o botão com opacidade reduzida e sem função quando o item está zerado
-- [ ] 2.6 Ligar o toque longo à abertura do painel de quantidade
-- [ ] 2.7 Definir o rótulo acessível com a ação completa, incluindo nome do produto e unidade
+- [x] 2.1 Implementar `StepperConsumo` como círculo de 40 pontos dentro de alvo de 48 por 48, alinhado à direita
+- [x] 2.2 Ligar o toque simples ao registro de consumo de uma unidade, sem confirmação, sem navegação e sem indicador de carregamento
+- [x] 2.3 Disparar o retorno tátil leve no instante do toque
+- [x] 2.4 Implementar a contração do círculo para 0,92 e retorno, em cerca de 90 milissegundos
+- [x] 2.5 Manter o botão com opacidade reduzida e sem função quando o item está zerado
+- [x] 2.6 Ligar o toque longo à abertura do painel de quantidade
+- [x] 2.7 Definir o rótulo acessível com a ação completa, incluindo nome do produto e unidade
 
 ## 3. Animação do nível
 
