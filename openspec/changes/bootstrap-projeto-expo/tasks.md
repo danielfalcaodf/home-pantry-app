@@ -14,7 +14,7 @@
 
 - [x] 3.1 Instalar as dependências de persistência (`expo-sqlite`, `drizzle-orm`) e a de desenvolvimento `drizzle-kit`, usando o instalador do Expo para fixar versões compatíveis com o SDK
 - [x] 3.2 Instalar `react-native-reanimated` e aplicar a configuração de Babel/plugin exigida pela versão instalada
-- [ ] 3.3 Instalar `expo-haptics`, `expo-keep-awake`, `expo-splash-screen`, `@gorhom/bottom-sheet` e `@shopify/flash-list` com suas dependências de gesto/animação
+- [x] 3.3 Instalar `expo-haptics`, `expo-keep-awake`, `expo-splash-screen`, `@gorhom/bottom-sheet` e `@shopify/flash-list` com suas dependências de gesto/animação
 - [ ] 3.4 Rodar o verificador de dependências do Expo e resolver qualquer incompatibilidade de versão apontada
 
 ## 4. Development build (EAS)
