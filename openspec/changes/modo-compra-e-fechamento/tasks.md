@@ -5,8 +5,8 @@
 - [x] 1.3 Registrar a quantidade planejada **exatamente** como exibida na lista, sem reaplicar o arredondamento
 - [x] 1.4 Registrar o valor estimado por unidade em cada item materializado
 - [x] 1.5 Não duplicar os itens avulsos, que já pertencem à compra aberta
-- [ ] 1.6 Escrever teste confirmando que a lista permanece derivada enquanto a compra não é iniciada
-- [ ] 1.7 Escrever teste confirmando que consumo registrado após iniciar a compra não altera os itens planejados
+- [x] 1.6 Escrever teste confirmando que a lista permanece derivada enquanto a compra não é iniciada
+- [x] 1.7 Escrever teste confirmando que consumo registrado após iniciar a compra não altera os itens planejados
 
 ## 2. Tela do modo compra
 

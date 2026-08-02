@@ -98,4 +98,30 @@ describe('useListaDeCompras', () => {
     expect(result.current.itens[0].quantidadeAComprar).toBe(1000);
     expect(result.current.itens[0].custo).toBe(1000);
   });
+
+  it('permanece derivada dos faltantes mesmo depois de a compra ser iniciada (materializada)', async () => {
+    const produtos = new ProdutoRepositorioFalso([
+      produtoFalso({ id: 'p1', nome: 'Arroz', quantidadeAtual: milesimos(0), quantidadeNecessaria: milesimos(2000) }),
+    ]);
+    const compras = new CompraRepositorioFalso(produtos);
+    const { result } = await montar(produtos, compras);
+    expect(result.current.itens).toHaveLength(1);
+
+    // "iniciar compra": materializa o faltante como compra_item planejado.
+    const aberta = await compras.abrir('casa-teste', 'usuario-teste', 1);
+    if (!aberta.ok) {
+      throw new Error('setup');
+    }
+    await compras.adicionarItem(aberta.valor.id, {
+      produtoId: 'p1',
+      unidade: 'pacote',
+      quantidadePlanejada: milesimos(2000),
+      valorEstimadoUnit: centavos(0),
+    });
+
+    // A lista continua vindo de listarFaltantes, não do item materializado.
+    const { result: depois } = await montar(produtos, compras);
+    expect(depois.current.itens).toHaveLength(1);
+    expect(depois.current.itens[0].nome).toBe('Arroz');
+  });
 });

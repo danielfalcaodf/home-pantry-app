@@ -377,3 +377,31 @@ describe('exclusão de faltante da lista', () => {
     expect(await movimentos.historicoPorCasa(casaId, 10)).toHaveLength(0);
   });
 });
+
+describe('itens planejados sobrevivem a consumo posterior', () => {
+  it('consumo registrado após iniciar a compra não altera a quantidade planejada do item', async () => {
+    const { compras, produtos, casaId, usuarioId, criarProduto } = await montar();
+    const arroz = await criarProduto('Arroz', 500, 890);
+    const compra = await compras.abrir(casaId, usuarioId, clock.agora());
+    if (!compra.ok) {
+      throw new Error('setup');
+    }
+    const item = await compras.adicionarItem(compra.valor.id, {
+      produtoId: arroz.id,
+      unidade: 'un',
+      quantidadePlanejada: milesimos(1500),
+      valorEstimadoUnit: centavos(890),
+    });
+
+    // Consumo altera o produto — nunca o item já materializado na compra.
+    await produtos.darBaixa({
+      produtoId: arroz.id,
+      quantidade: milesimos(300),
+      usuarioId,
+      criadoEm: clock.agora() + 1,
+    });
+
+    const itens = await compras.listarItens(compra.valor.id);
+    expect(itens.find((i) => i.item.id === item.id)?.item.quantidadePlanejada).toBe(1500);
+  });
+});
