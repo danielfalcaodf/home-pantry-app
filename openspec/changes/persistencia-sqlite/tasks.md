@@ -42,16 +42,16 @@
 
 ## 6. Repositório de produto
 
-- [ ] 6.1 Implementar `src/infrastructure/repositories/sqlite-produto.repository.ts` com criação, edição e remoção lógica, gravando a categoria já normalizada pelo domínio
-- [ ] 6.2 Implementar a consulta da despensa com colunas explícitas, ordenação por estado e alfabética dentro do grupo, excluindo inativos e removidos
-- [ ] 6.3 Implementar a consulta de faltantes retornando diferença bruta e produto bruto, **sem** arredondar nem converter — nomear os campos como brutos
-- [ ] 6.4 Implementar a consulta de categorias distintas para autocompletar
-- [ ] 6.5 Implementar `darBaixa` em transação única: atualizar a quantidade com proteção de não-negativo e inserir o movimento lendo o saldo resultante do banco após a atualização
-- [ ] 6.6 Marcar a situação de sincronização do produto como pendente em toda escrita que altere a quantidade
-- [ ] 6.7 Escrever teste da transação de baixa: quantidade atualizada e movimento gravado juntos
-- [ ] 6.8 Escrever teste de rollback: falha na inserção do movimento deixa a quantidade inalterada e nenhum movimento gravado
-- [ ] 6.9 Escrever teste de baixa maior que o saldo: quantidade final zero, operação bem-sucedida
-- [ ] 6.10 Escrever teste de unicidade de nome, incluindo o caso de reutilizar nome de produto removido logicamente
+- [x] 6.1 Implementar `src/infrastructure/repositories/sqlite-produto.repository.ts` com criação, edição e remoção lógica, gravando a categoria já normalizada pelo domínio
+- [x] 6.2 Implementar a consulta da despensa com colunas explícitas, ordenação por estado e alfabética dentro do grupo, excluindo inativos e removidos
+- [x] 6.3 Implementar a consulta de faltantes retornando diferença bruta e produto bruto, **sem** arredondar nem converter — nomear os campos como brutos
+- [x] 6.4 Implementar a consulta de categorias distintas para autocompletar
+- [x] 6.5 Implementar `darBaixa` em transação única: atualizar a quantidade com proteção de não-negativo e inserir o movimento lendo o saldo resultante do banco após a atualização
+- [x] 6.6 Marcar a situação de sincronização do produto como pendente em toda escrita que altere a quantidade
+- [x] 6.7 Escrever teste da transação de baixa: quantidade atualizada e movimento gravado juntos
+- [x] 6.8 Escrever teste de rollback: falha na inserção do movimento deixa a quantidade inalterada e nenhum movimento gravado
+- [x] 6.9 Escrever teste de baixa maior que o saldo: quantidade final zero, operação bem-sucedida
+- [x] 6.10 Escrever teste de unicidade de nome, incluindo o caso de reutilizar nome de produto removido logicamente
 
 ## 7. Repositório de movimento
 

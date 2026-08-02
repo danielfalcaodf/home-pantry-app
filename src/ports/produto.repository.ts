@@ -40,10 +40,20 @@ export type ItemListaBase = {
 };
 
 export interface ProdutoRepository {
-  criar(casaId: string, dados: ProdutoValidado): Promise<Result<Produto, ErroEscritaProduto>>;
+  /**
+   * Cria o produto; quantidade inicial > 0 grava um movimento `ajuste` de
+   * estoque inicial na MESMA transação — sem isso a reconciliação
+   * (DATABASE §6.6) acusaria divergência em todo produto recém-criado.
+   */
+  criar(
+    casaId: string,
+    usuarioId: string,
+    dados: ProdutoValidado,
+  ): Promise<Result<Produto, ErroEscritaProduto>>;
+  /** Quantidade atual NÃO é editável aqui — só muda por movimento. */
   editar(
     id: string,
-    dados: Partial<ProdutoValidado>,
+    dados: Partial<Omit<ProdutoValidado, 'quantidadeAtual'>>,
   ): Promise<Result<Produto, ErroEscritaProduto>>;
   removerLogicamente(id: string): Promise<void>;
   listarDespensa(casaId: string): Promise<Produto[]>;
