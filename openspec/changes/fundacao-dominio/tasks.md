@@ -7,12 +7,12 @@
 
 ## 2. Quantidade em milésimos
 
-- [ ] 2.1 Criar `src/domain/shared/quantidade.ts` com o tipo nominal `Milesimos` e o construtor `milesimos(n)`
-- [ ] 2.2 Implementar `deDecimal(valor)` convertendo o decimal digitado para milésimos, e `paraDecimal(m)` para o caminho inverso
-- [ ] 2.3 Implementar `formatarQuantidade(m, unidade)` produzindo texto sem casas decimais supérfluas
-- [ ] 2.4 Implementar `arredondarParaUnidade(m, unidade)` arredondando para cima só em unidade indivisível
-- [ ] 2.5 Escrever testes de conversão, de formatação e de arredondamento, cobrindo meio pacote virando um pacote, valor já inteiro não sendo inflado, e unidade divisível preservando a fração
-- [ ] 2.6 Escrever teste de idempotência: arredondar um valor já arredondado não o altera
+- [x] 2.1 Criar `src/domain/shared/quantidade.ts` com o tipo nominal `Milesimos` e o construtor `milesimos(n)`
+- [x] 2.2 Implementar `deDecimal(valor)` convertendo o decimal digitado para milésimos, e `paraDecimal(m)` para o caminho inverso
+- [x] 2.3 Implementar `formatarQuantidade(m, unidade)` produzindo texto sem casas decimais supérfluas
+- [x] 2.4 Implementar `arredondarParaUnidade(m, unidade)` arredondando para cima só em unidade indivisível
+- [x] 2.5 Escrever testes de conversão, de formatação e de arredondamento, cobrindo meio pacote virando um pacote, valor já inteiro não sendo inflado, e unidade divisível preservando a fração
+- [x] 2.6 Escrever teste de idempotência: arredondar um valor já arredondado não o altera
 
 ## 3. Dinheiro em centavos
 
