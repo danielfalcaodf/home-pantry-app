@@ -21,8 +21,8 @@
 
 - [x] 4.1 Configurar `app.json`/`app.config.ts` com nome, slug, identificador de pacote Android e bundle identifier iOS
 - [x] 4.2 Criar `eas.json` com os perfis `development` (cliente de desenvolvimento + distribuição interna), `preview` e `production`
-- [ ] 4.3 Gerar o primeiro development build e instalá-lo no aparelho de desenvolvimento
-- [ ] 4.4 Confirmar que o app abre pelo development build conectado ao Metro local
+- [ ] 4.3 Gerar o primeiro development build e instalá-lo no aparelho de desenvolvimento — **bloqueada: requer `eas login` (sem sessão EAS neste ambiente) e aparelho físico; configuração pronta, executar `npx eas-cli build --profile development --platform android`**
+- [ ] 4.4 Confirmar que o app abre pelo development build conectado ao Metro local — **bloqueada: depende da 4.3; validação local equivalente feita via `npx expo export` (bundle fecha sem erro)**
 
 ## 5. Primitivos compartilhados
 
