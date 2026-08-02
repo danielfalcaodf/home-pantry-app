@@ -12,9 +12,9 @@
 
 - [ ] 2.1 Implementar `app/compra/[id].tsx` como tela única, sem navegação interna
 - [ ] 2.2 Ativar a trava de tela acordada enquanto a tela estiver montada, e restaurar o comportamento padrão ao desmontar
-- [ ] 2.3 Implementar `ItemCompra` com controle de marcação quadrado de 28 pontos dentro de alvo de 48 por 48
-- [ ] 2.4 Aplicar ao item marcado o nome em cor secundária com risco horizontal, e remover todo o preenchimento da linha
-- [ ] 2.5 Implementar o desmarcar revertendo a aparência e o total
+- [x] 2.3 Implementar `ItemCompra` com controle de marcação quadrado de 28 pontos dentro de alvo de 48 por 48
+- [x] 2.4 Aplicar ao item marcado o nome em cor secundária com risco horizontal, e remover todo o preenchimento da linha
+- [x] 2.5 Implementar o desmarcar revertendo a aparência e o total
 - [ ] 2.6 Gravar cada marcação imediatamente no item de compra, e não em memória
 - [ ] 2.7 Implementar a saída da tela preservando o progresso, informando que a compra continua aberta
 - [ ] 2.8 Adicionar a ação de cancelar a compra no menu da tela, com confirmação, registrando a situação cancelada
@@ -31,7 +31,7 @@
 ## 4. Preço de referência
 
 - [x] 4.1 Detectar a divergência entre o valor pago e o valor unitário cadastrado, usando a regra de domínio
-- [ ] 4.2 Oferecer a pergunta de atualizar o preço de referência como controle embutido na linha do item, nunca como diálogo modal
+- [x] 4.2 Oferecer a pergunta de atualizar o preço de referência como controle embutido na linha do item, nunca como diálogo modal
 - [x] 4.3 Oferecer o registro do primeiro preço quando o produto tem valor unitário zero
 - [x] 4.4 Não perguntar para itens avulsos
 - [ ] 4.5 Registrar a resposta no item de compra, sem alterar o produto naquele momento
@@ -41,10 +41,10 @@
 
 ## 5. Rodapé de acompanhamento
 
-- [ ] 5.1 Implementar o rodapé fixo com o contador de itens marcados sobre o total de itens
-- [ ] 5.2 Exibir o total corrente do que já está marcado, em família monoespaçada
-- [ ] 5.3 Calcular o total corrente pela mesma função de domínio usada no fechamento
-- [ ] 5.4 Confirmar que o total troca diretamente, sem contagem progressiva e sem deslocar elementos adjacentes
+- [x] 5.1 Implementar o rodapé fixo com o contador de itens marcados sobre o total de itens
+- [x] 5.2 Exibir o total corrente do que já está marcado, em família monoespaçada
+- [x] 5.3 Calcular o total corrente pela mesma função de domínio usada no fechamento
+- [x] 5.4 Confirmar que o total troca diretamente, sem contagem progressiva e sem deslocar elementos adjacentes
 - [ ] 5.5 Escrever teste comparando o total corrente exibido com o total pago gravado no fechamento
 
 ## 6. Fechamento
