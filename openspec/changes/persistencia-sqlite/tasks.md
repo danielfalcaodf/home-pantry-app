@@ -64,15 +64,15 @@
 
 ## 8. Repositório de compra
 
-- [ ] 8.1 Implementar `sqlite-compra.repository.ts` com abertura de compra, respeitando o limite de no máximo uma compra aberta por casa
-- [ ] 8.2 Implementar adição, edição, ordenação e remoção de itens, incluindo itens avulsos sem produto associado
-- [ ] 8.3 Implementar a consulta de itens da compra com junção externa trazendo os dados do produto em uma única consulta
-- [ ] 8.4 Implementar `finalizar` em transação única aplicando reposições, movimentos, atualizações de preço confirmadas e a mudança de situação com o total pago
-- [ ] 8.5 Escrever teste de finalização bem-sucedida com três itens marcados
-- [ ] 8.6 Escrever teste de falha no meio: nenhuma quantidade alterada, nenhum movimento gravado, compra continua aberta
-- [ ] 8.7 Escrever teste confirmando que itens não marcados não geram reposição nem movimento
-- [ ] 8.8 Escrever teste confirmando que item avulso não gera reposição e que ele não desaparece da consulta de itens
-- [ ] 8.9 Escrever teste de contagem de consultas na carga de itens, garantindo consulta única
+- [x] 8.1 Implementar `sqlite-compra.repository.ts` com abertura de compra, respeitando o limite de no máximo uma compra aberta por casa
+- [x] 8.2 Implementar adição, edição, ordenação e remoção de itens, incluindo itens avulsos sem produto associado
+- [x] 8.3 Implementar a consulta de itens da compra com junção externa trazendo os dados do produto em uma única consulta
+- [x] 8.4 Implementar `finalizar` em transação única aplicando reposições, movimentos, atualizações de preço confirmadas e a mudança de situação com o total pago
+- [x] 8.5 Escrever teste de finalização bem-sucedida com três itens marcados
+- [x] 8.6 Escrever teste de falha no meio: nenhuma quantidade alterada, nenhum movimento gravado, compra continua aberta
+- [x] 8.7 Escrever teste confirmando que itens não marcados não geram reposição nem movimento
+- [x] 8.8 Escrever teste confirmando que item avulso não gera reposição e que ele não desaparece da consulta de itens
+- [x] 8.9 Escrever teste de contagem de consultas na carga de itens, garantindo consulta única
 
 ## 9. Dados iniciais
 
