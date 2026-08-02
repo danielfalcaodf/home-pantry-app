@@ -28,6 +28,7 @@ export type EdicaoItemCompra = Partial<
     | 'valorPagoUnitario'
     | 'comprado'
     | 'ordem'
+    | 'atualizarPreco'
   >
 >;
 

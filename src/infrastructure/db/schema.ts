@@ -193,6 +193,10 @@ export const compraItem = sqliteTable(
     // marca a exclusão de um faltante da lista derivada desta compra
     // (change lista-de-compras, design D1) — sempre com produto_id preenchido
     excluido: integer('excluido', { mode: 'boolean' }).notNull().default(false),
+    // resposta à pergunta de atualizar o preço de referência (design D4 da
+    // change modo-compra-e-fechamento): NULL = não perguntado/não se aplica,
+    // aplicada ao produto só dentro da transação de fechamento.
+    atualizarPreco: integer('atualizar_preco', { mode: 'boolean' }),
   },
   (t) => [
     index('idx_compra_item_compra').on(t.compraId, t.ordem),
@@ -207,6 +211,10 @@ export const compraItem = sqliteTable(
     ),
     check('ck_compra_item_comprado', sql`${t.comprado} IN (0,1)`),
     check('ck_compra_item_excluido', sql`${t.excluido} IN (0,1)`),
+    check(
+      'ck_compra_item_atualizar_preco',
+      sql`${t.atualizarPreco} IS NULL OR ${t.atualizarPreco} IN (0,1)`,
+    ),
     // ou é um produto do estoque, ou é um avulso com nome
     check(
       'ck_compra_item_origem',

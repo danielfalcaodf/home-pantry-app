@@ -54,6 +54,7 @@ function itemParaDominio(linha: LinhaItem): CompraItem {
     comprado: linha.comprado,
     ordem: linha.ordem,
     excluido: linha.excluido,
+    atualizarPreco: linha.atualizarPreco,
   };
 }
 
@@ -146,6 +147,7 @@ export class SQLiteCompraRepository implements CompraRepository {
         }),
         ...(dados.comprado !== undefined && { comprado: dados.comprado }),
         ...(dados.ordem !== undefined && { ordem: dados.ordem }),
+        ...(dados.atualizarPreco !== undefined && { atualizarPreco: dados.atualizarPreco }),
       })
       .where(eq(tabelaCompraItem.id, itemId))
       .run();

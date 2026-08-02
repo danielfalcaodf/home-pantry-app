@@ -66,6 +66,7 @@ export class CompraRepositorioFalso implements CompraRepository {
       comprado: false,
       ordem,
       excluido: item.excluido ?? false,
+      atualizarPreco: null,
     };
     this.itens.push(criado);
     return criado;
