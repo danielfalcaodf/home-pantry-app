@@ -1,0 +1,55 @@
+# Expo / React Native
+.expo/
+.expo-shared/
+dist/
+web-build/
+expo-env.d.ts
+
+# Native projects gerados por prebuild (managed workflow)
+android/
+ios/
+
+# Node
+node_modules/
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+.pnpm-debug.log*
+
+# Env / secrets
+.env
+.env.*.local
+
+# Build / EAS
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+credentials.json
+
+# Testes / cobertura
+coverage/
+
+# Metro
+.metro-health-check*
+
+# Debug
+*.log
+
+# macOS
+.DS_Store
+
+# Editor
+.vscode/
+.idea/
+
+# TypeScript
+*.tsbuildinfo
+
+# SQLite local (dados de desenvolvimento, nunca deve ir para o repo)
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
