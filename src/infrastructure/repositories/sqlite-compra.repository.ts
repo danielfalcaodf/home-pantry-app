@@ -157,6 +157,34 @@ export class SQLiteCompraRepository implements CompraRepository {
     this.db.delete(tabelaCompraItem).where(eq(tabelaCompraItem.id, itemId)).run();
   }
 
+  async cancelar(
+    compraId: string,
+    canceladaEm: number,
+  ): Promise<Result<Compra, 'nao_encontrada' | 'nao_esta_aberta'>> {
+    const atual = this.db
+      .select()
+      .from(tabelaCompra)
+      .where(eq(tabelaCompra.id, compraId))
+      .get() as LinhaCompra | undefined;
+    if (!atual) {
+      return falha('nao_encontrada');
+    }
+    if (atual.status !== 'aberta') {
+      return falha('nao_esta_aberta');
+    }
+    this.db
+      .update(tabelaCompra)
+      .set({ status: 'cancelada', atualizadoEm: canceladaEm, syncStatus: 'pendente' })
+      .where(eq(tabelaCompra.id, compraId))
+      .run();
+    const cancelada = this.db
+      .select()
+      .from(tabelaCompra)
+      .where(eq(tabelaCompra.id, compraId))
+      .get() as LinhaCompra;
+    return sucesso(compraParaDominio(cancelada));
+  }
+
   // Uma única consulta com junção EXTERNA: item avulso tem produto NULL e
   // sumiria com inner join (DATABASE §6.7).
   async listarItens(compraId: string): Promise<ItemComProduto[]> {

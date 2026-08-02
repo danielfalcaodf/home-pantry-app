@@ -83,6 +83,25 @@ export class CompraRepositorioFalso implements CompraRepository {
     this.itens = this.itens.filter((i) => i.id !== itemId);
   }
 
+  async cancelar(
+    compraId: string,
+    canceladaEm: number,
+  ): Promise<Result<Compra, 'nao_encontrada' | 'nao_esta_aberta'>> {
+    const indice = this.compras.findIndex((c) => c.id === compraId);
+    if (indice === -1) {
+      return falha('nao_encontrada');
+    }
+    if (this.compras[indice].status !== 'aberta') {
+      return falha('nao_esta_aberta');
+    }
+    this.compras[indice] = {
+      ...this.compras[indice],
+      status: 'cancelada',
+      atualizadoEm: canceladaEm,
+    };
+    return sucesso(this.compras[indice]);
+  }
+
   async listarItens(compraId: string): Promise<ItemComProduto[]> {
     return this.itens
       .filter((item) => item.compraId === compraId)

@@ -48,6 +48,15 @@ export interface CompraRepository {
   removerItem(itemId: string): Promise<void>;
   listarItens(compraId: string): Promise<ItemComProduto[]>;
   /**
+   * Situação `cancelada` (design "Open Questions"): não repõe nada, apenas
+   * libera `ux_compra_aberta` para uma compra nova. A compra permanece no
+   * histórico, nunca é apagada.
+   */
+  cancelar(
+    compraId: string,
+    canceladaEm: number,
+  ): Promise<Result<Compra, 'nao_encontrada' | 'nao_esta_aberta'>>;
+  /**
    * Aplica os efeitos calculados pelo domínio em UMA transação: reposições,
    * movimentos, atualizações de preço confirmadas e a mudança de status.
    */

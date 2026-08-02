@@ -51,6 +51,49 @@ describe('abertura de compra', () => {
   });
 });
 
+describe('cancelamento de compra', () => {
+  it('cancela uma compra aberta, libera o índice único e mantém no histórico', async () => {
+    const { compras, casaId, usuarioId } = await montar();
+    const aberta = await compras.abrir(casaId, usuarioId, clock.agora());
+    if (!aberta.ok) {
+      throw new Error('setup');
+    }
+    const resultado = await compras.cancelar(aberta.valor.id, clock.agora() + 1);
+    expect(resultado.ok).toBe(true);
+    if (resultado.ok) {
+      expect(resultado.valor.status).toBe('cancelada');
+    }
+    expect(await compras.obterAberta(casaId)).toBeNull();
+    // Uma casa nova pode abrir outra compra imediatamente após o cancelamento.
+    const novaAberta = await compras.abrir(casaId, usuarioId, clock.agora() + 2);
+    expect(novaAberta.ok).toBe(true);
+  });
+
+  it('cancelar uma compra já finalizada falha', async () => {
+    const { compras, casaId, usuarioId } = await montar();
+    const aberta = await compras.abrir(casaId, usuarioId, clock.agora());
+    if (!aberta.ok) {
+      throw new Error('setup');
+    }
+    const efeitosVazios = { reposicoes: [], atualizacoesDePreco: [], totalPago: centavos(0) };
+    await compras.finalizar(aberta.valor.id, efeitosVazios, usuarioId, clock.agora() + 1);
+    const resultado = await compras.cancelar(aberta.valor.id, clock.agora() + 2);
+    expect(resultado.ok).toBe(false);
+    if (!resultado.ok) {
+      expect(resultado.erro).toBe('nao_esta_aberta');
+    }
+  });
+
+  it('cancelar uma compra inexistente falha', async () => {
+    const { compras } = await montar();
+    const resultado = await compras.cancelar('inexistente', clock.agora());
+    expect(resultado.ok).toBe(false);
+    if (!resultado.ok) {
+      expect(resultado.erro).toBe('nao_encontrada');
+    }
+  });
+});
+
 describe('itens da compra', () => {
   it('adiciona, edita, ordena e remove itens, inclusive avulsos', async () => {
     const { compras, casaId, usuarioId, criarProduto } = await montar();
