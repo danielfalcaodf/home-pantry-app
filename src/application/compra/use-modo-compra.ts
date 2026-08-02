@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import { CompraItem } from '../../domain/compra/compra';
+import { divergenciaDePreco } from '../../domain/compra/compra.rules';
 import { Centavos } from '../../domain/shared/dinheiro';
 import { Milesimos } from '../../domain/shared/quantidade';
 import { observadorDoBanco } from '../../composicao/observador';
@@ -8,7 +9,18 @@ import { compraRepository } from '../../composicao/repositorios';
 import { CompraRepository, ItemComProduto } from '../../ports/compra.repository';
 import { ObservadorDeMudancas } from '../../ports/observador-de-mudancas';
 
-export type ItemDaCompra = ItemComProduto;
+// `divergePreco` computado aqui (application), nunca na tela: a
+// apresentação só recebe valores prontos (FRONTEND §12.2). Nunca perguntado
+// para item avulso (4.4), pois avulso não tem produto associado.
+export type ItemDaCompra = ItemComProduto & { divergePreco: boolean };
+
+function comDivergencia(item: ItemComProduto): ItemDaCompra {
+  const divergePreco =
+    item.produto !== null &&
+    item.item.valorPagoUnitario !== null &&
+    divergenciaDePreco(item.item, item.produto);
+  return { ...item, divergePreco };
+}
 
 export type EstadoModoCompra = {
   itens: ItemDaCompra[];
@@ -41,7 +53,7 @@ export function useModoCompra(
       if (!montado()) {
         return;
       }
-      setItens(listaItens);
+      setItens(listaItens.map(comDivergencia));
       setCarregando(false);
     },
     [compras, compraId],

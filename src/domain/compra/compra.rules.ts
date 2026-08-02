@@ -45,8 +45,13 @@ export function efeitoDeReposicao(
 }
 
 // Divergência inclui produto sem preço cadastrado (0): é o caminho para o
-// primeiro preço entrar mediante confirmação.
-export function divergenciaDePreco(item: CompraItem, produto: Produto): boolean {
+// primeiro preço entrar mediante confirmação. Só depende de valorUnitario —
+// aceita o Pick trazido pela junção externa de listarItens, sem exigir o
+// Produto inteiro.
+export function divergenciaDePreco(
+  item: CompraItem,
+  produto: Pick<Produto, 'valorUnitario'>,
+): boolean {
   if (item.valorPagoUnitario === null) {
     return false;
   }

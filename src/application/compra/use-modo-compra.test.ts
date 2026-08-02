@@ -90,6 +90,45 @@ describe('useModoCompra', () => {
     expect(produtos.produtos[0].valorUnitario).toBe(890);
   });
 
+  it('detecta divergência de preço, inclusive quando o produto não tem preço cadastrado', async () => {
+    const produtos = new ProdutoRepositorioFalso([
+      produtoFalso({ id: 'p1', nome: 'Arroz', valorUnitario: centavos(890) }),
+      produtoFalso({ id: 'p2', nome: 'Feijão', valorUnitario: centavos(0) }),
+    ]);
+    const compras = new CompraRepositorioFalso(produtos);
+    const aberta = await compras.abrir('casa-teste', 'usuario-teste', 1000);
+    if (!aberta.ok) {
+      throw new Error('setup');
+    }
+    const item1 = await compras.adicionarItem(aberta.valor.id, {
+      produtoId: 'p1',
+      unidade: 'un',
+      quantidadePlanejada: milesimos(1000),
+    });
+    const item2 = await compras.adicionarItem(aberta.valor.id, {
+      produtoId: 'p2',
+      unidade: 'un',
+      quantidadePlanejada: milesimos(1000),
+    });
+    const avulso = await compras.adicionarItem(aberta.valor.id, {
+      nomeAvulso: 'Pilha AA',
+      unidade: 'un',
+      quantidadePlanejada: milesimos(1000),
+    });
+    await compras.editarItem(item1.id, { valorPagoUnitario: centavos(950) });
+    await compras.editarItem(item2.id, { valorPagoUnitario: centavos(300) });
+    await compras.editarItem(avulso.id, { valorPagoUnitario: centavos(300) });
+
+    const observador = new ObservadorFalso();
+    const { result } = await renderHook(() => useModoCompra(aberta.valor.id, compras, observador));
+    await waitFor(() => expect(result.current.carregando).toBe(false));
+
+    const porId = new Map(result.current.itens.map((i) => [i.item.id, i]));
+    expect(porId.get(item1.id)?.divergePreco).toBe(true);
+    expect(porId.get(item2.id)?.divergePreco).toBe(true); // sem preço cadastrado (D5)
+    expect(porId.get(avulso.id)?.divergePreco).toBe(false); // avulso nunca pergunta (4.4)
+  });
+
   it('retomada: marcações preservadas ao sair e voltar, pois o estado vem sempre do repositório', async () => {
     const { compras, compraId, item, observador } = await montarCompraComItem();
     await compras.editarItem(item.id, { comprado: true, quantidadeComprada: milesimos(2000) });

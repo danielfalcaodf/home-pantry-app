@@ -30,10 +30,10 @@
 
 ## 4. Preço de referência
 
-- [ ] 4.1 Detectar a divergência entre o valor pago e o valor unitário cadastrado, usando a regra de domínio
+- [x] 4.1 Detectar a divergência entre o valor pago e o valor unitário cadastrado, usando a regra de domínio
 - [ ] 4.2 Oferecer a pergunta de atualizar o preço de referência como controle embutido na linha do item, nunca como diálogo modal
-- [ ] 4.3 Oferecer o registro do primeiro preço quando o produto tem valor unitário zero
-- [ ] 4.4 Não perguntar para itens avulsos
+- [x] 4.3 Oferecer o registro do primeiro preço quando o produto tem valor unitário zero
+- [x] 4.4 Não perguntar para itens avulsos
 - [ ] 4.5 Registrar a resposta no item de compra, sem alterar o produto naquele momento
 - [ ] 4.6 Aplicar as atualizações confirmadas somente dentro da transação de fechamento
 - [ ] 4.7 Escrever testes cobrindo confirmação, recusa, ausência de resposta e produto sem preço cadastrado
