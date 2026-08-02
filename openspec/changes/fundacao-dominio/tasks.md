@@ -54,13 +54,13 @@
 
 ## 7. Regras de movimento
 
-- [ ] 7.1 Criar `src/domain/movimento/movimento.rules.ts` com `construirMovimento(tipo, variacao, ...)` validando coerência de sinal e rejeitando variação zero
-- [ ] 7.2 Implementar `aplicarMovimento(saldoAtual, movimento)` retornando o saldo resultante e a variação efetivamente aplicada, fixando em zero quando cruzaria o zero
-- [ ] 7.3 Fazer `aplicarMovimento` sinalizar "nada a gravar" quando a baixa incide sobre saldo já zerado
-- [ ] 7.4 Implementar `movimentoInverso(movimento)` produzindo a variação de sinal oposto, preservando o tipo `ajuste` quando aplicável
-- [ ] 7.5 Escrever testes de coerência de sinal cobrindo baixa negativa, reposição positiva, variação zero rejeitada e sinal incoerente rejeitado
-- [ ] 7.6 Escrever teste da baixa que cruzaria zero: saldo 500 com baixa de 2000 resulta em saldo 0 e variação aplicada de -500
-- [ ] 7.7 Escrever teste de desfazer confirmando que o movimento original é preservado e que o inverso é um novo movimento
+- [x] 7.1 Criar `src/domain/movimento/movimento.rules.ts` com `construirMovimento(tipo, variacao, ...)` validando coerência de sinal e rejeitando variação zero
+- [x] 7.2 Implementar `aplicarMovimento(saldoAtual, movimento)` retornando o saldo resultante e a variação efetivamente aplicada, fixando em zero quando cruzaria o zero
+- [x] 7.3 Fazer `aplicarMovimento` sinalizar "nada a gravar" quando a baixa incide sobre saldo já zerado
+- [x] 7.4 Implementar `movimentoInverso(movimento)` produzindo a variação de sinal oposto, preservando o tipo `ajuste` quando aplicável
+- [x] 7.5 Escrever testes de coerência de sinal cobrindo baixa negativa, reposição positiva, variação zero rejeitada e sinal incoerente rejeitado
+- [x] 7.6 Escrever teste da baixa que cruzaria zero: saldo 500 com baixa de 2000 resulta em saldo 0 e variação aplicada de -500
+- [x] 7.7 Escrever teste de desfazer confirmando que o movimento original é preservado e que o inverso é um novo movimento
 
 ## 8. Regras de compra
 
