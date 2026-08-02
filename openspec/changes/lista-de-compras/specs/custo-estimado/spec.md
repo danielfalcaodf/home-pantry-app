@@ -1,0 +1,72 @@
+## ADDED Requirements
+
+### Requirement: Custo estimado por item
+
+Cada item da lista SHALL exibir seu custo estimado, calculado como a quantidade a comprar multiplicada pelo valor unitário, usando a conversão única de milésimos por centavos do domínio.
+
+#### Scenario: Custo de item com preço
+
+- **WHEN** um item tem quantidade a comprar de 2 unidades e valor unitário de R$ 8,90
+- **THEN** seu custo estimado exibido é R$ 17,80
+
+#### Scenario: Custo usa a quantidade já arredondada
+
+- **WHEN** um item em pacotes tem quantidade a comprar arredondada para 1 pacote
+- **THEN** o custo é calculado sobre 1 pacote, e não sobre a diferença bruta
+
+#### Scenario: Números em família monoespaçada
+
+- **WHEN** um custo é exibido
+- **THEN** ele usa o papel tipográfico de dado, alinhado à direita
+
+### Requirement: Itens sem preço não corrompem o total
+
+Itens sem valor unitário cadastrado SHALL entrar na lista com custo zero e SHALL ser marcados visualmente como sem preço. Eles NÃO devem impedir nem distorcer o total.
+
+#### Scenario: Marcação de item sem preço
+
+- **WHEN** um item tem valor unitário zero
+- **THEN** ele exibe a indicação de sem preço no lugar do valor
+
+#### Scenario: Total permanece calculável
+
+- **WHEN** a lista contém itens com e sem preço
+- **THEN** o total é a soma apenas dos custos conhecidos, e é exibido normalmente
+
+#### Scenario: Contagem de itens sem preço
+
+- **WHEN** três itens da lista estão sem preço
+- **THEN** o rodapé informa quantos itens estão sem preço cadastrado
+
+#### Scenario: Lista inteiramente sem preço
+
+- **WHEN** nenhum item da lista tem preço
+- **THEN** o total exibido é zero e a contagem de itens sem preço iguala o número de itens
+
+### Requirement: Rodapé com totais
+
+A lista SHALL exibir, em rodapé, a contagem de itens e o total estimado da compra, em família monoespaçada.
+
+#### Scenario: Contagem e total exibidos
+
+- **WHEN** a lista tem quinze itens somando R$ 189,40
+- **THEN** o rodapé exibe a contagem de itens e o total estimado
+
+#### Scenario: Total inclui avulsos
+
+- **WHEN** a lista contém itens em falta e itens avulsos com preço
+- **THEN** o total considera ambos
+
+#### Scenario: Total atualiza sem contagem progressiva
+
+- **WHEN** um item é removido da lista
+- **THEN** o total muda diretamente para o novo valor, sem animação de contagem
+
+### Requirement: Distinção entre valor da lista e valor do estoque
+
+O valor da lista de compras SHALL ser rotulado de forma inequívoca como estimativa do que se vai gastar, distinto do valor do que já está em casa.
+
+#### Scenario: Rótulo inequívoco
+
+- **WHEN** o total da lista é exibido
+- **THEN** seu rótulo o identifica como valor estimado da compra, sem ambiguidade com o valor do estoque

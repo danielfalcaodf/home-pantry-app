@@ -11,6 +11,22 @@
 
 ---
 
+Template e design system:
+
+````
+Use the claude_design MCP (https://api.anthropic.com/v1/design/mcp, auth via /design-login) to import this project:
+https://claude.ai/design/p/25a9a184-31d3-4d7f-96e9-dfa939c2a553?file=Repor.dc.html
+
+Focus on these files (the whole project is readable):
+- `Repor.dc.html`
+
+Also read these files the selection imports:
+- `android-frame.jsx`
+- `support.js`
+````
+lembra-se que isso so template para ser seguido, precisa se adaptado para arquitetura do projeto
+
+
 ## 1. O briefing, fechado
 
 **Sujeito:** a despensa de uma casa. Não é um ERP, não é um app de finanças, não é um to-do list. É o armário da cozinha.
