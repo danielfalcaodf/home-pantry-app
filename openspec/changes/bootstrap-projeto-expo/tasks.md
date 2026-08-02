@@ -50,5 +50,5 @@
 ## 8. Documentação
 
 - [x] 8.1 Atualizar a seção "Comandos" do `CLAUDE.md` com os comandos reais de `dev`, `test`, `lint`, `typecheck` e verificação de fronteiras, removendo o aviso de "a confirmar após o scaffold"
-- [ ] 8.2 Corrigir `ARQUITETURA-app-estoque-de-casa.md` §3 de "geração de UUID v4" para UUID v7, com nota apontando para DATABASE §4.2
+- [x] 8.2 Corrigir `ARQUITETURA-app-estoque-de-casa.md` §3 de "geração de UUID v4" para UUID v7, com nota apontando para DATABASE §4.2
 - [ ] 8.3 Atualizar o `README.md` com como rodar o projeto pelo development build, deixando explícito que Expo Go não é suportado

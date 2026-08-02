@@ -166,7 +166,7 @@ src/
 │
 └── shared/
     ├── result.ts                 # Result<T, E> em vez de throw no domínio
-    └── id.ts                     # geração de UUID v4
+    └── id.ts                     # geração de UUID v7 (ver DATABASE §4.2 — v4 fragmentaria o índice do movimento append-only)
 ```
 
 **Por que feature-based dentro de cada camada e não pastas por tipo (`components/`, `services/`, `models/`):** com IA gerando código, o custo maior é achar e alterar coisa relacionada. Agrupar por conceito de negócio (`produto`, `compra`, `movimento`) mantém a mudança local — mexer em preço não deveria abrir 5 pastas.
