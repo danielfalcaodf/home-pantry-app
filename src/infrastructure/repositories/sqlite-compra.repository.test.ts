@@ -307,3 +307,73 @@ describe('finalização', () => {
     expect(itens.some((i) => i.item.nomeAvulso === 'Pilha AA')).toBe(true);
   });
 });
+
+describe('avulsos não tocam o estoque', () => {
+  it('adicionar avulso não cria produto na despensa nem grava movimento', async () => {
+    const { compras, produtos, movimentos, casaId, usuarioId } = await montar();
+    const compra = await compras.abrir(casaId, usuarioId, clock.agora());
+    if (!compra.ok) {
+      throw new Error('setup');
+    }
+    await compras.adicionarItem(compra.valor.id, {
+      nomeAvulso: 'Pilha AA',
+      unidade: 'un',
+      quantidadePlanejada: milesimos(2000),
+      valorEstimadoUnit: centavos(900),
+    });
+
+    expect(await produtos.listarDespensa(casaId)).toHaveLength(0);
+    expect(await movimentos.historicoPorCasa(casaId, 10)).toHaveLength(0);
+  });
+});
+
+describe('unicidade da compra aberta sob concorrência', () => {
+  it('duas aberturas em sequência rápida para a mesma casa: só a primeira vence', async () => {
+    const { compras, casaId, usuarioId } = await montar();
+    const resultados = await Promise.all([
+      compras.abrir(casaId, usuarioId, clock.agora()),
+      compras.abrir(casaId, usuarioId, clock.agora()),
+    ]);
+    const sucessos = resultados.filter((r) => r.ok);
+    const falhas = resultados.filter((r) => !r.ok);
+    expect(sucessos).toHaveLength(1);
+    expect(falhas).toHaveLength(1);
+  });
+});
+
+describe('exclusão de faltante da lista', () => {
+  it('marcação de exclusão sobrevive à reabertura e morre com o fechamento da compra', async () => {
+    const { compras, produtos, movimentos, casaId, usuarioId, criarProduto } = await montar();
+    const arroz = await criarProduto('Arroz', 0);
+
+    const compra1 = await compras.abrir(casaId, usuarioId, clock.agora());
+    if (!compra1.ok) {
+      throw new Error('setup');
+    }
+    const exclusao = await compras.adicionarItem(compra1.valor.id, {
+      produtoId: arroz.id,
+      unidade: 'un',
+      quantidadePlanejada: milesimos(1000),
+      excluido: true,
+    });
+
+    // "reabertura da tela": relistar os itens da mesma compra aberta.
+    let itens = await compras.listarItens(compra1.valor.id);
+    expect(itens.find((i) => i.item.id === exclusao.id)?.item.excluido).toBe(true);
+
+    // Fecha a compra sem marcar nada como comprado.
+    const efeitos = efeitosDaFinalizacao([], [arroz], new Set());
+    if (!efeitos.ok) {
+      throw new Error('setup');
+    }
+    const fechada = await compras.finalizar(compra1.valor.id, efeitos.valor, usuarioId, clock.agora() + 1);
+    expect(fechada.ok).toBe(true);
+
+    // A exclusão morria com a compra: nenhuma compra aberta a contém mais.
+    expect(await compras.obterAberta(casaId)).toBeNull();
+    expect(await produtos.listarFaltantes(casaId)).toEqual(
+      expect.arrayContaining([expect.objectContaining({ id: arroz.id })]),
+    );
+    expect(await movimentos.historicoPorCasa(casaId, 10)).toHaveLength(0);
+  });
+});

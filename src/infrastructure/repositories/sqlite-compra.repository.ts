@@ -130,8 +130,13 @@ export class SQLiteCompraRepository implements CompraRepository {
     this.db
       .update(tabelaCompraItem)
       .set({
+        ...(dados.nomeAvulso !== undefined && { nomeAvulso: dados.nomeAvulso }),
+        ...(dados.unidade !== undefined && { unidade: dados.unidade }),
         ...(dados.quantidadePlanejada !== undefined && {
           quantidadePlanejada: dados.quantidadePlanejada,
+        }),
+        ...(dados.valorEstimadoUnit !== undefined && {
+          valorEstimadoUnit: dados.valorEstimadoUnit,
         }),
         ...(dados.quantidadeComprada !== undefined && {
           quantidadeComprada: dados.quantidadeComprada,

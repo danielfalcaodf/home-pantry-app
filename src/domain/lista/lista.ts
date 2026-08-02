@@ -33,3 +33,13 @@ export type TotalDaListaDeCompras = {
   contagemItens: number;
   contagemSemPreco: number;
 };
+
+// Forma dos valores crus vindos do formulário (SheetAvulso), antes da
+// conversão para milésimos/centavos — a conversão é responsabilidade dos
+// hooks de aplicação, nunca do componente.
+export type DadosDoAvulso = {
+  nome: string;
+  unidade: Unidade;
+  quantidade: number;
+  preco: number | null;
+};

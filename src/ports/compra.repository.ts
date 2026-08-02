@@ -20,7 +20,14 @@ export type NovoItemCompra = {
 export type EdicaoItemCompra = Partial<
   Pick<
     CompraItem,
-    'quantidadePlanejada' | 'quantidadeComprada' | 'valorPagoUnitario' | 'comprado' | 'ordem'
+    | 'nomeAvulso'
+    | 'unidade'
+    | 'quantidadePlanejada'
+    | 'quantidadeComprada'
+    | 'valorEstimadoUnit'
+    | 'valorPagoUnitario'
+    | 'comprado'
+    | 'ordem'
   >
 >;
 

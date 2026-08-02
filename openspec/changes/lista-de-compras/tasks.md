@@ -29,25 +29,25 @@
 
 ## 4. Itens avulsos
 
-- [ ] 4.1 Criar `use-adicionar-avulso.ts` criando a compra aberta sob demanda quando ela ainda não existir
-- [ ] 4.2 Reusar a compra aberta existente em adições subsequentes, sem criar outra
-- [ ] 4.3 Implementar `SheetAvulso` com nome, unidade, quantidade e preço opcional, exigindo o nome
-- [ ] 4.4 Assumir quantidade 1 como padrão editável ao adicionar
-- [ ] 4.5 Identificar visualmente os itens avulsos na lista
-- [ ] 4.6 Implementar a edição de nome, quantidade, unidade e preço do avulso, com recálculo do total
-- [ ] 4.7 Implementar a remoção do avulso, mantendo a compra aberta quando ainda houver itens em falta
-- [ ] 4.8 Escrever teste confirmando que adicionar avulso não cria nenhum produto na despensa
-- [ ] 4.9 Escrever teste confirmando que nenhuma operação sobre avulso grava movimento de estoque
-- [ ] 4.10 Escrever teste de unicidade da compra aberta ao adicionar dois avulsos em sequência rápida
+- [x] 4.1 Criar `use-adicionar-avulso.ts` criando a compra aberta sob demanda quando ela ainda não existir
+- [x] 4.2 Reusar a compra aberta existente em adições subsequentes, sem criar outra
+- [x] 4.3 Implementar `SheetAvulso` com nome, unidade, quantidade e preço opcional, exigindo o nome
+- [x] 4.4 Assumir quantidade 1 como padrão editável ao adicionar
+- [x] 4.5 Identificar visualmente os itens avulsos na lista
+- [x] 4.6 Implementar a edição de nome, quantidade, unidade e preço do avulso, com recálculo do total
+- [x] 4.7 Implementar a remoção do avulso, mantendo a compra aberta quando ainda houver itens em falta
+- [x] 4.8 Escrever teste confirmando que adicionar avulso não cria nenhum produto na despensa
+- [x] 4.9 Escrever teste confirmando que nenhuma operação sobre avulso grava movimento de estoque
+- [x] 4.10 Escrever teste de unicidade da compra aberta ao adicionar dois avulsos em sequência rápida
 
 ## 5. Remover item da lista
 
-- [ ] 5.1 Criar `use-remover-item-lista.ts` registrando a exclusão do item na compra aberta, criando-a sob demanda
-- [ ] 5.2 Confirmar que a remoção não altera a quantidade em estoque nem o cadastro do produto
-- [ ] 5.3 Implementar a ação de desfazer a remoção na mesma sessão
-- [ ] 5.4 Escrever teste de reabertura da tela confirmando que o item removido continua fora da lista
-- [ ] 5.5 Escrever teste de ciclo completo: remover item, fechar a compra, confirmar que ele volta na próxima lista
-- [ ] 5.6 Se a marcação de exclusão exigir coluna nova, criá-la em migration forward-only nova, sem editar migration publicada
+- [x] 5.1 Criar `use-remover-item-lista.ts` registrando a exclusão do item na compra aberta, criando-a sob demanda
+- [x] 5.2 Confirmar que a remoção não altera a quantidade em estoque nem o cadastro do produto
+- [x] 5.3 Implementar a ação de desfazer a remoção na mesma sessão
+- [x] 5.4 Escrever teste de reabertura da tela confirmando que o item removido continua fora da lista
+- [x] 5.5 Escrever teste de ciclo completo: remover item, fechar a compra, confirmar que ele volta na próxima lista
+- [x] 5.6 Se a marcação de exclusão exigir coluna nova, criá-la em migration forward-only nova, sem editar migration publicada
 
 ## 6. Exportação em texto
 
