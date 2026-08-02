@@ -1,11 +1,11 @@
 ## 1. Hooks de caso de uso
 
-- [ ] 1.1 Criar `src/application/estoque/use-produtos.ts` com consulta reativa da despensa, recebendo o repositório por parâmetro com padrão vindo do ponto de composição
-- [ ] 1.2 Enriquecer cada produto com estado, fração e rótulo vindos das regras de domínio, antes de entregar à apresentação
-- [ ] 1.3 Criar `use-cadastrar-produto.ts` chamando a validação de domínio e retornando `Result`
-- [ ] 1.4 Criar `use-editar-produto.ts` e `use-remover-produto.ts`
-- [ ] 1.5 Criar `use-categorias.ts` fornecendo as categorias existentes para o autocomplete
-- [ ] 1.6 Escrever testes dos hooks com repositório falso, confirmando que nenhum importa implementação concreta
+- [x] 1.1 Criar `src/application/estoque/use-produtos.ts` com consulta reativa da despensa, recebendo o repositório por parâmetro com padrão vindo do ponto de composição
+- [x] 1.2 Enriquecer cada produto com estado, fração e rótulo vindos das regras de domínio, antes de entregar à apresentação
+- [x] 1.3 Criar `use-cadastrar-produto.ts` chamando a validação de domínio e retornando `Result`
+- [x] 1.4 Criar `use-editar-produto.ts` e `use-remover-produto.ts`
+- [x] 1.5 Criar `use-categorias.ts` fornecendo as categorias existentes para o autocomplete
+- [x] 1.6 Escrever testes dos hooks com repositório falso, confirmando que nenhum importa implementação concreta
 
 ## 2. Medidor de linha d'água
 
