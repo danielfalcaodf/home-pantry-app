@@ -3,6 +3,7 @@ import {
   check,
   index,
   integer,
+  primaryKey,
   sqliteTable,
   text,
   uniqueIndex,
@@ -30,6 +31,21 @@ export const usuario = sqliteTable(
     atualizadoEm: integer('atualizado_em').notNull(),
   },
   (t) => [check('ck_usuario_perfil', sql`${t.perfil} IN ('admin','membro')`)],
+);
+
+// Preferências por casa em chave-valor: uma linha por chave, sem coluna nova
+// a cada preferência futura.
+export const configuracao = sqliteTable(
+  'configuracao',
+  {
+    casaId: text('casa_id')
+      .notNull()
+      .references(() => casa.id, { onDelete: 'cascade' }),
+    chave: text('chave').notNull(),
+    valor: text('valor').notNull(),
+    atualizadoEm: integer('atualizado_em').notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.casaId, t.chave] })],
 );
 
 export const produto = sqliteTable(

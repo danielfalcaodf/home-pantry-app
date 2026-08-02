@@ -25,11 +25,11 @@
 
 ## 4. Persistência da preferência
 
-- [ ] 4.1 Adicionar a tabela de configuração chave-valor por casa ao schema, com migration nova, sem editar a migration inicial
-- [ ] 4.2 Gerar a migration `0001_configuracao` e revisar o SQL produzido
-- [ ] 4.3 Implementar o acessador tipado de configuração no repositório, com valor padrão declarado junto de cada chave
-- [ ] 4.4 Escrever teste de leitura de preferência ausente retornando o padrão sem erro
-- [ ] 4.5 Escrever teste de gravação repetida confirmando substituição sem linha duplicada
+- [x] 4.1 Adicionar a tabela de configuração chave-valor por casa ao schema, com migration nova, sem editar a migration inicial
+- [x] 4.2 Gerar a migration `0001_configuracao` e revisar o SQL produzido
+- [x] 4.3 Implementar o acessador tipado de configuração no repositório, com valor padrão declarado junto de cada chave
+- [x] 4.4 Escrever teste de leitura de preferência ausente retornando o padrão sem erro
+- [x] 4.5 Escrever teste de gravação repetida confirmando substituição sem linha duplicada
 
 ## 5. Provedor de tema
 

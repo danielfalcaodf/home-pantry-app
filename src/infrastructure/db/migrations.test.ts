@@ -4,6 +4,7 @@ const TABELAS_ESPERADAS = [
   'casa',
   'compra',
   'compra_item',
+  'configuracao', // 0001_configuracao
   'movimento_estoque',
   'produto',
   'usuario',
@@ -19,8 +20,8 @@ const INDICES_ESPERADOS = [
   'ux_produto_casa_nome',
 ];
 
-describe('migration 0000_init sobre banco vazio', () => {
-  it('cria as seis tabelas declaradas', () => {
+describe('migrations aplicadas em sequência sobre banco vazio', () => {
+  it('cria todas as tabelas declaradas', () => {
     const { sqlite } = criarDbDeTeste();
     const tabelas = sqlite
       .prepare(

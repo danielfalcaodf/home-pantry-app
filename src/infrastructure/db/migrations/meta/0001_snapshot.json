@@ -1,0 +1,853 @@
+{
+  "version": "6",
+  "dialect": "sqlite",
+  "id": "4a9685bc-845f-4a13-b262-7ff1a1548b04",
+  "prevId": "b6df27e9-53e9-4b5d-8b09-62a57f1cc21b",
+  "tables": {
+    "casa": {
+      "name": "casa",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "nome": {
+          "name": "nome",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "criada_em": {
+          "name": "criada_em",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "atualizado_em": {
+          "name": "atualizado_em",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "compra": {
+      "name": "compra",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "casa_id": {
+          "name": "casa_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "usuario_id": {
+          "name": "usuario_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'aberta'"
+        },
+        "valor_total_pago": {
+          "name": "valor_total_pago",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "criada_em": {
+          "name": "criada_em",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "finalizada_em": {
+          "name": "finalizada_em",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "atualizado_em": {
+          "name": "atualizado_em",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "sync_status": {
+          "name": "sync_status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'local'"
+        }
+      },
+      "indexes": {
+        "ux_compra_aberta": {
+          "name": "ux_compra_aberta",
+          "columns": [
+            "casa_id"
+          ],
+          "isUnique": true,
+          "where": "\"compra\".\"status\" = 'aberta'"
+        }
+      },
+      "foreignKeys": {
+        "compra_casa_id_casa_id_fk": {
+          "name": "compra_casa_id_casa_id_fk",
+          "tableFrom": "compra",
+          "tableTo": "casa",
+          "columnsFrom": [
+            "casa_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "compra_usuario_id_usuario_id_fk": {
+          "name": "compra_usuario_id_usuario_id_fk",
+          "tableFrom": "compra",
+          "tableTo": "usuario",
+          "columnsFrom": [
+            "usuario_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "ck_compra_status": {
+          "name": "ck_compra_status",
+          "value": "\"compra\".\"status\" IN ('aberta','finalizada','cancelada')"
+        },
+        "ck_compra_total": {
+          "name": "ck_compra_total",
+          "value": "\"compra\".\"valor_total_pago\" IS NULL OR \"compra\".\"valor_total_pago\" >= 0"
+        },
+        "ck_compra_finalizada_data": {
+          "name": "ck_compra_finalizada_data",
+          "value": "\"compra\".\"status\" <> 'finalizada' OR \"compra\".\"finalizada_em\" IS NOT NULL"
+        }
+      }
+    },
+    "compra_item": {
+      "name": "compra_item",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "compra_id": {
+          "name": "compra_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "produto_id": {
+          "name": "produto_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "nome_avulso": {
+          "name": "nome_avulso",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "unidade": {
+          "name": "unidade",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "quantidade_planejada": {
+          "name": "quantidade_planejada",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "quantidade_comprada": {
+          "name": "quantidade_comprada",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "valor_estimado_unit": {
+          "name": "valor_estimado_unit",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "valor_pago_unitario": {
+          "name": "valor_pago_unitario",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "comprado": {
+          "name": "comprado",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
+        },
+        "ordem": {
+          "name": "ordem",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        }
+      },
+      "indexes": {
+        "idx_compra_item_compra": {
+          "name": "idx_compra_item_compra",
+          "columns": [
+            "compra_id",
+            "ordem"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "compra_item_compra_id_compra_id_fk": {
+          "name": "compra_item_compra_id_compra_id_fk",
+          "tableFrom": "compra_item",
+          "tableTo": "compra",
+          "columnsFrom": [
+            "compra_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "compra_item_produto_id_produto_id_fk": {
+          "name": "compra_item_produto_id_produto_id_fk",
+          "tableFrom": "compra_item",
+          "tableTo": "produto",
+          "columnsFrom": [
+            "produto_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "ck_compra_item_qtd_planejada": {
+          "name": "ck_compra_item_qtd_planejada",
+          "value": "\"compra_item\".\"quantidade_planejada\" > 0"
+        },
+        "ck_compra_item_qtd_comprada": {
+          "name": "ck_compra_item_qtd_comprada",
+          "value": "\"compra_item\".\"quantidade_comprada\" IS NULL OR \"compra_item\".\"quantidade_comprada\" >= 0"
+        },
+        "ck_compra_item_valor_pago": {
+          "name": "ck_compra_item_valor_pago",
+          "value": "\"compra_item\".\"valor_pago_unitario\" IS NULL OR \"compra_item\".\"valor_pago_unitario\" >= 0"
+        },
+        "ck_compra_item_comprado": {
+          "name": "ck_compra_item_comprado",
+          "value": "\"compra_item\".\"comprado\" IN (0,1)"
+        },
+        "ck_compra_item_origem": {
+          "name": "ck_compra_item_origem",
+          "value": "\"compra_item\".\"produto_id\" IS NOT NULL OR (\"compra_item\".\"nome_avulso\" IS NOT NULL AND length(trim(\"compra_item\".\"nome_avulso\")) > 0)"
+        },
+        "ck_compra_item_comprado_qtd": {
+          "name": "ck_compra_item_comprado_qtd",
+          "value": "\"compra_item\".\"comprado\" = 0 OR \"compra_item\".\"quantidade_comprada\" IS NOT NULL"
+        }
+      }
+    },
+    "configuracao": {
+      "name": "configuracao",
+      "columns": {
+        "casa_id": {
+          "name": "casa_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "chave": {
+          "name": "chave",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "valor": {
+          "name": "valor",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "atualizado_em": {
+          "name": "atualizado_em",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "configuracao_casa_id_casa_id_fk": {
+          "name": "configuracao_casa_id_casa_id_fk",
+          "tableFrom": "configuracao",
+          "tableTo": "casa",
+          "columnsFrom": [
+            "casa_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "configuracao_casa_id_chave_pk": {
+          "columns": [
+            "casa_id",
+            "chave"
+          ],
+          "name": "configuracao_casa_id_chave_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "movimento_estoque": {
+      "name": "movimento_estoque",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "casa_id": {
+          "name": "casa_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "produto_id": {
+          "name": "produto_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "usuario_id": {
+          "name": "usuario_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "compra_id": {
+          "name": "compra_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "tipo": {
+          "name": "tipo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "quantidade_delta": {
+          "name": "quantidade_delta",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "quantidade_resultante": {
+          "name": "quantidade_resultante",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "motivo": {
+          "name": "motivo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "criado_em": {
+          "name": "criado_em",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "sync_status": {
+          "name": "sync_status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'local'"
+        }
+      },
+      "indexes": {
+        "idx_movimento_produto_data": {
+          "name": "idx_movimento_produto_data",
+          "columns": [
+            "produto_id",
+            "\"criado_em\" DESC"
+          ],
+          "isUnique": false
+        },
+        "idx_movimento_casa_data": {
+          "name": "idx_movimento_casa_data",
+          "columns": [
+            "casa_id",
+            "\"criado_em\" DESC"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "movimento_estoque_casa_id_casa_id_fk": {
+          "name": "movimento_estoque_casa_id_casa_id_fk",
+          "tableFrom": "movimento_estoque",
+          "tableTo": "casa",
+          "columnsFrom": [
+            "casa_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "movimento_estoque_produto_id_produto_id_fk": {
+          "name": "movimento_estoque_produto_id_produto_id_fk",
+          "tableFrom": "movimento_estoque",
+          "tableTo": "produto",
+          "columnsFrom": [
+            "produto_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "movimento_estoque_usuario_id_usuario_id_fk": {
+          "name": "movimento_estoque_usuario_id_usuario_id_fk",
+          "tableFrom": "movimento_estoque",
+          "tableTo": "usuario",
+          "columnsFrom": [
+            "usuario_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "movimento_estoque_compra_id_compra_id_fk": {
+          "name": "movimento_estoque_compra_id_compra_id_fk",
+          "tableFrom": "movimento_estoque",
+          "tableTo": "compra",
+          "columnsFrom": [
+            "compra_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "ck_movimento_delta_nao_zero": {
+          "name": "ck_movimento_delta_nao_zero",
+          "value": "\"movimento_estoque\".\"quantidade_delta\" <> 0"
+        },
+        "ck_movimento_resultante": {
+          "name": "ck_movimento_resultante",
+          "value": "\"movimento_estoque\".\"quantidade_resultante\" >= 0"
+        },
+        "ck_movimento_delta_sinal": {
+          "name": "ck_movimento_delta_sinal",
+          "value": "(\"movimento_estoque\".\"tipo\" = 'baixa' AND \"movimento_estoque\".\"quantidade_delta\" < 0) OR (\"movimento_estoque\".\"tipo\" = 'reposicao' AND \"movimento_estoque\".\"quantidade_delta\" > 0) OR (\"movimento_estoque\".\"tipo\" = 'ajuste')"
+        }
+      }
+    },
+    "produto": {
+      "name": "produto",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "casa_id": {
+          "name": "casa_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "nome": {
+          "name": "nome",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "categoria": {
+          "name": "categoria",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "unidade": {
+          "name": "unidade",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "quantidade_atual": {
+          "name": "quantidade_atual",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "quantidade_necessaria": {
+          "name": "quantidade_necessaria",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "valor_unitario": {
+          "name": "valor_unitario",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "marca_preferida": {
+          "name": "marca_preferida",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "observacao": {
+          "name": "observacao",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "ativo": {
+          "name": "ativo",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": true
+        },
+        "criado_em": {
+          "name": "criado_em",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "atualizado_em": {
+          "name": "atualizado_em",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "deletado_em": {
+          "name": "deletado_em",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "sync_status": {
+          "name": "sync_status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'local'"
+        }
+      },
+      "indexes": {
+        "ux_produto_casa_nome": {
+          "name": "ux_produto_casa_nome",
+          "columns": [
+            "casa_id",
+            "\"nome\" COLLATE NOCASE"
+          ],
+          "isUnique": true,
+          "where": "\"produto\".\"deletado_em\" IS NULL"
+        },
+        "idx_produto_em_falta": {
+          "name": "idx_produto_em_falta",
+          "columns": [
+            "casa_id",
+            "categoria"
+          ],
+          "isUnique": false,
+          "where": "\"produto\".\"ativo\" = 1 AND \"produto\".\"deletado_em\" IS NULL AND \"produto\".\"quantidade_atual\" < \"produto\".\"quantidade_necessaria\""
+        },
+        "idx_produto_categoria": {
+          "name": "idx_produto_categoria",
+          "columns": [
+            "casa_id",
+            "\"categoria\" COLLATE NOCASE"
+          ],
+          "isUnique": false,
+          "where": "\"produto\".\"deletado_em\" IS NULL"
+        }
+      },
+      "foreignKeys": {
+        "produto_casa_id_casa_id_fk": {
+          "name": "produto_casa_id_casa_id_fk",
+          "tableFrom": "produto",
+          "tableTo": "casa",
+          "columnsFrom": [
+            "casa_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "ck_produto_nome": {
+          "name": "ck_produto_nome",
+          "value": "length(trim(\"produto\".\"nome\")) > 0"
+        },
+        "ck_produto_unidade": {
+          "name": "ck_produto_unidade",
+          "value": "\"produto\".\"unidade\" IN ('un','kg','g','L','ml','pacote','caixa')"
+        },
+        "ck_produto_qtd_atual": {
+          "name": "ck_produto_qtd_atual",
+          "value": "\"produto\".\"quantidade_atual\" >= 0"
+        },
+        "ck_produto_qtd_nec": {
+          "name": "ck_produto_qtd_nec",
+          "value": "\"produto\".\"quantidade_necessaria\" > 0"
+        },
+        "ck_produto_valor": {
+          "name": "ck_produto_valor",
+          "value": "\"produto\".\"valor_unitario\" >= 0"
+        },
+        "ck_produto_ativo": {
+          "name": "ck_produto_ativo",
+          "value": "\"produto\".\"ativo\" IN (0,1)"
+        },
+        "ck_produto_sync": {
+          "name": "ck_produto_sync",
+          "value": "\"produto\".\"sync_status\" IN ('local','pendente','sincronizado')"
+        }
+      }
+    },
+    "usuario": {
+      "name": "usuario",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "casa_id": {
+          "name": "casa_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "nome": {
+          "name": "nome",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "perfil": {
+          "name": "perfil",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'admin'"
+        },
+        "criado_em": {
+          "name": "criado_em",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "atualizado_em": {
+          "name": "atualizado_em",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "usuario_casa_id_casa_id_fk": {
+          "name": "usuario_casa_id_casa_id_fk",
+          "tableFrom": "usuario",
+          "tableTo": "casa",
+          "columnsFrom": [
+            "casa_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "ck_usuario_perfil": {
+          "name": "ck_usuario_perfil",
+          "value": "\"usuario\".\"perfil\" IN ('admin','membro')"
+        }
+      }
+    }
+  },
+  "views": {},
+  "enums": {},
+  "_meta": {
+    "schemas": {},
+    "tables": {},
+    "columns": {}
+  },
+  "internal": {
+    "indexes": {
+      "idx_movimento_produto_data": {
+        "columns": {
+          "\"criado_em\" DESC": {
+            "isExpression": true
+          }
+        }
+      },
+      "idx_movimento_casa_data": {
+        "columns": {
+          "\"criado_em\" DESC": {
+            "isExpression": true
+          }
+        }
+      },
+      "ux_produto_casa_nome": {
+        "columns": {
+          "\"nome\" COLLATE NOCASE": {
+            "isExpression": true
+          }
+        }
+      },
+      "idx_produto_categoria": {
+        "columns": {
+          "\"categoria\" COLLATE NOCASE": {
+            "isExpression": true
+          }
+        }
+      }
+    }
+  }
+}
