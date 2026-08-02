@@ -21,7 +21,7 @@ Para implementar uma delas: `/opsx:apply <nome>`. Para arquivar após concluir: 
 |---|---|---|---|---|
 | 1 | `bootstrap-projeto-expo` | ✅ | Projeto Expo + Expo Router + development build EAS + camadas + lint de fronteira + `Result` + UUID v7 | Não existe `package.json`. Bloqueia tudo. Obs.: tasks 4.3/4.4 (primeiro build EAS no aparelho) pendentes de `eas login` manual — configuração pronta. |
 | 2 | `fundacao-dominio` | ✅ | `src/domain/` completo com testes ≥ 90%: milésimos, centavos, estado do item, quantidade a comprar, movimento, compra | Regras corretas antes de qualquer tela. DATABASE §12: os helpers de unidade vêm **antes de qualquer query**. |
-| 3 | `persistencia-sqlite` | ⬜ | Cliente com PRAGMAs, schema Drizzle, migration `0000_init`, ports, repositórios, transação de baixa e de compra, seed | Fronteira de dados estabelecida. A partir daqui existem dados reais no aparelho. |
+| 3 | `persistencia-sqlite` | ✅ | Cliente com PRAGMAs, schema Drizzle, migration `0000_init`, ports, repositórios, transação de baixa e de compra, seed | Fronteira de dados estabelecida. A partir daqui existem dados reais no aparelho. |
 | 4 | `design-system-tema` | ⬜ | Tokens Despensa/Porcelana, escala tipográfica, 3 fontes, `ThemeProvider`, componentes-base, migration `0001_configuracao` | O layout sem cards se sustenta pelos tokens. Construí-los depois das telas garante deriva. |
 
 ### Fase 1 — O ciclo do produto
