@@ -13,6 +13,7 @@ export function itemDeFaltante(faltante: FaltanteBruto): ItemDaLista {
     categoria: faltante.categoria,
     unidade: faltante.unidade,
     quantidadeAComprar: quantidadeAComprar(faltante),
+    valorUnitario: faltante.valorUnitario,
     custo,
     semPreco,
   };

@@ -9,6 +9,10 @@ export type ItemListaProduto = {
   categoria: string | null;
   unidade: Unidade;
   quantidadeAComprar: Milesimos;
+  /** Preço por unidade, como cadastrado no produto — carregado para a
+   *  materialização da compra (change modo-compra-e-fechamento, design D2),
+   *  que não pode recalcular a partir do custo total. */
+  valorUnitario: Centavos;
   custo: Centavos;
   semPreco: boolean;
 };

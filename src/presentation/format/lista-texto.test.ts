@@ -12,6 +12,7 @@ function produto(sobrescreve: Partial<Extract<ItemDaLista, { tipo: 'produto' }>>
     categoria: 'Grãos',
     unidade: 'pacote',
     quantidadeAComprar: milesimos(1000),
+    valorUnitario: centavos(890),
     custo: centavos(890),
     semPreco: false,
     ...sobrescreve,

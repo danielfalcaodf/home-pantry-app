@@ -21,6 +21,7 @@ const ITEM: ItemListaProduto = {
   categoria: 'Grãos',
   unidade: 'pacote',
   quantidadeAComprar: milesimos(2000),
+  valorUnitario: centavos(890),
   custo: centavos(1780),
   semPreco: false,
 };
