@@ -76,12 +76,12 @@
 
 ## 9. Dados iniciais
 
-- [ ] 9.1 Criar `src/infrastructure/db/seed.ts` com a criação da casa e do usuário local na primeira abertura, sem duplicar em aberturas seguintes
-- [ ] 9.2 Criar o arquivo JSON embarcado com aproximadamente 40 itens comuns de mercado, cada um com nome, categoria e unidade, mais uma quantidade necessária sugerida
-- [ ] 9.3 Implementar o método de repositório que insere um subconjunto escolhido da lista base em uma única transação, aplicando a normalização de categoria do domínio
-- [ ] 9.4 Confirmar que a lista base **não** é inserida automaticamente na primeira abertura
-- [ ] 9.5 Escrever teste de idempotência da criação da casa e do usuário
-- [ ] 9.6 Escrever teste de adoção parcial da lista base
+- [x] 9.1 Criar `src/infrastructure/db/seed.ts` com a criação da casa e do usuário local na primeira abertura, sem duplicar em aberturas seguintes
+- [x] 9.2 Criar o arquivo JSON embarcado com aproximadamente 40 itens comuns de mercado, cada um com nome, categoria e unidade, mais uma quantidade necessária sugerida
+- [x] 9.3 Implementar o método de repositório que insere um subconjunto escolhido da lista base em uma única transação, aplicando a normalização de categoria do domínio
+- [x] 9.4 Confirmar que a lista base **não** é inserida automaticamente na primeira abertura
+- [x] 9.5 Escrever teste de idempotência da criação da casa e do usuário
+- [x] 9.6 Escrever teste de adoção parcial da lista base
 
 ## 10. Composição e conformidade
 
