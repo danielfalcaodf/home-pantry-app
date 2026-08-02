@@ -75,7 +75,7 @@
 
 ## 9. Conformidade e cobertura
 
-- [ ] 9.1 Executar o script de verificação de fronteiras e confirmar que `src/domain/` não tem nenhum import externo
-- [ ] 9.2 Executar a suíte de testes do domínio e confirmar que ela roda sem emulador e sem Metro
-- [ ] 9.3 Verificar que a cobertura de `src/domain/` atinge no mínimo 90% e que os cinco casos de falha silenciosa têm teste nomeado
-- [ ] 9.4 Revisar que nenhuma regra implementada aqui está duplicada em outro lugar do repositório
+- [x] 9.1 Executar o script de verificação de fronteiras e confirmar que `src/domain/` não tem nenhum import externo
+- [x] 9.2 Executar a suíte de testes do domínio e confirmar que ela roda sem emulador e sem Metro
+- [x] 9.3 Verificar que a cobertura de `src/domain/` atinge no mínimo 90% e que os cinco casos de falha silenciosa têm teste nomeado
+- [x] 9.4 Revisar que nenhuma regra implementada aqui está duplicada em outro lugar do repositório

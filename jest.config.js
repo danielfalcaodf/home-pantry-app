@@ -21,6 +21,7 @@ const transformTsPuro = {
 };
 
 module.exports = {
+  passWithNoTests: true,
   projects: [
     {
       displayName: 'domain',
@@ -34,7 +35,6 @@ module.exports = {
     {
       displayName: 'app',
       preset: 'jest-expo',
-      passWithNoTests: true,
       testMatch: [
         '<rootDir>/src/application/**/*.test.{ts,tsx}',
         '<rootDir>/src/infrastructure/**/*.test.{ts,tsx}',
