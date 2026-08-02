@@ -1,3 +1,4 @@
+import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Pressable, Share, View } from 'react-native';
 
@@ -6,9 +7,11 @@ import { useEditarAvulso } from '@/application/lista/use-editar-avulso';
 import { useListaDeCompras } from '@/application/lista/use-lista-compras';
 import { usePreferenciaDeAgrupamento } from '@/application/lista/use-preferencia-agrupamento';
 import { useRemoverItemDaLista } from '@/application/lista/use-remover-item-lista';
+import { useIniciarCompra } from '@/application/compra/use-iniciar-compra';
 import { DadosDoAvulso, ItemDaLista } from '@/domain/lista/lista';
 import { totalDaListaDeCompras } from '@/domain/lista/lista.rules';
 import { paraDecimal } from '@/domain/shared/quantidade';
+import { Botao } from '@/presentation/components/botao';
 import { EstadoVazio } from '@/presentation/components/estado-vazio';
 import { ItemLista } from '@/presentation/components/item-lista';
 import { RodapeTotal } from '@/presentation/components/rodape-total';
@@ -27,6 +30,7 @@ export default function Lista() {
   const { adicionar } = useAdicionarAvulso();
   const { editar, remover: removerAvulso } = useEditarAvulso();
   const { ultimaRemocao, remover, desfazer, limpar } = useRemoverItemDaLista();
+  const { iniciando, iniciar } = useIniciarCompra();
 
   const [sheetAberta, setSheetAberta] = useState(false);
   const [avulsoEmEdicao, setAvulsoEmEdicao] = useState<Extract<ItemDaLista, { tipo: 'avulso' }> | null>(
@@ -71,6 +75,11 @@ export default function Lista() {
       return;
     }
     await Share.share({ message: texto });
+  }
+
+  async function iniciarCompra() {
+    const compraId = await iniciar(itens);
+    router.push(`/compra/${compraId}`);
   }
 
   if (!carregando && itens.length === 0) {
@@ -130,6 +139,14 @@ export default function Lista() {
         total={total.total}
         contagemSemPreco={total.contagemSemPreco}
       />
+
+      <View style={{ paddingHorizontal: espaco.lg, paddingBottom: espaco.md }}>
+        <Botao
+          titulo={`Iniciar compra (${total.contagemItens})`}
+          onPress={() => void iniciarCompra()}
+          disabled={iniciando}
+        />
+      </View>
 
       {linhas.map((linha) =>
         linha.tipo === 'cabecalho' ? (

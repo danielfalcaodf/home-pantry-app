@@ -1,6 +1,6 @@
 ## 1. Iniciar a compra
 
-- [ ] 1.1 Adicionar na tela da lista a ação de iniciar a compra, com a contagem de itens no rótulo
+- [x] 1.1 Adicionar na tela da lista a ação de iniciar a compra, com a contagem de itens no rótulo
 - [x] 1.2 Criar `src/application/compra/use-iniciar-compra.ts` materializando os itens correntes da lista como itens planejados da compra aberta
 - [x] 1.3 Registrar a quantidade planejada **exatamente** como exibida na lista, sem reaplicar o arredondamento
 - [x] 1.4 Registrar o valor estimado por unidade em cada item materializado
