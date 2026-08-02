@@ -64,14 +64,14 @@
 
 ## 8. Regras de compra
 
-- [ ] 8.1 Criar `src/domain/compra/compra.rules.ts` com `totalPago(itens)` somando apenas os itens marcados
-- [ ] 8.2 Implementar `efeitoDeReposicao(item, produto)` retornando a nova quantidade e o movimento de reposição, e nada para item avulso
-- [ ] 8.3 Implementar `divergenciaDePreco(item, produto)` sinalizando quando o valor pago difere do cadastrado, inclusive quando o cadastrado é zero
-- [ ] 8.4 Implementar `efeitosDaFinalizacao(compra, produtos, confirmacoesDePreco)` retornando reposições, atualizações de preço confirmadas e total pago em uma única estrutura, ou falha sem efeito parcial
-- [ ] 8.5 Escrever testes de total pago cobrindo itens marcados e não marcados, compra sem marcações e item marcado sem preço
-- [ ] 8.6 Escrever testes de reposição cobrindo item de estoque, item avulso e quantidade comprada diferente da planejada
-- [ ] 8.7 Escrever testes de divergência de preço cobrindo preço igual, preço diferente, produto sem preço cadastrado, e o efeito de confirmar ou não confirmar
-- [ ] 8.8 Escrever teste de falha na finalização: um item marcado sem quantidade comprada produz falha e nenhum efeito para nenhum item
+- [x] 8.1 Criar `src/domain/compra/compra.rules.ts` com `totalPago(itens)` somando apenas os itens marcados
+- [x] 8.2 Implementar `efeitoDeReposicao(item, produto)` retornando a nova quantidade e o movimento de reposição, e nada para item avulso
+- [x] 8.3 Implementar `divergenciaDePreco(item, produto)` sinalizando quando o valor pago difere do cadastrado, inclusive quando o cadastrado é zero
+- [x] 8.4 Implementar `efeitosDaFinalizacao(compra, produtos, confirmacoesDePreco)` retornando reposições, atualizações de preço confirmadas e total pago em uma única estrutura, ou falha sem efeito parcial
+- [x] 8.5 Escrever testes de total pago cobrindo itens marcados e não marcados, compra sem marcações e item marcado sem preço
+- [x] 8.6 Escrever testes de reposição cobrindo item de estoque, item avulso e quantidade comprada diferente da planejada
+- [x] 8.7 Escrever testes de divergência de preço cobrindo preço igual, preço diferente, produto sem preço cadastrado, e o efeito de confirmar ou não confirmar
+- [x] 8.8 Escrever teste de falha na finalização: um item marcado sem quantidade comprada produz falha e nenhum efeito para nenhum item
 
 ## 9. Conformidade e cobertura
 
