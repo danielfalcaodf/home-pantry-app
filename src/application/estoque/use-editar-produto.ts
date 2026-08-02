@@ -6,10 +6,9 @@ import { Produto } from '../../domain/produto/produto';
 import { ProdutoValidado } from '../../domain/produto/validacao';
 import { ObservadorDeMudancas } from '../../ports/observador-de-mudancas';
 import { ProdutoRepository } from '../../ports/produto.repository';
-import { Result } from '../../shared/result';
+import { falha, Result } from '../../shared/result';
 import { enriquecer, ProdutoNaDespensa } from './use-produtos';
 import { ErroCadastro, mensagemDeEscrita } from './use-cadastrar-produto';
-import { falha } from '../../shared/result';
 
 export function useProduto(
   id: string,
@@ -34,6 +33,9 @@ export function useProduto(
   useEffect(() => {
     let montado = true;
     const estaMontado = () => montado;
+    // O lint não enxerga que `recarregar` só escreve estado depois do await —
+    // a escrita nunca é síncrona aqui, então não há render em cascata.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void recarregar(estaMontado);
     const cancelarAssinatura = observador.assinar(() => {
       void recarregar(estaMontado);

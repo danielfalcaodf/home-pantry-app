@@ -60,12 +60,12 @@
 
 ## 6. Detalhe e edição
 
-- [ ] 6.1 Implementar `app/produto/[id].tsx` com a quantidade atual no papel de display, no topo
-- [ ] 6.2 Implementar a edição de todos os campos de cadastro, deixando a quantidade atual como somente leitura
-- [ ] 6.3 Implementar o rodapé com o resumo de registros de consumo do período recente, em linguagem do usuário
-- [ ] 6.4 Confirmar que alterar a quantidade necessária muda o estado do item na despensa
-- [ ] 6.5 Implementar a remoção lógica com confirmação explícita
-- [ ] 6.6 Confirmar que o item removido some da despensa e que seus movimentos permanecem no banco
+- [x] 6.1 Implementar `app/produto/[id].tsx` com a quantidade atual no papel de display, no topo
+- [x] 6.2 Implementar a edição de todos os campos de cadastro, deixando a quantidade atual como somente leitura
+- [x] 6.3 Implementar o rodapé com o resumo de registros de consumo do período recente, em linguagem do usuário
+- [x] 6.4 Confirmar que alterar a quantidade necessária muda o estado do item na despensa
+- [x] 6.5 Implementar a remoção lógica com confirmação explícita
+- [x] 6.6 Confirmar que o item removido some da despensa e que seus movimentos permanecem no banco
 
 ## 7. Adoção da lista base
 
