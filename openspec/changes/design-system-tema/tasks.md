@@ -60,8 +60,8 @@
 
 ## 8. Movimento
 
-- [ ] 8.1 Configurar as animações de mola para declararem respeito à preferência de redução de movimento do sistema
-- [ ] 8.2 Confirmar que nenhum componente checa manualmente a preferência de redução de movimento
+- [x] 8.1 Configurar as animações de mola para declararem respeito à preferência de redução de movimento do sistema
+- [x] 8.2 Confirmar que nenhum componente checa manualmente a preferência de redução de movimento
 - [ ] 8.3 Verificar no aparelho, com redução de movimento ligada, que a mudança de valor ocorre em esmaecimento curto e o retorno tátil permanece
 
 ## 9. Conformidade
