@@ -1,11 +1,11 @@
 ## 1. Composição da lista
 
-- [ ] 1.1 Criar `src/application/lista/use-lista-compras.ts` compondo a consulta de faltantes com os itens avulsos da compra aberta
-- [ ] 1.2 Aplicar as regras de domínio de quantidade a comprar e custo estimado sobre os valores brutos vindos da consulta
-- [ ] 1.3 Subtrair da lista os itens marcados como excluídos da compra aberta
-- [ ] 1.4 Confirmar que a consulta de faltantes não contém nenhuma expressão de arredondamento por unidade
-- [ ] 1.5 Confirmar que nenhuma tabela representa a lista de compras no schema
-- [ ] 1.6 Escrever testes do hook com repositório falso cobrindo item entrando e saindo da lista automaticamente
+- [x] 1.1 Criar `src/application/lista/use-lista-compras.ts` compondo a consulta de faltantes com os itens avulsos da compra aberta
+- [x] 1.2 Aplicar as regras de domínio de quantidade a comprar e custo estimado sobre os valores brutos vindos da consulta
+- [x] 1.3 Subtrair da lista os itens marcados como excluídos da compra aberta
+- [x] 1.4 Confirmar que a consulta de faltantes não contém nenhuma expressão de arredondamento por unidade
+- [x] 1.5 Confirmar que nenhuma tabela representa a lista de compras no schema
+- [x] 1.6 Escrever testes do hook com repositório falso cobrindo item entrando e saindo da lista automaticamente
 
 ## 2. Tela da lista
 

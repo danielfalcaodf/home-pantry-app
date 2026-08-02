@@ -96,8 +96,20 @@ export class ProdutoRepositorioFalso implements ProdutoRepository {
     );
   }
 
-  async listarFaltantes(): Promise<FaltanteBruto[]> {
-    return [];
+  async listarFaltantes(casaId: string): Promise<FaltanteBruto[]> {
+    return (await this.listarDespensa(casaId))
+      .filter((p) => p.quantidadeAtual < p.quantidadeNecessaria)
+      .map((p) => ({
+        id: p.id,
+        nome: p.nome,
+        categoria: p.categoria,
+        unidade: p.unidade,
+        valorUnitario: p.valorUnitario,
+        quantidadeAtual: p.quantidadeAtual,
+        quantidadeNecessaria: p.quantidadeNecessaria,
+        faltaBruta: milesimos(p.quantidadeNecessaria - p.quantidadeAtual),
+      }))
+      .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
   }
 
   async buscarPorNome(casaId: string, termo: string): Promise<Produto[]> {
