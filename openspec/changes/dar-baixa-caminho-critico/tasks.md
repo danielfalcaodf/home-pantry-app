@@ -19,12 +19,12 @@
 
 ## 3. Animação do nível
 
-- [ ] 3.1 Converter a altura do preenchimento em valor animado executado na thread de interface
-- [ ] 3.2 Implementar a descida com física de mola de amortecimento 18, em cerca de 320 milissegundos
-- [ ] 3.3 Declarar respeito à preferência de redução de movimento do sistema na própria animação
-- [ ] 3.4 Fazer a mola redirecionar para o valor-alvo mais recente em vez de reiniciar, para toques rápidos sucessivos
-- [ ] 3.5 Garantir que apenas o item alterado anima, e que nenhum item anima por rolagem ou por reordenação
-- [ ] 3.6 Implementar a troca dos números em esmaecimento cruzado curto, sem deslizamento e sem contagem progressiva
+- [x] 3.1 Converter a altura do preenchimento em valor animado executado na thread de interface
+- [x] 3.2 Implementar a descida com física de mola de amortecimento 18, em cerca de 320 milissegundos
+- [x] 3.3 Declarar respeito à preferência de redução de movimento do sistema na própria animação
+- [x] 3.4 Fazer a mola redirecionar para o valor-alvo mais recente em vez de reiniciar, para toques rápidos sucessivos
+- [x] 3.5 Garantir que apenas o item alterado anima, e que nenhum item anima por rolagem ou por reordenação
+- [x] 3.6 Implementar a troca dos números em esmaecimento cruzado curto, sem deslizamento e sem contagem progressiva
 - [ ] 3.7 Verificar no aparelho que registrar consumo durante a rolagem não causa engasgo em nenhuma das duas
 
 ## 4. Teclado de quantidade

@@ -36,9 +36,9 @@ describe('MedidorNivel', () => {
 
   it('zerado: nenhuma tinta, só a régua na base em crítico', async () => {
     await comTema(<MedidorNivel fracao={0} estado="critico" temSobra={false} />);
-    expect(estilos(camada('medidor-tinta')).height).toBe(0);
+    expect(estilos(camada('medidor-tinta')).height).toBe('0%');
     const regua = estilos(camada('medidor-regua'));
-    expect(regua.bottom).toBe(0);
+    expect(regua.bottom).toBe('0%');
     expect(regua.backgroundColor).toBe(despensa.state.critico);
   });
 
