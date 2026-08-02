@@ -18,9 +18,18 @@ Projeto ainda **não foi inicializado** (sem `package.json`, sem código — só
 - **Outros**: `expo-haptics`, `expo-keep-awake`, `@gorhom/bottom-sheet`, `FlashList` (listas >150 itens)
 - Sem biblioteca de design system pronta — os ~12 componentes são custom (ver design de frontend).
 
-## Comandos (a confirmar após o scaffold)
+## Comandos
 
-Ainda não há `package.json`. Ao inicializar, documentar aqui os comandos reais de `dev`, `test`, `lint` e `typecheck` assim que existirem — não adivinhar.
+| Comando | O que faz |
+|---|---|
+| `npm start` | Metro para o development build (`expo start`) — Expo Go não é suportado |
+| `npm test` | Todos os testes (projetos `domain` e `app` do Jest) |
+| `npm run test:domain` | Só o domínio — Node puro, sem emulador, conclui em segundos |
+| `npm run test:cov` | Domínio com cobertura (mínimo 90%) |
+| `npm run lint` | ESLint (preset Expo + boundaries + regra de hex) |
+| `npm run typecheck` | `tsc --noEmit` |
+| `npm run verificar:fronteiras` | Grep de conformidade sobre `src/domain/` |
+| `npm run verificar` | Agregado: fronteiras + lint + typecheck (rodar antes de qualquer merge) |
 
 Fluxo de schema já definido na arquitetura:
 ```
