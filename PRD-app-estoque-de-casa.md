@@ -52,7 +52,7 @@ Não quer cadastrar nada. Só quer abrir o app quando pega a última caixa de le
 - Campos obrigatórios: `nome`, `unidade` (un, kg, g, L, ml, pacote, caixa), `quantidade_necessaria`.
 - Campos opcionais: `quantidade_atual` (default 0), `valor_unitario` (default 0), `categoria`, `marca_preferida`, `observacao`.
 - `quantidade_necessaria` aceita valores decimais (ex.: 1,5 kg) e deve ser > 0.
-- Nome duplicado dentro da mesma casa exibe alerta "Já existe um produto com esse nome" e permite cancelar ou salvar mesmo assim.
+- Nome duplicado dentro da mesma casa exibe *"Já existe um item chamado X na sua despensa."* e oferece **Ver o item** ou diferenciar o nome. **Não é possível salvar duplicado**: o `UNIQUE INDEX ux_produto_casa_nome` (DATABASE §5, índice 1) impede na raiz, e dois "Arroz" quebrariam a busca, o autocomplete e a lista de compras sem o usuário conseguir distinguir qual é qual. Nome de item já removido pode ser reutilizado.
 - Produto criado fica imediatamente visível para o outro morador (ver US-08).
 - Cadastro completo em ≤ 4 campos preenchidos na tela inicial; demais campos ficam em "Mais opções" recolhido.
 

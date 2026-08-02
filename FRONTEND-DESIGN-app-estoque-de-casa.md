@@ -377,7 +377,7 @@ A ação mantém o mesmo nome do começo ao fim: o botão diz `Usei`, o toast di
 **Erros dizem o que houve e o que fazer, sem pedir desculpa:**
 
 - *"Não foi possível salvar. Toque para tentar de novo."*
-- *"Já existe um item chamado Arroz na sua despensa."* · **Ver o item** / **Salvar assim mesmo**
+- *"Já existe um item chamado Arroz na sua despensa."* · **Ver o item** / **Usar outro nome** — salvar duplicado não é oferecido, porque o índice único do banco o rejeitaria (ver PRD US-01 e DATABASE §5)
 - *"O backup é de uma versão mais nova do app. Atualize antes de restaurar."*
 
 ---

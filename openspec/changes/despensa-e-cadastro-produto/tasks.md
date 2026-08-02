@@ -42,7 +42,7 @@
 - [x] 4.8 Implementar a busca por nome, ignorando caixa e acentuação por normalização no cliente
 - [x] 4.9 Implementar o resultado vazio de busca com a ação de cadastrar o termo buscado
 - [x] 4.10 Usar lista virtualizada de alto desempenho com altura de item fixa
-- [ ] 4.11 Verificar no aparelho a fluidez da rolagem com 300 itens
+- [ ] 4.11 Verificar no aparelho a fluidez da rolagem com 300 itens — **bloqueada: exige aparelho (mesma dependência das tasks 4.3/4.4 da change 1). A lista já usa FlashList com altura de item fixa de 68pt, que é a condição que torna a virtualização precisa**
 - [x] 4.12 Confirmar que a tela não mantém cópia dos produtos em estado global nem em cache de requisição
 
 ## 5. Cadastro de produto
@@ -76,14 +76,14 @@
 - [x] 7.5 Definir a quantidade necessária sugerida de cada item da lista base por unidade
 - [x] 7.6 Ligar a criação em bloco à transação única do repositório
 - [x] 7.7 Tratar a falha da criação em bloco sem deixar despensa parcial, oferecendo tentar novamente
-- [ ] 7.8 Verificar que a adoção funciona com o aparelho sem conexão
+- [ ] 7.8 Verificar que a adoção funciona com o aparelho sem conexão — **coberta por construção: a lista base é um JSON embarcado no pacote e a inserção é uma transação SQLite local; não existe caminho de rede no fluxo. Confirmação em aparelho fica com as demais**
 - [x] 7.9 Escrever teste de adoção parcial e de adoção sem nenhum item marcado
 
 ## 8. Conformidade e documentos
 
-- [ ] 8.1 Executar lint, typecheck e verificação de fronteiras
-- [ ] 8.2 Confirmar que nenhum literal de cor foi introduzido fora dos tokens
-- [ ] 8.3 Verificar a tela com escala de fonte do sistema em 200 por cento, confirmando que o nome não trunca
-- [ ] 8.4 Atualizar `PRD-app-estoque-de-casa.md` US-01, substituindo "salvar mesmo assim" pelo comportamento de diferenciar o nome, com nota apontando para o índice único do documento de banco
-- [ ] 8.5 Atualizar `FRONTEND-DESIGN-app-estoque-de-casa.md` §11 para refletir a mesma decisão
-- [ ] 8.6 Revisar visualmente com 200 itens reais em aparelho pequeno e registrar se a altura de 68 pontos se sustenta
+- [x] 8.1 Executar lint, typecheck e verificação de fronteiras
+- [x] 8.2 Confirmar que nenhum literal de cor foi introduzido fora dos tokens
+- [ ] 8.3 Verificar a tela com escala de fonte do sistema em 200 por cento, confirmando que o nome não trunca — **bloqueada: exige aparelho**
+- [x] 8.4 Atualizar `PRD-app-estoque-de-casa.md` US-01, substituindo "salvar mesmo assim" pelo comportamento de diferenciar o nome, com nota apontando para o índice único do documento de banco
+- [x] 8.5 Atualizar `FRONTEND-DESIGN-app-estoque-de-casa.md` §11 para refletir a mesma decisão
+- [ ] 8.6 Revisar visualmente com 200 itens reais em aparelho pequeno e registrar se a altura de 68 pontos se sustenta — **bloqueada: exige aparelho. O risco e o plano de resposta (subir para 76pt antes de reintroduzir bordas) estão no `design.md`**
