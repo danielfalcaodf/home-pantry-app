@@ -4,22 +4,29 @@ import { Alert, View } from 'react-native';
 
 import { ProdutoNaDespensa } from '@/application/estoque/use-produtos';
 import { useCategorias } from '@/application/estoque/use-categorias';
+import { useDarBaixa } from '@/application/estoque/use-dar-baixa';
+import { useDesfazerMovimento } from '@/application/estoque/use-desfazer-movimento';
 import {
   useEditarProduto,
   useProduto,
   useRemoverProduto,
 } from '@/application/estoque/use-editar-produto';
+import { useReporPontual } from '@/application/estoque/use-repor-pontual';
 import { normalizarCategoria } from '@/domain/produto/categoria';
 import { centavos, formatarBRL } from '@/domain/shared/dinheiro';
-import { deDecimal, formatarNumero, paraDecimal } from '@/domain/shared/quantidade';
+import { deDecimal, formatarNumero, milesimos, paraDecimal } from '@/domain/shared/quantidade';
 import { rotuloDaUnidade } from '@/domain/shared/unidade';
 import { Botao } from '@/presentation/components/botao';
 import {
   FormularioProduto,
   ValoresDoProduto,
 } from '@/presentation/components/formulario-produto';
+import { TecladoQuantidade } from '@/presentation/components/teclado-quantidade';
 import { TelaErro } from '@/presentation/components/tela-erro';
 import { Texto } from '@/presentation/components/texto';
+import { Toast } from '@/presentation/components/toast';
+import { ToastDesfazer } from '@/presentation/components/toast-desfazer';
+import { useRegistroDeConsumo } from '@/presentation/components/use-registro-de-consumo';
 import { espaco } from '@/presentation/theme/espaco';
 import { useTheme } from '@/presentation/theme/provider';
 
@@ -67,6 +74,23 @@ function Detalhe({ id, item }: { id: string; item: ProdutoNaDespensa }) {
 
   const [valores, setValores] = useState<ValoresDoProduto>(() => valoresDoItem(item));
   const [erros, setErros] = useState<Partial<Record<keyof ValoresDoProduto, string>>>({});
+  const [tecladoAberto, setTecladoAberto] = useState(false);
+
+  // Mesmos casos de uso da lista: o efeito pelo detalhe é idêntico.
+  const { registrar: registrarConsumo } = useDarBaixa();
+  const { registrar: registrarReposicao } = useReporPontual();
+  const { desfazer } = useDesfazerMovimento();
+  const confirmacao = useRegistroDeConsumo();
+
+  async function usar(quantidade = milesimos(1000)) {
+    const resultado = await registrarConsumo(id, quantidade);
+    confirmacao.anunciar(resultado, item.produto, quantidade, 'consumo');
+  }
+
+  async function repor(quantidade = milesimos(1000)) {
+    const resultado = await registrarReposicao(id, quantidade);
+    confirmacao.anunciar(resultado, item.produto, quantidade, 'reposicao');
+  }
 
   async function salvar() {
     const quantidade = Number(valores.quantidadeNecessaria.replace(',', '.'));
@@ -129,6 +153,28 @@ function Detalhe({ id, item }: { id: string; item: ProdutoNaDespensa }) {
         </Texto>
       </View>
 
+      {/* Caminho visível para as mesmas ações do toque longo na lista:
+          gesto invisível não pode ser o único acesso (FRONTEND §10). */}
+      <View style={{ flexDirection: 'row', gap: espaco.md, paddingHorizontal: espaco.lg }}>
+        <View style={{ flex: 1 }}>
+          <Botao
+            titulo="Usei"
+            onPress={() => void usar()}
+            disabled={produto.quantidadeAtual <= 0}
+          />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Botao titulo="Repus" variante="secundario" onPress={() => void repor()} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Botao
+            titulo="Outra quantidade"
+            variante="secundario"
+            onPress={() => setTecladoAberto(true)}
+          />
+        </View>
+      </View>
+
       <FormularioProduto
         valores={valores}
         aoMudar={setValores}
@@ -142,6 +188,29 @@ function Detalhe({ id, item }: { id: string; item: ProdutoNaDespensa }) {
       <View style={{ padding: espaco.lg }}>
         <Botao titulo="Tirar da despensa" variante="secundario" onPress={confirmarRemocao} />
       </View>
+
+      <ToastDesfazer
+        registro={confirmacao.registro}
+        onDesfazer={(movimentoId) => {
+          void desfazer(movimentoId);
+          confirmacao.limpar();
+        }}
+        onFim={confirmacao.limpar}
+      />
+      {confirmacao.aviso && !confirmacao.registro ? (
+        <Toast mensagem={confirmacao.aviso} onFim={confirmacao.limpar} />
+      ) : null}
+
+      {tecladoAberto ? (
+        <TecladoQuantidade
+          visivel
+          nomeDoItem={produto.nome}
+          unidade={produto.unidade}
+          onFechar={() => setTecladoAberto(false)}
+          onUsei={(quantidade) => void usar(deDecimal(quantidade))}
+          onRepus={(quantidade) => void repor(deDecimal(quantidade))}
+        />
+      ) : null}
     </View>
   );
 }

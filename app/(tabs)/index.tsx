@@ -5,12 +5,20 @@ import { ScrollView, View } from 'react-native';
 
 import { ProdutoNaDespensa, useProdutos } from '@/application/estoque/use-produtos';
 import { useCategorias } from '@/application/estoque/use-categorias';
+import { useDarBaixa } from '@/application/estoque/use-dar-baixa';
+import { useDesfazerMovimento } from '@/application/estoque/use-desfazer-movimento';
+import { useReporPontual } from '@/application/estoque/use-repor-pontual';
+import { deDecimal, milesimos } from '@/domain/shared/quantidade';
 import { rotuloDaUnidade } from '@/domain/shared/unidade';
 import { CampoTexto } from '@/presentation/components/campo-texto';
 import { ChipEstado } from '@/presentation/components/chip-estado';
 import { EstadoVazio } from '@/presentation/components/estado-vazio';
 import { ItemDespensa } from '@/presentation/components/item-despensa';
+import { TecladoQuantidade } from '@/presentation/components/teclado-quantidade';
 import { Texto } from '@/presentation/components/texto';
+import { Toast } from '@/presentation/components/toast';
+import { ToastDesfazer } from '@/presentation/components/toast-desfazer';
+import { useRegistroDeConsumo } from '@/presentation/components/use-registro-de-consumo';
 import {
   agruparPorCategoria,
   contarPorEstado,
@@ -39,6 +47,25 @@ export default function Despensa() {
   const [filtro, setFiltro] = useState<FiltroEstado>('tudo');
   const [categoria, setCategoria] = useState<string | null>(null);
   const [busca, setBusca] = useState('');
+  const [itemDoTeclado, setItemDoTeclado] = useState<ProdutoNaDespensa | null>(null);
+
+  const { registrar: registrarConsumo } = useDarBaixa();
+  const { registrar: registrarReposicao } = useReporPontual();
+  const { desfazer } = useDesfazerMovimento();
+  const confirmacao = useRegistroDeConsumo();
+
+  async function usar(item: ProdutoNaDespensa, quantidade = milesimos(1000)) {
+    const resultado = await registrarConsumo(item.produto.id, quantidade);
+    confirmacao.anunciar(resultado, item.produto, quantidade, 'consumo', () =>
+      void usar(item, quantidade),
+    );
+  }
+
+  async function repor(item: ProdutoNaDespensa, quantidade: number) {
+    const emMilesimos = deDecimal(quantidade);
+    const resultado = await registrarReposicao(item.produto.id, emMilesimos);
+    confirmacao.anunciar(resultado, item.produto, emMilesimos, 'reposicao');
+  }
 
   const contagens = useMemo(() => contarPorEstado(itens), [itens]);
 
@@ -181,11 +208,45 @@ export default function Despensa() {
                   false,
                 )} de ${linha.item.produto.nome}`}
                 onAbrir={() => router.push(`/produto/${linha.item.produto.id}`)}
+                onConsumir={() => void usar(linha.item)}
+                onAbrirTeclado={() => setItemDoTeclado(linha.item)}
               />
             )
           }
         />
       )}
+
+      {/* A confirmação flutua sobre a lista sem bloquear o toque nela. */}
+      <ToastDesfazer
+        registro={confirmacao.registro}
+        onDesfazer={(movimentoId) => {
+          void desfazer(movimentoId);
+          confirmacao.limpar();
+        }}
+        onFim={confirmacao.limpar}
+      />
+      {confirmacao.aviso && !confirmacao.registro ? (
+        <Toast
+          mensagem={confirmacao.aviso}
+          onFim={confirmacao.limpar}
+          acao={
+            confirmacao.tentarNovamente.current
+              ? { titulo: 'Tentar de novo', onPress: () => confirmacao.tentarNovamente.current?.() }
+              : undefined
+          }
+        />
+      ) : null}
+
+      {itemDoTeclado ? (
+        <TecladoQuantidade
+          visivel
+          nomeDoItem={itemDoTeclado.produto.nome}
+          unidade={itemDoTeclado.produto.unidade}
+          onFechar={() => setItemDoTeclado(null)}
+          onUsei={(quantidade) => void usar(itemDoTeclado, deDecimal(quantidade))}
+          onRepus={(quantidade) => void repor(itemDoTeclado, quantidade)}
+        />
+      ) : null}
     </View>
   );
 }

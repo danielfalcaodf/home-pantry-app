@@ -1,3 +1,9 @@
+> **Ponto de parada (2026-08-02).** Seções 1 a 7 implementadas e testadas; a change **não foi arquivada** e a PR **não foi aberta**.
+>
+> **Retomar pela seção 8 (medição do KPI K4)** — é a razão de esta change existir e a única que ainda pode mudar o código: se os 10s não forem atingidos, a tarefa 8.5 manda otimizar a etapa dominante antes de encerrar.
+>
+> As tarefas 8.x e 9.x, mais 3.7, 6.5 e 7.2, exigem **aparelho com development build** — a mesma dependência de `eas login` que bloqueia as tarefas 4.3/4.4 da change 1. Nada além disso está pendente no código.
+
 ## 1. Casos de uso
 
 - [x] 1.1 Criar `src/application/estoque/use-dar-baixa.ts` chamando a regra de domínio para obter saldo resultante e variação aplicada, e delegando a persistência ao repositório em transação única
@@ -25,43 +31,43 @@
 - [x] 3.4 Fazer a mola redirecionar para o valor-alvo mais recente em vez de reiniciar, para toques rápidos sucessivos
 - [x] 3.5 Garantir que apenas o item alterado anima, e que nenhum item anima por rolagem ou por reordenação
 - [x] 3.6 Implementar a troca dos números em esmaecimento cruzado curto, sem deslizamento e sem contagem progressiva
-- [ ] 3.7 Verificar no aparelho que registrar consumo durante a rolagem não causa engasgo em nenhuma das duas
+- [ ] 3.7 Verificar no aparelho que registrar consumo durante a rolagem não causa engasgo em nenhuma das duas — **bloqueada: exige aparelho. A altura do nível é um shared value do Reanimated, então a mola roda na thread de interface e não disputa com a rolagem**
 
 ## 4. Teclado de quantidade
 
-- [ ] 4.1 Implementar `TecladoQuantidade` como painel inferior com um único campo numérico e a unidade do item fixa ao lado
-- [ ] 4.2 Abrir o painel com o campo já em foco e o teclado numérico do sistema visível
-- [ ] 4.3 Implementar as duas ações de registrar consumo e registrar reposição, fechando o painel ao salvar
-- [ ] 4.4 Aceitar valor decimal quando a unidade for divisível
-- [ ] 4.5 Garantir que fechar sem confirmar não altera nada
-- [ ] 4.6 Adicionar as mesmas duas ações na tela de detalhe do produto, abaixo da quantidade, como caminho visível alternativo ao toque longo
-- [ ] 4.7 Confirmar que o efeito pelo detalhe é idêntico ao efeito pela lista
+- [x] 4.1 Implementar `TecladoQuantidade` como painel inferior com um único campo numérico e a unidade do item fixa ao lado
+- [x] 4.2 Abrir o painel com o campo já em foco e o teclado numérico do sistema visível
+- [x] 4.3 Implementar as duas ações de registrar consumo e registrar reposição, fechando o painel ao salvar
+- [x] 4.4 Aceitar valor decimal quando a unidade for divisível
+- [x] 4.5 Garantir que fechar sem confirmar não altera nada
+- [x] 4.6 Adicionar as mesmas duas ações na tela de detalhe do produto, abaixo da quantidade, como caminho visível alternativo ao toque longo
+- [x] 4.7 Confirmar que o efeito pelo detalhe é idêntico ao efeito pela lista
 
 ## 5. Desfazer
 
-- [ ] 5.1 Implementar `ToastDesfazer` com janela de dez segundos e barra fina de tempo restante
-- [ ] 5.2 Fazer a confirmação nomear o item e a quantidade registrada, com o mesmo verbo da ação
-- [ ] 5.3 Vincular a ação de desfazer ao **identificador do movimento** descrito na confirmação, e não ao último movimento gravado
-- [ ] 5.4 Aplicar a política de substituição: uma nova confirmação cancela a anterior, sem empilhar
-- [ ] 5.5 Garantir que a confirmação não bloqueia a interação com a lista
-- [ ] 5.6 Escrever teste com três registros em sequência confirmando que o desfazer reverte o registro descrito na confirmação visível
-- [ ] 5.7 Escrever teste de desfazer de consumo que zerou o item, confirmando que a quantidade volta ao valor real anterior e não à quantidade solicitada
-- [ ] 5.8 Confirmar que o movimento original permanece no banco após desfazer
+- [x] 5.1 Implementar `ToastDesfazer` com janela de dez segundos e barra fina de tempo restante
+- [x] 5.2 Fazer a confirmação nomear o item e a quantidade registrada, com o mesmo verbo da ação
+- [x] 5.3 Vincular a ação de desfazer ao **identificador do movimento** descrito na confirmação, e não ao último movimento gravado
+- [x] 5.4 Aplicar a política de substituição: uma nova confirmação cancela a anterior, sem empilhar
+- [x] 5.5 Garantir que a confirmação não bloqueia a interação com a lista
+- [x] 5.6 Escrever teste com três registros em sequência confirmando que o desfazer reverte o registro descrito na confirmação visível
+- [x] 5.7 Escrever teste de desfazer de consumo que zerou o item, confirmando que a quantidade volta ao valor real anterior e não à quantidade solicitada
+- [x] 5.8 Confirmar que o movimento original permanece no banco após desfazer
 
 ## 6. Casos de borda
 
-- [ ] 6.1 Implementar o aviso de item acabado quando a quantidade chega a zero por registro de consumo
-- [ ] 6.2 Confirmar que consumo maior que o saldo fixa em zero e conclui com sucesso
-- [ ] 6.3 Implementar a mensagem de falha de gravação com a ação de tentar novamente, sem alterar a quantidade
-- [ ] 6.4 Confirmar que sair da tela durante a animação preserva o registro e não gera erro
-- [ ] 6.5 Verificar que o fluxo completo funciona com o aparelho sem conexão
+- [x] 6.1 Implementar o aviso de item acabado quando a quantidade chega a zero por registro de consumo
+- [x] 6.2 Confirmar que consumo maior que o saldo fixa em zero e conclui com sucesso
+- [x] 6.3 Implementar a mensagem de falha de gravação com a ação de tentar novamente, sem alterar a quantidade
+- [x] 6.4 Confirmar que sair da tela durante a animação preserva o registro e não gera erro
+- [ ] 6.5 Verificar que o fluxo completo funciona com o aparelho sem conexão — **coberta por construção: não existe caminho de rede no fluxo; tudo é transação SQLite local. Confirmação em aparelho fica com as demais**
 
 ## 7. Conformidade de movimento e vocabulário
 
-- [ ] 7.1 Revisar todo o app confirmando ausência de animação de entrada de tela, aparecimento em cascata, esqueleto cintilante e contagem progressiva
-- [ ] 7.2 Verificar no aparelho, com redução de movimento ligada, que o nível muda em esmaecimento curto e o retorno tátil permanece
-- [ ] 7.3 Revisar todos os textos deste fluxo confirmando o vocabulário de usuário do começo ao fim, sem termos de sistema
-- [ ] 7.4 Confirmar que a persistência não aguarda o término de nenhuma animação
+- [x] 7.1 Revisar todo o app confirmando ausência de animação de entrada de tela, aparecimento em cascata, esqueleto cintilante e contagem progressiva
+- [ ] 7.2 Verificar no aparelho, com redução de movimento ligada, que o nível muda em esmaecimento curto e o retorno tátil permanece — **bloqueada: exige aparelho. `ReduceMotion.System` na mola e no fade delega ao sistema; o háptico é disparado fora da animação, então permanece**
+- [x] 7.3 Revisar todos os textos deste fluxo confirmando o vocabulário de usuário do começo ao fim, sem termos de sistema
+- [x] 7.4 Confirmar que a persistência não aguarda o término de nenhuma animação
 
 ## 8. Medição do KPI
 
