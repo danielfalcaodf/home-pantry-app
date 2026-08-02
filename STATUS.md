@@ -30,7 +30,7 @@ Para implementar uma delas: `/opsx:apply <nome>`. Para arquivar após concluir: 
 |---|---|---|---|---|
 | 5 | `despensa-e-cadastro-produto` | ✅ | Linha d'água, tela Despensa, filtros, busca, CRUD de produto, adoção da lista base | Primeira coisa utilizável. Resolve o risco Alto de cadastro inicial pesado. |
 | 6 | `dar-baixa-caminho-critico` | ✅ | Stepper funcional, coreografia de movimento, teclado de quantidade, toast de desfazer | O KPI que decide o produto. ARQUITETURA §11 o isola porque "merece iteração de UX própria". Obs.: tasks 3.7, 6.5, 7.2, 8.1, 8.3–8.5, 9.1, 9.2 (medição real do KPI K4, háptico, rolagem, offline em hardware) pendentes de aparelho — ver tabela abaixo. |
-| 7 | `lista-de-compras` | ⬜ | Lista derivada, itens avulsos, custo estimado, agrupar por categoria, exportar texto | Só faz sentido com estoque real dentro. |
+| 7 | `lista-de-compras` | ✅ | Lista derivada, itens avulsos, custo estimado, agrupar por categoria, exportar texto | Só faz sentido com estoque real dentro. Obs.: tarefas 7.4 e 7.5 (escala de fonte 200%, alinhamento visual da coluna de preço) pendentes de aparelho — ver tabela abaixo. |
 | 8 | `modo-compra-e-fechamento` | ⬜ | Modo corredor de mercado, marcação, preço pago, fechamento atômico, atualização de preço de referência | Fecha o ciclo: consome → falta → lista → compra → repõe. |
 
 ### Fase 2 — Confiança nos dados
@@ -49,7 +49,7 @@ Para implementar uma delas: `/opsx:apply <nome>`. Para arquivar após concluir: 
 
 ### Estado do repositório
 
-Changes 1 a 6 estão **implementadas, arquivadas e com PR aberta**. A próxima é a change 7 (`lista-de-compras`), ainda não iniciada.
+Changes 1 a 7 estão **implementadas, arquivadas e com PR aberta**. A próxima é a change 8 (`modo-compra-e-fechamento`), ainda não iniciada.
 
 As branches formam uma cadeia — cada PR aponta para a branch da change anterior, e o merge precisa seguir essa ordem:
 
@@ -61,8 +61,19 @@ As branches formam uma cadeia — cada PR aponta para a branch da change anterio
 | [#4](https://github.com/danielfalcaodf/home-pantry-app/pull/4) | `change/design-system-tema` | `change/persistencia-sqlite` | 4 · design-system-tema |
 | [#5](https://github.com/danielfalcaodf/home-pantry-app/pull/5) | `change/despensa-e-cadastro-produto` | `change/design-system-tema` | 5 · despensa-e-cadastro-produto |
 | [#6](https://github.com/danielfalcaodf/home-pantry-app/pull/6) | `change/dar-baixa-caminho-critico` | `change/despensa-e-cadastro-produto` | 6 · dar-baixa-caminho-critico |
+| [#7](https://github.com/danielfalcaodf/home-pantry-app/pull/7) | `feature/lista-de-compras` | `change/dar-baixa-caminho-critico` | 7 · lista-de-compras |
 
 **A PR de `develop` para `main` ainda não foi aberta** — ela fecha o ciclo depois que as changes restantes entrarem.
+
+### Change 7 — concluída, com pendências de aparelho documentadas
+
+47 de 49 tarefas concluídas e testadas. As 2 restantes (7.4, 7.5) exigem aparelho físico real — escala de fonte do sistema a 200% e o alinhamento visual da coluna de preço — pela mesma razão da change 6: sem emulador Android/iOS neste ambiente, uma medição visual não seria dado real. A change foi arquivada mesmo assim, seguindo a mesma decisão tomada na change 6, para não travar o restante do MVP.
+
+- `use-lista-compras` compõe faltantes (consulta existente) com avulsos da compra aberta, sem tabela de lista — a exclusão de um faltante vira uma marcação (`compra_item.excluido`, migration `0002`) na compra aberta, criada sob demanda e reusada entre chamadas
+- Itens avulsos (`use-adicionar-avulso`, `use-editar-avulso`) nunca tocam produto nem movimento de estoque — testado explicitamente
+- Tela `Lista` com `ItemLista`, `RodapeTotal` (total estimado + contagem sem preço) e `SheetAvulso`; agrupamento por categoria persistido em `configuracao`
+- Exportação como texto simples pela folha de compartilhamento nativa (`Share.share`), refletindo o agrupamento ativo
+- `FaltanteBruto` foi movido de `ports/` para `domain/produto/produto.ts` durante a change — o tipo é consumido por uma função pura de domínio (`lista.rules.ts`) e não pode depender de `ports/` (regra de dependência)
 
 ### Change 6 — concluída, com pendências de aparelho documentadas
 
@@ -76,7 +87,7 @@ As branches formam uma cadeia — cada PR aponta para a branch da change anterio
 
 ### A próxima change
 
-**7 · `lista-de-compras`** — lista derivada, itens avulsos, custo estimado, agrupar por categoria, exportar texto. Branch a partir de `change/dar-baixa-caminho-critico`.
+**8 · `modo-compra-e-fechamento`** — modo corredor de mercado, marcação, preço pago, fechamento atômico, atualização de preço de referência. Branch a partir de `feature/lista-de-compras`.
 
 ### O que está bloqueado por falta de aparelho
 
@@ -89,12 +100,13 @@ Um `eas login` e um development build instalado destravam tudo isto de uma vez �
 | 4 | 3.4, 6.3, 8.3, 9.2 | Dígitos tabulares, abertura sem flash, redução de movimento, fonte a 200% |
 | 5 | 4.11, 7.8, 8.3, 8.6 | Rolagem com 300 itens, adoção offline, fonte a 200%, altura de 68pt |
 | 6 | 3.7, 6.5, 7.2, 8.1, 8.3–8.5, 9.1, 9.2 | Engasgo na rolagem, fluxo offline, redução de movimento, **medição real do K4**, retorno tátil em uso repetido |
+| 7 | 7.4, 7.5 | Escala de fonte a 200%, alinhamento visual da coluna de preço |
 
 Comando para destravar: `npx eas-cli login && npx eas-cli build --profile development --platform android`.
 
 ### Verificação atual
 
-`npm test` → **314 testes, todos verdes** · `npm run verificar` (fronteiras + lint + typecheck) → **verde, zero avisos** · `npx expo export` fecha o bundle.
+`npm test` → **355 testes, todos verdes** · `npm run verificar` (fronteiras + lint + typecheck) → **verde, zero avisos** · `npx expo export` fecha o bundle.
 
 ---
 
