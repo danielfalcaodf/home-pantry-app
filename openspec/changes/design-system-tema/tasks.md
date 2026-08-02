@@ -17,11 +17,11 @@
 
 ## 3. Fontes
 
-- [ ] 3.1 Inspecionar os pacotes de fonte de Archivo, IBM Plex Sans e IBM Plex Mono e listar os pesos que cada um realmente exporta
-- [ ] 3.2 Ajustar a escala tipográfica para referenciar apenas pesos existentes, corrigindo o documento de frontend se algum peso suposto não existir
-- [ ] 3.3 Instalar os pacotes de fonte e carregar somente os pesos referenciados pela escala
+- [x] 3.1 Inspecionar os pacotes de fonte de Archivo, IBM Plex Sans e IBM Plex Mono e listar os pesos que cada um realmente exporta
+- [x] 3.2 Ajustar a escala tipográfica para referenciar apenas pesos existentes, corrigindo o documento de frontend se algum peso suposto não existir
+- [x] 3.3 Instalar os pacotes de fonte e carregar somente os pesos referenciados pela escala
 - [ ] 3.4 Habilitar as figuras tabulares na família monoespaçada e verificar no aparelho que os dígitos têm largura idêntica
-- [ ] 3.5 Medir o peso total das fontes embarcadas e registrar o valor; se ultrapassar 400 quilobytes, remover a família de display e ajustar a escala
+- [x] 3.5 Medir o peso total das fontes embarcadas e registrar o valor; se ultrapassar 400 quilobytes, remover a família de display e ajustar a escala
 
 ## 4. Persistência da preferência
 
