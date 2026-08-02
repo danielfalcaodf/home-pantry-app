@@ -32,18 +32,18 @@
 
 ## 4. Tela da despensa
 
-- [ ] 4.1 Implementar `app/(tabs)/index.tsx` com o título de tela no papel de display e a lista de itens
-- [ ] 4.2 Configurar a barra de abas com Despensa, Lista e Resumo, deixando as duas últimas como marcadores por enquanto
-- [ ] 4.3 Consumir a ordenação vinda da consulta, sem reordenar na apresentação
-- [ ] 4.4 Implementar o agrupamento por categoria com cabeçalho fixo, apenas no filtro amplo
-- [ ] 4.5 Agrupar itens sem categoria sob um cabeçalho próprio ao final
-- [ ] 4.6 Implementar a barra de chips de filtro por estado com contagens reativas
-- [ ] 4.7 Implementar o filtro por categoria, oferecendo apenas categorias existentes, combinável com o filtro de estado
-- [ ] 4.8 Implementar a busca por nome, ignorando caixa e acentuação por normalização no cliente
-- [ ] 4.9 Implementar o resultado vazio de busca com a ação de cadastrar o termo buscado
-- [ ] 4.10 Usar lista virtualizada de alto desempenho com altura de item fixa
+- [x] 4.1 Implementar `app/(tabs)/index.tsx` com o título de tela no papel de display e a lista de itens
+- [x] 4.2 Configurar a barra de abas com Despensa, Lista e Resumo, deixando as duas últimas como marcadores por enquanto
+- [x] 4.3 Consumir a ordenação vinda da consulta, sem reordenar na apresentação
+- [x] 4.4 Implementar o agrupamento por categoria com cabeçalho fixo, apenas no filtro amplo
+- [x] 4.5 Agrupar itens sem categoria sob um cabeçalho próprio ao final
+- [x] 4.6 Implementar a barra de chips de filtro por estado com contagens reativas
+- [x] 4.7 Implementar o filtro por categoria, oferecendo apenas categorias existentes, combinável com o filtro de estado
+- [x] 4.8 Implementar a busca por nome, ignorando caixa e acentuação por normalização no cliente
+- [x] 4.9 Implementar o resultado vazio de busca com a ação de cadastrar o termo buscado
+- [x] 4.10 Usar lista virtualizada de alto desempenho com altura de item fixa
 - [ ] 4.11 Verificar no aparelho a fluidez da rolagem com 300 itens
-- [ ] 4.12 Confirmar que a tela não mantém cópia dos produtos em estado global nem em cache de requisição
+- [x] 4.12 Confirmar que a tela não mantém cópia dos produtos em estado global nem em cache de requisição
 
 ## 5. Cadastro de produto
 
