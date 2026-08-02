@@ -71,13 +71,13 @@
 
 ## 8. Medição do KPI
 
-- [ ] 8.1 Cronometrar em aparelho real, com o app frio e uma despensa de volume realista, o percurso de abrir o app e registrar o consumo de um item
-- [ ] 8.2 Contar os toques do percurso e confirmar o máximo de três
-- [ ] 8.3 Medir separadamente o tempo de abertura fria e o tempo do gesto, para saber qual domina
-- [ ] 8.4 Registrar os números medidos no repositório
-- [ ] 8.5 Se a meta de dez segundos não for atingida, otimizar a etapa dominante antes de encerrar a change
+- [ ] 8.1 Cronometrar em aparelho real, com o app frio e uma despensa de volume realista, o percurso de abrir o app e registrar o consumo de um item — **bloqueada: exige aparelho. Sem `eas login` + build instalado não há como medir tempo de abertura fria nem o do gesto neste ambiente (sem emulador Android/iOS disponível; expo-sqlite web é alpha/instável e expo-haptics não roda em web, então uma medição via `expo start --web` não seria uma medição válida do K4)**
+- [x] 8.2 Contar os toques do percurso e confirmar o máximo de três — verificado por leitura de código: a Despensa é a rota inicial (`app/(tabs)/_layout.tsx`, sem passo de navegação antes dela) e o `StepperConsumo` (`src/presentation/components/stepper-consumo.tsx`) registra o consumo num único `onPress`, sem confirmação, modal ou segunda tela (`src/application/estoque/use-dar-baixa.ts`). Total: 1 toque do app aberto até o toast "Anotado"
+- [ ] 8.3 Medir separadamente o tempo de abertura fria e o tempo do gesto, para saber qual domina — **bloqueada: exige aparelho. Mesma limitação de ambiente da 8.1**
+- [ ] 8.4 Registrar os números medidos no repositório — **bloqueada: depende dos números reais de 8.1/8.3, que exigem aparelho**
+- [ ] 8.5 Se a meta de dez segundos não for atingida, otimizar a etapa dominante antes de encerrar a change — **bloqueada: depende do resultado de 8.1/8.3 em aparelho real**
 
 ## 9. Documentos
 
-- [ ] 9.1 Verificar em uso real se a reordenação imediata do item que muda de estado atrapalha registros sucessivos, e registrar a conclusão
-- [ ] 9.2 Confirmar em uso real a intensidade do retorno tátil em uso repetido
+- [ ] 9.1 Verificar em uso real se a reordenação imediata do item que muda de estado atrapalha registros sucessivos, e registrar a conclusão — **bloqueada: exige aparelho. Mesma limitação de ambiente da 8.1**
+- [ ] 9.2 Confirmar em uso real a intensidade do retorno tátil em uso repetido — **bloqueada: exige aparelho. expo-haptics não tem implementação web (Android usa `Vibrator`, iOS usa `UIImpactFeedbackGenerator`); sem device físico não há retorno tátil real para avaliar**
