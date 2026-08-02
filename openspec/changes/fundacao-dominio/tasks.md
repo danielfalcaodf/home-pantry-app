@@ -31,17 +31,17 @@
 
 ## 5. Regras de estoque
 
-- [ ] 5.1 Criar `src/domain/produto/estoque.rules.ts` e implementar `estadoDoItem(produto)` retornando crítico, em falta ou ok
-- [ ] 5.2 Implementar `emFalta(produto)` e `quantidadeAComprar(produto)`, esta última aplicando o arredondamento por unidade
-- [ ] 5.3 Implementar `custoReposicao(produto)` e `valorEmEstoque(produto)` usando a conversão única de milésimos por centavos
-- [ ] 5.4 Implementar `alturaDoNivel(produto)` retornando a fração clampada em `[0,1]` mais o sinalizador de sobra, e retornando fração 0 sem lançar quando a quantidade necessária for 0
-- [ ] 5.5 Implementar `rotuloDoItem(produto)` produzindo "Acabou", "Falta N" ou "Cheio", usando a formatação de quantidade do projeto
-- [ ] 5.6 Implementar `totalDaLista(produtos)` retornando o total em centavos e a contagem de itens sem preço, separadamente
-- [ ] 5.7 Escrever testes de estado cobrindo zerado, abaixo do mínimo, no mínimo exato e acima do mínimo
-- [ ] 5.8 Escrever testes de `quantidadeAComprar` cobrindo unidade divisível, unidade indivisível com fração, item ok e item zerado
-- [ ] 5.9 Escrever testes de `alturaDoNivel` cobrindo fração parcial, item acima do necessário sem transbordar, item zerado e quantidade necessária inválida
-- [ ] 5.10 Escrever teste de item sem preço na lista: custo 0, marcado como sem preço, e total da lista não corrompido
-- [ ] 5.11 Escrever teste garantindo que nenhum rótulo contém vocabulário de sistema
+- [x] 5.1 Criar `src/domain/produto/estoque.rules.ts` e implementar `estadoDoItem(produto)` retornando crítico, em falta ou ok
+- [x] 5.2 Implementar `emFalta(produto)` e `quantidadeAComprar(produto)`, esta última aplicando o arredondamento por unidade
+- [x] 5.3 Implementar `custoReposicao(produto)` e `valorEmEstoque(produto)` usando a conversão única de milésimos por centavos
+- [x] 5.4 Implementar `alturaDoNivel(produto)` retornando a fração clampada em `[0,1]` mais o sinalizador de sobra, e retornando fração 0 sem lançar quando a quantidade necessária for 0
+- [x] 5.5 Implementar `rotuloDoItem(produto)` produzindo "Acabou", "Falta N" ou "Cheio", usando a formatação de quantidade do projeto
+- [x] 5.6 Implementar `totalDaLista(produtos)` retornando o total em centavos e a contagem de itens sem preço, separadamente
+- [x] 5.7 Escrever testes de estado cobrindo zerado, abaixo do mínimo, no mínimo exato e acima do mínimo
+- [x] 5.8 Escrever testes de `quantidadeAComprar` cobrindo unidade divisível, unidade indivisível com fração, item ok e item zerado
+- [x] 5.9 Escrever testes de `alturaDoNivel` cobrindo fração parcial, item acima do necessário sem transbordar, item zerado e quantidade necessária inválida
+- [x] 5.10 Escrever teste de item sem preço na lista: custo 0, marcado como sem preço, e total da lista não corrompido
+- [x] 5.11 Escrever teste garantindo que nenhum rótulo contém vocabulário de sistema
 
 ## 6. Categoria e validação de produto
 
