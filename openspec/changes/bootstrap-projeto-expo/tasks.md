@@ -7,7 +7,7 @@
 
 ## 2. Estrutura de camadas
 
-- [ ] 2.1 Criar a árvore `src/domain/{produto,compra,movimento,shared}/`, `src/ports/`, `src/infrastructure/{db,repositories}/`, `src/application/{estoque,lista,compra}/`, `src/presentation/{components,theme,format}/` e `src/shared/`, com `.gitkeep` nas pastas ainda vazias
+- [x] 2.1 Criar a árvore `src/domain/{produto,compra,movimento,shared}/`, `src/ports/`, `src/infrastructure/{db,repositories}/`, `src/application/{estoque,lista,compra}/`, `src/presentation/{components,theme,format}/` e `src/shared/`, com `.gitkeep` nas pastas ainda vazias
 - [ ] 2.2 Criar os diretórios de rota `app/(tabs)/`, `app/produto/` e `app/compra/` com placeholders que renderizam um texto, só para validar o roteamento
 
 ## 3. Dependências da stack
