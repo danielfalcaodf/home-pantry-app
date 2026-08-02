@@ -16,11 +16,11 @@
 
 ## 3. Dinheiro em centavos
 
-- [ ] 3.1 Criar `src/domain/shared/dinheiro.ts` com o tipo nominal `Centavos` e o construtor `centavos(n)`
-- [ ] 3.2 Implementar `deTextoDigitado(texto)` convertendo entrada do usuário para centavos, e `formatarBRL(c)` para exibição
-- [ ] 3.3 Implementar `multiplicarQuantidadePorPreco(milesimos, centavos)` — a **única** conversão de milésimos por centavos para centavos, com arredondamento ao centavo mais próximo
-- [ ] 3.4 Escrever testes de formatação, de conversão de entrada e do produto quantidade por preço, incluindo quantidade fracionária e valor zero
-- [ ] 3.5 Escrever teste que verifica que 2000 milésimos por 1290 centavos resulta em 2580 centavos, e não em valor mil vezes maior
+- [x] 3.1 Criar `src/domain/shared/dinheiro.ts` com o tipo nominal `Centavos` e o construtor `centavos(n)`
+- [x] 3.2 Implementar `deTextoDigitado(texto)` convertendo entrada do usuário para centavos, e `formatarBRL(c)` para exibição
+- [x] 3.3 Implementar `multiplicarQuantidadePorPreco(milesimos, centavos)` — a **única** conversão de milésimos por centavos para centavos, com arredondamento ao centavo mais próximo
+- [x] 3.4 Escrever testes de formatação, de conversão de entrada e do produto quantidade por preço, incluindo quantidade fracionária e valor zero
+- [x] 3.5 Escrever teste que verifica que 2000 milésimos por 1290 centavos resulta em 2580 centavos, e não em valor mil vezes maior
 
 ## 4. Tipos de entidade
 
