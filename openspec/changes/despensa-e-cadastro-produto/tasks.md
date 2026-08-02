@@ -19,16 +19,16 @@
 
 ## 3. Linha de item
 
-- [ ] 3.1 Implementar `ItemDespensa` com 68 pontos de altura, raio zero, de borda a borda, sem card, borda ou sombra
-- [ ] 3.2 Montar a área esquerda com nome, categoria e unidade, e a leitura de quantidade com o rótulo de estado no papel tipográfico de dado
-- [ ] 3.3 Reservar o alvo do botão de consumo à direita, com círculo de 40 pontos dentro de alvo de 48 por 48, ainda sem ação
-- [ ] 3.4 Aplicar opacidade reduzida ao botão quando o item estiver zerado, mantendo o layout inalterado
-- [ ] 3.5 Ligar o toque da área esquerda à navegação para o detalhe do produto
-- [ ] 3.6 Confirmar que nenhum gesto de deslizar dispara ação
-- [ ] 3.7 Definir o rótulo acessível da linha com nome, leitura de quantidade e estado
-- [ ] 3.8 Definir o rótulo acessível do botão com a ação completa, nome do produto e unidade
-- [ ] 3.9 Confirmar que o nível é pintado no valor final, sem animação de rolagem e sem entrada em cascata
-- [ ] 3.10 Escrever testes confirmando os rótulos acessíveis e a ausência de aritmética no componente
+- [x] 3.1 Implementar `ItemDespensa` com 68 pontos de altura, raio zero, de borda a borda, sem card, borda ou sombra
+- [x] 3.2 Montar a área esquerda com nome, categoria e unidade, e a leitura de quantidade com o rótulo de estado no papel tipográfico de dado
+- [x] 3.3 Reservar o alvo do botão de consumo à direita, com círculo de 40 pontos dentro de alvo de 48 por 48, ainda sem ação
+- [x] 3.4 Aplicar opacidade reduzida ao botão quando o item estiver zerado, mantendo o layout inalterado
+- [x] 3.5 Ligar o toque da área esquerda à navegação para o detalhe do produto
+- [x] 3.6 Confirmar que nenhum gesto de deslizar dispara ação
+- [x] 3.7 Definir o rótulo acessível da linha com nome, leitura de quantidade e estado
+- [x] 3.8 Definir o rótulo acessível do botão com a ação completa, nome do produto e unidade
+- [x] 3.9 Confirmar que o nível é pintado no valor final, sem animação de rolagem e sem entrada em cascata
+- [x] 3.10 Escrever testes confirmando os rótulos acessíveis e a ausência de aritmética no componente
 
 ## 4. Tela da despensa
 
