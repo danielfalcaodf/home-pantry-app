@@ -63,9 +63,9 @@
 
 ## 6. Conformidade
 
-- [ ] 6.1 Executar lint, typecheck e verificação de fronteiras
-- [ ] 6.2 Confirmar que nenhum literal de cor foi introduzido fora dos tokens
-- [ ] 6.3 Revisar todos os textos confirmando vocabulário de usuário, sem termos de sistema
-- [ ] 6.4 Confirmar que nenhum caminho do app permite alterar quantidade sem gravar movimento
-- [ ] 6.5 Verificar as telas com escala de fonte do sistema em 200 por cento
-- [ ] 6.6 Avaliar se vale exibir há quantos dias foi a última conferência, sem poluir o caminho crítico da despensa
+- [x] 6.1 Executar lint, typecheck e verificação de fronteiras — `npm run verificar`: verde, zero avisos
+- [x] 6.2 Confirmar que nenhum literal de cor foi introduzido fora dos tokens — varredura por `#[0-9A-Fa-f]{3,8}` nos arquivos desta change: zero ocorrências fora de `theme/tokens.ts`
+- [x] 6.3 Revisar todos os textos confirmando vocabulário de usuário, sem termos de sistema — varredura por "dar baixa"/"movimento de estoque"/"reposição": só aparecem em comentários de código, nunca em texto de tela
+- [x] 6.4 Confirmar que nenhum caminho do app permite alterar quantidade sem gravar movimento — `ProdutoRepository.editar` exclui `quantidadeAtual` do tipo aceito; `ajustar`, `darBaixa`, `repor` e `corrigirTodasDivergencias` sempre gravam o `UPDATE` e o `INSERT` do movimento na mesma transação
+- [ ] 6.5 Verificar as telas com escala de fonte do sistema em 200 por cento — pendente de aparelho físico (sem emulador Android/iOS neste ambiente, mesma razão das changes 5-9)
+- [x] 6.6 Avaliar se vale exibir há quantos dias foi a última conferência, sem poluir o caminho crítico da despensa — decidido não exibir: a despensa já ganhou um link para a conferência nesta change (task 3.1), e mais um dado no cabeçalho competiria com o caminho crítico de dar baixa; fica como candidato de v1.1 junto da notificação semanal
