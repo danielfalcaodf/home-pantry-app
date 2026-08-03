@@ -1,4 +1,5 @@
 import { validarCadastroProduto } from '../../domain/produto/validacao';
+import { converterValorBruto } from '../../domain/shared/dinheiro';
 import { milesimos } from '../../domain/shared/quantidade';
 import { criarDbDeTeste, semearCasaEUsuario } from '../db/teste/criar-db-teste';
 import { SQLiteProdutoRepository } from './sqlite-produto.repository';
@@ -424,5 +425,76 @@ describe('listarTudoParaBackup', () => {
       .run('outra-casa', 'Outra casa');
     const outros = await repo.listarTudoParaBackup('outra-casa');
     expect(outros).toHaveLength(0);
+  });
+});
+
+describe('valorBrutoDoEstoque', () => {
+  function dadosCom(nome: string, quantidadeAtual: number, valorUnitario: number) {
+    const resultado = validarCadastroProduto({
+      nome,
+      unidade: 'un',
+      quantidadeNecessaria: 1,
+      quantidadeAtual,
+      valorUnitario,
+    });
+    if (!resultado.ok) {
+      throw new Error('fixture inválida');
+    }
+    return resultado.valor;
+  }
+
+  it('despensa conhecida: dois itens de valores dados produzem o bruto exato esperado', async () => {
+    const { repo, casaId, usuarioId } = montar();
+    await repo.criar(casaId, usuarioId, dadosCom('Arroz', 2, 1290));
+    await repo.criar(casaId, usuarioId, dadosCom('Café', 3, 2250));
+
+    const bruto = await repo.valorBrutoDoEstoque(casaId);
+
+    expect(bruto).toBe(2000 * 1290 + 3000 * 2250);
+    expect(converterValorBruto(bruto)).toBe(9330); // R$ 93,30
+  });
+
+  it('despensa vazia produz bruto zero', async () => {
+    const { repo, casaId } = montar();
+    expect(await repo.valorBrutoDoEstoque(casaId)).toBe(0);
+  });
+
+  it('produto sem preço contribui zero, sem invalidar o total dos demais', async () => {
+    const { repo, casaId, usuarioId } = montar();
+    await repo.criar(casaId, usuarioId, dadosCom('Arroz', 2, 1290));
+    await repo.criar(casaId, usuarioId, dadosCom('Detergente', 1, 0));
+
+    expect(await repo.valorBrutoDoEstoque(casaId)).toBe(2000 * 1290);
+  });
+
+  it('produto removido logicamente não entra no bruto', async () => {
+    const { repo, casaId, usuarioId } = montar();
+    await repo.criar(casaId, usuarioId, dadosCom('Arroz', 2, 1290));
+    const removido = await repo.criar(casaId, usuarioId, dadosCom('Café', 3, 2250));
+    if (!removido.ok) throw new Error('setup');
+    await repo.removerLogicamente(removido.valor.id);
+
+    expect(await repo.valorBrutoDoEstoque(casaId)).toBe(2000 * 1290);
+  });
+
+  it('produto inativo não entra no bruto', async () => {
+    const { repo, casaId, usuarioId, sqlite } = montar();
+    await repo.criar(casaId, usuarioId, dadosCom('Arroz', 2, 1290));
+    const inativo = await repo.criar(casaId, usuarioId, dadosCom('Café', 3, 2250));
+    if (!inativo.ok) throw new Error('setup');
+    // Sem campo de edição de `ativo` na API pública — a coluna existe para
+    // desativação futura, ainda sem caso de uso que a grave.
+    sqlite.prepare('UPDATE produto SET ativo = 0 WHERE id = ?').run(inativo.valor.id);
+
+    expect(await repo.valorBrutoDoEstoque(casaId)).toBe(2000 * 1290);
+  });
+
+  it('não soma o bruto de outra casa', async () => {
+    const { repo, casaId, usuarioId, sqlite } = montar();
+    await repo.criar(casaId, usuarioId, dadosCom('Arroz', 2, 1290));
+    sqlite
+      .prepare('INSERT INTO casa (id, nome, criada_em, atualizado_em) VALUES (?, ?, 0, 0)')
+      .run('outra-casa', 'Outra casa');
+    expect(await repo.valorBrutoDoEstoque('outra-casa')).toBe(0);
   });
 });

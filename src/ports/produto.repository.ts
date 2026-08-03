@@ -69,6 +69,13 @@ export interface ProdutoRepository {
   obterPorId(id: string): Promise<Produto | null>;
   /** Todos os produtos da casa, inclusive inativos e removidos logicamente — uso exclusivo do backup. */
   listarTudoParaBackup(casaId: string): Promise<Produto[]>;
+  /**
+   * Bruto de `quantidade_atual × valor_unitario` somado sobre a casa inteira
+   * (DATABASE §6.5) — milésimos·centavos, NÃO centavos. A divisão por mil é
+   * responsabilidade exclusiva do domínio (`converterValorBruto`), nunca
+   * desta consulta.
+   */
+  valorBrutoDoEstoque(casaId: string): Promise<number>;
   /** Registro de consumo: UPDATE + INSERT do movimento na MESMA transação. */
   darBaixa(comando: ComandoBaixa): Promise<Result<ResultadoBaixa, 'nao_encontrado'>>;
   /** Reposição sem compra associada, na mesma transação única. */

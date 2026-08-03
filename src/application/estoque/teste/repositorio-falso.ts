@@ -135,6 +135,14 @@ export class ProdutoRepositorioFalso implements ProdutoRepository {
     return this.produtos.filter((p) => p.casaId === casaId);
   }
 
+  // Espelha a consulta real: bruto (milésimos·centavos), sem dividir por mil.
+  async valorBrutoDoEstoque(casaId: string): Promise<number> {
+    return (await this.listarDespensa(casaId)).reduce(
+      (total, p) => total + p.quantidadeAtual * p.valorUnitario,
+      0,
+    );
+  }
+
   /** Registro de cada movimento, para os testes de desfazer e de ajuste. */
   movimentos: {
     id: string;
