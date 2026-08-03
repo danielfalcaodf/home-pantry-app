@@ -31,7 +31,7 @@ Para implementar uma delas: `/opsx:apply <nome>`. Para arquivar após concluir: 
 | 5 | `despensa-e-cadastro-produto` | ✅ | Linha d'água, tela Despensa, filtros, busca, CRUD de produto, adoção da lista base | Primeira coisa utilizável. Resolve o risco Alto de cadastro inicial pesado. |
 | 6 | `dar-baixa-caminho-critico` | ✅ | Stepper funcional, coreografia de movimento, teclado de quantidade, toast de desfazer | O KPI que decide o produto. ARQUITETURA §11 o isola porque "merece iteração de UX própria". Obs.: tasks 3.7, 6.5, 7.2, 8.1, 8.3–8.5, 9.1, 9.2 (medição real do KPI K4, háptico, rolagem, offline em hardware) pendentes de aparelho — ver tabela abaixo. |
 | 7 | `lista-de-compras` | ✅ | Lista derivada, itens avulsos, custo estimado, agrupar por categoria, exportar texto | Só faz sentido com estoque real dentro. Obs.: tarefas 7.4 e 7.5 (escala de fonte 200%, alinhamento visual da coluna de preço) pendentes de aparelho — ver tabela abaixo. |
-| 8 | `modo-compra-e-fechamento` | ⬜ | Modo corredor de mercado, marcação, preço pago, fechamento atômico, atualização de preço de referência | Fecha o ciclo: consome → falta → lista → compra → repõe. |
+| 8 | `modo-compra-e-fechamento` | ✅ | Modo corredor de mercado, marcação, preço pago, fechamento atômico, atualização de preço de referência | Fecha o ciclo: consome → falta → lista → compra → repõe. |
 
 ### Fase 2 — Confiança nos dados
 
@@ -45,11 +45,11 @@ Para implementar uma delas: `/opsx:apply <nome>`. Para arquivar após concluir: 
 
 ## Onde a implementação parou
 
-**Última atualização: 2026-08-02.** Retomada em outra máquina começa por aqui.
+**Última atualização: 2026-08-03.** Retomada em outra máquina começa por aqui.
 
 ### Estado do repositório
 
-Changes 1 a 7 estão **implementadas, arquivadas e com PR aberta**. A próxima é a change 8 (`modo-compra-e-fechamento`), ainda não iniciada.
+Changes 1 a 8 estão **implementadas, arquivadas e com PR aberta**. A próxima é a change 9 (`backup-restore-json`), ainda não iniciada.
 
 As branches formam uma cadeia — cada PR aponta para a branch da change anterior, e o merge precisa seguir essa ordem:
 
@@ -62,8 +62,20 @@ As branches formam uma cadeia — cada PR aponta para a branch da change anterio
 | [#5](https://github.com/danielfalcaodf/home-pantry-app/pull/5) | `change/despensa-e-cadastro-produto` | `change/design-system-tema` | 5 · despensa-e-cadastro-produto |
 | [#6](https://github.com/danielfalcaodf/home-pantry-app/pull/6) | `change/dar-baixa-caminho-critico` | `change/despensa-e-cadastro-produto` | 6 · dar-baixa-caminho-critico |
 | [#7](https://github.com/danielfalcaodf/home-pantry-app/pull/7) | `feature/lista-de-compras` | `change/dar-baixa-caminho-critico` | 7 · lista-de-compras |
+| #8 (a abrir) | `feature/modo-compra-e-fechamento` | `feature/lista-de-compras` | 8 · modo-compra-e-fechamento |
 
 **A PR de `develop` para `main` ainda não foi aberta** — ela fecha o ciclo depois que as changes restantes entrarem.
+
+### Change 8 — concluída, com pendências de aparelho documentadas
+
+53 de 55 tarefas concluídas e testadas. As 2 restantes (8.4, 8.6) exigem aparelho físico real — verificar em uso real no corredor do mercado se a pergunta de preço embutida na linha não interrompe o fluxo, e a tela com escala de fonte do sistema a 200% — pela mesma razão das changes 6 e 7: sem emulador Android/iOS neste ambiente. A change foi arquivada mesmo assim, seguindo a mesma decisão das anteriores, para não travar o restante do MVP.
+
+- `use-iniciar-compra` materializa a lista corrente (tela, não uma nova consulta) em `compra_item`, sem reaplicar arredondamento e sem duplicar avulsos; a lista continua derivada depois disso
+- `compra_item` ganhou a coluna `atualizar_preco` (migration `0003`, forward-only) para guardar a resposta da pergunta de preço sem tocar o produto antes do fechamento
+- `use-modo-compra` grava cada marcação/ajuste direto no item, sem estado em memória — retomada é automática porque a tela sempre lê do repositório
+- `use-finalizar-compra` delega ao repositório, que já aplicava a transação única (reposições + movimentos vinculados à compra + atualizações de preço confirmadas + total pago); teste de rollback com falha injetada no meio do lote confirma que nada muda
+- `CompraRepository.cancelar` fecha a compra sem repor nada, liberando `ux_compra_aberta`
+- `ItemCompra`/`RodapeCompra` corrigidos para não importar `application/` nem `domain/produto/produto` — a fronteira de camadas exige tipos locais e valores prontos, mesmo quando o dado de origem vem de um hook
 
 ### Change 7 — concluída, com pendências de aparelho documentadas
 
@@ -87,7 +99,7 @@ As branches formam uma cadeia — cada PR aponta para a branch da change anterio
 
 ### A próxima change
 
-**8 · `modo-compra-e-fechamento`** — modo corredor de mercado, marcação, preço pago, fechamento atômico, atualização de preço de referência. Branch a partir de `feature/lista-de-compras`.
+**9 · `backup-restore-json`** — backup JSON versionado, restauração transacional, reconciliação, tela de configurações. Branch a partir de `feature/modo-compra-e-fechamento`.
 
 ### O que está bloqueado por falta de aparelho
 
@@ -101,12 +113,13 @@ Um `eas login` e um development build instalado destravam tudo isto de uma vez �
 | 5 | 4.11, 7.8, 8.3, 8.6 | Rolagem com 300 itens, adoção offline, fonte a 200%, altura de 68pt |
 | 6 | 3.7, 6.5, 7.2, 8.1, 8.3–8.5, 9.1, 9.2 | Engasgo na rolagem, fluxo offline, redução de movimento, **medição real do K4**, retorno tátil em uso repetido |
 | 7 | 7.4, 7.5 | Escala de fonte a 200%, alinhamento visual da coluna de preço |
+| 8 | 8.4, 8.6 | Uso real no corredor do mercado, fonte a 200% |
 
 Comando para destravar: `npx eas-cli login && npx eas-cli build --profile development --platform android`.
 
 ### Verificação atual
 
-`npm test` → **355 testes, todos verdes** · `npm run verificar` (fronteiras + lint + typecheck) → **verde, zero avisos** · `npx expo export` fecha o bundle.
+`npm test` → **405 testes, todos verdes** · `npm run verificar` (fronteiras + lint + typecheck) → **verde, zero avisos** · `npx expo export` fecha o bundle.
 
 ---
 
