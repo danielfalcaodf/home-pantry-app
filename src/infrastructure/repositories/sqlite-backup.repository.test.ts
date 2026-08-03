@@ -1,13 +1,68 @@
+import { ArquivoBackup, VERSAO_SCHEMA_BACKUP_ATUAL } from '../../domain/backup/backup.schema';
 import { efeitosDaFinalizacao } from '../../domain/compra/compra.rules';
 import { validarCadastroProduto } from '../../domain/produto/validacao';
 import { centavos } from '../../domain/shared/dinheiro';
 import { milesimos } from '../../domain/shared/quantidade';
-import { VERSAO_SCHEMA_BACKUP_ATUAL } from '../../domain/backup/backup.schema';
 import { criarDbDeTeste, semearCasaEUsuario } from '../db/teste/criar-db-teste';
 import { SQLiteBackupRepository } from './sqlite-backup.repository';
 import { SQLiteCompraRepository } from './sqlite-compra.repository';
 import { SQLiteMovimentoRepository } from './sqlite-movimento.repository';
 import { SQLiteProdutoRepository } from './sqlite-produto.repository';
+
+function arquivoDeOutroAparelho(sobrescreve: Partial<ArquivoBackup> = {}): ArquivoBackup {
+  return {
+    versaoSchema: VERSAO_SCHEMA_BACKUP_ATUAL,
+    exportadoEm: 500,
+    casa: { id: 'casa-do-backup', nome: 'Casa restaurada', criadaEm: 0, atualizadoEm: 0 },
+    usuarios: [
+      {
+        id: 'usuario-do-backup',
+        casaId: 'casa-do-backup',
+        nome: 'Quem fez o backup',
+        perfil: 'admin',
+        criadoEm: 0,
+        atualizadoEm: 0,
+      },
+    ],
+    produtos: [
+      {
+        id: 'produto-do-backup',
+        casaId: 'casa-do-backup',
+        nome: 'Arroz',
+        categoria: 'Grãos',
+        unidade: 'pacote',
+        quantidadeAtual: milesimos(2000),
+        quantidadeNecessaria: milesimos(3000),
+        valorUnitario: centavos(890),
+        marcaPreferida: null,
+        observacao: null,
+        ativo: true,
+        criadoEm: 100,
+        atualizadoEm: 100,
+        deletadoEm: null,
+        syncStatus: 'sincronizado',
+      },
+    ],
+    movimentos: [
+      {
+        id: 'movimento-do-backup',
+        casaId: 'casa-do-backup',
+        produtoId: 'produto-do-backup',
+        usuarioId: 'usuario-do-backup',
+        compraId: null,
+        tipo: 'ajuste',
+        quantidadeDelta: milesimos(2000),
+        quantidadeResultante: milesimos(2000),
+        motivo: 'estoque_inicial',
+        criadoEm: 100,
+        syncStatus: 'sincronizado',
+      },
+    ],
+    compras: [],
+    itensCompra: [],
+    ...sobrescreve,
+  };
+}
 
 const clock = { agora: () => 1_700_000_000_000 };
 
@@ -140,5 +195,169 @@ describe('SQLiteBackupRepository.montar', () => {
     const arquivo = await backup.montar('outra-casa', clock.agora());
     expect(arquivo.produtos).toHaveLength(0);
     expect(arquivo.usuarios.map((u) => u.id)).toEqual(['outro-usuario']);
+  });
+});
+
+describe('SQLiteBackupRepository.restaurar', () => {
+  it('insere tudo sob a casa local, reescrevendo o casaId (design D8)', async () => {
+    const { backup, casaId, sqlite } = await montar();
+    const arquivo = arquivoDeOutroAparelho();
+
+    await backup.restaurar(arquivo, casaId, 999);
+
+    const produto = sqlite
+      .prepare('SELECT casa_id, nome FROM produto WHERE id = ?')
+      .get('produto-do-backup') as { casa_id: string; nome: string };
+    expect(produto.casa_id).toBe(casaId);
+    expect(produto.nome).toBe('Arroz');
+
+    const movimento = sqlite
+      .prepare('SELECT casa_id FROM movimento_estoque WHERE id = ?')
+      .get('movimento-do-backup') as { casa_id: string };
+    expect(movimento.casa_id).toBe(casaId);
+
+    const usuario = sqlite
+      .prepare('SELECT casa_id FROM usuario WHERE id = ?')
+      .get('usuario-do-backup') as { casa_id: string };
+    expect(usuario.casa_id).toBe(casaId);
+  });
+
+  it('nunca insere uma segunda casa — atualiza o nome da casa local', async () => {
+    const { backup, casaId, sqlite } = await montar();
+    await backup.restaurar(arquivoDeOutroAparelho(), casaId, 999);
+
+    const casas = sqlite.prepare('SELECT id, nome FROM casa').all() as {
+      id: string;
+      nome: string;
+    }[];
+    expect(casas).toHaveLength(1);
+    expect(casas[0]).toEqual({ id: casaId, nome: 'Casa restaurada' });
+  });
+
+  it('registro ausente é inserido; registro existente é atualizado com o conteúdo do backup', async () => {
+    const { backup, produtos, casaId, usuarioId, sqlite } = await montar();
+    const dados = validarCadastroProduto({ nome: 'Feijão', unidade: 'un', quantidadeNecessaria: 2 });
+    if (!dados.ok) throw new Error('setup');
+    const existente = await produtos.criar(casaId, usuarioId, dados.valor);
+    if (!existente.ok) throw new Error('setup');
+
+    const arquivo = arquivoDeOutroAparelho({
+      produtos: [
+        {
+          id: existente.valor.id,
+          casaId: 'casa-do-backup',
+          nome: 'Feijão preto',
+          categoria: 'Grãos',
+          unidade: 'un',
+          quantidadeAtual: milesimos(0),
+          quantidadeNecessaria: milesimos(2000),
+          valorUnitario: centavos(0),
+          marcaPreferida: null,
+          observacao: null,
+          ativo: true,
+          criadoEm: 0,
+          atualizadoEm: 0,
+          deletadoEm: null,
+          syncStatus: 'sincronizado',
+        },
+      ],
+      // O movimento padrão da fixture referencia produto-do-backup, que não
+      // está mais na lista de produtos deste arquivo — sem isso, a FK falha.
+      movimentos: [],
+    });
+    await backup.restaurar(arquivo, casaId, 999);
+
+    const linha = sqlite
+      .prepare('SELECT nome, casa_id FROM produto WHERE id = ?')
+      .get(existente.valor.id) as { nome: string; casa_id: string };
+    expect(linha.nome).toBe('Feijão preto');
+    expect(linha.casa_id).toBe(casaId);
+    expect(sqlite.prepare('SELECT COUNT(*) AS n FROM produto').get()).toEqual({ n: 1 });
+  });
+
+  it('restauração repetida é idempotente — mesmo arquivo duas vezes não duplica nada', async () => {
+    const { backup, casaId, sqlite } = await montar();
+    const arquivo = arquivoDeOutroAparelho();
+
+    await backup.restaurar(arquivo, casaId, 999);
+    await backup.restaurar(arquivo, casaId, 1000);
+
+    expect(sqlite.prepare('SELECT COUNT(*) AS n FROM produto').get()).toEqual({ n: 1 });
+    expect(sqlite.prepare('SELECT COUNT(*) AS n FROM movimento_estoque').get()).toEqual({ n: 1 });
+    expect(sqlite.prepare('SELECT COUNT(*) AS n FROM usuario').get()).toEqual({ n: 2 });
+  });
+
+  it('combina com dados criados no aparelho depois do backup, sem apagar nenhum', async () => {
+    const { backup, produtos, casaId, usuarioId, sqlite } = await montar();
+    const dados = validarCadastroProduto({ nome: 'Macarrão', unidade: 'pacote', quantidadeNecessaria: 2 });
+    if (!dados.ok) throw new Error('setup');
+    const criadoLocalmente = await produtos.criar(casaId, usuarioId, dados.valor);
+    if (!criadoLocalmente.ok) throw new Error('setup');
+
+    await backup.restaurar(arquivoDeOutroAparelho(), casaId, 999);
+
+    const nomes = sqlite.prepare('SELECT nome FROM produto ORDER BY nome').all() as {
+      nome: string;
+    }[];
+    expect(nomes.map((n) => n.nome)).toEqual(['Arroz', 'Macarrão']);
+  });
+
+  it('falha no meio da transação não deixa estado parcial', async () => {
+    const { backup, casaId, sqlite } = await montar();
+    const antesProdutos = sqlite.prepare('SELECT COUNT(*) AS n FROM produto').get();
+    const antesItens = sqlite.prepare('SELECT COUNT(*) AS n FROM compra_item').get();
+
+    // item de compra referenciando uma compra inexistente: viola FK depois
+    // de já ter inserido produtos e movimentos válidos — a transação
+    // inteira precisa desfazer também essas escritas anteriores.
+    const arquivo = arquivoDeOutroAparelho({
+      itensCompra: [
+        {
+          id: 'item-orfao',
+          compraId: 'compra-que-nao-existe',
+          produtoId: 'produto-do-backup',
+          nomeAvulso: null,
+          unidade: 'pacote',
+          quantidadePlanejada: milesimos(1000),
+          quantidadeComprada: null,
+          valorEstimadoUnit: centavos(0),
+          valorPagoUnitario: null,
+          comprado: false,
+          ordem: 0,
+          excluido: false,
+          atualizarPreco: null,
+        },
+      ],
+    });
+
+    await expect(backup.restaurar(arquivo, casaId, 999)).rejects.toThrow(/FOREIGN KEY/i);
+
+    expect(sqlite.prepare('SELECT COUNT(*) AS n FROM produto').get()).toEqual(antesProdutos);
+    expect(sqlite.prepare('SELECT COUNT(*) AS n FROM compra_item').get()).toEqual(antesItens);
+  });
+
+  it('duas compras abertas com ids diferentes (local e do backup) rejeitam a transação inteira', async () => {
+    const { backup, compras, casaId, usuarioId, sqlite } = await montar();
+    const abertaLocal = await compras.abrir(casaId, usuarioId, 10);
+    if (!abertaLocal.ok) throw new Error('setup');
+
+    const arquivo = arquivoDeOutroAparelho({
+      compras: [
+        {
+          id: 'compra-aberta-do-backup',
+          casaId: 'casa-do-backup',
+          usuarioId: 'usuario-do-backup',
+          status: 'aberta',
+          valorTotalPago: null,
+          criadaEm: 5,
+          finalizadaEm: null,
+          atualizadoEm: 5,
+          syncStatus: 'sincronizado',
+        },
+      ],
+    });
+
+    await expect(backup.restaurar(arquivo, casaId, 999)).rejects.toThrow(/UNIQUE/i);
+    expect(sqlite.prepare('SELECT COUNT(*) AS n FROM compra').get()).toEqual({ n: 1 });
   });
 });

@@ -27,9 +27,18 @@ export function arquivoBackupFalso(sobrescreve: Partial<ArquivoBackup> = {}): Ar
 export class BackupRepositorioFalso implements BackupRepository {
   arquivo: ArquivoBackup = arquivoBackupFalso();
   chamadasMontar: { casaId: string; exportadoEm: number }[] = [];
+  chamadasRestaurar: { arquivo: ArquivoBackup; casaIdLocal: string; aplicadoEm: number }[] = [];
+  falharAoRestaurar: Error | null = null;
 
   async montar(casaId: string, exportadoEm: number): Promise<ArquivoBackup> {
     this.chamadasMontar.push({ casaId, exportadoEm });
     return { ...this.arquivo, exportadoEm };
+  }
+
+  async restaurar(arquivo: ArquivoBackup, casaIdLocal: string, aplicadoEm: number): Promise<void> {
+    if (this.falharAoRestaurar) {
+      throw this.falharAoRestaurar;
+    }
+    this.chamadasRestaurar.push({ arquivo, casaIdLocal, aplicadoEm });
   }
 }
