@@ -448,3 +448,96 @@ describe('itens planejados sobrevivem a consumo posterior', () => {
     expect(itens.find((i) => i.item.id === item.id)?.item.quantidadePlanejada).toBe(1500);
   });
 });
+
+describe('escala e retorno à lista (tasks 7.1, 7.4)', () => {
+  it('fechamento bem-sucedido com oito itens marcados de quinze', async () => {
+    const { compras, produtos, casaId, usuarioId, criarProduto, sqlite } = await montar();
+    const produtosCriados = [];
+    for (let i = 0; i < 15; i++) {
+      produtosCriados.push(await criarProduto(`Produto ${i}`, 0, 500));
+    }
+    const compra = await compras.abrir(casaId, usuarioId, clock.agora());
+    if (!compra.ok) {
+      throw new Error('setup');
+    }
+    const itensCriados = [];
+    for (const p of produtosCriados) {
+      itensCriados.push(
+        await compras.adicionarItem(compra.valor.id, {
+          produtoId: p.id,
+          unidade: 'un',
+          quantidadePlanejada: milesimos(1000),
+          valorEstimadoUnit: centavos(500),
+        }),
+      );
+    }
+    expect(itensCriados).toHaveLength(15);
+
+    for (const item of itensCriados.slice(0, 8)) {
+      await compras.editarItem(item.id, {
+        comprado: true,
+        quantidadeComprada: milesimos(1000),
+        valorPagoUnitario: centavos(500),
+      });
+    }
+
+    const itensAtuais = (await compras.listarItens(compra.valor.id)).map((i) => i.item);
+    const produtosAtuais = await produtos.listarDespensa(casaId);
+    const efeitos = efeitosDaFinalizacao(itensAtuais, produtosAtuais, new Set());
+    if (!efeitos.ok) {
+      throw new Error('setup');
+    }
+    expect(efeitos.valor.reposicoes).toHaveLength(8);
+
+    const resultado = await compras.finalizar(compra.valor.id, efeitos.valor, usuarioId, clock.agora() + 1);
+    expect(resultado.ok).toBe(true);
+    expect(resultado.ok && resultado.valor.valorTotalPago).toBe(8 * 500);
+
+    const reposicoes = sqlite
+      .prepare("SELECT COUNT(*) AS n FROM movimento_estoque WHERE tipo = 'reposicao' AND compra_id = ?")
+      .get(compra.valor.id);
+    expect(reposicoes).toEqual({ n: 8 });
+  });
+
+  it('itens não marcados voltam à lista quando o produto continua abaixo do mínimo', async () => {
+    const { compras, produtos, casaId, usuarioId, criarProduto } = await montar();
+    // Ambos começam abaixo do mínimo (necessária fixa em 3, do helper).
+    const repostoNoFechamento = await criarProduto('Arroz', 0, 500);
+    const deixadoDeFora = await criarProduto('Feijão', 0, 500);
+    const compra = await compras.abrir(casaId, usuarioId, clock.agora());
+    if (!compra.ok) {
+      throw new Error('setup');
+    }
+    const item1 = await compras.adicionarItem(compra.valor.id, {
+      produtoId: repostoNoFechamento.id,
+      unidade: 'un',
+      quantidadePlanejada: milesimos(3000),
+      valorEstimadoUnit: centavos(500),
+    });
+    await compras.adicionarItem(compra.valor.id, {
+      produtoId: deixadoDeFora.id,
+      unidade: 'un',
+      quantidadePlanejada: milesimos(3000),
+      valorEstimadoUnit: centavos(500),
+    });
+    // Só o primeiro é marcado — o segundo fica pendente.
+    await compras.editarItem(item1.id, {
+      comprado: true,
+      quantidadeComprada: milesimos(3000),
+      valorPagoUnitario: centavos(500),
+    });
+
+    const itensAtuais = (await compras.listarItens(compra.valor.id)).map((i) => i.item);
+    const produtosAtuais = await produtos.listarDespensa(casaId);
+    const efeitos = efeitosDaFinalizacao(itensAtuais, produtosAtuais, new Set());
+    if (!efeitos.ok) {
+      throw new Error('setup');
+    }
+    await compras.finalizar(compra.valor.id, efeitos.valor, usuarioId, clock.agora() + 1);
+
+    const faltantes = await produtos.listarFaltantes(casaId);
+    // O reposto sai da lista (chegou à necessária); o não marcado continua.
+    expect(faltantes.map((f) => f.id)).not.toContain(repostoNoFechamento.id);
+    expect(faltantes.map((f) => f.id)).toContain(deixadoDeFora.id);
+  });
+});

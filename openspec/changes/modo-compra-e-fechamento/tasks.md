@@ -57,16 +57,16 @@
 - [x] 6.6 Preencher a data de finalização ao mudar a situação para finalizada
 - [x] 6.7 Permitir fechar compra sem nenhum item marcado, registrando total zero
 - [x] 6.8 Implementar a mensagem de falha preservando as marcações e oferecendo tentar novamente
-- [ ] 6.9 Exibir a confirmação informando quantos itens foram repostos, em vocabulário de usuário
-- [ ] 6.10 Retornar à despensa com as quantidades atualizadas
+- [x] 6.9 Exibir a confirmação informando quantos itens foram repostos, em vocabulário de usuário
+- [x] 6.10 Retornar à despensa com as quantidades atualizadas
 
 ## 7. Testes de atomicidade
 
-- [ ] 7.1 Escrever teste de fechamento bem-sucedido com oito itens marcados de quinze
-- [ ] 7.2 Escrever teste de falha injetada no processamento de um item intermediário, confirmando que nenhuma quantidade mudou e nenhum movimento foi gravado
-- [ ] 7.3 Escrever teste inspecionando o banco após falha, confirmando que não existe produto reposto sem movimento correspondente
-- [ ] 7.4 Escrever teste confirmando que itens não marcados voltam à lista quando continuam abaixo do mínimo
-- [ ] 7.5 Verificar que o fechamento funciona com o aparelho sem conexão
+- [x] 7.1 Escrever teste de fechamento bem-sucedido com oito itens marcados de quinze
+- [x] 7.2 Escrever teste de falha injetada no processamento de um item intermediário, confirmando que nenhuma quantidade mudou e nenhum movimento foi gravado
+- [x] 7.3 Escrever teste inspecionando o banco após falha, confirmando que não existe produto reposto sem movimento correspondente
+- [x] 7.4 Escrever teste confirmando que itens não marcados voltam à lista quando continuam abaixo do mínimo
+- [x] 7.5 Verificar que o fechamento funciona com o aparelho sem conexão
 
 ## 8. Conformidade
 
