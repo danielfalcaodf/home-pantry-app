@@ -25,7 +25,15 @@ export type ResultadoCorrecaoEmBloco = { corrigidos: number };
 // remoção — desfazer não tem como ser implementado errado se o método
 // errado não existe (design D3).
 export interface MovimentoRepository {
-  historicoPorProduto(produtoId: string, limite?: number): Promise<MovimentoEstoque[]>;
+  /**
+   * `antesDe` continua a partir da data do último item carregado (design
+   * D7) — nunca deslocamento numérico, que degrada conforme a tabela
+   * append-only cresce (DATABASE §11).
+   */
+  historicoPorProduto(
+    produtoId: string,
+    opcoes?: { limite?: number; antesDe?: number },
+  ): Promise<MovimentoEstoque[]>;
   historicoPorCasa(casaId: string, limite?: number): Promise<MovimentoEstoque[]>;
   /**
    * Desfazer: insere o movimento INVERSO e ajusta a quantidade do produto

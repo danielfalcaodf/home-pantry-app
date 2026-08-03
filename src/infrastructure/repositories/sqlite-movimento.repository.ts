@@ -1,4 +1,4 @@
-import { desc, eq, sql } from 'drizzle-orm';
+import { and, desc, eq, lt, sql } from 'drizzle-orm';
 
 import { MovimentoEstoque, TipoMovimento } from '../../domain/movimento/movimento';
 import { movimentoInverso } from '../../domain/movimento/movimento.rules';
@@ -36,11 +36,22 @@ function paraDominio(linha: LinhaMovimento): MovimentoEstoque {
 export class SQLiteMovimentoRepository implements MovimentoRepository {
   constructor(private readonly db: Db) {}
 
-  async historicoPorProduto(produtoId: string, limite = 50): Promise<MovimentoEstoque[]> {
+  // Continuação por data (design D7), não por deslocamento numérico: usa o
+  // índice idx_movimento_produto_data, que não degrada com o tamanho da
+  // tabela append-only (DATABASE §11).
+  async historicoPorProduto(
+    produtoId: string,
+    opcoes: { limite?: number; antesDe?: number } = {},
+  ): Promise<MovimentoEstoque[]> {
+    const { limite = 50, antesDe } = opcoes;
     return this.db
       .select()
       .from(movimentoEstoque)
-      .where(eq(movimentoEstoque.produtoId, produtoId))
+      .where(
+        antesDe === undefined
+          ? eq(movimentoEstoque.produtoId, produtoId)
+          : and(eq(movimentoEstoque.produtoId, produtoId), lt(movimentoEstoque.criadoEm, antesDe)),
+      )
       .orderBy(desc(movimentoEstoque.criadoEm))
       .limit(limite)
       .all()

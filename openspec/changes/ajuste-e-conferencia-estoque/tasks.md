@@ -49,17 +49,17 @@
 
 ## 5. Histórico do produto
 
-- [ ] 5.1 Criar `app/produto/[id]/historico.tsx` listando os movimentos do mais recente para o mais antigo
-- [ ] 5.2 Exibir em cada linha o que aconteceu, a quantidade, a data e o motivo quando houver
-- [ ] 5.3 Distinguir visualmente consumos, reposições e ajustes
-- [ ] 5.4 Indicar quando uma reposição veio de uma compra
-- [ ] 5.5 Usar o papel tipográfico de dado para quantidades e datas
-- [ ] 5.6 Descrever cada movimento com o mesmo verbo usado no momento da ação, sem termos de sistema
-- [ ] 5.7 Não oferecer nenhuma ação de editar ou remover movimento
-- [ ] 5.8 Implementar a paginação por data, carregando um bloco recente e continuando por rolagem
-- [ ] 5.9 Confirmar que a consulta de continuação usa a data do último item, e não deslocamento numérico
-- [ ] 5.10 Ligar o resumo do rodapé do detalhe ao histórico completo
-- [ ] 5.11 Escrever teste de paginação com histórico grande, verificando que a carga inicial é limitada
+- [x] 5.1 Criar `app/produto/[id]/historico.tsx` listando os movimentos do mais recente para o mais antigo
+- [x] 5.2 Exibir em cada linha o que aconteceu, a quantidade, a data e o motivo quando houver
+- [x] 5.3 Distinguir visualmente consumos, reposições e ajustes
+- [x] 5.4 Indicar quando uma reposição veio de uma compra
+- [x] 5.5 Usar o papel tipográfico de dado para quantidades e datas
+- [x] 5.6 Descrever cada movimento com o mesmo verbo usado no momento da ação, sem termos de sistema
+- [x] 5.7 Não oferecer nenhuma ação de editar ou remover movimento
+- [x] 5.8 Implementar a paginação por data, carregando um bloco recente e continuando por rolagem
+- [x] 5.9 Confirmar que a consulta de continuação usa a data do último item, e não deslocamento numérico
+- [x] 5.10 Ligar o resumo do rodapé do detalhe ao histórico completo
+- [x] 5.11 Escrever teste de paginação com histórico grande, verificando que a carga inicial é limitada
 
 ## 6. Conformidade
 

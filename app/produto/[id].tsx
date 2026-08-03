@@ -13,6 +13,7 @@ import {
   useRemoverProduto,
 } from '@/application/estoque/use-editar-produto';
 import { useReporPontual } from '@/application/estoque/use-repor-pontual';
+import { useResumoHistoricoRecente } from '@/application/estoque/use-resumo-historico';
 import { normalizarCategoria } from '@/domain/produto/categoria';
 import { centavos, formatarBRL } from '@/domain/shared/dinheiro';
 import { deDecimal, formatarNumero, milesimos, paraDecimal } from '@/domain/shared/quantidade';
@@ -92,6 +93,7 @@ function Detalhe({ id, item }: { id: string; item: ProdutoNaDespensa }) {
   const { ajustar } = useAjustarEstoque();
   const { desfazer } = useDesfazerMovimento();
   const confirmacao = useRegistroDeConsumo();
+  const resumoHistorico = useResumoHistoricoRecente(id);
 
   async function usar(quantidade = milesimos(1000)) {
     const resultado = await registrarConsumo(id, quantidade);
@@ -223,6 +225,25 @@ function Detalhe({ id, item }: { id: string; item: ProdutoNaDespensa }) {
         aoSalvar={salvar}
         quantidadeAtualEditavel={false}
       />
+
+      {/* Resumo do histórico (task 5.10): a mesma confiança de que o app
+          registra o que deveria, com acesso ao histórico completo. */}
+      {!resumoHistorico.carregando ? (
+        <Pressable
+          onPress={() => router.push(`/produto/${id}/historico`)}
+          accessibilityRole="button"
+          accessibilityLabel="Ver histórico completo"
+          style={{ paddingHorizontal: espaco.lg, paddingVertical: espaco.sm }}
+        >
+          <Texto papel="label" tom="secondary">
+            {resumoHistorico.quantidadeDeUsos === 0
+              ? 'Sem uso registrado nos últimos 30 dias'
+              : resumoHistorico.quantidadeDeUsos === 1
+                ? 'Você anotou 1 uso nos últimos 30 dias'
+                : `Você anotou ${resumoHistorico.quantidadeDeUsos} usos nos últimos 30 dias`}
+          </Texto>
+        </Pressable>
+      ) : null}
 
       <View style={{ padding: espaco.lg }}>
         <Botao titulo="Tirar da despensa" variante="secundario" onPress={confirmarRemocao} />
