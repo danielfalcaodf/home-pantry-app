@@ -38,7 +38,7 @@ Para implementar uma delas: `/opsx:apply <nome>`. Para arquivar após concluir: 
 | # | Change | Estado | Entrega | Por que nessa posição |
 |---|---|---|---|---|
 | 9 | `backup-restore-json` | ✅ | Backup JSON versionado, restauração transacional, reconciliação, tela de configurações | ARQUITETURA §9: **obrigatório antes de qualquer feature nova**. Sem backend, é a única proteção contra perda total — e o único caminho de recuperação de migration ruim. |
-| 10 | `ajuste-e-conferencia-estoque` | ⬜ | Ajuste com motivo, modo conferência, diagnóstico de integridade, histórico do produto | Compensa a ausência de US-08. ARQUITETURA §1.1: sem sync, K2 depende da conferência semanal. |
+| 10 | `ajuste-e-conferencia-estoque` | ✅ | Ajuste com motivo, modo conferência, diagnóstico de integridade, histórico do produto | Compensa a ausência de US-08. ARQUITETURA §1.1: sem sync, K2 depende da conferência semanal. |
 | 11 | `resumo-valores-e-historico` | ⬜ | Valor do estoque, valor da lista, gasto mensal, histórico de compras | Camada de leitura sobre dados existentes. Não bloqueia nada. |
 
 ---
@@ -49,7 +49,7 @@ Para implementar uma delas: `/opsx:apply <nome>`. Para arquivar após concluir: 
 
 ### Estado do repositório
 
-Changes 1 a 9 estão **implementadas, arquivadas e com PR aberta**. A próxima é a change 10 (`ajuste-e-conferencia-estoque`) — ou a 11, já que as duas são independentes entre si depois da 9 (ver grafo de dependências).
+Changes 1 a 10 estão **implementadas, arquivadas e com PR aberta**. A próxima é a change 11 (`resumo-valores-e-historico`) — a única restante, sem dependência pendente.
 
 As branches formam uma cadeia — cada PR aponta para a branch da change anterior, e o merge precisa seguir essa ordem:
 
@@ -64,8 +64,23 @@ As branches formam uma cadeia — cada PR aponta para a branch da change anterio
 | [#7](https://github.com/danielfalcaodf/home-pantry-app/pull/7) | `feature/lista-de-compras` | `change/dar-baixa-caminho-critico` | 7 · lista-de-compras |
 | [#8](https://github.com/danielfalcaodf/home-pantry-app/pull/8) | `feature/modo-compra-e-fechamento` | `feature/lista-de-compras` | 8 · modo-compra-e-fechamento |
 | [#9](https://github.com/danielfalcaodf/home-pantry-app/pull/9) | `feature/backup-restore-json` | `feature/modo-compra-e-fechamento` | 9 · backup-restore-json |
+| #10 (a abrir) | `feature/ajuste-e-conferencia-estoque` | `feature/backup-restore-json` | 10 · ajuste-e-conferencia-estoque |
 
-**A PR de `develop` para `main` ainda não foi aberta** — ela fecha o ciclo depois que as changes restantes entrarem.
+**A PR de `develop` para `main` ainda não foi aberta** — ela fecha o ciclo depois que a change 11 entrar.
+
+### Change 10 — concluída, com pendências de aparelho documentadas
+
+49 de 51 tarefas concluídas e testadas. As 2 restantes (3.13 — medir 30 itens conferidos em uso real, 6.5 — escala de fonte a 200%) exigem aparelho físico real, pela mesma razão das changes 5-9: sem emulador Android/iOS neste ambiente. A change foi arquivada mesmo assim, seguindo a mesma decisão das anteriores, para não travar o restante do MVP.
+
+- `calcularAjuste` (movimento.rules.ts) reaproveita `construirMovimento`: o usuário informa o **valor final** contado, não a diferença (design D2) — a variação e a rejeição de "sem mudança" ficam com o domínio
+- `ProdutoRepository.ajustar` grava a quantidade e o movimento de ajuste (motivo opcional: perda/vencimento/correção) na mesma transação, igual ao padrão de `darBaixa`/`repor`
+- `SheetAjusteEstoque`: o toque na quantidade atual do detalhe abre este caminho — nunca um campo de formulário comum (design D3, herdada da change 5 e concretizada aqui)
+- `MotivoAjuste` mora em `domain/movimento/movimento.ts`, ao lado de `TipoMovimento` — precisou saída de `ports/` para `presentation/` não depender de `ports/` diretamente (fronteira de camadas)
+- `use-conferencia.ts`: percurso por categoria (ou tudo) ordenado por nome, incluindo itens zerados; confirmar avança sem gravar nada, corrigir grava o mesmo ajuste. Posição do percurso persiste em `configuracao` (`conferenciaCategoria`/`conferenciaIndice`) para retomar — o progresso é o próprio estado do banco (design D5), nunca uma transação pendente
+- `app/diagnostico.tsx` ganhou tela própria (antes embutida em configurações) com correção em bloco: `MovimentoRepository.corrigirTodasDivergencias` corrige cada produto divergente com seu próprio movimento de ajuste, em uma única transação — testado com falha injetada (rollback total)
+- `MovimentoRepository.historicoPorProduto` ganhou paginação por data (`antesDe`), substituindo o parâmetro posicional `limite` — único caminho de chamada era interno ao repositório, sem breaking change de fato
+- `app/produto/[id]/historico.tsx`: histórico somente leitura, paginado em blocos de 30, cada linha com o mesmo verbo do momento da ação (Usei/Repus/Comprei/Corrigi para) em cor distinta por tipo, quantidade e data no papel tipográfico de dado
+- Vocabulário: a cópia do rodapé do detalhe ("Você anotou N usos...") evita a palavra "baixa" mesmo aparecendo como exemplo literal no FRONTEND-DESIGN §7.3 — resolvido a favor da regra de vocabulário mais explícita (§11), que proíbe termos de sistema no histórico
 
 ### Change 9 — concluída, com pendência de aparelho documentada
 
@@ -112,7 +127,7 @@ As branches formam uma cadeia — cada PR aponta para a branch da change anterio
 
 ### A próxima change
 
-**10 · `ajuste-e-conferencia-estoque`** (ou **11 · `resumo-valores-e-historico`** — independentes entre si depois da 9). Branch a partir de `feature/backup-restore-json`.
+**11 · `resumo-valores-e-historico`** — a única restante, sem dependência pendente. Branch a partir de `feature/ajuste-e-conferencia-estoque`.
 
 ### O que está bloqueado por falta de aparelho
 
@@ -128,12 +143,13 @@ Um `eas login` e um development build instalado destravam tudo isto de uma vez �
 | 7 | 7.4, 7.5 | Escala de fonte a 200%, alinhamento visual da coluna de preço |
 | 8 | 8.4, 8.6 | Uso real no corredor do mercado, fonte a 200% |
 | 9 | 7.4 | Ciclo completo exportar → desinstalar → reinstalar → restaurar em aparelho real |
+| 10 | 3.13, 6.5 | Medir 30 itens conferidos em uso real, fonte a 200% |
 
 Comando para destravar: `npx eas-cli login && npx eas-cli build --profile development --platform android`.
 
 ### Verificação atual
 
-`npm test` → **470 testes, todos verdes** (49 suítes) · `npm run verificar` (fronteiras + lint + typecheck) → **verde, zero avisos** · `npx expo export` fecha o bundle.
+`npm test` → **530 testes, todos verdes** (55 suítes) · `npm run verificar` (fronteiras + lint + typecheck) → **verde, zero avisos** · `npx expo export` fecha o bundle.
 
 ---
 
