@@ -70,9 +70,9 @@
 
 ## 8. Conformidade
 
-- [ ] 8.1 Executar lint, typecheck e verificação de fronteiras
-- [ ] 8.2 Confirmar que nenhum literal de cor foi introduzido fora dos tokens
-- [ ] 8.3 Revisar todos os textos do fluxo confirmando vocabulário de usuário, sem termos de sistema
-- [ ] 8.4 Verificar em uso real, no mercado, se o controle embutido de preço não interrompe o fluxo do corredor
-- [ ] 8.5 Verificar que a trava de tela acordada é desativada ao sair da tela
-- [ ] 8.6 Verificar a tela com escala de fonte do sistema em 200 por cento
+- [x] 8.1 Executar lint, typecheck e verificação de fronteiras
+- [x] 8.2 Confirmar que nenhum literal de cor foi introduzido fora dos tokens
+- [x] 8.3 Revisar todos os textos do fluxo confirmando vocabulário de usuário, sem termos de sistema
+- [ ] 8.4 Verificar em uso real, no mercado, se o controle embutido de preço não interrompe o fluxo do corredor — pendente de aparelho (sem hardware físico neste ambiente, mesma razão das changes 6 e 7)
+- [x] 8.5 Verificar que a trava de tela acordada é desativada ao sair da tela — `useKeepAwake()` ativa no montar e desativa no desmontar por contrato da própria API (`expo-keep-awake`), chamado incondicionalmente no topo do componente
+- [ ] 8.6 Verificar a tela com escala de fonte do sistema em 200 por cento — pendente de aparelho (mesma razão acima)
