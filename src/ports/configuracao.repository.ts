@@ -9,11 +9,14 @@ export type PreferenciaDeAgrupamento = 'agrupado' | 'continuo';
 export type Configuracoes = {
   tema: PreferenciaDeTema;
   agrupamentoDaLista: PreferenciaDeAgrupamento;
+  /** Epoch ms do último backup gerado, como texto — '' quando nunca houve. */
+  ultimoBackupEm: string;
 };
 
 export const PADROES: Configuracoes = {
   tema: 'automatico',
   agrupamentoDaLista: 'agrupado',
+  ultimoBackupEm: '',
 };
 
 export interface ConfiguracaoRepository {

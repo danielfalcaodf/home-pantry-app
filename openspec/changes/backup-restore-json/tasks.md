@@ -9,16 +9,16 @@
 
 ## 2. Exportação
 
-- [ ] 2.1 Criar `src/infrastructure/backup/exportar.ts` reunindo todos os registros da casa pelos repositórios
-- [ ] 2.2 Incluir produtos removidos logicamente, com sua marcação de remoção
-- [ ] 2.3 Incluir todo o histórico de movimentos, sem truncamento por data
-- [ ] 2.4 Incluir compras finalizadas, canceladas e a compra aberta, com seus itens
-- [ ] 2.5 Gravar quantidades e valores como inteiros em unidades internas, sem conversão para exibição
-- [ ] 2.6 Criar `use-exportar-backup.ts` gerando o arquivo com nome contendo a data
-- [ ] 2.7 Ligar a exportação à folha de compartilhamento do sistema
-- [ ] 2.8 Registrar a data do último backup na tabela de configuração
-- [ ] 2.9 Escrever teste do conteúdo exportado, confirmando que nenhuma coleção é omitida
-- [ ] 2.10 Verificar que a exportação funciona com o aparelho sem conexão
+- [x] 2.1 Criar `src/infrastructure/backup/exportar.ts` reunindo todos os registros da casa pelos repositórios — implementado como `SQLiteBackupRepository.montar()` (`src/infrastructure/repositories/sqlite-backup.repository.ts`) atrás do port `BackupRepository`, mesmo padrão Ports & Adapters dos demais repositórios, em vez de uma função solta
+- [x] 2.2 Incluir produtos removidos logicamente, com sua marcação de remoção
+- [x] 2.3 Incluir todo o histórico de movimentos, sem truncamento por data
+- [x] 2.4 Incluir compras finalizadas, canceladas e a compra aberta, com seus itens
+- [x] 2.5 Gravar quantidades e valores como inteiros em unidades internas, sem conversão para exibição
+- [x] 2.6 Criar `use-exportar-backup.ts` gerando o arquivo com nome contendo a data
+- [x] 2.7 Ligar a exportação à folha de compartilhamento do sistema
+- [x] 2.8 Registrar a data do último backup na tabela de configuração
+- [x] 2.9 Escrever teste do conteúdo exportado, confirmando que nenhuma coleção é omitida
+- [x] 2.10 Verificar que a exportação funciona com o aparelho sem conexão — nenhum passo do caminho de exportação faz chamada de rede (leitura é só SQLite local; gravação e compartilhamento são operações de arquivo do aparelho), garantia por construção — mesma linha das changes 6-8
 
 ## 3. Restauração
 
