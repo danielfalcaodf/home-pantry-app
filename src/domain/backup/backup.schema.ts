@@ -101,3 +101,25 @@ export function converterParaVersaoAtual(arquivo: ArquivoBackup): ArquivoBackup 
     ? atual
     : { ...atual, versaoSchema: VERSAO_SCHEMA_BACKUP_ATUAL };
 }
+
+export type ResumoBackup = {
+  exportadoEm: number;
+  totalUsuarios: number;
+  totalProdutos: number;
+  totalMovimentos: number;
+  totalCompras: number;
+  totalItensCompra: number;
+};
+
+// Para a confirmação antes de aplicar (spec "Resumo antes de aplicar"):
+// data do backup e contagem de registros, sem tocar o banco.
+export function resumoDoBackup(arquivo: ArquivoBackup): ResumoBackup {
+  return {
+    exportadoEm: arquivo.exportadoEm,
+    totalUsuarios: arquivo.usuarios.length,
+    totalProdutos: arquivo.produtos.length,
+    totalMovimentos: arquivo.movimentos.length,
+    totalCompras: arquivo.compras.length,
+    totalItensCompra: arquivo.itensCompra.length,
+  };
+}

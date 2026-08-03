@@ -22,19 +22,19 @@
 
 ## 3. Restauração
 
-- [ ] 3.1 Criar `use-restaurar-backup.ts` com seleção de arquivo pelo seletor do sistema
-- [ ] 3.2 Validar a estrutura e a versão **antes** de qualquer escrita no banco
-- [ ] 3.3 Apresentar a confirmação com a data do backup e a contagem de registros a restaurar
+- [x] 3.1 Criar `use-restaurar-backup.ts` com seleção de arquivo pelo seletor do sistema
+- [x] 3.2 Validar a estrutura e a versão **antes** de qualquer escrita no banco
+- [x] 3.3 Apresentar a confirmação com a data do backup e a contagem de registros a restaurar
 - [x] 3.4 Implementar a aplicação em transação única, combinando por identificador com atualização dos existentes e inserção dos ausentes
 - [x] 3.5 Garantir que a operação é idempotente, sem duplicar registros nem movimentos ao restaurar o mesmo arquivo duas vezes
-- [ ] 3.6 Implementar a mensagem de recusa de backup de versão mais nova, com o texto definido no documento de frontend
-- [ ] 3.7 Implementar a mensagem de falha preservando o banco intacto e oferecendo tentar novamente
-- [ ] 3.8 Garantir que cancelar na confirmação não realiza nenhuma escrita
+- [x] 3.6 Implementar a mensagem de recusa de backup de versão mais nova, com o texto definido no documento de frontend
+- [x] 3.7 Implementar a mensagem de falha preservando o banco intacto e oferecendo tentar novamente
+- [x] 3.8 Garantir que cancelar na confirmação não realiza nenhuma escrita
 - [x] 3.9 Escrever teste de restauração completa bem-sucedida
 - [x] 3.10 Escrever teste de falha injetada no meio, confirmando que o banco permanece como estava
 - [x] 3.11 Escrever teste de idempotência restaurando o mesmo backup duas vezes
 - [x] 3.12 Escrever teste de combinação, restaurando um backup em um banco que já tem dados criados depois dele
-- [ ] 3.13 Verificar que a restauração funciona com o aparelho sem conexão
+- [x] 3.13 Verificar que a restauração funciona com o aparelho sem conexão — nenhum passo faz chamada de rede (leitura de arquivo local + escrita no SQLite local), garantia por construção
 
 ## 4. Reconciliação
 

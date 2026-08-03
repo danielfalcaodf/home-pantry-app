@@ -2,6 +2,7 @@ import {
   ArquivoBackup,
   CasaBackup,
   converterParaVersaoAtual,
+  resumoDoBackup,
   UsuarioBackup,
   validarBackup,
   VERSAO_SCHEMA_BACKUP_ATUAL,
@@ -90,5 +91,27 @@ describe('converterParaVersaoAtual', () => {
     const antigo = { ...arquivoValido(), versaoSchema: VERSAO_SCHEMA_BACKUP_ATUAL - 1 };
     const convertido = converterParaVersaoAtual(antigo);
     expect(convertido.versaoSchema).toBe(VERSAO_SCHEMA_BACKUP_ATUAL);
+  });
+});
+
+describe('resumoDoBackup', () => {
+  it('conta cada coleção e traz a data de exportação', () => {
+    const arquivo: ArquivoBackup = {
+      ...arquivoValido(),
+      exportadoEm: 42,
+      usuarios: [usuarioValido(), usuarioValido()],
+      produtos: [],
+      movimentos: [],
+      compras: [],
+      itensCompra: [],
+    };
+    expect(resumoDoBackup(arquivo)).toEqual({
+      exportadoEm: 42,
+      totalUsuarios: 2,
+      totalProdutos: 0,
+      totalMovimentos: 0,
+      totalCompras: 0,
+      totalItensCompra: 0,
+    });
   });
 });
