@@ -1,7 +1,9 @@
 # lista-derivada
 
-## Requirements
+## Purpose
 
+Definir a lista de compras como consulta derivada do estoque e dos itens avulsos da compra aberta — nunca uma tabela materializada — cobrindo cálculo de quantidade a comprar, ordenação/agrupamento, remoção sem efeito de estoque e o estado vazio.
+## Requirements
 ### Requirement: Lista derivada, nunca materializada
 
 A lista de compras SHALL ser composta em tempo de consulta a partir dos produtos cuja quantidade atual é menor que a necessária, unidos aos itens avulsos da compra aberta. NÃO deve existir tabela de lista de compras.
@@ -101,3 +103,38 @@ Quando nenhum item estiver faltando, a lista SHALL exibir uma mensagem afirmativ
 
 - **WHEN** a lista está vazia
 - **THEN** a ação de adicionar um item avulso permanece acessível
+
+### Requirement: Iniciar compra converte a lista em itens planejados
+
+A lista de compras SHALL oferecer a ação de iniciar a compra, que materializa seus itens correntes como itens planejados da compra aberta. A materialização acontece **apenas** nesse momento — a lista continua sendo derivada até então.
+
+#### Scenario: Materialização no início da compra
+
+- **WHEN** o usuário inicia a compra
+- **THEN** os itens da lista corrente passam a existir como itens planejados da compra aberta
+
+#### Scenario: Lista permanece derivada antes disso
+
+- **WHEN** o usuário apenas visualiza a lista sem iniciar a compra
+- **THEN** nenhum item planejado é criado
+
+#### Scenario: Quantidade planejada preserva o arredondamento
+
+- **WHEN** um item em unidade indivisível é materializado
+- **THEN** sua quantidade planejada é exatamente a exibida na lista, sem novo arredondamento
+
+#### Scenario: Preço estimado registrado no item
+
+- **WHEN** um item com preço é materializado
+- **THEN** seu valor estimado por unidade é registrado, permitindo comparar depois com o valor pago
+
+#### Scenario: Avulsos já pertencem à compra
+
+- **WHEN** a lista contém itens avulsos
+- **THEN** eles já estão na compra aberta e não são duplicados na materialização
+
+#### Scenario: Alterações do estoque após iniciar não mudam a compra
+
+- **WHEN** o usuário inicia a compra e depois registra um consumo em outro item
+- **THEN** os itens planejados da compra em andamento permanecem como estavam
+
