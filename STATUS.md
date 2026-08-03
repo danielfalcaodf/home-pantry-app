@@ -62,7 +62,7 @@ As branches formam uma cadeia — cada PR aponta para a branch da change anterio
 | [#5](https://github.com/danielfalcaodf/home-pantry-app/pull/5) | `change/despensa-e-cadastro-produto` | `change/design-system-tema` | 5 · despensa-e-cadastro-produto |
 | [#6](https://github.com/danielfalcaodf/home-pantry-app/pull/6) | `change/dar-baixa-caminho-critico` | `change/despensa-e-cadastro-produto` | 6 · dar-baixa-caminho-critico |
 | [#7](https://github.com/danielfalcaodf/home-pantry-app/pull/7) | `feature/lista-de-compras` | `change/dar-baixa-caminho-critico` | 7 · lista-de-compras |
-| #8 (a abrir) | `feature/modo-compra-e-fechamento` | `feature/lista-de-compras` | 8 · modo-compra-e-fechamento |
+| [#8](https://github.com/danielfalcaodf/home-pantry-app/pull/8) | `feature/modo-compra-e-fechamento` | `feature/lista-de-compras` | 8 · modo-compra-e-fechamento |
 
 **A PR de `develop` para `main` ainda não foi aberta** — ela fecha o ciclo depois que as changes restantes entrarem.
 
