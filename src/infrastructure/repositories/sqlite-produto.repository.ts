@@ -8,11 +8,13 @@ import { milesimos } from '../../domain/shared/quantidade';
 import { Unidade } from '../../domain/shared/unidade';
 import { Clock } from '../../ports/clock';
 import {
+  ComandoAjuste,
   ComandoBaixa,
   ErroEscritaProduto,
   FaltanteBruto,
   ItemListaBase,
   ProdutoRepository,
+  ResultadoAjuste,
   ResultadoBaixa,
 } from '../../ports/produto.repository';
 import { gerarId } from '../../shared/id';
@@ -368,6 +370,57 @@ export class SQLiteProdutoRepository implements ProdutoRepository {
       return sucesso({
         gravou: true,
         saldoResultante: milesimos(depois.quantidadeAtual),
+        movimentoId,
+      });
+    });
+  }
+
+  // Mesma forma de darBaixa/repor — UPDATE + INSERT do movimento na MESMA
+  // transação —, mas grava o VALOR FINAL informado, não uma soma (design D2).
+  // Sem caso de saldo negativo: a validação já rejeitou antes de chegar aqui.
+  async ajustar(comando: ComandoAjuste): Promise<Result<ResultadoAjuste, 'nao_encontrado'>> {
+    const { produtoId, valorFinal, usuarioId, motivo, criadoEm } = comando;
+    return this.db.transaction((tx): Result<ResultadoAjuste, 'nao_encontrado'> => {
+      const atual = tx
+        .select({
+          casaId: tabelaProduto.casaId,
+          quantidadeAtual: tabelaProduto.quantidadeAtual,
+        })
+        .from(tabelaProduto)
+        .where(and(eq(tabelaProduto.id, produtoId), naoRemovido))
+        .get();
+      if (!atual) {
+        return falha('nao_encontrado');
+      }
+
+      const variacao = valorFinal - atual.quantidadeAtual;
+      if (variacao === 0) {
+        return sucesso({ gravou: false, motivo: 'sem_mudanca' });
+      }
+
+      tx.update(tabelaProduto)
+        .set({ quantidadeAtual: valorFinal, atualizadoEm: criadoEm, syncStatus: 'pendente' })
+        .where(eq(tabelaProduto.id, produtoId))
+        .run();
+
+      const movimentoId = gerarId(() => criadoEm);
+      tx.insert(movimentoEstoque)
+        .values({
+          id: movimentoId,
+          casaId: atual.casaId,
+          produtoId,
+          usuarioId,
+          tipo: 'ajuste',
+          quantidadeDelta: variacao,
+          quantidadeResultante: valorFinal,
+          motivo,
+          criadoEm,
+        })
+        .run();
+
+      return sucesso({
+        gravou: true,
+        saldoResultante: milesimos(valorFinal),
         movimentoId,
       });
     });

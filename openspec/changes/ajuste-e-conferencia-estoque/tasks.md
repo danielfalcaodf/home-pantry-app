@@ -1,13 +1,13 @@
 ## 1. Ajuste de estoque
 
-- [ ] 1.1 Criar `src/application/estoque/use-ajustar-estoque.ts` recebendo o **valor final** informado pelo usuário e calculando a variação pela regra de domínio
-- [ ] 1.2 Delegar a persistência ao repositório em transação única: atualização da quantidade e gravação do movimento de tipo ajuste
-- [ ] 1.3 Não gravar nada quando o valor informado for igual ao registrado
-- [ ] 1.4 Rejeitar valor negativo com erro em texto
-- [ ] 1.5 Implementar o motivo opcional com as sugestões de perda, vencimento e correção, aceitando ausência de motivo
-- [ ] 1.6 Preservar o tipo ajuste independentemente do sinal da variação
-- [ ] 1.7 Escrever testes cobrindo ajuste para cima, para baixo, para zero, sem mudança e com valor negativo
-- [ ] 1.8 Escrever teste de atomicidade: falha na gravação do movimento deixa a quantidade inalterada
+- [x] 1.1 Criar `src/application/estoque/use-ajustar-estoque.ts` recebendo o **valor final** informado pelo usuário e calculando a variação pela regra de domínio
+- [x] 1.2 Delegar a persistência ao repositório em transação única: atualização da quantidade e gravação do movimento de tipo ajuste
+- [x] 1.3 Não gravar nada quando o valor informado for igual ao registrado
+- [x] 1.4 Rejeitar valor negativo com erro em texto
+- [x] 1.5 Implementar o motivo opcional com as sugestões de perda, vencimento e correção, aceitando ausência de motivo
+- [x] 1.6 Preservar o tipo ajuste independentemente do sinal da variação
+- [x] 1.7 Escrever testes cobrindo ajuste para cima, para baixo, para zero, sem mudança e com valor negativo
+- [x] 1.8 Escrever teste de atomicidade: falha na gravação do movimento deixa a quantidade inalterada
 
 ## 2. Quantidade editável no detalhe
 
