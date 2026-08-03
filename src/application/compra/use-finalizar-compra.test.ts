@@ -1,5 +1,6 @@
 import { act, cleanup, renderHook } from '@testing-library/react-native';
 
+import { totalPago } from '../../domain/compra/compra.rules';
 import { centavos } from '../../domain/shared/dinheiro';
 import { milesimos } from '../../domain/shared/quantidade';
 import { produtoFalso, ProdutoRepositorioFalso } from '../estoque/teste/repositorio-falso';
@@ -42,6 +43,33 @@ async function prepararCompra() {
   });
   return { produtos, compras, compraId: aberta.valor.id, item1, item2, avulso };
 }
+
+describe('total corrente do rodapé bate com o total gravado no fechamento', () => {
+  it('o total calculado por totalPago antes de fechar é igual ao valorTotalPago gravado', async () => {
+    const { produtos, compras, compraId, item1, item2 } = await prepararCompra();
+    await compras.editarItem(item1.id, {
+      comprado: true,
+      quantidadeComprada: milesimos(2000),
+      valorPagoUnitario: centavos(950),
+    });
+    await compras.editarItem(item2.id, {
+      comprado: true,
+      quantidadeComprada: milesimos(1000),
+      valorPagoUnitario: centavos(700),
+    });
+
+    const itensAntes = (await compras.listarItens(compraId)).map((i) => i.item);
+    const totalExibidoNoRodape = totalPago(itensAntes);
+
+    const { result } = await renderHook(() => useFinalizarCompra(compras, produtos));
+    await act(async () => {
+      await result.current.finalizar(compraId);
+    });
+
+    const compra = compras.compras.find((c) => c.id === compraId);
+    expect(compra?.valorTotalPago).toBe(totalExibidoNoRodape);
+  });
+});
 
 describe('useFinalizarCompra', () => {
   it('repõe apenas os itens marcados e informa quantos foram repostos', async () => {

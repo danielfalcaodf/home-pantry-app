@@ -45,7 +45,7 @@
 - [x] 5.2 Exibir o total corrente do que já está marcado, em família monoespaçada
 - [x] 5.3 Calcular o total corrente pela mesma função de domínio usada no fechamento
 - [x] 5.4 Confirmar que o total troca diretamente, sem contagem progressiva e sem deslocar elementos adjacentes
-- [ ] 5.5 Escrever teste comparando o total corrente exibido com o total pago gravado no fechamento
+- [x] 5.5 Escrever teste comparando o total corrente exibido com o total pago gravado no fechamento
 
 ## 6. Fechamento
 
