@@ -35,17 +35,17 @@
 
 ## 4. Diagnóstico de integridade
 
-- [ ] 4.1 Criar `app/diagnostico.tsx` executando a consulta de reconciliação sob demanda
-- [ ] 4.2 Listar os produtos divergentes com o valor registrado e o valor calculado pelos movimentos
-- [ ] 4.3 Confirmar que a verificação não realiza nenhuma escrita
-- [ ] 4.4 Implementar a correção individual gravando movimento de ajuste até o valor calculado pelos movimentos
-- [ ] 4.5 Implementar a correção em bloco em uma única transação, com um movimento de ajuste por produto
-- [ ] 4.6 Permitir sair sem corrigir, sem alterar nada
-- [ ] 4.7 Escrever a mensagem afirmativa para o caso sem divergência, e a acionável para o caso com divergência, sem alarme
-- [ ] 4.8 Ligar o acesso a partir da tela de configurações
-- [ ] 4.9 Escrever teste de banco coerente retornando zero divergências
-- [ ] 4.10 Escrever teste com divergência injetada, confirmando detecção, correção e verificação limpa em seguida
-- [ ] 4.11 Escrever teste de falha injetada na correção em bloco, confirmando que nada foi alterado
+- [x] 4.1 Criar `app/diagnostico.tsx` executando a consulta de reconciliação sob demanda
+- [x] 4.2 Listar os produtos divergentes com o valor registrado e o valor calculado pelos movimentos
+- [x] 4.3 Confirmar que a verificação não realiza nenhuma escrita — `reconciliar()` é um `SELECT` puro, sem transação de escrita
+- [x] 4.4 Implementar a correção individual gravando movimento de ajuste até o valor calculado pelos movimentos
+- [x] 4.5 Implementar a correção em bloco em uma única transação, com um movimento de ajuste por produto
+- [x] 4.6 Permitir sair sem corrigir, sem alterar nada
+- [x] 4.7 Escrever a mensagem afirmativa para o caso sem divergência, e a acionável para o caso com divergência, sem alarme
+- [x] 4.8 Ligar o acesso a partir da tela de configurações
+- [x] 4.9 Escrever teste de banco coerente retornando zero divergências
+- [x] 4.10 Escrever teste com divergência injetada, confirmando detecção, correção e verificação limpa em seguida
+- [x] 4.11 Escrever teste de falha injetada na correção em bloco, confirmando que nada foi alterado
 
 ## 5. Histórico do produto
 

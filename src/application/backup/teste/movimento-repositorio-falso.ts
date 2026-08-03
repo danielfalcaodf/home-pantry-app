@@ -4,6 +4,7 @@ import {
   DivergenciaReconciliacao,
   MovimentoRepository,
   ResultadoAjuste,
+  ResultadoCorrecaoEmBloco,
   ResultadoDesfazer,
 } from '../../../ports/movimento.repository';
 import { falha, Result, sucesso } from '../../../shared/result';
@@ -39,6 +40,15 @@ export class MovimentoRepositorioFalso implements MovimentoRepository {
     this.chamadasCorrigir.push({ produtoId, calculado });
     this.divergencias = this.divergencias.filter((d) => d.produtoId !== produtoId);
     return sucesso({ movimentoId: `ajuste-${produtoId}`, saldoResultante: calculado });
+  }
+
+  async corrigirTodasDivergencias(): Promise<ResultadoCorrecaoEmBloco> {
+    const corrigidos = this.divergencias.length;
+    this.chamadasCorrigir.push(
+      ...this.divergencias.map((d) => ({ produtoId: d.produtoId, calculado: d.calculado })),
+    );
+    this.divergencias = [];
+    return { corrigidos };
   }
 
   async listarTudoParaBackup(): Promise<MovimentoEstoque[]> {

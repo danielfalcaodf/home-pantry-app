@@ -11,6 +11,8 @@ export type EstadoDiagnostico = {
   verificar: () => Promise<void>;
   /** Corrige pela soma dos movimentos (`calculado`) — nunca em silêncio: grava um movimento de ajuste (task 4.4). */
   corrigir: (produtoId: string) => Promise<void>;
+  /** Corrige todas as divergências de uma vez, em uma única transação (task 4.5). */
+  corrigirTudo: () => Promise<void>;
 };
 
 // Ação de diagnóstico sob demanda nas configurações (task 4.5) — a mesma
@@ -54,5 +56,11 @@ export function useDiagnostico(
     [divergencias, movimentos],
   );
 
-  return { verificando, verificado, divergencias, verificar, corrigir };
+  const corrigirTudo = useCallback(async () => {
+    const { casaId, usuarioId } = obterIdentidadeLocal();
+    await movimentos.corrigirTodasDivergencias(casaId, usuarioId, relogio.agora());
+    setDivergencias([]);
+  }, [movimentos]);
+
+  return { verificando, verificado, divergencias, verificar, corrigir, corrigirTudo };
 }

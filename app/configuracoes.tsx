@@ -1,6 +1,6 @@
+import { router } from 'expo-router';
 import { Pressable, View } from 'react-native';
 
-import { useDiagnostico } from '@/application/backup/use-diagnostico';
 import { useExportarBackup } from '@/application/backup/use-exportar-backup';
 import { useExportarDados } from '@/application/backup/use-exportar-dados';
 import { useRestaurarBackup } from '@/application/backup/use-restaurar-backup';
@@ -38,7 +38,6 @@ export default function Configuracoes() {
   const backup = useExportarBackup();
   const dados = useExportarDados();
   const restauracao = useRestaurarBackup();
-  const diagnostico = useDiagnostico();
   const ultimoBackup = useUltimoBackup();
 
   async function fazerBackupAgora() {
@@ -125,34 +124,8 @@ export default function Configuracoes() {
         <Botao
           titulo="Verificar consistência"
           variante="secundario"
-          onPress={() => void diagnostico.verificar()}
-          disabled={diagnostico.verificando}
+          onPress={() => router.push('/diagnostico')}
         />
-        {diagnostico.verificado && diagnostico.divergencias.length === 0 ? (
-          <Texto papel="body.md">Tudo certo — nenhuma divergência encontrada.</Texto>
-        ) : null}
-        {diagnostico.divergencias.map((divergencia) => (
-          <View
-            key={divergencia.produtoId}
-            style={{
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              gap: espaco.sm,
-            }}
-          >
-            <Texto papel="body.md">{divergencia.nome}</Texto>
-            <Pressable
-              onPress={() => void diagnostico.corrigir(divergencia.produtoId)}
-              accessibilityRole="button"
-              accessibilityLabel={`Corrigir ${divergencia.nome}`}
-            >
-              <Texto papel="body.md" cor={tema.action.azulejo}>
-                Corrigir
-              </Texto>
-            </Pressable>
-          </View>
-        ))}
       </Secao>
 
       {restauracao.estado.fase === 'confirmando' ? (

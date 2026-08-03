@@ -188,6 +188,58 @@ describe('corrigirDivergencia', () => {
   });
 });
 
+describe('corrigirTodasDivergencias', () => {
+  async function montarComDuasDivergencias() {
+    const { db, sqlite } = criarDbDeTeste();
+    const { casaId, usuarioId } = semearCasaEUsuario(sqlite);
+    const produtos = new SQLiteProdutoRepository(db, clock);
+    const movimentos = new SQLiteMovimentoRepository(db);
+    for (const nome of ['Feijão', 'Arroz']) {
+      const dados = validarCadastroProduto({ nome, unidade: 'un', quantidadeNecessaria: 2 });
+      if (!dados.ok) throw new Error('setup');
+      const criado = await produtos.criar(casaId, usuarioId, dados.valor);
+      if (!criado.ok) throw new Error('setup');
+      // adulteração fora da transação, para cada produto
+      sqlite.prepare('UPDATE produto SET quantidade_atual = 999 WHERE id = ?').run(criado.valor.id);
+    }
+    return { db, sqlite, casaId, usuarioId, produtos, movimentos };
+  }
+
+  it('corrige cada produto divergente com seu próprio movimento de ajuste, em uma única transação', async () => {
+    const { sqlite, casaId, usuarioId, movimentos } = await montarComDuasDivergencias();
+
+    const resultado = await movimentos.corrigirTodasDivergencias(casaId, usuarioId, clock.agora());
+    expect(resultado).toEqual({ corrigidos: 2 });
+    expect(await movimentos.reconciliar(casaId)).toHaveLength(0);
+
+    const ajustes = sqlite
+      .prepare("SELECT COUNT(*) AS n FROM movimento_estoque WHERE tipo = 'ajuste' AND motivo = 'reconciliacao'")
+      .get();
+    expect(ajustes).toEqual({ n: 2 });
+  });
+
+  it('sem divergência não corrige nada e não falha', async () => {
+    const { casaId, usuarioId, movimentos } = await montarComBaixa();
+    const resultado = await movimentos.corrigirTodasDivergencias(casaId, usuarioId, clock.agora());
+    expect(resultado).toEqual({ corrigidos: 0 });
+  });
+
+  it('rollback: falha na correção de um produto não deixa nenhum corrigido', async () => {
+    const { sqlite, casaId, movimentos } = await montarComDuasDivergencias();
+
+    // usuário inexistente → INSERT do movimento de ajuste viola FK → transação inteira volta
+    await expect(
+      movimentos.corrigirTodasDivergencias(casaId, 'usuario-fantasma', clock.agora()),
+    ).rejects.toThrow(/FOREIGN KEY/i);
+
+    const divergencias = await movimentos.reconciliar(casaId);
+    expect(divergencias).toHaveLength(2);
+    expect(
+      sqlite.prepare("SELECT COUNT(*) AS n FROM movimento_estoque WHERE tipo = 'ajuste'").get(),
+    ).toEqual({ n: 0 });
+  });
+});
+
 describe('listarTudoParaBackup', () => {
   it('traz o histórico inteiro da casa, sem limite', async () => {
     const { movimentos, casaId, produtoId, usuarioId, sqlite } = await montarComBaixa();

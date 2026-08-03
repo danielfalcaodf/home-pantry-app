@@ -286,6 +286,10 @@ export class MovimentoRepositorioFalso implements MovimentoRepository {
     return sucesso({ movimentoId: `ajuste-${produtoId}`, saldoResultante: calculado });
   }
 
+  async corrigirTodasDivergencias(): Promise<{ corrigidos: number }> {
+    return { corrigidos: 0 };
+  }
+
   async listarTudoParaBackup(): Promise<never[]> {
     return [];
   }
