@@ -5,6 +5,37 @@ import { Centavos, centavos, multiplicarQuantidadePorPreco } from '../shared/din
 import { Milesimos, milesimos } from '../shared/quantidade';
 import { CompraItem } from './compra';
 
+export type GastoDoMes = { mes: string; totalPago: Centavos; qtdCompras: number };
+
+const MESES_DE_HISTORICO = 12;
+
+// "YYYY-MM" menos `quantos` meses — aritmética pura de calendário, sem
+// depender do relógio: o mês de referência é sempre passado por quem chama.
+function mesAnterior(mesDeReferencia: string, quantos: number): string {
+  const [ano, mes] = mesDeReferencia.split('-').map(Number);
+  const data = new Date(ano, mes - 1 - quantos, 1);
+  return `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, '0')}`;
+}
+
+/**
+ * Preenche os meses sem compra com zero (design D6/Open Questions da change
+ * resumo-valores-e-historico): mantém os últimos doze meses contínuos no
+ * eixo do tempo mesmo antes de haver um ano de uso real, do mais recente
+ * para o mais antigo.
+ */
+export function completarMesesSemCompra(
+  gastos: readonly GastoDoMes[],
+  mesDeReferencia: string,
+): GastoDoMes[] {
+  const porMes = new Map(gastos.map((gasto) => [gasto.mes, gasto] as const));
+  const meses: GastoDoMes[] = [];
+  for (let i = 0; i < MESES_DE_HISTORICO; i++) {
+    const mes = mesAnterior(mesDeReferencia, i);
+    meses.push(porMes.get(mes) ?? { mes, totalPago: centavos(0), qtdCompras: 0 });
+  }
+  return meses;
+}
+
 export function totalPago(itens: readonly CompraItem[]): Centavos {
   let total = 0;
   for (const item of itens) {

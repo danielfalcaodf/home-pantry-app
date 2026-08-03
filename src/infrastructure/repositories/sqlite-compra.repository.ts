@@ -1,7 +1,7 @@
 import { and, eq, sql } from 'drizzle-orm';
 
 import { Compra, CompraItem, StatusCompra } from '../../domain/compra/compra';
-import { EfeitosFinalizacao } from '../../domain/compra/compra.rules';
+import { EfeitosFinalizacao, GastoDoMes } from '../../domain/compra/compra.rules';
 import { centavos } from '../../domain/shared/dinheiro';
 import { milesimos } from '../../domain/shared/quantidade';
 import { Unidade } from '../../domain/shared/unidade';
@@ -332,5 +332,28 @@ export class SQLiteCompraRepository implements CompraRepository {
       });
     }
     return resultado;
+  }
+
+  // DATABASE §6.5: 'localtime' agrega no fuso do aparelho, não em tempo
+  // universal (design D4) — só 'finalizada' entra (design D5, cancelada não
+  // é gasto). valorTotalPago já está em centavos: nenhuma conversão de
+  // unidade acontece aqui.
+  async gastoPorMes(casaId: string, desdeEm: number): Promise<GastoDoMes[]> {
+    const linhas = this.db.all<{ mes: string; totalPago: number; qtdCompras: number }>(sql`
+      SELECT strftime('%Y-%m', finalizada_em / 1000, 'unixepoch', 'localtime') AS mes,
+             COALESCE(SUM(valor_total_pago), 0) AS totalPago,
+             COUNT(*) AS qtdCompras
+        FROM compra
+       WHERE casa_id = ${casaId}
+         AND status = 'finalizada'
+         AND finalizada_em >= ${desdeEm}
+       GROUP BY mes
+       ORDER BY mes DESC
+    `);
+    return linhas.map((linha) => ({
+      mes: linha.mes,
+      totalPago: centavos(linha.totalPago),
+      qtdCompras: linha.qtdCompras,
+    }));
   }
 }

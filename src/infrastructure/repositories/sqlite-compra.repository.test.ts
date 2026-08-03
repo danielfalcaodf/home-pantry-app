@@ -542,6 +542,77 @@ describe('escala e retorno à lista (tasks 7.1, 7.4)', () => {
   });
 });
 
+describe('gastoPorMes', () => {
+  async function finalizarComTotal(
+    compras: Awaited<ReturnType<typeof montar>>['compras'],
+    casaId: string,
+    usuarioId: string,
+    finalizadaEm: number,
+    totalPago: number,
+  ) {
+    const aberta = await compras.abrir(casaId, usuarioId, finalizadaEm - 1000);
+    if (!aberta.ok) throw new Error('setup');
+    await compras.finalizar(
+      aberta.valor.id,
+      { reposicoes: [], atualizacoesDePreco: [], totalPago: centavos(totalPago) },
+      usuarioId,
+      finalizadaEm,
+    );
+    return aberta.valor.id;
+  }
+
+  it('agrega o total pago e a contagem de compras por mês, do mais recente ao mais antigo', async () => {
+    const { compras, casaId, usuarioId } = await montar();
+    await finalizarComTotal(compras, casaId, usuarioId, Date.UTC(2026, 6, 10), 5000);
+    await finalizarComTotal(compras, casaId, usuarioId, Date.UTC(2026, 6, 20), 3000);
+    await finalizarComTotal(compras, casaId, usuarioId, Date.UTC(2026, 5, 5), 1000);
+
+    const gastos = await compras.gastoPorMes(casaId, Date.UTC(2025, 0, 1));
+
+    expect(gastos).toEqual([
+      { mes: '2026-07', totalPago: 8000, qtdCompras: 2 },
+      { mes: '2026-06', totalPago: 1000, qtdCompras: 1 },
+    ]);
+  });
+
+  it('compra fechada perto da meia-noite do último dia do mês cai no mês correto (task 3.8)', async () => {
+    const { compras, casaId, usuarioId } = await montar();
+    // 31/01 23:30 UTC == 23:30 no fuso local deste processo (TZ=UTC) — o
+    // ponto é exercitar o mesmo modificador 'localtime' da DATABASE §6.5.
+    const pertoDaMeiaNoite = Date.UTC(2026, 0, 31, 23, 30, 0);
+    await finalizarComTotal(compras, casaId, usuarioId, pertoDaMeiaNoite, 4200);
+
+    const gastos = await compras.gastoPorMes(casaId, Date.UTC(2025, 0, 1));
+
+    expect(gastos).toEqual([{ mes: '2026-01', totalPago: 4200, qtdCompras: 1 }]);
+  });
+
+  it('compras abertas e canceladas não entram no gasto (task 3.9)', async () => {
+    const { compras, casaId, usuarioId } = await montar();
+    // Só uma compra aberta por vez (ux_compra_aberta): cancela antes de
+    // abrir a que fica pendente até o fim do teste.
+    const cancelada = await compras.abrir(casaId, usuarioId, Date.UTC(2026, 6, 2));
+    if (!cancelada.ok) throw new Error('setup');
+    await compras.cancelar(cancelada.valor.id, Date.UTC(2026, 6, 3));
+
+    await compras.abrir(casaId, usuarioId, Date.UTC(2026, 6, 1)); // fica aberta
+
+    const gastos = await compras.gastoPorMes(casaId, Date.UTC(2025, 0, 1));
+
+    expect(gastos).toEqual([]);
+  });
+
+  it('respeita o corte de "desde" e não traz meses anteriores', async () => {
+    const { compras, casaId, usuarioId } = await montar();
+    await finalizarComTotal(compras, casaId, usuarioId, Date.UTC(2024, 0, 15), 999);
+    await finalizarComTotal(compras, casaId, usuarioId, Date.UTC(2026, 6, 15), 100);
+
+    const gastos = await compras.gastoPorMes(casaId, Date.UTC(2025, 0, 1));
+
+    expect(gastos).toEqual([{ mes: '2026-07', totalPago: 100, qtdCompras: 1 }]);
+  });
+});
+
 describe('listarTudoParaBackup', () => {
   it('traz compras de todos os status, cada uma com seus itens', async () => {
     const { casaId, usuarioId, compras, criarProduto } = await montar();

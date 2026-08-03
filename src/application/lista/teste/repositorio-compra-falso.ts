@@ -1,5 +1,5 @@
 import { Compra, CompraItem } from '../../../domain/compra/compra';
-import { EfeitosFinalizacao } from '../../../domain/compra/compra.rules';
+import { EfeitosFinalizacao, GastoDoMes } from '../../../domain/compra/compra.rules';
 import { centavos } from '../../../domain/shared/dinheiro';
 import { milesimos } from '../../../domain/shared/quantidade';
 import {
@@ -168,6 +168,30 @@ export class CompraRepositorioFalso implements CompraRepository {
       atualizadoEm: finalizadaEm,
     };
     return sucesso(this.compras[indice]);
+  }
+
+  // Espelha o strftime('localtime') do SQLite usando o fuso local do
+  // processo (Date getters), não UTC.
+  async gastoPorMes(casaId: string, desdeEm: number): Promise<GastoDoMes[]> {
+    const porMes = new Map<string, { totalPago: number; qtdCompras: number }>();
+    for (const c of this.compras) {
+      if (c.casaId !== casaId || c.status !== 'finalizada' || c.finalizadaEm === null) {
+        continue;
+      }
+      if (c.finalizadaEm < desdeEm) {
+        continue;
+      }
+      const data = new Date(c.finalizadaEm);
+      const mes = `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, '0')}`;
+      const atual = porMes.get(mes) ?? { totalPago: 0, qtdCompras: 0 };
+      porMes.set(mes, {
+        totalPago: atual.totalPago + (c.valorTotalPago ?? 0),
+        qtdCompras: atual.qtdCompras + 1,
+      });
+    }
+    return [...porMes.entries()]
+      .map(([mes, dados]) => ({ mes, totalPago: centavos(dados.totalPago), qtdCompras: dados.qtdCompras }))
+      .sort((a, b) => b.mes.localeCompare(a.mes));
   }
 
   async listarTudoParaBackup(casaId: string): Promise<{ compra: Compra; itens: CompraItem[] }[]> {

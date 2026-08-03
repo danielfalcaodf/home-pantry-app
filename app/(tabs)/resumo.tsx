@@ -1,6 +1,7 @@
 import { router } from 'expo-router';
 import { Pressable, ScrollView, View } from 'react-native';
 
+import { useGastoMensal } from '@/application/resumo/use-gasto-mensal';
 import { useResumoDeValores } from '@/application/resumo/use-resumo-valores';
 import { EstadoItem } from '@/domain/produto/estoque.rules';
 import { formatarBRL } from '@/domain/shared/dinheiro';
@@ -9,6 +10,7 @@ import { Texto } from '@/presentation/components/texto';
 import { corDoEstado } from '@/presentation/theme/cor-do-estado';
 import { espaco } from '@/presentation/theme/espaco';
 import { useTheme } from '@/presentation/theme/provider';
+import { rotuloDoMes } from '@/presentation/format/gasto-mensal';
 
 const ESTADOS: { valor: EstadoItem; rotulo: string }[] = [
   { valor: 'critico', rotulo: 'Acabou' },
@@ -25,10 +27,13 @@ const ESTADOS: { valor: EstadoItem; rotulo: string }[] = [
 export default function Resumo() {
   const tema = useTheme();
   const resumo = useResumoDeValores();
+  const gastoMensal = useGastoMensal();
 
-  if (resumo.carregando) {
+  if (resumo.carregando || gastoMensal.carregando) {
     return null;
   }
+
+  const nenhumaCompraFechada = gastoMensal.meses.every((mes) => mes.qtdCompras === 0);
 
   return (
     <ScrollView style={{ flex: 1, backgroundColor: tema.bg.base }}>
@@ -98,6 +103,38 @@ export default function Resumo() {
               />
             ))}
           </View>
+        </View>
+
+        <View style={{ gap: espaco.sm }}>
+          <Texto papel="label" tom="secondary">
+            Gasto por mês
+          </Texto>
+          {nenhumaCompraFechada ? (
+            <Texto papel="body.md" tom="secondary">
+              Nenhuma compra fechada ainda. Assim que você fechar a primeira, o gasto do mês
+              aparece aqui.
+            </Texto>
+          ) : (
+            gastoMensal.meses.map((mes) => (
+              <View
+                key={mes.mes}
+                style={{
+                  flexDirection: 'row',
+                  justifyContent: 'space-between',
+                  paddingVertical: espaco.xs,
+                  borderBottomWidth: 1,
+                  borderBottomColor: tema.line.hairline,
+                }}
+              >
+                <Texto papel="body.md" tom={mes.qtdCompras === 0 ? 'secondary' : 'primary'}>
+                  {rotuloDoMes(mes.mes)}
+                </Texto>
+                <Texto papel="data.md" tom={mes.qtdCompras === 0 ? 'secondary' : 'primary'}>
+                  {mes.qtdCompras === 0 ? '—' : formatarBRL(mes.totalPago)}
+                </Texto>
+              </View>
+            ))
+          )}
         </View>
       </View>
     </ScrollView>

@@ -1,10 +1,12 @@
 import { Compra, CompraItem } from '../domain/compra/compra';
-import { EfeitosFinalizacao } from '../domain/compra/compra.rules';
+import { EfeitosFinalizacao, GastoDoMes } from '../domain/compra/compra.rules';
 import { Produto } from '../domain/produto/produto';
 import { Centavos } from '../domain/shared/dinheiro';
 import { Milesimos } from '../domain/shared/quantidade';
 import { Unidade } from '../domain/shared/unidade';
 import { Result } from '../shared/result';
+
+export type { GastoDoMes } from '../domain/compra/compra.rules';
 
 export type NovoItemCompra = {
   produtoId?: string;
@@ -68,4 +70,11 @@ export interface CompraRepository {
   ): Promise<Result<Compra, 'nao_encontrada' | 'nao_esta_aberta'>>;
   /** Todas as compras da casa (aberta, finalizada, cancelada) com seus itens — uso exclusivo do backup. */
   listarTudoParaBackup(casaId: string): Promise<{ compra: Compra; itens: CompraItem[] }[]>;
+  /**
+   * Gasto por mês das compras finalizadas desde `desdeEm`, agregado no fuso
+   * horário local (DATABASE §6.5, design D4) — nunca em tempo universal, ou
+   * uma compra fechada perto da meia-noite cairia no mês seguinte. Só
+   * `status = 'finalizada'` entra (design D5): cancelada não é gasto.
+   */
+  gastoPorMes(casaId: string, desdeEm: number): Promise<GastoDoMes[]>;
 }
