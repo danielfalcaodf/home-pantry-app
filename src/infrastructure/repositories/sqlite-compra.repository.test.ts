@@ -541,3 +541,39 @@ describe('escala e retorno à lista (tasks 7.1, 7.4)', () => {
     expect(faltantes.map((f) => f.id)).toContain(deixadoDeFora.id);
   });
 });
+
+describe('listarTudoParaBackup', () => {
+  it('traz compras de todos os status, cada uma com seus itens', async () => {
+    const { casaId, usuarioId, compras, criarProduto } = await montar();
+    const produto = await criarProduto('Arroz', 0, 500);
+
+    const aberta = await compras.abrir(casaId, usuarioId, clock.agora());
+    if (!aberta.ok) throw new Error('setup');
+    await compras.adicionarItem(aberta.valor.id, {
+      produtoId: produto.id,
+      unidade: 'un',
+      quantidadePlanejada: milesimos(1000),
+      valorEstimadoUnit: centavos(500),
+    });
+    await compras.cancelar(aberta.valor.id, clock.agora() + 1);
+
+    const segunda = await compras.abrir(casaId, usuarioId, clock.agora() + 2);
+    if (!segunda.ok) throw new Error('setup');
+
+    const backup = await compras.listarTudoParaBackup(casaId);
+    expect(backup).toHaveLength(2);
+    expect(backup.map((c) => c.compra.status).sort()).toEqual(['aberta', 'cancelada']);
+    const cancelada = backup.find((c) => c.compra.status === 'cancelada');
+    expect(cancelada?.itens).toHaveLength(1);
+    expect(cancelada?.itens[0].produtoId).toBe(produto.id);
+  });
+
+  it('não retorna compras de outra casa', async () => {
+    const { compras, sqlite } = await montar();
+    sqlite
+      .prepare('INSERT INTO casa (id, nome, criada_em, atualizado_em) VALUES (?, ?, 0, 0)')
+      .run('outra-casa', 'Outra casa');
+    const outros = await compras.listarTudoParaBackup('outra-casa');
+    expect(outros).toHaveLength(0);
+  });
+});

@@ -252,6 +252,17 @@ export class SQLiteProdutoRepository implements ProdutoRepository {
     return linha ? paraDominio(linha) : null;
   }
 
+  // Sem os filtros de ativo/não-removido de listarDespensa: o backup precisa
+  // do estado completo, inclusive o que a UI normal nunca mostra.
+  async listarTudoParaBackup(casaId: string): Promise<Produto[]> {
+    const linhas = this.db
+      .select()
+      .from(tabelaProduto)
+      .where(eq(tabelaProduto.casaId, casaId))
+      .all();
+    return linhas.map(paraDominio);
+  }
+
   // Caminho crítico (DATABASE §6.3): UPDATE com proteção de não-negativo e
   // INSERT do movimento lendo o saldo do banco DEPOIS do update — tudo na
   // mesma transação. Nunca separar as duas escritas.

@@ -169,4 +169,15 @@ export class CompraRepositorioFalso implements CompraRepository {
     };
     return sucesso(this.compras[indice]);
   }
+
+  async listarTudoParaBackup(casaId: string): Promise<{ compra: Compra; itens: CompraItem[] }[]> {
+    return this.compras
+      .filter((c) => c.casaId === casaId)
+      .map((compra) => ({
+        compra,
+        itens: this.itens
+          .filter((i) => i.compraId === compra.id)
+          .sort((a, b) => a.ordem - b.ordem),
+      }));
+  }
 }

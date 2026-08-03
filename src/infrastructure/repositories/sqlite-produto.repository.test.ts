@@ -249,3 +249,29 @@ describe('darBaixa — transação do caminho crítico', () => {
     expect(baixa.ok).toBe(false);
   });
 });
+
+describe('listarTudoParaBackup', () => {
+  it('inclui produtos inativos e removidos logicamente, ao contrário de listarDespensa', async () => {
+    const { repo, casaId, usuarioId } = montar();
+    const criado = await repo.criar(casaId, usuarioId, dadosValidos('Feijão'));
+    if (!criado.ok) throw new Error('setup');
+    await repo.removerLogicamente(criado.valor.id);
+
+    const backup = await repo.listarTudoParaBackup(casaId);
+    const despensa = await repo.listarDespensa(casaId);
+
+    expect(backup.map((p) => p.id)).toContain(criado.valor.id);
+    expect(despensa.map((p) => p.id)).not.toContain(criado.valor.id);
+    expect(backup.find((p) => p.id === criado.valor.id)?.deletadoEm).not.toBeNull();
+  });
+
+  it('não retorna produtos de outra casa', async () => {
+    const { repo, casaId, usuarioId, sqlite } = montar();
+    await repo.criar(casaId, usuarioId, dadosValidos('Arroz'));
+    sqlite
+      .prepare('INSERT INTO casa (id, nome, criada_em, atualizado_em) VALUES (?, ?, 0, 0)')
+      .run('outra-casa', 'Outra casa');
+    const outros = await repo.listarTudoParaBackup('outra-casa');
+    expect(outros).toHaveLength(0);
+  });
+});

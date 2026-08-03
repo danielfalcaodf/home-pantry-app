@@ -308,4 +308,29 @@ export class SQLiteCompraRepository implements CompraRepository {
       },
     );
   }
+
+  // Todo o histórico de compras (aberta, finalizada, cancelada) com seus
+  // itens — o backup não filtra por status como as consultas normais.
+  async listarTudoParaBackup(casaId: string): Promise<{ compra: Compra; itens: CompraItem[] }[]> {
+    const compras = this.db
+      .select()
+      .from(tabelaCompra)
+      .where(eq(tabelaCompra.casaId, casaId))
+      .orderBy(tabelaCompra.criadaEm)
+      .all();
+    const resultado: { compra: Compra; itens: CompraItem[] }[] = [];
+    for (const linha of compras) {
+      const itens = this.db
+        .select()
+        .from(tabelaCompraItem)
+        .where(eq(tabelaCompraItem.compraId, linha.id))
+        .orderBy(tabelaCompraItem.ordem)
+        .all();
+      resultado.push({
+        compra: compraParaDominio(linha),
+        itens: itens.map(itemParaDominio),
+      });
+    }
+    return resultado;
+  }
 }

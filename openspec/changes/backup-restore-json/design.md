@@ -72,6 +72,20 @@ A leitura e escrita de arquivo ficam na infraestrutura. A separação importa: o
 
 PRD §4.4 pede exportação em CSV ou JSON a pedido do usuário — portabilidade de dados, não recuperação. O arquivo tabular tem valores convertidos para leitura humana e não é restaurável.
 
+### D8 — Restauração adota a `casa` local; nunca insere uma segunda casa
+
+O MVP é single-house por design (ADR-03, US-08 fora de escopo): existe exatamente uma linha `casa` por aparelho, criada por `garantirCasaEUsuario` na primeira abertura. Restaurar um backup gerado em OUTRO aparelho traz um `casa.id` diferente do local — inserir essa linha criaria uma segunda casa órfã, e todo produto/movimento/compra do backup ficaria sob um `casaId` que `obterIdentidadeLocal()` nunca consulta.
+
+A restauração portanto **nunca insere `casa`**: ela atualiza o nome da casa local a partir do backup e **reescreve o `casaId`** de todo produto, movimento e compra importados para o `casaId` local, preservando os demais identificadores (produtoId, movimentoId, compraId, usuarioId) verbatim — é isso que torna a combinação por identificador (D2) idempotente. Usuários do backup são inseridos como linhas adicionais sob a casa local (mesmo se o `usuarioId` já seedado localmente for outro) — histórico antigo continua apontando para o usuário que o gerou, sem exigir remapeamento.
+
+Caso extremo aceito e testado: se o backup contém uma compra `aberta` e o aparelho local também já tem uma compra aberta com outro id, a restauração falha inteira (rollback, `ux_compra_aberta` impede duas) — consistente com "falha não deixa estado parcial"; o usuário finaliza ou cancela uma das duas e tenta de novo.
+
+### D9 — Movimento de correção da reconciliação fica fora da própria soma que ele corrige
+
+A consulta de reconciliação (DATABASE §6.6) recalcula a quantidade esperada como `SUM(quantidade_delta)` de todos os movimentos do produto. Corrigir uma divergência exige inserir um novo movimento `ajuste` (nunca alterar a quantidade em silêncio) — mas se esse movimento entrar na mesma soma, ele muda o valor que acabou de servir de alvo da correção, e a reconciliação seguinte encontraria uma NOVA divergência do tamanho da correção. Matematicamente, nenhum delta não-nulo resolve isso se for contado.
+
+Por isso `reconciliar()` exclui da soma os movimentos com `motivo = 'reconciliacao'` (o próprio ato de corrigir), mantendo-os na tabela para auditoria e histórico, mas fora do cálculo do que o estoque "deveria" ser. `corrigirDivergencia` (MovimentoRepository) grava esse movimento com `motivo: 'reconciliacao'` especificamente para acionar essa exclusão.
+
 Oferecê-los sem distinção produziria a falha previsível: a pessoa exporta a planilha achando que fez backup. Os rótulos precisam separar "backup restaurável" de "exportar meus dados".
 
 ## Risks / Trade-offs

@@ -2,10 +2,11 @@ import { desc, eq, sql } from 'drizzle-orm';
 
 import { MovimentoEstoque, TipoMovimento } from '../../domain/movimento/movimento';
 import { movimentoInverso } from '../../domain/movimento/movimento.rules';
-import { milesimos } from '../../domain/shared/quantidade';
+import { Milesimos, milesimos } from '../../domain/shared/quantidade';
 import {
   DivergenciaReconciliacao,
   MovimentoRepository,
+  ResultadoAjuste,
   ResultadoDesfazer,
 } from '../../ports/movimento.repository';
 import { gerarId } from '../../shared/id';
@@ -114,7 +115,12 @@ export class SQLiteMovimentoRepository implements MovimentoRepository {
     });
   }
 
-  // DATABASE §6.6 — deve retornar zero linhas sempre.
+  // DATABASE §6.6 — deve retornar zero linhas sempre. Movimentos de ajuste
+  // motivo='reconciliacao' ficam FORA da soma (design D9 da change
+  // backup-restore-json): eles registram a própria correção, não uma causa
+  // dela — contá-los tornaria toda correção auto-inconsistente (o novo
+  // delta mudaria a soma que acabou de ser usada como alvo, e nenhuma
+  // correção jamais convergiria).
   async reconciliar(casaId: string): Promise<DivergenciaReconciliacao[]> {
     const linhas = this.db.all<{
       produtoId: string;
@@ -126,7 +132,8 @@ export class SQLiteMovimentoRepository implements MovimentoRepository {
              p.quantidade_atual AS materializado,
              COALESCE(SUM(m.quantidade_delta), 0) AS calculado
       FROM produto p
-      LEFT JOIN movimento_estoque m ON m.produto_id = p.id
+      LEFT JOIN movimento_estoque m
+        ON m.produto_id = p.id AND (m.motivo IS NULL OR m.motivo <> 'reconciliacao')
       WHERE p.casa_id = ${casaId} AND p.deletado_em IS NULL
       GROUP BY p.id
       HAVING materializado <> calculado
@@ -137,5 +144,60 @@ export class SQLiteMovimentoRepository implements MovimentoRepository {
       materializado: milesimos(linha.materializado),
       calculado: milesimos(linha.calculado),
     }));
+  }
+
+  // Mesma forma da baixa/reposição: UPDATE lendo o saldo do banco depois +
+  // INSERT do movimento na MESMA transação. Nunca ajusta em silêncio — a
+  // correção é sempre um movimento novo, append-only (design D4).
+  async corrigirDivergencia(
+    produtoId: string,
+    usuarioId: string,
+    calculado: Milesimos,
+    criadoEm: number,
+  ): Promise<Result<ResultadoAjuste, 'nao_encontrado'>> {
+    return this.db.transaction((tx): Result<ResultadoAjuste, 'nao_encontrado'> => {
+      const atual = tx
+        .select({ casaId: tabelaProduto.casaId, quantidadeAtual: tabelaProduto.quantidadeAtual })
+        .from(tabelaProduto)
+        .where(eq(tabelaProduto.id, produtoId))
+        .get();
+      if (!atual) {
+        return falha('nao_encontrado');
+      }
+
+      tx.update(tabelaProduto)
+        .set({ quantidadeAtual: calculado, atualizadoEm: criadoEm, syncStatus: 'pendente' })
+        .where(eq(tabelaProduto.id, produtoId))
+        .run();
+
+      const movimentoId = gerarId(() => criadoEm);
+      tx.insert(movimentoEstoque)
+        .values({
+          id: movimentoId,
+          casaId: atual.casaId,
+          produtoId,
+          usuarioId,
+          tipo: 'ajuste',
+          quantidadeDelta: calculado - atual.quantidadeAtual,
+          quantidadeResultante: calculado,
+          motivo: 'reconciliacao',
+          criadoEm,
+        })
+        .run();
+
+      return sucesso({ movimentoId, saldoResultante: milesimos(calculado) });
+    });
+  }
+
+  // Sem limite: o backup precisa do histórico inteiro, sem truncamento por
+  // data (proposal.md, "Backup completo").
+  async listarTudoParaBackup(casaId: string): Promise<MovimentoEstoque[]> {
+    return this.db
+      .select()
+      .from(movimentoEstoque)
+      .where(eq(movimentoEstoque.casaId, casaId))
+      .orderBy(desc(movimentoEstoque.criadoEm))
+      .all()
+      .map(paraDominio);
   }
 }

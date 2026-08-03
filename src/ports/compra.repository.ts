@@ -66,4 +66,6 @@ export interface CompraRepository {
     usuarioId: string,
     finalizadaEm: number,
   ): Promise<Result<Compra, 'nao_encontrada' | 'nao_esta_aberta'>>;
+  /** Todas as compras da casa (aberta, finalizada, cancelada) com seus itens — uso exclusivo do backup. */
+  listarTudoParaBackup(casaId: string): Promise<{ compra: Compra; itens: CompraItem[] }[]>;
 }

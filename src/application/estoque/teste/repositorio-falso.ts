@@ -129,6 +129,10 @@ export class ProdutoRepositorioFalso implements ProdutoRepository {
     return this.produtos.find((p) => p.id === id) ?? null;
   }
 
+  async listarTudoParaBackup(casaId: string): Promise<Produto[]> {
+    return this.produtos.filter((p) => p.casaId === casaId);
+  }
+
   /** Registro de cada movimento, para os testes de desfazer. */
   movimentos: { id: string; produtoId: string; tipo: 'baixa' | 'reposicao'; delta: number }[] =
     [];
@@ -223,6 +227,26 @@ export class MovimentoRepositorioFalso implements MovimentoRepository {
   }
 
   async reconciliar(): Promise<never[]> {
+    return [];
+  }
+
+  async corrigirDivergencia(
+    produtoId: string,
+    _usuarioId: string,
+    calculado: Milesimos,
+  ): Promise<Result<{ movimentoId: string; saldoResultante: Milesimos }, 'nao_encontrado'>> {
+    const indice = this.produtos.produtos.findIndex((p) => p.id === produtoId);
+    if (indice === -1) {
+      return falha('nao_encontrado');
+    }
+    this.produtos.produtos[indice] = {
+      ...this.produtos.produtos[indice],
+      quantidadeAtual: calculado,
+    };
+    return sucesso({ movimentoId: `ajuste-${produtoId}`, saldoResultante: calculado });
+  }
+
+  async listarTudoParaBackup(): Promise<never[]> {
     return [];
   }
 }

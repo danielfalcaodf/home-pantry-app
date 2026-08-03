@@ -51,6 +51,8 @@ export interface ProdutoRepository {
   buscarPorNome(casaId: string, termo: string): Promise<Produto[]>;
   listarCategorias(casaId: string): Promise<string[]>;
   obterPorId(id: string): Promise<Produto | null>;
+  /** Todos os produtos da casa, inclusive inativos e removidos logicamente — uso exclusivo do backup. */
+  listarTudoParaBackup(casaId: string): Promise<Produto[]>;
   /** Registro de consumo: UPDATE + INSERT do movimento na MESMA transação. */
   darBaixa(comando: ComandoBaixa): Promise<Result<ResultadoBaixa, 'nao_encontrado'>>;
   /** Reposição sem compra associada, na mesma transação única. */

@@ -138,3 +138,69 @@ describe('reconciliação', () => {
     );
   });
 });
+
+describe('corrigirDivergencia', () => {
+  it('grava um movimento de ajuste e leva a quantidade ao valor calculado, nunca em silêncio', async () => {
+    const { db, sqlite } = criarDbDeTeste();
+    const { casaId, usuarioId } = semearCasaEUsuario(sqlite);
+    const produtos = new SQLiteProdutoRepository(db, clock);
+    const movimentos = new SQLiteMovimentoRepository(db);
+    const dados = validarCadastroProduto({ nome: 'Feijão', unidade: 'un', quantidadeNecessaria: 2 });
+    if (!dados.ok) throw new Error('setup');
+    const criado = await produtos.criar(casaId, usuarioId, dados.valor);
+    if (!criado.ok) throw new Error('setup');
+    sqlite.prepare('UPDATE produto SET quantidade_atual = 999 WHERE id = ?').run(criado.valor.id);
+
+    const resultado = await movimentos.corrigirDivergencia(
+      criado.valor.id,
+      usuarioId,
+      milesimos(0),
+      clock.agora(),
+    );
+    expect(resultado.ok).toBe(true);
+    if (resultado.ok) {
+      expect(resultado.valor.saldoResultante).toBe(0);
+    }
+    const produto = sqlite
+      .prepare('SELECT quantidade_atual FROM produto WHERE id = ?')
+      .get(criado.valor.id) as { quantidade_atual: number };
+    expect(produto.quantidade_atual).toBe(0);
+    const ajuste = sqlite
+      .prepare("SELECT * FROM movimento_estoque WHERE tipo = 'ajuste' AND motivo = 'reconciliacao'")
+      .get() as { quantidade_delta: number; quantidade_resultante: number };
+    expect(ajuste).toEqual(
+      expect.objectContaining({ quantidade_delta: -999, quantidade_resultante: 0 }),
+    );
+    // O próprio movimento de correção fica fora da soma da reconciliação
+    // (design D9) — senão nenhuma correção jamais convergiria.
+    expect(await movimentos.reconciliar(casaId)).toHaveLength(0);
+  });
+
+  it('produto inexistente retorna nao_encontrado', async () => {
+    const { movimentos } = await montarComBaixa();
+    const resultado = await movimentos.corrigirDivergencia(
+      'fantasma',
+      'usuario-teste',
+      milesimos(0),
+      clock.agora(),
+    );
+    expect(resultado.ok).toBe(false);
+  });
+});
+
+describe('listarTudoParaBackup', () => {
+  it('traz o histórico inteiro da casa, sem limite', async () => {
+    const { movimentos, casaId, produtoId, usuarioId, sqlite } = await montarComBaixa();
+    for (let i = 0; i < 5; i += 1) {
+      sqlite
+        .prepare(
+          `INSERT INTO movimento_estoque (id, casa_id, produto_id, usuario_id, tipo, quantidade_delta, quantidade_resultante, criado_em)
+           VALUES (?, ?, ?, ?, 'reposicao', 100, 100, ?)`,
+        )
+        .run(`extra-${i}`, casaId, produtoId, usuarioId, 10 + i);
+    }
+    const historico = await movimentos.listarTudoParaBackup(casaId);
+    // ajuste inicial + baixa + 5 extras
+    expect(historico).toHaveLength(7);
+  });
+});
