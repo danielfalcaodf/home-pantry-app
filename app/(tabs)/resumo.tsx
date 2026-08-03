@@ -106,9 +106,20 @@ export default function Resumo() {
         </View>
 
         <View style={{ gap: espaco.sm }}>
-          <Texto papel="label" tom="secondary">
-            Gasto por mês
-          </Texto>
+          <View
+            style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}
+          >
+            <Texto papel="label" tom="secondary">
+              Gasto por mês
+            </Texto>
+            <Texto
+              papel="body.md"
+              cor={tema.action.azulejo}
+              onPress={() => router.push('/compra/historico')}
+            >
+              Ver histórico
+            </Texto>
+          </View>
           {nenhumaCompraFechada ? (
             <Texto papel="body.md" tom="secondary">
               Nenhuma compra fechada ainda. Assim que você fechar a primeira, o gasto do mês

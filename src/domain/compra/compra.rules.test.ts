@@ -1,9 +1,10 @@
 import { Produto } from '../produto/produto';
 import { centavos } from '../shared/dinheiro';
 import { milesimos } from '../shared/quantidade';
-import { CompraItem } from './compra';
+import { Compra, CompraItem } from './compra';
 import {
   completarMesesSemCompra,
+  dataDeReferencia,
   divergenciaDePreco,
   efeitoDeReposicao,
   efeitosDaFinalizacao,
@@ -192,6 +193,33 @@ describe('efeitosDaFinalizacao', () => {
 function gasto(mes: string, totalPago = 0, qtdCompras = 1): GastoDoMes {
   return { mes, totalPago: centavos(totalPago), qtdCompras };
 }
+
+function compra(sobrescreve: Partial<Compra> = {}): Compra {
+  return {
+    id: 'compra-1',
+    casaId: 'casa-1',
+    usuarioId: 'usuario-1',
+    status: 'finalizada',
+    valorTotalPago: centavos(1000),
+    criadaEm: 0,
+    finalizadaEm: 500,
+    atualizadoEm: 500,
+    syncStatus: 'local',
+    ...sobrescreve,
+  };
+}
+
+describe('dataDeReferencia', () => {
+  it('usa finalizadaEm quando presente', () => {
+    expect(dataDeReferencia(compra({ finalizadaEm: 500, atualizadoEm: 999 }))).toBe(500);
+  });
+
+  it('usa atualizadoEm quando finalizadaEm é null (compra cancelada)', () => {
+    expect(dataDeReferencia(compra({ status: 'cancelada', finalizadaEm: null, atualizadoEm: 999 }))).toBe(
+      999,
+    );
+  });
+});
 
 describe('completarMesesSemCompra', () => {
   it('preenche os doze meses do mais recente ao mais antigo', () => {

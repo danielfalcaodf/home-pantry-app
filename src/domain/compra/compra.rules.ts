@@ -3,7 +3,17 @@ import { MovimentoPendente } from '../movimento/movimento.rules';
 import { Produto } from '../produto/produto';
 import { Centavos, centavos, multiplicarQuantidadePorPreco } from '../shared/dinheiro';
 import { Milesimos, milesimos } from '../shared/quantidade';
-import { CompraItem } from './compra';
+import { Compra, CompraItem } from './compra';
+
+/**
+ * A data que representa uma linha do histórico (design D5/D6 da change
+ * resumo-valores-e-historico): `finalizadaEm` quando a compra fechou, ou o
+ * momento do cancelamento quando ela nunca chegou a finalizar — usada tanto
+ * para ordenar/paginar quanto para exibir.
+ */
+export function dataDeReferencia(compra: Pick<Compra, 'finalizadaEm' | 'atualizadoEm'>): number {
+  return compra.finalizadaEm ?? compra.atualizadoEm;
+}
 
 export type GastoDoMes = { mes: string; totalPago: Centavos; qtdCompras: number };
 

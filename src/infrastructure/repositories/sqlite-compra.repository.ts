@@ -6,6 +6,7 @@ import { centavos } from '../../domain/shared/dinheiro';
 import { milesimos } from '../../domain/shared/quantidade';
 import { Unidade } from '../../domain/shared/unidade';
 import {
+  CompraDoHistorico,
   CompraRepository,
   EdicaoItemCompra,
   ItemComProduto,
@@ -354,6 +355,56 @@ export class SQLiteCompraRepository implements CompraRepository {
       mes: linha.mes,
       totalPago: centavos(linha.totalPago),
       qtdCompras: linha.qtdCompras,
+    }));
+  }
+
+  // Continuação por data (design D6), não por deslocamento numérico: cada
+  // linha usa finalizadaEm como referência ou, sem ela (cancelada nunca
+  // chega a finalizar), atualizadoEm — o momento do cancelamento. A
+  // contagem de itens comprados vem de uma junção agregada em UMA consulta
+  // (DATABASE §6.7), nunca uma consulta por compra do histórico.
+  async listarHistorico(
+    casaId: string,
+    opcoes: { limite?: number; antesDe?: number } = {},
+  ): Promise<CompraDoHistorico[]> {
+    const { limite = 30, antesDe } = opcoes;
+    const filtroData =
+      antesDe === undefined ? sql`` : sql`AND COALESCE(finalizada_em, atualizado_em) < ${antesDe}`;
+    const linhas = this.db.all<{
+      id: string;
+      casaId: string;
+      usuarioId: string;
+      status: string;
+      valorTotalPago: number | null;
+      criadaEm: number;
+      finalizadaEm: number | null;
+      atualizadoEm: number;
+      syncStatus: string;
+      qtdItensComprados: number;
+    }>(sql`
+      SELECT
+        c.id            AS id,
+        c.casa_id       AS casaId,
+        c.usuario_id    AS usuarioId,
+        c.status        AS status,
+        c.valor_total_pago AS valorTotalPago,
+        c.criada_em     AS criadaEm,
+        c.finalizada_em AS finalizadaEm,
+        c.atualizado_em AS atualizadoEm,
+        c.sync_status   AS syncStatus,
+        COALESCE(SUM(CASE WHEN ci.comprado = 1 THEN 1 ELSE 0 END), 0) AS qtdItensComprados
+      FROM compra c
+      LEFT JOIN compra_item ci ON ci.compra_id = c.id
+      WHERE c.casa_id = ${casaId}
+        AND c.status IN ('finalizada', 'cancelada')
+        ${filtroData}
+      GROUP BY c.id
+      ORDER BY COALESCE(c.finalizada_em, c.atualizado_em) DESC
+      LIMIT ${limite}
+    `);
+    return linhas.map((linha) => ({
+      compra: compraParaDominio(linha as unknown as LinhaCompra),
+      qtdItensComprados: linha.qtdItensComprados,
     }));
   }
 }

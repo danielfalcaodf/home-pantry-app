@@ -613,6 +613,130 @@ describe('gastoPorMes', () => {
   });
 });
 
+describe('listarHistorico', () => {
+  async function finalizar(
+    compras: Awaited<ReturnType<typeof montar>>['compras'],
+    casaId: string,
+    usuarioId: string,
+    finalizadaEm: number,
+    totalPago = 1000,
+  ) {
+    const aberta = await compras.abrir(casaId, usuarioId, finalizadaEm - 1000);
+    if (!aberta.ok) throw new Error('setup');
+    const resultado = await compras.finalizar(
+      aberta.valor.id,
+      { reposicoes: [], atualizacoesDePreco: [], totalPago: centavos(totalPago) },
+      usuarioId,
+      finalizadaEm,
+    );
+    if (!resultado.ok) throw new Error('setup');
+    return resultado.valor;
+  }
+
+  async function cancelar(
+    compras: Awaited<ReturnType<typeof montar>>['compras'],
+    casaId: string,
+    usuarioId: string,
+    canceladaEm: number,
+  ) {
+    const aberta = await compras.abrir(casaId, usuarioId, canceladaEm - 1000);
+    if (!aberta.ok) throw new Error('setup');
+    const resultado = await compras.cancelar(aberta.valor.id, canceladaEm);
+    if (!resultado.ok) throw new Error('setup');
+    return resultado.valor;
+  }
+
+  it('traz finalizadas e canceladas, do mais recente ao mais antigo, mas não a que está aberta', async () => {
+    const { compras, casaId, usuarioId } = await montar();
+    const f1 = await finalizar(compras, casaId, usuarioId, 1000);
+    const c1 = await cancelar(compras, casaId, usuarioId, 2000);
+    await compras.abrir(casaId, usuarioId, 3000); // fica aberta, não deve aparecer
+
+    const historico = await compras.listarHistorico(casaId);
+
+    expect(historico.map((h) => h.compra.id)).toEqual([c1.id, f1.id]);
+  });
+
+  it('pagina por data de referência, não por deslocamento numérico (tasks 4.4, 4.5)', async () => {
+    const { compras, casaId, usuarioId } = await montar();
+    const antigas = [];
+    for (let i = 0; i < 5; i++) {
+      antigas.push(await finalizar(compras, casaId, usuarioId, 1000 + i * 1000));
+    }
+
+    const primeiroBloco = await compras.listarHistorico(casaId, { limite: 2 });
+    expect(primeiroBloco).toHaveLength(2);
+    expect(primeiroBloco.map((h) => h.compra.id)).toEqual([antigas[4].id, antigas[3].id]);
+
+    const ultimaData = primeiroBloco[primeiroBloco.length - 1].compra.finalizadaEm as number;
+    const segundoBloco = await compras.listarHistorico(casaId, { limite: 2, antesDe: ultimaData });
+    expect(segundoBloco.map((h) => h.compra.id)).toEqual([antigas[2].id, antigas[1].id]);
+  });
+
+  it('cancelada usa atualizadoEm como data de referência, e ordena corretamente entre finalizadas', async () => {
+    const { compras, casaId, usuarioId } = await montar();
+    const f1 = await finalizar(compras, casaId, usuarioId, 1000);
+    const c1 = await cancelar(compras, casaId, usuarioId, 2000);
+    const f2 = await finalizar(compras, casaId, usuarioId, 3000);
+
+    const historico = await compras.listarHistorico(casaId);
+
+    expect(historico.map((h) => h.compra.id)).toEqual([f2.id, c1.id, f1.id]);
+  });
+
+  it('traz a contagem de itens comprados por uma junção agregada, sem consulta por linha (task 5.2/§6.7)', async () => {
+    const { compras, casaId, usuarioId, criarProduto, sqlite } = await montar();
+    const p1 = await criarProduto('Arroz', 0, 500);
+    const p2 = await criarProduto('Feijão', 0, 500);
+    const aberta = await compras.abrir(casaId, usuarioId, 1);
+    if (!aberta.ok) throw new Error('setup');
+    const i1 = await compras.adicionarItem(aberta.valor.id, {
+      produtoId: p1.id,
+      unidade: 'un',
+      quantidadePlanejada: milesimos(1000),
+    });
+    await compras.adicionarItem(aberta.valor.id, {
+      produtoId: p2.id,
+      unidade: 'un',
+      quantidadePlanejada: milesimos(1000),
+    }); // não marcado como comprado
+    await compras.editarItem(i1.id, {
+      comprado: true,
+      quantidadeComprada: milesimos(1000),
+      valorPagoUnitario: centavos(500),
+    });
+    await compras.finalizar(
+      aberta.valor.id,
+      { reposicoes: [], atualizacoesDePreco: [], totalPago: centavos(500) },
+      usuarioId,
+      2000,
+    );
+
+    const originalPrepare = sqlite.prepare.bind(sqlite);
+    let consultas = 0;
+    (sqlite as unknown as { prepare: typeof sqlite.prepare }).prepare = ((fonte: string) => {
+      consultas += 1;
+      return originalPrepare(fonte);
+    }) as typeof sqlite.prepare;
+
+    const historico = await compras.listarHistorico(casaId);
+    (sqlite as unknown as { prepare: typeof sqlite.prepare }).prepare = originalPrepare;
+
+    expect(consultas).toBe(1);
+    expect(historico).toHaveLength(1);
+    expect(historico[0].qtdItensComprados).toBe(1);
+  });
+
+  it('não retorna histórico de outra casa', async () => {
+    const { compras, casaId, usuarioId, sqlite } = await montar();
+    await finalizar(compras, casaId, usuarioId, 1000);
+    sqlite
+      .prepare('INSERT INTO casa (id, nome, criada_em, atualizado_em) VALUES (?, ?, 0, 0)')
+      .run('outra-casa', 'Outra casa');
+    expect(await compras.listarHistorico('outra-casa')).toHaveLength(0);
+  });
+});
+
 describe('listarTudoParaBackup', () => {
   it('traz compras de todos os status, cada uma com seus itens', async () => {
     const { casaId, usuarioId, compras, criarProduto } = await montar();

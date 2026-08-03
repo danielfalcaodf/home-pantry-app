@@ -41,6 +41,10 @@ export type ItemComProduto = {
   produto: Pick<Produto, 'id' | 'nome' | 'categoria' | 'unidade' | 'valorUnitario'> | null;
 };
 
+// A contagem de itens comprados vem de uma junção agregada em uma única
+// consulta (DATABASE §6.7) — nunca uma consulta por linha do histórico.
+export type CompraDoHistorico = { compra: Compra; qtdItensComprados: number };
+
 export interface CompraRepository {
   /** No máximo uma compra aberta por casa (ux_compra_aberta). */
   abrir(casaId: string, usuarioId: string, criadaEm: number): Promise<Result<Compra, 'ja_existe_aberta'>>;
@@ -77,4 +81,14 @@ export interface CompraRepository {
    * `status = 'finalizada'` entra (design D5): cancelada não é gasto.
    */
   gastoPorMes(casaId: string, desdeEm: number): Promise<GastoDoMes[]>;
+  /**
+   * Histórico de compras finalizadas E canceladas (design D5 — cancelada
+   * aparece no histórico, só não no gasto), paginado pela data de
+   * referência (`finalizadaEm` ou, sem ela, `atualizadoEm`), nunca por
+   * deslocamento numérico (design D6, mesmo motivo do histórico do produto).
+   */
+  listarHistorico(
+    casaId: string,
+    opcoes?: { limite?: number; antesDe?: number },
+  ): Promise<CompraDoHistorico[]>;
 }
