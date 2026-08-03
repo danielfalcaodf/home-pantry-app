@@ -23,7 +23,7 @@
 ## 3. Ajuste de quantidade e preço
 
 - [ ] 3.1 Assumir a quantidade planejada como comprada quando o item é marcado sem ajuste
-- [ ] 3.2 Implementar o ajuste da quantidade comprada na própria tela ou em painel sobreposto, sem trocar de rota
+- [x] 3.2 Implementar o ajuste da quantidade comprada na própria tela ou em painel sobreposto, sem trocar de rota
 - [ ] 3.3 Implementar a informação do valor pago por unidade, com recálculo do total corrente
 - [ ] 3.4 Permitir marcar sem informar preço pago, contribuindo com zero para o total
 - [ ] 3.5 Confirmar que item marcado sempre tem quantidade comprada definida, tornando o estado rejeitado pelo banco inalcançável pela interface
