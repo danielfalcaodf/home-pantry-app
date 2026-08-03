@@ -1,6 +1,6 @@
 import { Pressable, View } from 'react-native';
 
-import { ItemDaCompra } from '../../application/compra/use-modo-compra';
+import { CompraItem } from '../../domain/compra/compra';
 import { formatarBRL } from '../../domain/shared/dinheiro';
 import { formatarQuantidade } from '../../domain/shared/quantidade';
 import { ALVO_TOQUE_MINIMO, espaco, raio } from '../theme/espaco';
@@ -10,8 +10,18 @@ import { Texto } from './texto';
 
 const LADO_MARCACAO = 28;
 
+// Mesma forma de application/compra/use-modo-compra.ItemDaCompra, mas
+// declarada aqui: presentation não importa application nem domain/produto/
+// (regra de camada) — o componente recebe o valor já pronto por tipagem
+// estrutural, só com o nome do produto, que é tudo que a linha usa.
+export type LinhaDeCompra = {
+  item: CompraItem;
+  produto: { nome: string } | null;
+  divergePreco: boolean;
+};
+
 export type ItemCompraProps = {
-  linha: ItemDaCompra;
+  linha: LinhaDeCompra;
   onMarcar: () => void;
   onDesmarcar: () => void;
   onAjustar: () => void;

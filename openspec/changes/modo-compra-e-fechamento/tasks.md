@@ -10,23 +10,23 @@
 
 ## 2. Tela do modo compra
 
-- [ ] 2.1 Implementar `app/compra/[id].tsx` como tela única, sem navegação interna
-- [ ] 2.2 Ativar a trava de tela acordada enquanto a tela estiver montada, e restaurar o comportamento padrão ao desmontar
+- [x] 2.1 Implementar `app/compra/[id].tsx` como tela única, sem navegação interna
+- [x] 2.2 Ativar a trava de tela acordada enquanto a tela estiver montada, e restaurar o comportamento padrão ao desmontar
 - [x] 2.3 Implementar `ItemCompra` com controle de marcação quadrado de 28 pontos dentro de alvo de 48 por 48
 - [x] 2.4 Aplicar ao item marcado o nome em cor secundária com risco horizontal, e remover todo o preenchimento da linha
 - [x] 2.5 Implementar o desmarcar revertendo a aparência e o total
-- [ ] 2.6 Gravar cada marcação imediatamente no item de compra, e não em memória
-- [ ] 2.7 Implementar a saída da tela preservando o progresso, informando que a compra continua aberta
-- [ ] 2.8 Adicionar a ação de cancelar a compra no menu da tela, com confirmação, registrando a situação cancelada
-- [ ] 2.9 Escrever teste de retomada: marcações preservadas ao sair e voltar
+- [x] 2.6 Gravar cada marcação imediatamente no item de compra, e não em memória
+- [x] 2.7 Implementar a saída da tela preservando o progresso, informando que a compra continua aberta
+- [x] 2.8 Adicionar a ação de cancelar a compra no menu da tela, com confirmação, registrando a situação cancelada
+- [x] 2.9 Escrever teste de retomada: marcações preservadas ao sair e voltar
 
 ## 3. Ajuste de quantidade e preço
 
-- [ ] 3.1 Assumir a quantidade planejada como comprada quando o item é marcado sem ajuste
+- [x] 3.1 Assumir a quantidade planejada como comprada quando o item é marcado sem ajuste
 - [x] 3.2 Implementar o ajuste da quantidade comprada na própria tela ou em painel sobreposto, sem trocar de rota
-- [ ] 3.3 Implementar a informação do valor pago por unidade, com recálculo do total corrente
-- [ ] 3.4 Permitir marcar sem informar preço pago, contribuindo com zero para o total
-- [ ] 3.5 Confirmar que item marcado sempre tem quantidade comprada definida, tornando o estado rejeitado pelo banco inalcançável pela interface
+- [x] 3.3 Implementar a informação do valor pago por unidade, com recálculo do total corrente
+- [x] 3.4 Permitir marcar sem informar preço pago, contribuindo com zero para o total
+- [x] 3.5 Confirmar que item marcado sempre tem quantidade comprada definida, tornando o estado rejeitado pelo banco inalcançável pela interface
 
 ## 4. Preço de referência
 
@@ -34,10 +34,10 @@
 - [x] 4.2 Oferecer a pergunta de atualizar o preço de referência como controle embutido na linha do item, nunca como diálogo modal
 - [x] 4.3 Oferecer o registro do primeiro preço quando o produto tem valor unitário zero
 - [x] 4.4 Não perguntar para itens avulsos
-- [ ] 4.5 Registrar a resposta no item de compra, sem alterar o produto naquele momento
-- [ ] 4.6 Aplicar as atualizações confirmadas somente dentro da transação de fechamento
-- [ ] 4.7 Escrever testes cobrindo confirmação, recusa, ausência de resposta e produto sem preço cadastrado
-- [ ] 4.8 Escrever teste confirmando que uma falha de fechamento não altera nenhum valor unitário
+- [x] 4.5 Registrar a resposta no item de compra, sem alterar o produto naquele momento
+- [x] 4.6 Aplicar as atualizações confirmadas somente dentro da transação de fechamento
+- [x] 4.7 Escrever testes cobrindo confirmação, recusa, ausência de resposta e produto sem preço cadastrado
+- [x] 4.8 Escrever teste confirmando que uma falha de fechamento não altera nenhum valor unitário
 
 ## 5. Rodapé de acompanhamento
 

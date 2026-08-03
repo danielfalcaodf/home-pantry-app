@@ -138,3 +138,81 @@ describe('useFinalizarCompra', () => {
     expect(compras.compras.find((c) => c.id === compraId)?.status).toBe('aberta');
   });
 });
+
+describe('atualização de preço de referência no fechamento', () => {
+  it('confirmação (atualizarPreco true) atualiza o valor unitário do produto', async () => {
+    const { produtos, compras, compraId, item1 } = await prepararCompra();
+    await compras.editarItem(item1.id, {
+      comprado: true,
+      quantidadeComprada: milesimos(2000),
+      valorPagoUnitario: centavos(950), // diverge de 890
+      atualizarPreco: true,
+    });
+    const { result } = await renderHook(() => useFinalizarCompra(compras, produtos));
+    await act(async () => {
+      await result.current.finalizar(compraId);
+    });
+    expect(produtos.produtos.find((p) => p.id === 'p1')?.valorUnitario).toBe(950);
+  });
+
+  it('recusa (atualizarPreco false) não atualiza o valor unitário do produto', async () => {
+    const { produtos, compras, compraId, item1 } = await prepararCompra();
+    await compras.editarItem(item1.id, {
+      comprado: true,
+      quantidadeComprada: milesimos(2000),
+      valorPagoUnitario: centavos(950),
+      atualizarPreco: false,
+    });
+    const { result } = await renderHook(() => useFinalizarCompra(compras, produtos));
+    await act(async () => {
+      await result.current.finalizar(compraId);
+    });
+    expect(produtos.produtos.find((p) => p.id === 'p1')?.valorUnitario).toBe(890);
+  });
+
+  it('ausência de resposta (atualizarPreco null) não atualiza o valor unitário', async () => {
+    const { produtos, compras, compraId, item1 } = await prepararCompra();
+    await compras.editarItem(item1.id, {
+      comprado: true,
+      quantidadeComprada: milesimos(2000),
+      valorPagoUnitario: centavos(950),
+      // atualizarPreco permanece null: nunca perguntado/respondido
+    });
+    const { result } = await renderHook(() => useFinalizarCompra(compras, produtos));
+    await act(async () => {
+      await result.current.finalizar(compraId);
+    });
+    expect(produtos.produtos.find((p) => p.id === 'p1')?.valorUnitario).toBe(890);
+  });
+
+  it('produto sem preço cadastrado: confirmação registra o primeiro preço', async () => {
+    const { produtos, compras, compraId, item2 } = await prepararCompra();
+    await compras.editarItem(item2.id, {
+      comprado: true,
+      quantidadeComprada: milesimos(1000),
+      valorPagoUnitario: centavos(700),
+      atualizarPreco: true,
+    });
+    const { result } = await renderHook(() => useFinalizarCompra(compras, produtos));
+    await act(async () => {
+      await result.current.finalizar(compraId);
+    });
+    expect(produtos.produtos.find((p) => p.id === 'p2')?.valorUnitario).toBe(700);
+  });
+
+  it('falha no fechamento não altera nenhum valor unitário confirmado', async () => {
+    const { produtos, compras, compraId, item1 } = await prepararCompra();
+    await compras.editarItem(item1.id, {
+      comprado: true,
+      quantidadeComprada: milesimos(2000),
+      valorPagoUnitario: centavos(950),
+      atualizarPreco: true,
+    });
+    jest.spyOn(compras, 'finalizar').mockRejectedValueOnce(new Error('falha de i/o'));
+    const { result } = await renderHook(() => useFinalizarCompra(compras, produtos));
+    await act(async () => {
+      await result.current.finalizar(compraId);
+    });
+    expect(produtos.produtos.find((p) => p.id === 'p1')?.valorUnitario).toBe(890);
+  });
+});

@@ -1,25 +1,24 @@
 import { View } from 'react-native';
 
-import { totalPago } from '../../domain/compra/compra.rules';
-import { formatarBRL } from '../../domain/shared/dinheiro';
-import { CompraItem } from '../../domain/compra/compra';
+import { Centavos, formatarBRL } from '../../domain/shared/dinheiro';
 import { espaco } from '../theme/espaco';
 import { useTheme } from '../theme/provider';
 import { Texto } from './texto';
 
 export type RodapeCompraProps = {
-  itens: readonly CompraItem[];
+  marcados: number;
+  totalDeItens: number;
+  total: Centavos;
 };
 
 /**
  * Contador e total trocam direto no próximo render, sem contagem progressiva
- * (design D7/§9): o total corrente usa a MESMA função de domínio do
- * fechamento (task 5.3), então o que a pessoa vê é sempre o que vai gravar.
+ * (design D7/§9). Recebe tudo pronto — inclusive o total, calculado por quem
+ * chama com a mesma função de domínio do fechamento (task 5.3) — porque
+ * presentation/ não importa regra de domínio, só tipos e formatadores.
  */
-export function RodapeCompra({ itens }: RodapeCompraProps) {
+export function RodapeCompra({ marcados, totalDeItens, total }: RodapeCompraProps) {
   const tema = useTheme();
-  const marcados = itens.filter((item) => item.comprado).length;
-  const total = totalPago(itens);
 
   return (
     <View
@@ -34,7 +33,7 @@ export function RodapeCompra({ itens }: RodapeCompraProps) {
       }}
     >
       <Texto papel="data.lg">
-        {marcados} de {itens.length}
+        {marcados} de {totalDeItens}
       </Texto>
       <Texto papel="data.lg">{formatarBRL(total)}</Texto>
     </View>

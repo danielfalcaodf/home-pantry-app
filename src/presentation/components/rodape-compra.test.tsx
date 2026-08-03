@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react-native';
 import { ReactNode } from 'react';
 
 import { CompraItem } from '../../domain/compra/compra';
+import { totalPago } from '../../domain/compra/compra.rules';
 import { centavos } from '../../domain/shared/dinheiro';
 import { milesimos } from '../../domain/shared/quantidade';
 import { ThemeProvider } from '../theme/provider';
@@ -39,14 +40,17 @@ describe('RodapeCompra', () => {
       item({ comprado: false }),
       item({ comprado: true, quantidadeComprada: milesimos(1000), valorPagoUnitario: centavos(300) }),
     ];
-    await comTema(<RodapeCompra itens={itens} />);
+    await comTema(
+      <RodapeCompra marcados={2} totalDeItens={itens.length} total={totalPago(itens)} />,
+    );
     expect(screen.getByText('2 de 3')).toBeTruthy();
     // 2000×950/1000 + 1000×300/1000 = 1900 + 300 = 2200 = R$ 22,00
     expect(screen.getByText('R$ 22,00')).toBeTruthy();
   });
 
   it('nenhum item marcado: total zero', async () => {
-    await comTema(<RodapeCompra itens={[item(), item()]} />);
+    const itens = [item(), item()];
+    await comTema(<RodapeCompra marcados={0} totalDeItens={itens.length} total={totalPago(itens)} />);
     expect(screen.getByText('0 de 2')).toBeTruthy();
     expect(screen.getByText('R$ 0,00')).toBeTruthy();
   });

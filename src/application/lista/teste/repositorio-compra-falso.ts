@@ -150,6 +150,15 @@ export class CompraRepositorioFalso implements CompraRepository {
           };
         }
       }
+      for (const atualizacao of efeitos.atualizacoesDePreco) {
+        const idx = this.produtos.produtos.findIndex((p) => p.id === atualizacao.produtoId);
+        if (idx !== -1) {
+          this.produtos.produtos[idx] = {
+            ...this.produtos.produtos[idx],
+            valorUnitario: atualizacao.novoValorUnitario,
+          };
+        }
+      }
     }
     this.compras[indice] = {
       ...this.compras[indice],
