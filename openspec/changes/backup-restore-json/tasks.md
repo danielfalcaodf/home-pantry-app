@@ -65,8 +65,8 @@
 
 ## 7. Conformidade
 
-- [ ] 7.1 Executar lint, typecheck e verificação de fronteiras
-- [ ] 7.2 Confirmar que `src/domain/backup/` não importa nada de sistema de arquivos nem do Expo
-- [ ] 7.3 Confirmar que nenhum literal de cor foi introduzido fora dos tokens
-- [ ] 7.4 Testar o ciclo completo em aparelho real: exportar, desinstalar o app, reinstalar, restaurar, e conferir que despensa e histórico voltaram
-- [ ] 7.5 Registrar no guia do repositório que gerar um backup JSON antes de atualizar o app é o único mecanismo que sobrevive a mudanças de schema
+- [x] 7.1 Executar lint, typecheck e verificação de fronteiras — `npm run verificar` verde
+- [x] 7.2 Confirmar que `src/domain/backup/` não importa nada de sistema de arquivos nem do Expo — `grep -rE "from ['\"](expo|react|drizzle|@react)" src/domain/` sem resultado (regra também aplicada pelo lint)
+- [x] 7.3 Confirmar que nenhum literal de cor foi introduzido fora dos tokens — `no-restricted-syntax` do eslint.config.js cobre `app/` e `src/`, verde
+- [ ] 7.4 Testar o ciclo completo em aparelho real: exportar, desinstalar o app, reinstalar, restaurar, e conferir que despensa e histórico voltaram — exige aparelho físico (mesma razão das changes 5-8: sem emulador Android/iOS neste ambiente); a transação de restauração e a idempotência estão cobertas por teste de infraestrutura (SQLite real, `sqlite-backup.repository.test.ts`)
+- [x] 7.5 Registrar no guia do repositório que gerar um backup JSON antes de atualizar o app é o único mecanismo que sobrevive a mudanças de schema — `CLAUDE.md`, seção de migrations
