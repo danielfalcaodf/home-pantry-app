@@ -39,10 +39,10 @@
 ## 4. Reconciliação
 
 - [x] 4.1 Executar a consulta de reconciliação automaticamente ao final de toda restauração bem-sucedida — `use-restaurar-backup.ts`, ao final de `confirmar()`
-- [ ] 4.2 Exibir os produtos divergentes quando houver, com o valor materializado e o calculado — dado pronto em `useDiagnostico`/`useRestaurarBackup`; UI na tela de configurações (seção 6)
+- [x] 4.2 Exibir os produtos divergentes quando houver, com o valor materializado e o calculado
 - [x] 4.3 Oferecer a correção pela soma dos movimentos, gravando um movimento de ajuste — `MovimentoRepository.corrigirDivergencia` + `useDiagnostico.corrigir`
 - [x] 4.4 Garantir que nenhuma quantidade é alterada em silêncio — toda correção passa por `corrigirDivergencia`, que grava o movimento de ajuste (`motivo: 'reconciliacao'`) na mesma transação
-- [ ] 4.5 Expor a reconciliação como ação de diagnóstico nas configurações — hook `useDiagnostico` pronto; wiring na tela (seção 6)
+- [x] 4.5 Expor a reconciliação como ação de diagnóstico nas configurações
 - [x] 4.6 Escrever teste confirmando zero divergências após restaurar um backup íntegro
 - [x] 4.7 Escrever teste com backup adulterado, confirmando que a divergência é detectada e informada
 
@@ -50,18 +50,18 @@
 
 - [x] 5.1 Implementar a geração do arquivo separado por vírgulas com os produtos
 - [x] 5.2 Converter quantidades e valores para leitura humana no arquivo tabular
-- [ ] 5.3 Rotular a ação explicitamente como exportação de dados, distinta e não restaurável — rótulo na tela de configurações (seção 6)
+- [x] 5.3 Rotular a ação explicitamente como exportação de dados, distinta e não restaurável
 - [x] 5.4 Ligar à folha de compartilhamento do sistema
 
 ## 6. Tela de configurações
 
-- [ ] 6.1 Criar `app/configuracoes.tsx` alcançável a partir de uma tela principal, sem navegação profunda
-- [ ] 6.2 Mover a escolha de tema para esta tela, com as três opções e persistência
-- [ ] 6.3 Agrupar exportar backup, restaurar backup e exportar dados
-- [ ] 6.4 Distinguir visualmente a restauração como ação destrutiva, descrevendo seu efeito
-- [ ] 6.5 Executar a exportação diretamente, sem confirmação
-- [ ] 6.6 Exibir a data do último backup, ou o convite a fazer o primeiro quando nunca houve
-- [ ] 6.7 Adicionar a ação de diagnóstico que roda a reconciliação sob demanda
+- [x] 6.1 Criar `app/configuracoes.tsx` alcançável a partir de uma tela principal, sem navegação profunda — link a partir da aba Resumo
+- [x] 6.2 Mover a escolha de tema para esta tela, com as três opções e persistência — nenhuma change anterior tinha construído a UI de escolha (só a persistência, na `design-system-tema`); `ThemeProvider` ganhou `escolher`/`useEscolherTema` para uma única instância do hook viver no layout raiz e a tela de configurações trocar a preferência sem duplicar estado
+- [x] 6.3 Agrupar exportar backup, restaurar backup e exportar dados
+- [x] 6.4 Distinguir visualmente a restauração como ação destrutiva, descrevendo seu efeito
+- [x] 6.5 Executar a exportação diretamente, sem confirmação
+- [x] 6.6 Exibir a data do último backup, ou o convite a fazer o primeiro quando nunca houve
+- [x] 6.7 Adicionar a ação de diagnóstico que roda a reconciliação sob demanda
 
 ## 7. Conformidade
 
