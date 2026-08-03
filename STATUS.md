@@ -37,7 +37,7 @@ Para implementar uma delas: `/opsx:apply <nome>`. Para arquivar após concluir: 
 
 | # | Change | Estado | Entrega | Por que nessa posição |
 |---|---|---|---|---|
-| 9 | `backup-restore-json` | ⬜ | Backup JSON versionado, restauração transacional, reconciliação, tela de configurações | ARQUITETURA §9: **obrigatório antes de qualquer feature nova**. Sem backend, é a única proteção contra perda total — e o único caminho de recuperação de migration ruim. |
+| 9 | `backup-restore-json` | ✅ | Backup JSON versionado, restauração transacional, reconciliação, tela de configurações | ARQUITETURA §9: **obrigatório antes de qualquer feature nova**. Sem backend, é a única proteção contra perda total — e o único caminho de recuperação de migration ruim. |
 | 10 | `ajuste-e-conferencia-estoque` | ⬜ | Ajuste com motivo, modo conferência, diagnóstico de integridade, histórico do produto | Compensa a ausência de US-08. ARQUITETURA §1.1: sem sync, K2 depende da conferência semanal. |
 | 11 | `resumo-valores-e-historico` | ⬜ | Valor do estoque, valor da lista, gasto mensal, histórico de compras | Camada de leitura sobre dados existentes. Não bloqueia nada. |
 
@@ -49,7 +49,7 @@ Para implementar uma delas: `/opsx:apply <nome>`. Para arquivar após concluir: 
 
 ### Estado do repositório
 
-Changes 1 a 8 estão **implementadas, arquivadas e com PR aberta**. A próxima é a change 9 (`backup-restore-json`), ainda não iniciada.
+Changes 1 a 9 estão **implementadas, arquivadas e com PR aberta**. A próxima é a change 10 (`ajuste-e-conferencia-estoque`) — ou a 11, já que as duas são independentes entre si depois da 9 (ver grafo de dependências).
 
 As branches formam uma cadeia — cada PR aponta para a branch da change anterior, e o merge precisa seguir essa ordem:
 
@@ -63,8 +63,21 @@ As branches formam uma cadeia — cada PR aponta para a branch da change anterio
 | [#6](https://github.com/danielfalcaodf/home-pantry-app/pull/6) | `change/dar-baixa-caminho-critico` | `change/despensa-e-cadastro-produto` | 6 · dar-baixa-caminho-critico |
 | [#7](https://github.com/danielfalcaodf/home-pantry-app/pull/7) | `feature/lista-de-compras` | `change/dar-baixa-caminho-critico` | 7 · lista-de-compras |
 | [#8](https://github.com/danielfalcaodf/home-pantry-app/pull/8) | `feature/modo-compra-e-fechamento` | `feature/lista-de-compras` | 8 · modo-compra-e-fechamento |
+| [#9](https://github.com/danielfalcaodf/home-pantry-app/pull/9) | `feature/backup-restore-json` | `feature/modo-compra-e-fechamento` | 9 · backup-restore-json |
 
 **A PR de `develop` para `main` ainda não foi aberta** — ela fecha o ciclo depois que as changes restantes entrarem.
+
+### Change 9 — concluída, com pendência de aparelho documentada
+
+44 de 45 tarefas concluídas e testadas (a 4.2 e a 4.5 completaram junto da seção 6, quando a UI que as expõe ficou pronta). A restante (7.4 — ciclo completo exportar/desinstalar/reinstalar/restaurar em aparelho real) exige hardware físico, mesma razão das changes 5-8: sem emulador Android/iOS neste ambiente. A transação de restauração em si está coberta por teste de infraestrutura com SQLite real (rollback, idempotência, combinação).
+
+- `domain/backup/backup.schema.ts`: forma do arquivo, validação estrutural e de versão, conversão entre versões — TypeScript puro. Versão do backup acompanha o número de migrations aplicadas (hoje 4)
+- `SQLiteBackupRepository` (novo port `BackupRepository`) monta o arquivo pelos repositórios existentes — que ganharam `listarTudoParaBackup` sem os filtros de ativo/removido/limite das consultas normais — e restaura tudo numa única transação, com upsert por identificador
+- **Design D8** (nova, registrada no `design.md` arquivado): a restauração nunca insere uma segunda `casa` — reescreve o `casaId` de todo o conteúdo para a casa local, e só atualiza o nome dela. Duas compras `aberta` simultâneas (local + backup) derrubam a transação inteira, comportamento aceito e testado
+- **Design D9** (nova): o movimento de correção da reconciliação (`motivo: 'reconciliacao'`) fica fora da própria soma que ele corrige — senão nenhuma correção jamais convergiria, já que o novo delta mudaria o alvo que acabou de usar. Exigiu um ajuste pontual na consulta de `reconciliar()` da change 3
+- Novo port `SistemaDeArquivos` (adapter Expo com `File`/`Directory`/`Paths` + `expo-sharing` + `expo-document-picker`, ambos adicionados como dependência) — grava, compartilha, seleciona e lê arquivo, injetável como os repositórios
+- `app/configuracoes.tsx`: primeira tela de escolha de tema do projeto (a change 4 só tinha construído a persistência); `ThemeProvider` ganhou o parâmetro opcional `escolher`/`useEscolherTema` para uma única instância do hook de preferência continuar vivendo no layout raiz
+- Exportação tabular (CSV) reaproveita `SistemaDeArquivos`, mas é gerada por uma função de domínio própria (`gerarCsvDeProdutos`) — rotulada na tela como "exportar meus dados", distinta e explicitamente não restaurável (design D7)
 
 ### Change 8 — concluída, com pendências de aparelho documentadas
 
@@ -99,7 +112,7 @@ As branches formam uma cadeia — cada PR aponta para a branch da change anterio
 
 ### A próxima change
 
-**9 · `backup-restore-json`** — backup JSON versionado, restauração transacional, reconciliação, tela de configurações. Branch a partir de `feature/modo-compra-e-fechamento`.
+**10 · `ajuste-e-conferencia-estoque`** (ou **11 · `resumo-valores-e-historico`** — independentes entre si depois da 9). Branch a partir de `feature/backup-restore-json`.
 
 ### O que está bloqueado por falta de aparelho
 
@@ -114,12 +127,13 @@ Um `eas login` e um development build instalado destravam tudo isto de uma vez �
 | 6 | 3.7, 6.5, 7.2, 8.1, 8.3–8.5, 9.1, 9.2 | Engasgo na rolagem, fluxo offline, redução de movimento, **medição real do K4**, retorno tátil em uso repetido |
 | 7 | 7.4, 7.5 | Escala de fonte a 200%, alinhamento visual da coluna de preço |
 | 8 | 8.4, 8.6 | Uso real no corredor do mercado, fonte a 200% |
+| 9 | 7.4 | Ciclo completo exportar → desinstalar → reinstalar → restaurar em aparelho real |
 
 Comando para destravar: `npx eas-cli login && npx eas-cli build --profile development --platform android`.
 
 ### Verificação atual
 
-`npm test` → **405 testes, todos verdes** · `npm run verificar` (fronteiras + lint + typecheck) → **verde, zero avisos** · `npx expo export` fecha o bundle.
+`npm test` → **470 testes, todos verdes** (49 suítes) · `npm run verificar` (fronteiras + lint + typecheck) → **verde, zero avisos** · `npx expo export` fecha o bundle.
 
 ---
 
