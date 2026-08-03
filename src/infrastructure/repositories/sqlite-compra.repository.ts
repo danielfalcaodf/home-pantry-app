@@ -97,6 +97,11 @@ export class SQLiteCompraRepository implements CompraRepository {
     return linha ? compraParaDominio(linha) : null;
   }
 
+  async obterPorId(compraId: string): Promise<Compra | null> {
+    const linha = this.db.select().from(tabelaCompra).where(eq(tabelaCompra.id, compraId)).get();
+    return linha ? compraParaDominio(linha) : null;
+  }
+
   async adicionarItem(compraId: string, item: NovoItemCompra): Promise<CompraItem> {
     const id = gerarId();
     const ordem =

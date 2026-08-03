@@ -613,6 +613,92 @@ describe('gastoPorMes', () => {
   });
 });
 
+describe('obterPorId', () => {
+  it('encontra uma compra por id em qualquer status', async () => {
+    const { compras, casaId, usuarioId } = await montar();
+    const aberta = await compras.abrir(casaId, usuarioId, clock.agora());
+    if (!aberta.ok) throw new Error('setup');
+
+    const encontrada = await compras.obterPorId(aberta.valor.id);
+    expect(encontrada?.id).toBe(aberta.valor.id);
+  });
+
+  it('retorna null para id inexistente', async () => {
+    const { compras } = await montar();
+    expect(await compras.obterPorId('inexistente')).toBeNull();
+  });
+});
+
+describe('detalhe da compra — obterPorId + listarItens, sem N+1 (task 5.6)', () => {
+  it('carrega a compra e os itens em exatamente duas consultas, com qualquer quantidade de itens', async () => {
+    const { compras, casaId, usuarioId, criarProduto, sqlite } = await montar();
+    const aberta = await compras.abrir(casaId, usuarioId, clock.agora());
+    if (!aberta.ok) throw new Error('setup');
+    for (let i = 0; i < 10; i++) {
+      const produto = await criarProduto(`Produto ${i}`, 0, 500);
+      await compras.adicionarItem(aberta.valor.id, {
+        produtoId: produto.id,
+        unidade: 'un',
+        quantidadePlanejada: milesimos(1000),
+      });
+    }
+
+    const originalPrepare = sqlite.prepare.bind(sqlite);
+    let consultas = 0;
+    (sqlite as unknown as { prepare: typeof sqlite.prepare }).prepare = ((fonte: string) => {
+      consultas += 1;
+      return originalPrepare(fonte);
+    }) as typeof sqlite.prepare;
+
+    const compra = await compras.obterPorId(aberta.valor.id);
+    const itens = await compras.listarItens(aberta.valor.id);
+    (sqlite as unknown as { prepare: typeof sqlite.prepare }).prepare = originalPrepare;
+
+    expect(consultas).toBe(2);
+    expect(compra).not.toBeNull();
+    expect(itens).toHaveLength(10);
+  });
+
+  it('produto removido logicamente após a compra não derruba o detalhe — item continua aparecendo (task 5.4, 5.7)', async () => {
+    const { compras, produtos, casaId, usuarioId, criarProduto } = await montar();
+    const produto = await criarProduto('Arroz', 0, 500);
+    const aberta = await compras.abrir(casaId, usuarioId, clock.agora());
+    if (!aberta.ok) throw new Error('setup');
+    const item = await compras.adicionarItem(aberta.valor.id, {
+      produtoId: produto.id,
+      unidade: 'un',
+      quantidadePlanejada: milesimos(1000),
+    });
+
+    // Remoção lógica (a única forma real de "remover" um produto no app —
+    // CLAUDE.md, "a remoção de produto é lógica"): a linha continua
+    // existindo, então o vínculo permanece (design D7) e a junção externa
+    // ainda encontra o produto.
+    await produtos.removerLogicamente(produto.id);
+
+    const itens = await compras.listarItens(aberta.valor.id);
+    expect(itens).toHaveLength(1);
+    expect(itens[0].item.id).toBe(item.id);
+    expect(itens[0].produto?.nome).toBe('Arroz');
+  });
+
+  it('avulso (produtoId null desde a origem) aparece com produto null, sem quebrar o detalhe', async () => {
+    const { compras, casaId, usuarioId } = await montar();
+    const aberta = await compras.abrir(casaId, usuarioId, clock.agora());
+    if (!aberta.ok) throw new Error('setup');
+    await compras.adicionarItem(aberta.valor.id, {
+      nomeAvulso: 'Pilha AA',
+      unidade: 'un',
+      quantidadePlanejada: milesimos(1000),
+    });
+
+    const itens = await compras.listarItens(aberta.valor.id);
+    expect(itens).toHaveLength(1);
+    expect(itens[0].produto).toBeNull();
+    expect(itens[0].item.nomeAvulso).toBe('Pilha AA');
+  });
+});
+
 describe('listarHistorico', () => {
   async function finalizar(
     compras: Awaited<ReturnType<typeof montar>>['compras'],

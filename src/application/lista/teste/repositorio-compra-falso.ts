@@ -51,6 +51,10 @@ export class CompraRepositorioFalso implements CompraRepository {
     return this.compras.find((c) => c.casaId === casaId && c.status === 'aberta') ?? null;
   }
 
+  async obterPorId(compraId: string): Promise<Compra | null> {
+    return this.compras.find((c) => c.id === compraId) ?? null;
+  }
+
   async adicionarItem(compraId: string, item: NovoItemCompra): Promise<CompraItem> {
     this.proximoId += 1;
     const ordem = item.ordem ?? this.itens.filter((i) => i.compraId === compraId).length;

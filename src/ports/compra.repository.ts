@@ -49,6 +49,8 @@ export interface CompraRepository {
   /** No máximo uma compra aberta por casa (ux_compra_aberta). */
   abrir(casaId: string, usuarioId: string, criadaEm: number): Promise<Result<Compra, 'ja_existe_aberta'>>;
   obterAberta(casaId: string): Promise<Compra | null>;
+  /** Qualquer status — o detalhe de uma compra finalizada ou cancelada usa este método. */
+  obterPorId(compraId: string): Promise<Compra | null>;
   adicionarItem(compraId: string, item: NovoItemCompra): Promise<CompraItem>;
   editarItem(itemId: string, dados: EdicaoItemCompra): Promise<void>;
   removerItem(itemId: string): Promise<void>;
