@@ -1,10 +1,11 @@
 import { useCallback } from 'react';
 
+import { MotivoAjuste } from '../../domain/movimento/movimento';
 import { calcularAjuste } from '../../domain/movimento/movimento.rules';
 import { Milesimos } from '../../domain/shared/quantidade';
 import { obterIdentidadeLocal, produtoRepository, relogio } from '../../composicao/repositorios';
 import { Clock } from '../../ports/clock';
-import { MotivoAjuste, ProdutoRepository } from '../../ports/produto.repository';
+import { ProdutoRepository } from '../../ports/produto.repository';
 
 export type ResultadoAjusteDeEstoque =
   | { ajustou: true; movimentoId: string; saldoResultante: Milesimos }

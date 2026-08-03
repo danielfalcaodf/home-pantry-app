@@ -11,11 +11,11 @@
 
 ## 2. Quantidade editável no detalhe
 
-- [ ] 2.1 Tornar a quantidade atual tocável na tela de detalhe, abrindo o caminho de ajuste
-- [ ] 2.2 Confirmar que a quantidade atual não é editável como campo de formulário comum
-- [ ] 2.3 Confirmar que alterar a quantidade necessária continua sendo edição de cadastro, sem gravar movimento
-- [ ] 2.4 Usar linguagem de correção na interface, sem termos de sistema
-- [ ] 2.5 Escrever teste confirmando que o ajuste pelo detalhe produz o mesmo efeito de qualquer outro caminho
+- [x] 2.1 Tornar a quantidade atual tocável na tela de detalhe, abrindo o caminho de ajuste
+- [x] 2.2 Confirmar que a quantidade atual não é editável como campo de formulário comum
+- [x] 2.3 Confirmar que alterar a quantidade necessária continua sendo edição de cadastro, sem gravar movimento
+- [x] 2.4 Usar linguagem de correção na interface, sem termos de sistema
+- [x] 2.5 Escrever teste confirmando que o ajuste pelo detalhe produz o mesmo efeito de qualquer outro caminho
 
 ## 3. Modo conferência
 

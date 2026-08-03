@@ -1,3 +1,4 @@
+import { MotivoAjuste } from '../domain/movimento/movimento';
 import { FaltanteBruto, Produto } from '../domain/produto/produto';
 import { ProdutoValidado } from '../domain/produto/validacao';
 import { Milesimos } from '../domain/shared/quantidade';
@@ -5,6 +6,7 @@ import { Unidade } from '../domain/shared/unidade';
 import { Result } from '../shared/result';
 
 export type { FaltanteBruto } from '../domain/produto/produto';
+export type { MotivoAjuste } from '../domain/movimento/movimento';
 
 export type ErroEscritaProduto = 'nome_duplicado' | 'nao_encontrado';
 
@@ -21,8 +23,6 @@ export type ResultadoBaixa =
   /** Baixa sobre saldo já zerado: variação 0 é rejeitada pelo banco e
    *  poluiria a trilha append-only. */
   | { gravou: false; motivo: 'estoque_zerado' };
-
-export type MotivoAjuste = 'perda' | 'vencimento' | 'correcao';
 
 export type ComandoAjuste = {
   produtoId: string;

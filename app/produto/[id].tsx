@@ -1,8 +1,9 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { Alert, View } from 'react-native';
+import { Alert, Pressable, View } from 'react-native';
 
 import { ProdutoNaDespensa } from '@/application/estoque/use-produtos';
+import { useAjustarEstoque } from '@/application/estoque/use-ajustar-estoque';
 import { useCategorias } from '@/application/estoque/use-categorias';
 import { useDarBaixa } from '@/application/estoque/use-dar-baixa';
 import { useDesfazerMovimento } from '@/application/estoque/use-desfazer-movimento';
@@ -15,17 +16,24 @@ import { useReporPontual } from '@/application/estoque/use-repor-pontual';
 import { normalizarCategoria } from '@/domain/produto/categoria';
 import { centavos, formatarBRL } from '@/domain/shared/dinheiro';
 import { deDecimal, formatarNumero, milesimos, paraDecimal } from '@/domain/shared/quantidade';
+import { MotivoAjuste } from '@/domain/movimento/movimento';
 import { rotuloDaUnidade } from '@/domain/shared/unidade';
 import { Botao } from '@/presentation/components/botao';
 import {
   FormularioProduto,
   ValoresDoProduto,
 } from '@/presentation/components/formulario-produto';
+import { SheetAjusteEstoque } from '@/presentation/components/sheet-ajuste-estoque';
 import { TecladoQuantidade } from '@/presentation/components/teclado-quantidade';
 import { TelaErro } from '@/presentation/components/tela-erro';
 import { Texto } from '@/presentation/components/texto';
 import { Toast } from '@/presentation/components/toast';
 import { ToastDesfazer } from '@/presentation/components/toast-desfazer';
+import {
+  mensagemDeAjuste,
+  MENSAGEM_AJUSTE_SEM_MUDANCA,
+  MENSAGEM_FALHA_AO_GRAVAR,
+} from '@/presentation/format/mensagem-de-registro';
 import { useRegistroDeConsumo } from '@/presentation/components/use-registro-de-consumo';
 import { espaco } from '@/presentation/theme/espaco';
 import { useTheme } from '@/presentation/theme/provider';
@@ -75,10 +83,13 @@ function Detalhe({ id, item }: { id: string; item: ProdutoNaDespensa }) {
   const [valores, setValores] = useState<ValoresDoProduto>(() => valoresDoItem(item));
   const [erros, setErros] = useState<Partial<Record<keyof ValoresDoProduto, string>>>({});
   const [tecladoAberto, setTecladoAberto] = useState(false);
+  const [ajusteAberto, setAjusteAberto] = useState(false);
+  const [avisoDeAjuste, setAvisoDeAjuste] = useState<string | null>(null);
 
   // Mesmos casos de uso da lista: o efeito pelo detalhe é idêntico.
   const { registrar: registrarConsumo } = useDarBaixa();
   const { registrar: registrarReposicao } = useReporPontual();
+  const { ajustar } = useAjustarEstoque();
   const { desfazer } = useDesfazerMovimento();
   const confirmacao = useRegistroDeConsumo();
 
@@ -90,6 +101,28 @@ function Detalhe({ id, item }: { id: string; item: ProdutoNaDespensa }) {
   async function repor(quantidade = milesimos(1000)) {
     const resultado = await registrarReposicao(id, quantidade);
     confirmacao.anunciar(resultado, item.produto, quantidade, 'reposicao');
+  }
+
+  // Caminho de correção (design D3): o toque na quantidade atual abre este
+  // fluxo — o resultado é idêntico ao de um ajuste feito por qualquer outro
+  // caminho (tasks 2.1, 2.5), nunca um campo de formulário comum (task 2.2).
+  async function corrigirQuantidade({
+    valorFinal,
+    motivo,
+  }: {
+    valorFinal: number;
+    motivo: MotivoAjuste | null;
+  }) {
+    const resultado = await ajustar(id, item.produto.quantidadeAtual, deDecimal(valorFinal), motivo);
+    if ('erro' in resultado) {
+      setAvisoDeAjuste(MENSAGEM_FALHA_AO_GRAVAR);
+      return;
+    }
+    if (!resultado.ajustou) {
+      setAvisoDeAjuste(resultado.motivo === 'sem_mudanca' ? MENSAGEM_AJUSTE_SEM_MUDANCA : MENSAGEM_FALHA_AO_GRAVAR);
+      return;
+    }
+    setAvisoDeAjuste(mensagemDeAjuste(item.produto.nome, deDecimal(valorFinal), item.produto.unidade));
   }
 
   async function salvar() {
@@ -139,12 +172,18 @@ function Detalhe({ id, item }: { id: string; item: ProdutoNaDespensa }) {
   return (
     <View style={{ flex: 1, backgroundColor: tema.bg.base }}>
       <View style={{ padding: espaco.lg, gap: espaco.xs }}>
-        {/* Quantidade atual é somente leitura: mudá-la gera movimento e é
-            ajuste, que tem regra própria (D8). */}
-        <Texto papel="display.lg">
-          {formatarNumero(produto.quantidadeAtual)}{' '}
-          {rotuloDaUnidade(produto.unidade, produto.quantidadeAtual !== 1000)}
-        </Texto>
+        {/* O toque abre o caminho de ajuste (design D3) — a quantidade
+            atual nunca é um campo de formulário comum (task 2.2). */}
+        <Pressable
+          onPress={() => setAjusteAberto(true)}
+          accessibilityRole="button"
+          accessibilityLabel="Corrigir quantidade atual"
+        >
+          <Texto papel="display.lg">
+            {formatarNumero(produto.quantidadeAtual)}{' '}
+            {rotuloDaUnidade(produto.unidade, produto.quantidadeAtual !== 1000)}
+          </Texto>
+        </Pressable>
         <Texto papel="label" tom="secondary">
           {item.rotulo}
           {produto.valorUnitario > 0
@@ -200,6 +239,9 @@ function Detalhe({ id, item }: { id: string; item: ProdutoNaDespensa }) {
       {confirmacao.aviso && !confirmacao.registro ? (
         <Toast mensagem={confirmacao.aviso} onFim={confirmacao.limpar} />
       ) : null}
+      {avisoDeAjuste ? (
+        <Toast mensagem={avisoDeAjuste} onFim={() => setAvisoDeAjuste(null)} />
+      ) : null}
 
       {tecladoAberto ? (
         <TecladoQuantidade
@@ -211,6 +253,15 @@ function Detalhe({ id, item }: { id: string; item: ProdutoNaDespensa }) {
           onRepus={(quantidade) => void repor(deDecimal(quantidade))}
         />
       ) : null}
+
+      <SheetAjusteEstoque
+        visivel={ajusteAberto}
+        nome={produto.nome}
+        unidade={produto.unidade}
+        quantidadeAtual={paraDecimal(produto.quantidadeAtual)}
+        onFechar={() => setAjusteAberto(false)}
+        onSalvar={(dados) => void corrigirQuantidade(dados)}
+      />
     </View>
   );
 }
