@@ -1,11 +1,11 @@
 ## 1. Formato do backup
 
-- [ ] 1.1 Criar `src/domain/backup/backup.schema.ts` definindo a forma do arquivo com versão de schema, data de exportação e as coleções de casa, usuários, produtos, movimentos, compras e itens de compra
-- [ ] 1.2 Implementar a validação da estrutura retornando `Result`, sem depender de sistema de arquivos
-- [ ] 1.3 Implementar a verificação de versão: recusar versão mais nova que a do app, aceitar versões anteriores
-- [ ] 1.4 Criar a função de conversão de versões anteriores para o formato corrente, com uma entrada por versão publicada
-- [ ] 1.5 Escrever testes de validação cobrindo arquivo válido, arquivo malformado, arquivo sem versão e arquivo de versão mais nova
-- [ ] 1.6 Decidir e registrar se a versão do backup acompanha a numeração das migrations
+- [x] 1.1 Criar `src/domain/backup/backup.schema.ts` definindo a forma do arquivo com versão de schema, data de exportação e as coleções de casa, usuários, produtos, movimentos, compras e itens de compra
+- [x] 1.2 Implementar a validação da estrutura retornando `Result`, sem depender de sistema de arquivos
+- [x] 1.3 Implementar a verificação de versão: recusar versão mais nova que a do app, aceitar versões anteriores
+- [x] 1.4 Criar a função de conversão de versões anteriores para o formato corrente, com uma entrada por versão publicada
+- [x] 1.5 Escrever testes de validação cobrindo arquivo válido, arquivo malformado, arquivo sem versão e arquivo de versão mais nova
+- [x] 1.6 Decidir e registrar se a versão do backup acompanha a numeração das migrations
 
 ## 2. Exportação
 

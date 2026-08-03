@@ -94,6 +94,6 @@ O que ela estabelece é operacional: a partir daqui, a política de "backup ante
 
 ## Open Questions
 
-- **Versão de schema do backup versus versão de migration do Drizzle**: usar o mesmo número mantém tudo alinhado; usar um contador próprio permite mudar o formato do backup sem migration. Proposta: mesmo número, porque a forma do backup deriva do schema.
+- **Versão de schema do backup versus versão de migration do Drizzle**: usar o mesmo número mantém tudo alinhado; usar um contador próprio permite mudar o formato do backup sem migration. Proposta: mesmo número, porque a forma do backup deriva do schema. **Resolvida (task 1.6)**: `VERSAO_SCHEMA_BACKUP_ATUAL` em `domain/backup/backup.schema.ts` conta as migrations aplicadas (hoje 4: `0000_init`..`0003_compra_item_atualizar_preco`). Cada migration futura que mude a forma dos dados exportados incrementa essa constante e ganha uma entrada em `CONVERSORES`.
 - **Lembrete de backup periódico**: seria eficaz, mas notificação é v1.1. Por ora, a data do último backup visível na tela de configurações é o que existe.
 - **Reconciliação como diagnóstico manual**: DATABASE §6.6 sugere "um botão escondido de diagnóstico". Esta change o coloca nas configurações; a tela de diagnóstico mais completa pertence à change de ajuste e conferência.
