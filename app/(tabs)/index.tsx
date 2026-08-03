@@ -1,6 +1,6 @@
 import { FlashList } from '@shopify/flash-list';
-import { router } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { router, useLocalSearchParams } from 'expo-router';
+import { useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 
 import { ProdutoNaDespensa, useProdutos } from '@/application/estoque/use-produtos';
@@ -38,16 +38,30 @@ const FILTROS: { valor: FiltroEstado; rotulo: string }[] = [
   { valor: 'ok', rotulo: 'Cheio' },
 ];
 
+const FILTROS_VALIDOS = new Set<FiltroEstado>(['tudo', 'critico', 'emFalta', 'ok']);
+
 export default function Despensa() {
   const tema = useTheme();
   const { itens, carregando } = useProdutos();
   const categorias = useCategorias();
 
-  // Filtro e busca são estado efêmero de tela (ADR-05) — nada global.
+  // Filtro e busca são estado efêmero de tela (ADR-05) — nada global. A
+  // tela Resumo pode chegar com um filtro pronto (task 2.6): cada contagem
+  // por estado leva direto para a despensa já filtrada por aquele estado.
+  const { filtro: filtroDaRota } = useLocalSearchParams<{ filtro?: string }>();
   const [filtro, setFiltro] = useState<FiltroEstado>('tudo');
   const [categoria, setCategoria] = useState<string | null>(null);
   const [busca, setBusca] = useState('');
   const [itemDoTeclado, setItemDoTeclado] = useState<ProdutoNaDespensa | null>(null);
+
+  useEffect(() => {
+    // Sincroniza com um sistema externo (a rota) — não deriva de outro
+    // estado local, só reage a um parâmetro de navegação (task 2.6).
+    if (filtroDaRota && FILTROS_VALIDOS.has(filtroDaRota as FiltroEstado)) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setFiltro(filtroDaRota as FiltroEstado);
+    }
+  }, [filtroDaRota]);
 
   const { registrar: registrarConsumo } = useDarBaixa();
   const { registrar: registrarReposicao } = useReporPontual();
