@@ -38,13 +38,13 @@
 
 ## 4. Reconciliação
 
-- [ ] 4.1 Executar a consulta de reconciliação automaticamente ao final de toda restauração bem-sucedida
-- [ ] 4.2 Exibir os produtos divergentes quando houver, com o valor materializado e o calculado
-- [ ] 4.3 Oferecer a correção pela soma dos movimentos, gravando um movimento de ajuste
-- [ ] 4.4 Garantir que nenhuma quantidade é alterada em silêncio
-- [ ] 4.5 Expor a reconciliação como ação de diagnóstico nas configurações
-- [ ] 4.6 Escrever teste confirmando zero divergências após restaurar um backup íntegro
-- [ ] 4.7 Escrever teste com backup adulterado, confirmando que a divergência é detectada e informada
+- [x] 4.1 Executar a consulta de reconciliação automaticamente ao final de toda restauração bem-sucedida — `use-restaurar-backup.ts`, ao final de `confirmar()`
+- [ ] 4.2 Exibir os produtos divergentes quando houver, com o valor materializado e o calculado — dado pronto em `useDiagnostico`/`useRestaurarBackup`; UI na tela de configurações (seção 6)
+- [x] 4.3 Oferecer a correção pela soma dos movimentos, gravando um movimento de ajuste — `MovimentoRepository.corrigirDivergencia` + `useDiagnostico.corrigir`
+- [x] 4.4 Garantir que nenhuma quantidade é alterada em silêncio — toda correção passa por `corrigirDivergencia`, que grava o movimento de ajuste (`motivo: 'reconciliacao'`) na mesma transação
+- [ ] 4.5 Expor a reconciliação como ação de diagnóstico nas configurações — hook `useDiagnostico` pronto; wiring na tela (seção 6)
+- [x] 4.6 Escrever teste confirmando zero divergências após restaurar um backup íntegro
+- [x] 4.7 Escrever teste com backup adulterado, confirmando que a divergência é detectada e informada
 
 ## 5. Exportação tabular
 

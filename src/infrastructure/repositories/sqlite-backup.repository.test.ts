@@ -361,3 +361,48 @@ describe('SQLiteBackupRepository.restaurar', () => {
     expect(sqlite.prepare('SELECT COUNT(*) AS n FROM compra').get()).toEqual({ n: 1 });
   });
 });
+
+describe('reconciliação após restaurar (tasks 4.6-4.7)', () => {
+  it('backup íntegro restaurado não deixa nenhuma divergência', async () => {
+    const { backup, movimentos, casaId } = await montar();
+    // produto-do-backup: quantidadeAtual 2000, movimento único de +2000 —
+    // coerente por construção.
+    await backup.restaurar(arquivoDeOutroAparelho(), casaId, 999);
+
+    expect(await movimentos.reconciliar(casaId)).toHaveLength(0);
+  });
+
+  it('backup adulterado (quantidade não bate com a soma dos movimentos) é detectado após restaurar', async () => {
+    const { backup, movimentos, casaId } = await montar();
+    const arquivo = arquivoDeOutroAparelho({
+      produtos: [
+        {
+          id: 'produto-do-backup',
+          casaId: 'casa-do-backup',
+          nome: 'Arroz',
+          categoria: 'Grãos',
+          unidade: 'pacote',
+          // adulterado: o arquivo diz 5000, mas o único movimento abaixo soma 2000.
+          quantidadeAtual: milesimos(5000),
+          quantidadeNecessaria: milesimos(3000),
+          valorUnitario: centavos(890),
+          marcaPreferida: null,
+          observacao: null,
+          ativo: true,
+          criadoEm: 100,
+          atualizadoEm: 100,
+          deletadoEm: null,
+          syncStatus: 'sincronizado',
+        },
+      ],
+    });
+
+    await backup.restaurar(arquivo, casaId, 999);
+
+    const divergencias = await movimentos.reconciliar(casaId);
+    expect(divergencias).toHaveLength(1);
+    expect(divergencias[0]).toEqual(
+      expect.objectContaining({ produtoId: 'produto-do-backup', materializado: 5000, calculado: 2000 }),
+    );
+  });
+});
