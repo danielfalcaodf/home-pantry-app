@@ -1,7 +1,7 @@
 import { FlashList } from '@shopify/flash-list';
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { ScrollView, View } from 'react-native';
+import { Pressable, ScrollView, View } from 'react-native';
 
 import { ProdutoNaDespensa, useProdutos } from '@/application/estoque/use-produtos';
 import { useCategorias } from '@/application/estoque/use-categorias';
@@ -121,7 +121,26 @@ export default function Despensa() {
   return (
     <View style={{ flex: 1, backgroundColor: tema.bg.base }}>
       <View style={{ paddingHorizontal: espaco.lg, paddingTop: espaco.lg, gap: espaco.md }}>
-        <Texto papel="display.sm">Despensa</Texto>
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}
+        >
+          <Texto papel="display.sm">Despensa</Texto>
+          {/* Recalibração semanal (ARQUITETURA §1.1) — alcançável, mas fora do
+              caminho crítico de dar baixa (nenhum toque extra nas linhas abaixo). */}
+          <Pressable
+            onPress={() => router.push('/conferencia')}
+            accessibilityRole="button"
+            accessibilityLabel="Conferência de estoque"
+          >
+            <Texto papel="body.md" cor={tema.action.azulejo}>
+              Conferência
+            </Texto>
+          </Pressable>
+        </View>
         <CampoTexto
           rotulo="Buscar"
           value={busca}

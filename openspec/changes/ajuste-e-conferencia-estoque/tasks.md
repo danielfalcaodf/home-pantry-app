@@ -19,19 +19,19 @@
 
 ## 3. Modo conferência
 
-- [ ] 3.1 Criar `app/conferencia.tsx` com a escolha da categoria a conferir, ou a opção de conferir tudo
-- [ ] 3.2 Criar `use-conferencia.ts` fornecendo a sequência de itens e a posição do percurso
-- [ ] 3.3 Apresentar um item por vez, com a quantidade registrada em destaque
-- [ ] 3.4 Exibir o progresso com quantos itens já foram conferidos de quantos
-- [ ] 3.5 Implementar o confirmar de um toque, avançando sem gravar nenhum movimento
-- [ ] 3.6 Implementar a correção informando o valor final, gravando ajuste e avançando, sem diálogo adicional
-- [ ] 3.7 Incluir itens zerados no percurso, permitindo corrigir para valor maior
-- [ ] 3.8 Não oferecer criação nem remoção de produto durante o percurso
-- [ ] 3.9 Guardar a posição do percurso para permitir retomar de onde parou
-- [ ] 3.10 Informar ao final quantos itens foram corrigidos e quantos estavam corretos
-- [ ] 3.11 Usar alvos de toque generosos, adequados ao uso rápido
-- [ ] 3.12 Verificar que a conferência funciona com o aparelho sem conexão
-- [ ] 3.13 Medir quanto tempo leva conferir trinta itens e registrar o resultado
+- [x] 3.1 Criar `app/conferencia.tsx` com a escolha da categoria a conferir, ou a opção de conferir tudo
+- [x] 3.2 Criar `use-conferencia.ts` fornecendo a sequência de itens e a posição do percurso
+- [x] 3.3 Apresentar um item por vez, com a quantidade registrada em destaque
+- [x] 3.4 Exibir o progresso com quantos itens já foram conferidos de quantos
+- [x] 3.5 Implementar o confirmar de um toque, avançando sem gravar nenhum movimento
+- [x] 3.6 Implementar a correção informando o valor final, gravando ajuste e avançando, sem diálogo adicional
+- [x] 3.7 Incluir itens zerados no percurso, permitindo corrigir para valor maior
+- [x] 3.8 Não oferecer criação nem remoção de produto durante o percurso
+- [x] 3.9 Guardar a posição do percurso para permitir retomar de onde parou
+- [x] 3.10 Informar ao final quantos itens foram corrigidos e quantos estavam corretos
+- [x] 3.11 Usar alvos de toque generosos, adequados ao uso rápido
+- [x] 3.12 Verificar que a conferência funciona com o aparelho sem conexão — verificado por leitura de código: todo o caminho de escrita usa apenas `produtoRepository`/`configuracaoRepository` (SQLite local), sem nenhuma chamada de rede
+- [ ] 3.13 Medir quanto tempo leva conferir trinta itens e registrar o resultado — pendente de aparelho físico (sem emulador Android/iOS neste ambiente, mesma razão das changes 5-9)
 
 ## 4. Diagnóstico de integridade
 
