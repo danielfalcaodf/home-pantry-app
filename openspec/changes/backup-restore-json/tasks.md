@@ -48,10 +48,10 @@
 
 ## 5. Exportação tabular
 
-- [ ] 5.1 Implementar a geração do arquivo separado por vírgulas com os produtos
-- [ ] 5.2 Converter quantidades e valores para leitura humana no arquivo tabular
-- [ ] 5.3 Rotular a ação explicitamente como exportação de dados, distinta e não restaurável
-- [ ] 5.4 Ligar à folha de compartilhamento do sistema
+- [x] 5.1 Implementar a geração do arquivo separado por vírgulas com os produtos
+- [x] 5.2 Converter quantidades e valores para leitura humana no arquivo tabular
+- [ ] 5.3 Rotular a ação explicitamente como exportação de dados, distinta e não restaurável — rótulo na tela de configurações (seção 6)
+- [x] 5.4 Ligar à folha de compartilhamento do sistema
 
 ## 6. Tela de configurações
 
