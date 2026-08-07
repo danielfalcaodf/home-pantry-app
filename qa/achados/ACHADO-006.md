@@ -5,8 +5,10 @@ change: despensa-e-cadastro-produto
 capability: despensa-e-cadastro-produto
 severidade: critica
 fase: F2
-estado: aberto
+estado: descartado
 ---
+> **Atualização (PR 6)**: o erro foi corrigido na PR 6 (`change/dar-baixa-caminho-critico`) via `// eslint-disable-next-line react-hooks/set-state-in-effect` justificado em comentário ("o lint não enxerga que `recarregar` só escreve estado depois do await — a escrita nunca é síncrona aqui, então não há render em cascata"), tanto em `use-produtos.ts:69` quanto em `use-categorias.ts` equivalente. É uma correção legítima (falso positivo da regra), não uma mudança de comportamento. **Estado alterado para `descartado`**: não abre change própria — é só um problema de sequenciamento entre PR 5 e PR 6, que já se resolve naturalmente na ordem de merge da cadeia (PR 5 nunca é mesclada sozinha sem a 6 antes dela ficar disponível, mas fica registrado aqui para o caso de alguém tentar mesclar só até a PR 5).
+
 ## O que quebra
 
 `npm run verificar` **falha com exit code 1** nesta PR isolada — 2 erros de lint `react-hooks/set-state-in-effect` (não warnings): `setState` chamado sincronamente dentro de um `useEffect`, o que o próprio ESLint classifica como podendo disparar cascading renders. Isso significa que, se a PR 5 fosse mesclada e testada isoladamente (ou se a cadeia parasse aqui), o gate de CI/pre-merge (`npm run verificar`, exigido pelo `CLAUDE.md` "rodar antes de qualquer merge") bloquearia o merge.
