@@ -5,8 +5,10 @@ change: correcao-navegacao-nativa
 capability: chrome-de-navegacao
 severidade: critica
 fase: F2
-estado: aberto
+estado: descartado
 ---
+> **Atualização (PR 13)**: confirmado via `git show <branch>:package.json` que nem a PR 6, nem a PR 11, nem a PR 12 declaram `react-native-get-random-values` — só o topo da cadeia (PR 13, `feat/ajuste-visual-telas-design-system`, commit `4121ccd` "feat(icones): adiciona react-native-svg e componente IconeSvg") adiciona a entrada em `package.json:43` (`~1.11.0`). **Estado alterado para `descartado`**: mesma situação do ACHADO-006 — é um problema de sequenciamento entre PR 12 e PR 13, resolvido naturalmente pela ordem de merge da cadeia (a PR 12 nunca é mesclada sozinha sem a 13 vir logo depois na sequência planejada), não uma change própria. Fica registrado para o caso de alguém tentar mesclar só até a PR 12 e rodar `npm run verificar` isoladamente lá.
+
 ## O que quebra
 
 `app/_layout.tsx:1` importa `react-native-get-random-values` (polyfill de `crypto.getRandomValues`, tipicamente necessário para geração de UUID funcionar em React Native), mas o pacote **não está declarado em `package.json`** — nem em `dependencies` nem em `devDependencies`. `npm run verificar` falha com erro de lint (`import/no-unresolved`), e qualquer `npm ci` limpo (como o desta rodada de QA) não instala o pacote porque ele nunca foi declarado.

@@ -10,7 +10,7 @@
 |---|---|---|---|
 | F0 | Ambiente e ferramental (sem emulador) | concluída | [qa/fases/F0-ambiente.md](fases/F0-ambiente.md) |
 | F1 | Baseline no topo da cadeia | concluída | [qa/fases/F1-baseline-topo.md](fases/F1-baseline-topo.md) |
-| F2 | Cadeia incremental por worktree (13 PRs) | em andamento | `qa/fases/F2-cadeia-incremental.md` |
+| F2 | Cadeia incremental por worktree (13 PRs) | concluída | [qa/fases/F2-cadeia-incremental.md](fases/F2-cadeia-incremental.md) |
 | F3 | Conformidade com specs OpenSpec | pendente | `qa/fases/F3-conformidade-spec.md` |
 | F4 | Smoke no emulador *(requer development build)* | bloqueada | `qa/fases/F4-smoke-emulador.md` |
 | F5 | Fluxos E2E ainda descobertos *(requer F4)* | bloqueada | `qa/fases/F5-fluxos-e2e.md` |
@@ -33,8 +33,8 @@
 | 9 | `feature/backup-restore-json` | concluída | [qa/por-pr/PR-09.md](por-pr/PR-09.md) |
 | 10 | `feature/ajuste-e-conferencia-estoque` | concluída | [qa/por-pr/PR-10.md](por-pr/PR-10.md) |
 | 11 | `feature/resumo-valores-e-historico` | concluída | [qa/por-pr/PR-11.md](por-pr/PR-11.md) |
-| 12 | `feat/correcao-navegacao-nativa` | concluída (achado crítico) | [qa/por-pr/PR-12.md](por-pr/PR-12.md) |
-| 13 | `feat/ajuste-visual-telas-design-system` | pendente | `qa/por-pr/PR-13.md` |
+| 12 | `feat/correcao-navegacao-nativa` | concluída (achado crítico, corrigido na PR 13) | [qa/por-pr/PR-12.md](por-pr/PR-12.md) |
+| 13 | `feat/ajuste-visual-telas-design-system` | concluída | [qa/por-pr/PR-13.md](por-pr/PR-13.md) |
 
 ## Achados registrados
 
@@ -46,8 +46,8 @@
 | [ACHADO-004](achados/ACHADO-004.md) | média | F2 (PR 3) | aberto | `backup-pre-migration.ts` sem nenhum teste |
 | [ACHADO-005](achados/ACHADO-005.md) | baixa | F2 (PR 3) | aberto | Import não usado em `sqlite-produto.repository.ts:7` |
 | [ACHADO-006](achados/ACHADO-006.md) | crítica | F2 (PR 5) | descartado | `npm run verificar` falhava isoladamente na PR 5; corrigido via eslint-disable justificado na PR 6 |
-| [ACHADO-007](achados/ACHADO-007.md) | **crítica** | F2 (PR 12) | aberto | `react-native-get-random-values` importado em `app/_layout.tsx` sem estar em `package.json`; `verificar` falha |
+| [ACHADO-007](achados/ACHADO-007.md) | crítica | F2 (PR 12) | descartado | `react-native-get-random-values` importado em `app/_layout.tsx` sem estar em `package.json`; corrigido na PR 13 |
 
-## Como executar a próxima rodada
+## Próximo passo
 
-Rodada única de F2: `/qa:run-pr <NN>` (comando ainda não criado nesta sessão — próximo passo). Ver seção "Execução por sessão" do plano-fonte para o formato do `/loop` sem intervalo.
+F2 concluída (13/13 PRs). Próxima fase: **F3 — conformidade com os specs OpenSpec**, via subagent `qa-expert` (`/qa:audit <capability>`), uma capability por invocação, agregando o resultado em `qa/fases/F3-conformidade-spec.md`. F4-F6 seguem bloqueadas até `eas login` + development build.
