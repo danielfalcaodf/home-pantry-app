@@ -25,8 +25,8 @@
 | 1 | `change/bootstrap-projeto-expo` | concluída | [qa/por-pr/PR-01.md](por-pr/PR-01.md) |
 | 2 | `change/fundacao-dominio` | concluída | [qa/por-pr/PR-02.md](por-pr/PR-02.md) |
 | 3 | `change/persistencia-sqlite` | concluída | [qa/por-pr/PR-03.md](por-pr/PR-03.md) |
-| 4 | `change/design-system-tema` | pendente | `qa/por-pr/PR-04.md` |
-| 5 | `change/despensa-e-cadastro-produto` | pendente | `qa/por-pr/PR-05.md` |
+| 4 | `change/design-system-tema` | concluída | [qa/por-pr/PR-04.md](por-pr/PR-04.md) |
+| 5 | `change/despensa-e-cadastro-produto` | concluída (achado crítico) | [qa/por-pr/PR-05.md](por-pr/PR-05.md) |
 | 6 | `change/dar-baixa-caminho-critico` | pendente | `qa/por-pr/PR-06.md` |
 | 7 | `feature/lista-de-compras` | pendente | `qa/por-pr/PR-07.md` |
 | 8 | `feature/modo-compra-e-fechamento` | pendente | `qa/por-pr/PR-08.md` |
@@ -45,6 +45,7 @@
 | [ACHADO-003](achados/ACHADO-003.md) | baixa | F0 | aberto | Inconsistência de gerenciador de pacotes (npm vs pnpm) |
 | [ACHADO-004](achados/ACHADO-004.md) | média | F2 (PR 3) | aberto | `backup-pre-migration.ts` sem nenhum teste |
 | [ACHADO-005](achados/ACHADO-005.md) | baixa | F2 (PR 3) | aberto | Import não usado em `sqlite-produto.repository.ts:7` |
+| [ACHADO-006](achados/ACHADO-006.md) | **crítica** | F2 (PR 5) | aberto | `npm run verificar` falha (2 erros de lint `set-state-in-effect`) isoladamente na PR 5; topo está verde |
 
 ## Como executar a próxima rodada
 
