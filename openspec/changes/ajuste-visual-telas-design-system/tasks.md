@@ -30,10 +30,10 @@
 
 ## 6. Resumo: métrica de destaque e gráfico de barras
 
-- [ ] 6.1 Em `app/(tabs)/resumo.tsx`, promover o mês corrente de `gastoMensal.meses` a um bloco de métrica `data.xl` no mesmo padrão visual de "Em casa"/"Falta comprar" (rótulo "Gasto este mês" + valor grande).
-- [ ] 6.2 Adicionar um componente de gráfico de barras simples (`View`s com `flexDirection: 'row', alignItems: 'flex-end'`, altura proporcional ao maior valor do período) para os últimos meses de `gastoMensal.meses`, sem introduzir biblioteca de gráfico.
-- [ ] 6.3 Manter a lista textual de meses anteriores abaixo do gráfico (não remover o detalhamento por mês, só adicionar a visualização).
-- [ ] 6.4 Teste do novo componente de gráfico: barras proporcionais, sem contagem progressiva, sem toque/interação.
+- [x] 6.1 Em `app/(tabs)/resumo.tsx`, promovido `gastoMensal.meses[0]` (mês corrente — confirmado pela ordem de `completarMesesSemCompra`, mais recente primeiro) a bloco `data.xl` "Gasto este mês", no mesmo padrão de "Em casa"/"Falta comprar".
+- [x] 6.2 Novo componente `src/presentation/components/grafico-barras.tsx` (`GraficoBarras`): `View`s em `flexDirection: 'row', alignItems: 'flex-end'`, altura proporcional ao maior valor (`(valor/maior)*100`, com piso de 2px para valores > 0 não desaparecerem visualmente). Resumo usa os últimos 4 meses (`MESES_NO_GRAFICO`), revertidos para ordem cronológica (mais antigo à esquerda).
+- [x] 6.3 Lista textual de todos os 12 meses mantida abaixo do gráfico, sem remoção de detalhamento.
+- [x] 6.4 `grafico-barras.test.tsx`: rótulos renderizados, altura proporcional ao maior valor, nenhuma barra com `onPress`/responder a toque, período todo zerado não quebra.
 
 ## 7. Conformidade do repositório
 
