@@ -28,8 +28,8 @@
 | 4 | `change/design-system-tema` | concluída | [qa/por-pr/PR-04.md](por-pr/PR-04.md) |
 | 5 | `change/despensa-e-cadastro-produto` | concluída (achado crítico) | [qa/por-pr/PR-05.md](por-pr/PR-05.md) |
 | 6 | `change/dar-baixa-caminho-critico` | concluída | [qa/por-pr/PR-06.md](por-pr/PR-06.md) |
-| 7 | `feature/lista-de-compras` | pendente | `qa/por-pr/PR-07.md` |
-| 8 | `feature/modo-compra-e-fechamento` | pendente | `qa/por-pr/PR-08.md` |
+| 7 | `feature/lista-de-compras` | concluída | [qa/por-pr/PR-07.md](por-pr/PR-07.md) |
+| 8 | `feature/modo-compra-e-fechamento` | concluída | [qa/por-pr/PR-08.md](por-pr/PR-08.md) |
 | 9 | `feature/backup-restore-json` | pendente | `qa/por-pr/PR-09.md` |
 | 10 | `feature/ajuste-e-conferencia-estoque` | pendente | `qa/por-pr/PR-10.md` |
 | 11 | `feature/resumo-valores-e-historico` | pendente | `qa/por-pr/PR-11.md` |
