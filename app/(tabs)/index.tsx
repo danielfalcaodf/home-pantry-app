@@ -269,8 +269,13 @@ export default function Despensa() {
                   linha.item.produto.unidade,
                   false,
                 )} de ${linha.item.produto.nome}`}
+                rotuloAcaoReposicao={`Repor 1 ${rotuloDaUnidade(
+                  linha.item.produto.unidade,
+                  false,
+                )} de ${linha.item.produto.nome}`}
                 onAbrir={() => router.push(`/produto/${linha.item.produto.id}`)}
                 onConsumir={() => void usar(linha.item)}
+                onRepor={() => void repor(linha.item, 1)}
                 onAbrirTeclado={() => setItemDoTeclado(linha.item)}
               />
             )

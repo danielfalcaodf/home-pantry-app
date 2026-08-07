@@ -6,6 +6,7 @@ import { useExportarDados } from '@/application/backup/use-exportar-dados';
 import { useRestaurarBackup } from '@/application/backup/use-restaurar-backup';
 import { useUltimoBackup } from '@/application/backup/use-ultimo-backup';
 import { Botao } from '@/presentation/components/botao';
+import { BotaoVoltar } from '@/presentation/components/botao-voltar';
 import { Texto } from '@/presentation/components/texto';
 import { Toast } from '@/presentation/components/toast';
 import { formatarDataDoUltimoBackup } from '@/presentation/format/data-do-backup';
@@ -49,8 +50,16 @@ export default function Configuracoes() {
   return (
     <View style={{ flex: 1, backgroundColor: tema.bg.base }}>
       <View
-        style={{ paddingHorizontal: espaco.lg, paddingTop: espaco.lg, paddingBottom: espaco.sm }}
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: espaco.sm,
+          paddingHorizontal: espaco.lg,
+          paddingTop: espaco.lg,
+          paddingBottom: espaco.sm,
+        }}
       >
+        <BotaoVoltar />
         <Texto papel="display.sm">Configurações</Texto>
       </View>
 

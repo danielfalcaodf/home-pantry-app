@@ -37,6 +37,15 @@ export default function TabsLayout() {
           tabBarIcon: ({ color }) => <IconeSvg path={icones.tabResumo} cor={String(color)} />,
         }}
       />
+      <Tabs.Screen
+        name="configuracoes"
+        options={{
+          title: 'Configurações',
+          tabBarIcon: ({ color }) => (
+            <IconeSvg path={icones.tabConfiguracoes} cor={String(color)} />
+          ),
+        }}
+      />
     </Tabs>
   );
 }
