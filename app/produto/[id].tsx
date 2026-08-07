@@ -20,6 +20,7 @@ import { deDecimal, formatarNumero, milesimos, paraDecimal } from '@/domain/shar
 import { MotivoAjuste } from '@/domain/movimento/movimento';
 import { rotuloDaUnidade } from '@/domain/shared/unidade';
 import { Botao } from '@/presentation/components/botao';
+import { BotaoVoltar } from '@/presentation/components/botao-voltar';
 import {
   FormularioProduto,
   ValoresDoProduto,
@@ -173,6 +174,9 @@ function Detalhe({ id, item }: { id: string; item: ProdutoNaDespensa }) {
 
   return (
     <View style={{ flex: 1, backgroundColor: tema.bg.base }}>
+      <View style={{ paddingHorizontal: espaco.lg, paddingTop: espaco.xs }}>
+        <BotaoVoltar />
+      </View>
       <View style={{ padding: espaco.lg, gap: espaco.xs }}>
         {/* O toque abre o caminho de ajuste (design D3) — a quantidade
             atual nunca é um campo de formulário comum (task 2.2). */}
