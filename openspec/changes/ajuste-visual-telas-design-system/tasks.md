@@ -37,5 +37,7 @@
 
 ## 7. Conformidade do repositório
 
-- [ ] 7.1 Rodar `npm run verificar` (fronteiras + lint + typecheck) e `npm test`.
-- [ ] 7.2 Reportar aqui (ou em comentário da PR) qualquer divergência do `npm run verificar` que não pôde ser resolvida automaticamente.
+- [x] 7.1 `npm run verificar` (fronteiras + lint + typecheck) passa limpo. `npm test`: 602 passando, 2 falhando — ambas pré-existentes (confirmado com `git stash` antes das mudanças desta change), sem relação com o escopo deste proposal:
+  - `historico-de-compras.test.ts` (`formatarDataDaCompra`): depende do fuso horário local da máquina de execução, não das mudanças aqui.
+  - `use-gasto-mensal.test.ts`: mesma classe de flakiness — timing entre `Date.now()`/relógio do sistema no ambiente de teste.
+- [x] 7.2 Nenhuma divergência introduzida por esta change ficou sem resolver.
