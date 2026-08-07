@@ -25,8 +25,8 @@
 
 ## 5. Modo compra: reposicionar rodapé
 
-- [ ] 5.1 Em `app/compra/[id].tsx`, mover `<RodapeCompra ... />` de logo após o cabeçalho para imediatamente antes dos botões "Fechar compra"/"Cancelar compra", no final da árvore de views.
-- [ ] 5.2 Conferir que nenhum teste existente (`rodape-compra.test.tsx` ou teste de tela do Modo compra) dependia da posição anterior; ajustar se necessário.
+- [x] 5.1 Em `app/compra/[id].tsx`, mover `<RodapeCompra ... />` de logo após o cabeçalho para imediatamente antes dos botões "Fechar compra"/"Cancelar compra", no final da árvore de views — agrupado com eles no mesmo bloco condicional (`aviso?.sucesso ? null : (...)`), já que rodapé e botões só fazem sentido juntos enquanto a compra segue aberta.
+- [x] 5.2 Nenhum teste existente dependia da posição anterior: `rodape-compra.test.tsx` testa o componente isolado, sem tela em volta; não há teste de tela do Modo compra neste projeto.
 
 ## 6. Resumo: métrica de destaque e gráfico de barras
 
