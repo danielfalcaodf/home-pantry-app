@@ -15,13 +15,13 @@
 
 ## 4. Cabeçalho da Despensa
 
-- [ ] 4.1 Em `app/(tabs)/index.tsx`, substituir o `CampoTexto` sempre visível por um botão de ícone "Buscar" que alterna a visibilidade do campo (estado local `buscaAberta`).
-- [ ] 4.2 Adicionar botão de ícone "Adicionar produto" no cabeçalho, navegando para `/produto/novo` (mesmo destino do fluxo já existente).
-- [ ] 4.3 Remover o link de texto "Conferência" do cabeçalho da Despensa.
-- [ ] 4.4 Adicionar o acesso à Conferência de estoque em `app/configuracoes.tsx` (novo item de lista/link, navegando para `/conferencia`).
-- [ ] 4.5 Reduzir os chips de `FILTROS` em `app/(tabs)/index.tsx` de 4 (`Tudo`/`Acabou`/`Faltando`/`Cheio`) para 3 (`Tudo`/`Acabou`/`Faltando`), com "Faltando" cobrindo os estados `emFalta` e `critico` juntos.
-- [ ] 4.6 Ajustar `contarPorEstado`/filtro em `src/presentation/format/agrupar-despensa.ts` (ou onde a contagem é calculada) para expor a contagem combinada de "Faltando" (crítico + em falta) sem duplicar lógica de estado que já existe em `domain/produto/estoque.rules.ts`.
-- [ ] 4.7 Atualizar/estender os testes de `agrupar-despensa` e da tela Despensa para cobrir os novos cenários do spec `tela-despensa` (chip "Faltando" soma crítico+emFalta, sem chip "Cheio").
+- [x] 4.1 Em `app/(tabs)/index.tsx`, substituir o `CampoTexto` sempre visível por um botão de ícone "Buscar" que alterna a visibilidade do campo (estado local `buscaAberta`).
+- [x] 4.2 Adicionar botão de ícone "Adicionar produto" no cabeçalho, navegando para `/produto/novo` (mesmo destino do fluxo já existente).
+- [x] 4.3 Remover o link de texto "Conferência" do cabeçalho da Despensa.
+- [x] 4.4 Adicionar o acesso à Conferência de estoque em `app/configuracoes.tsx` (novo item de lista/link, navegando para `/conferencia`).
+- [x] 4.5 Reduzir os chips de `FILTROS` em `app/(tabs)/index.tsx` de 4 (`Tudo`/`Acabou`/`Faltando`/`Cheio`) para 3 (`Tudo`/`Acabou`/`Faltando`), com "Faltando" cobrindo os estados `emFalta` e `critico` juntos.
+- [x] 4.6 Ajustar `contarPorEstado`/filtro em `src/presentation/format/agrupar-despensa.ts` (ou onde a contagem é calculada) para expor a contagem combinada de "Faltando" (crítico + em falta) sem duplicar lógica de estado que já existe em `domain/produto/estoque.rules.ts`. Nova `casaComFiltro` reaproveita `EstadoItem` já calculado, sem duplicar `estadoDoItem()`; `FiltroEstado` continua aceitando os valores antigos (`emFalta`, `ok`) para não quebrar as rotas que o Resumo já usa (`/?filtro=emFalta`), mesmo sem chip próprio para eles na Despensa.
+- [x] 4.7 Testes: `src/presentation/format/agrupar-despensa.test.ts` (novo) cobre `contarPorEstado` (chip "Faltando" soma crítico+emFalta, chips zerados) e `casaComFiltro` (composto e estados isolados). Não há precedente de teste de tela em `app/` neste projeto (telas são finas por arquitetura) — a lógica testável do cabeçalho já está coberta no nível de `agrupar-despensa`.
 
 ## 5. Modo compra: reposicionar rodapé
 
