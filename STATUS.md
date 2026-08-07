@@ -41,11 +41,19 @@ Para implementar uma delas: `/opsx:apply <nome>`. Para arquivar após concluir: 
 | 10 | `ajuste-e-conferencia-estoque` | ✅ | Ajuste com motivo, modo conferência, diagnóstico de integridade, histórico do produto | Compensa a ausência de US-08. ARQUITETURA §1.1: sem sync, K2 depende da conferência semanal. |
 | 11 | `resumo-valores-e-historico` | ✅ | Valor do estoque, valor da lista, gasto mensal, histórico de compras | Camada de leitura sobre dados existentes. Não bloqueia nada. |
 
+### Pós-MVP — correções e ajustes
+
+| # | Change | Estado | Entrega | Por que nessa posição |
+|---|---|---|---|---|
+| 12 | `correcao-navegacao-nativa` | ✅ | Header nativo oculto em toda rota, `BotaoVoltar` compartilhado no Detalhe do produto/Cadastrar produto/Modo compra, tab bar sem ícone (`MissingIcon`) | Bug encontrado após a change 11: nenhuma tela foi desenhada para o header nativo do Expo Router, que vazava nome de arquivo/rota na UI. |
+
+`ajuste-visual-telas-design-system` está proposta (`openspec/changes/ajuste-visual-telas-design-system/`) mas ainda não implementada — depende de reverter a decisão "tab bar sem ícone" da change 12 (ver task 1.1 dessa change), então só pode rodar depois que a 12 estiver mesclada.
+
 ---
 
 ## Onde a implementação parou
 
-**Última atualização: 2026-08-03.** Retomada em outra máquina começa por aqui.
+**Última atualização: 2026-08-06.** Retomada em outra máquina começa por aqui.
 
 ### Estado do repositório
 
