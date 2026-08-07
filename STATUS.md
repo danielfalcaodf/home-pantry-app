@@ -74,6 +74,7 @@ As branches formam uma cadeia — cada PR aponta para a branch da change anterio
 | [#10](https://github.com/danielfalcaodf/home-pantry-app/pull/10) | `feature/ajuste-e-conferencia-estoque` | `feature/backup-restore-json` | 10 · ajuste-e-conferencia-estoque |
 | [#11](https://github.com/danielfalcaodf/home-pantry-app/pull/11) | `feature/resumo-valores-e-historico` | `feature/ajuste-e-conferencia-estoque` | 11 · resumo-valores-e-historico |
 | [#12](https://github.com/danielfalcaodf/home-pantry-app/pull/12) | `feat/correcao-navegacao-nativa` | `feature/resumo-valores-e-historico` | 12 · correcao-navegacao-nativa |
+| [#13](https://github.com/danielfalcaodf/home-pantry-app/pull/13) | `feat/ajuste-visual-telas-design-system` | `feat/correcao-navegacao-nativa` | 13 · ajuste-visual-telas-design-system |
 
 **A PR de `develop` para `main` ainda não foi aberta** — abrir depois que a cadeia de PRs (1 a 13) for mesclada na ordem acima; ela fecha o ciclo do MVP + correções pós-MVP.
 
