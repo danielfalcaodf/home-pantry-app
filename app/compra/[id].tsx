@@ -10,6 +10,7 @@ import { totalPago } from '@/domain/compra/compra.rules';
 import { centavos } from '@/domain/shared/dinheiro';
 import { deDecimal, paraDecimal } from '@/domain/shared/quantidade';
 import { Botao } from '@/presentation/components/botao';
+import { BotaoVoltar } from '@/presentation/components/botao-voltar';
 import { ItemCompra } from '@/presentation/components/item-compra';
 import { RodapeCompra } from '@/presentation/components/rodape-compra';
 import { SheetAjusteCompra } from '@/presentation/components/sheet-ajuste-compra';
@@ -88,7 +89,10 @@ export default function ModoCompra() {
   return (
     <View style={{ flex: 1, backgroundColor: tema.bg.base }}>
       <View style={{ padding: espaco.lg, paddingBottom: espaco.sm, gap: espaco.xs }}>
-        <Texto papel="display.sm">Compra</Texto>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: espaco.sm }}>
+          <BotaoVoltar />
+          <Texto papel="display.sm">Compra</Texto>
+        </View>
         <Texto papel="label" tom="secondary">
           Toque em cada item para marcar. Se sair, a compra continua aberta com o que você já marcou.
         </Texto>
