@@ -128,6 +128,17 @@ export default function Configuracoes() {
         />
       </Secao>
 
+      <Secao titulo="Despensa">
+        {/* Recalibração semanal (ARQUITETURA §1.1) — saiu do cabeçalho da
+            Despensa (que agora só tem os ícones de buscar/adicionar) e
+            passou a ficar aqui, junto das outras ações de baixa frequência. */}
+        <Botao
+          titulo="Conferência de estoque"
+          variante="secundario"
+          onPress={() => router.push('/conferencia')}
+        />
+      </Secao>
+
       {restauracao.estado.fase === 'confirmando' ? (
         <View
           style={{
