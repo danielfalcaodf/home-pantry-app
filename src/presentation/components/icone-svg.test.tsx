@@ -18,13 +18,18 @@ function achatarPaths(no: ReactTestRendererJSON | null): ReactTestRendererJSON[]
 }
 
 describe('IconeSvg', () => {
-  it('renderiza um path por item do array recebido', async () => {
+  it('uma string de path vira um único <Path> (padrão dos ícones do design system)', async () => {
     const resultado = await render(
       <IconeSvg path={icones.adicionar} cor={despensa.action.azulejo} />,
     );
-    expect(achatarPaths(resultado.toJSON() as ReactTestRendererJSON)).toHaveLength(
-      icones.adicionar.length,
+    expect(achatarPaths(resultado.toJSON() as ReactTestRendererJSON)).toHaveLength(1);
+  });
+
+  it('um array de paths vira um <Path> por item', async () => {
+    const resultado = await render(
+      <IconeSvg path={['M0 0h1', 'M1 1h1', 'M2 2h1']} cor={despensa.action.azulejo} />,
     );
+    expect(achatarPaths(resultado.toJSON() as ReactTestRendererJSON)).toHaveLength(3);
   });
 
   it('aplica a mesma cor recebida a todos os paths, e cores diferentes geram valores diferentes', async () => {

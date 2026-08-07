@@ -72,11 +72,33 @@ describe('GraficoBarras', () => {
     expect(views.every((no) => no.props.onStartShouldSetResponder === undefined)).toBe(true);
   });
 
-  it('sem compras no período (todos zerados), não quebra e usa a cor neutra', async () => {
+  it('sem compras no período (todos zerados), não quebra', async () => {
     await comTema([
       { chave: 'a', rotulo: 'A', valor: 0 },
       { chave: 'b', rotulo: 'B', valor: 0 },
     ]);
     expect(screen.getByText('A')).toBeTruthy();
+  });
+
+  it('só o último item (mês mais recente) fica em opacidade plena — os demais em 0.4', async () => {
+    const resultado = await render(
+      <ThemeProvider preferencia="escuro">
+        <GraficoBarras
+          altura={100}
+          dados={[
+            { chave: 'a', rotulo: 'A', valor: 10 },
+            { chave: 'b', rotulo: 'B', valor: 20 },
+            { chave: 'c', rotulo: 'C', valor: 30 },
+          ]}
+        />
+      </ThemeProvider>,
+    );
+    const views = achatarViews(resultado.toJSON() as ReactTestRendererJSON);
+    const opacidades = views
+      .map((no) => no.props.style)
+      .flat()
+      .map((estilo) => estilo?.opacity)
+      .filter((valor): valor is number => typeof valor === 'number');
+    expect(opacidades).toEqual([0.4, 0.4, 1]);
   });
 });
