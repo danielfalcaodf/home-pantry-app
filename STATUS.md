@@ -73,9 +73,10 @@ As branches formam uma cadeia — cada PR aponta para a branch da change anterio
 | [#8](https://github.com/danielfalcaodf/home-pantry-app/pull/8) | `feature/modo-compra-e-fechamento` | `feature/lista-de-compras` | 8 · modo-compra-e-fechamento |
 | [#9](https://github.com/danielfalcaodf/home-pantry-app/pull/9) | `feature/backup-restore-json` | `feature/modo-compra-e-fechamento` | 9 · backup-restore-json |
 | [#10](https://github.com/danielfalcaodf/home-pantry-app/pull/10) | `feature/ajuste-e-conferencia-estoque` | `feature/backup-restore-json` | 10 · ajuste-e-conferencia-estoque |
-| #11 (a abrir) | `feature/resumo-valores-e-historico` | `feature/ajuste-e-conferencia-estoque` | 11 · resumo-valores-e-historico |
+| [#11](https://github.com/danielfalcaodf/home-pantry-app/pull/11) | `feature/resumo-valores-e-historico` | `feature/ajuste-e-conferencia-estoque` | 11 · resumo-valores-e-historico |
+| [#12](https://github.com/danielfalcaodf/home-pantry-app/pull/12) | `feat/correcao-navegacao-nativa` | `feature/resumo-valores-e-historico` | 12 · correcao-navegacao-nativa |
 
-**A PR de `develop` para `main` ainda não foi aberta** — abrir assim que a PR #11 existir; ela fecha o ciclo do MVP.
+**A PR de `develop` para `main` ainda não foi aberta** — abrir depois que a cadeia de PRs (1 a 12) for mesclada na ordem acima; ela fecha o ciclo do MVP + correção pós-MVP.
 
 ### Change 11 — concluída, com pendências documentadas
 
