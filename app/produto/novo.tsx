@@ -68,6 +68,7 @@ export default function NovoProduto() {
       aoMudar={setValores}
       erros={erros}
       categoriasExistentes={categorias}
+      tituloCabecalho="Novo produto"
       tituloAcao="Adicionar à despensa"
       aoSalvar={salvar}
       salvando={salvando}

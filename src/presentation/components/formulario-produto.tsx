@@ -5,6 +5,7 @@ import { UNIDADES, Unidade } from '../../domain/shared/unidade';
 import { espaco } from '../theme/espaco';
 import { useTheme } from '../theme/provider';
 import { Botao } from './botao';
+import { BotaoVoltar } from './botao-voltar';
 import { CampoTexto } from './campo-texto';
 import { ChipEstado } from './chip-estado';
 import { Texto } from './texto';
@@ -43,6 +44,8 @@ export type FormularioProdutoProps = {
   /** Quantidade atual só é editável no cadastro: depois vira ajuste (D8). */
   quantidadeAtualEditavel?: boolean;
   avisoDeNome?: { mensagem: string; acoes: { titulo: string; onPress: () => void }[] };
+  /** Cabeçalho com título + voltar — só o Cadastrar produto usa (D3). */
+  tituloCabecalho?: string;
 };
 
 export function FormularioProduto({
@@ -55,6 +58,7 @@ export function FormularioProduto({
   salvando,
   quantidadeAtualEditavel = true,
   avisoDeNome,
+  tituloCabecalho,
 }: FormularioProdutoProps) {
   const tema = useTheme();
   const [maisOpcoes, setMaisOpcoes] = useState(false);
@@ -75,6 +79,13 @@ export function FormularioProduto({
       contentContainerStyle={{ padding: espaco.lg, gap: espaco.lg }}
       keyboardShouldPersistTaps="handled"
     >
+      {tituloCabecalho ? (
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: espaco.sm }}>
+          <BotaoVoltar />
+          <Texto papel="display.sm">{tituloCabecalho}</Texto>
+        </View>
+      ) : null}
+
       <CampoTexto
         rotulo="O que é"
         value={valores.nome}
