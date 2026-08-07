@@ -174,23 +174,25 @@ function Detalhe({ id, item }: { id: string; item: ProdutoNaDespensa }) {
 
   return (
     <View style={{ flex: 1, backgroundColor: tema.bg.base }}>
-      <View style={{ paddingHorizontal: espaco.lg, paddingTop: espaco.xs }}>
+      <View style={{ paddingHorizontal: espaco.lg, paddingTop: espaco.xs, alignItems: 'flex-start' }}>
         <BotaoVoltar />
       </View>
-      <View style={{ padding: espaco.lg, gap: espaco.xs }}>
+      <View style={{ padding: espaco.lg, gap: espaco.xs, alignItems: 'center' }}>
         {/* O toque abre o caminho de ajuste (design D3) — a quantidade
-            atual nunca é um campo de formulário comum (task 2.2). */}
+            atual nunca é um campo de formulário comum (task 2.2). Centralizado
+            como no design system (ProductDetailScreen.jsx) — só espaçamento,
+            nenhum campo ou botão foi removido. */}
         <Pressable
           onPress={() => setAjusteAberto(true)}
           accessibilityRole="button"
           accessibilityLabel="Corrigir quantidade atual"
         >
-          <Texto papel="display.lg">
+          <Texto papel="display.lg" style={{ textAlign: 'center' }}>
             {formatarNumero(produto.quantidadeAtual)}{' '}
             {rotuloDaUnidade(produto.unidade, produto.quantidadeAtual !== 1000)}
           </Texto>
         </Pressable>
-        <Texto papel="label" tom="secondary">
+        <Texto papel="label" tom="secondary" style={{ textAlign: 'center' }}>
           {item.rotulo}
           {produto.valorUnitario > 0
             ? ` · costuma custar ${formatarBRL(produto.valorUnitario)}`
