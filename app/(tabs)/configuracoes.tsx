@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { Pressable, View } from 'react-native';
+import { Pressable, ScrollView, View } from 'react-native';
 
 import { useExportarBackup } from '@/application/backup/use-exportar-backup';
 import { useExportarDados } from '@/application/backup/use-exportar-dados';
@@ -63,90 +63,92 @@ export default function Configuracoes() {
         <Texto papel="display.sm">Configurações</Texto>
       </View>
 
-      <Secao titulo="Tema">
-        <View style={{ flexDirection: 'row', gap: espaco.sm }}>
-          {OPCOES_TEMA.map((opcao) => {
-            const ativo = preferencia === opcao.valor;
-            return (
-              <Pressable
-                key={opcao.valor}
-                onPress={() => void escolherTema(opcao.valor)}
-                accessibilityRole="button"
-                accessibilityLabel={`Tema ${opcao.rotulo}`}
-                accessibilityState={{ selected: ativo }}
-                style={{
-                  paddingVertical: espaco.sm,
-                  paddingHorizontal: espaco.md,
-                  borderRadius: raio.campo,
-                  borderWidth: 1,
-                  borderColor: ativo ? tema.action.azulejo : tema.line.hairline,
-                }}
-              >
-                <Texto papel="body.md" cor={ativo ? tema.action.azulejo : undefined}>
-                  {opcao.rotulo}
-                </Texto>
-              </Pressable>
-            );
-          })}
-        </View>
-      </Secao>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: espaco.xxxl }}>
+        <Secao titulo="Tema">
+          <View style={{ flexDirection: 'row', gap: espaco.sm }}>
+            {OPCOES_TEMA.map((opcao) => {
+              const ativo = preferencia === opcao.valor;
+              return (
+                <Pressable
+                  key={opcao.valor}
+                  onPress={() => void escolherTema(opcao.valor)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Tema ${opcao.rotulo}`}
+                  accessibilityState={{ selected: ativo }}
+                  style={{
+                    paddingVertical: espaco.sm,
+                    paddingHorizontal: espaco.md,
+                    borderRadius: raio.campo,
+                    borderWidth: 1,
+                    borderColor: ativo ? tema.action.azulejo : tema.line.hairline,
+                  }}
+                >
+                  <Texto papel="body.md" cor={ativo ? tema.action.azulejo : undefined}>
+                    {opcao.rotulo}
+                  </Texto>
+                </Pressable>
+              );
+            })}
+          </View>
+        </Secao>
 
-      <Secao titulo="Seus dados">
-        <View style={{ gap: espaco.xs }}>
-          <Botao
-            titulo="Fazer backup agora"
-            onPress={() => void fazerBackupAgora()}
-            disabled={backup.exportando}
-          />
-          <Texto papel="caption" tom="secondary">
-            {formatarDataDoUltimoBackup(ultimoBackup.ultimoBackupEm)}
-          </Texto>
-        </View>
+        <Secao titulo="Seus dados">
+          <View style={{ gap: espaco.xs }}>
+            <Botao
+              titulo="Fazer backup agora"
+              onPress={() => void fazerBackupAgora()}
+              disabled={backup.exportando}
+            />
+            <Texto papel="caption" tom="secondary">
+              {formatarDataDoUltimoBackup(ultimoBackup.ultimoBackupEm)}
+            </Texto>
+          </View>
 
-        <View style={{ gap: espaco.xs }}>
+          <View style={{ gap: espaco.xs }}>
+            <Botao
+              titulo="Restaurar backup"
+              variante="secundario"
+              onPress={() => void restauracao.selecionar()}
+            />
+            {/* Ação destrutiva sinalizada pela descrição do efeito, não só pela cor (task 6.4). */}
+            <Texto papel="caption" tom="secondary">
+              Substitui os dados existentes pelos deste backup. Não pode ser desfeito.
+            </Texto>
+          </View>
+
+          <View style={{ gap: espaco.xs }}>
+            <Botao
+              titulo="Exportar meus dados (CSV)"
+              variante="secundario"
+              onPress={() => void dados.exportar()}
+              disabled={dados.exportando}
+            />
+            {/* Rótulo distinto de backup (task 5.3/design D7): planilha legível, não restaurável. */}
+            <Texto papel="caption" tom="secondary">
+              Uma planilha com o que está na despensa hoje — não é uma cópia de segurança.
+            </Texto>
+          </View>
+        </Secao>
+
+        <Secao titulo="Diagnóstico">
           <Botao
-            titulo="Restaurar backup"
+            titulo="Verificar consistência"
             variante="secundario"
-            onPress={() => void restauracao.selecionar()}
+            onPress={() => router.push('/diagnostico')}
           />
-          {/* Ação destrutiva sinalizada pela descrição do efeito, não só pela cor (task 6.4). */}
-          <Texto papel="caption" tom="secondary">
-            Substitui os dados existentes pelos deste backup. Não pode ser desfeito.
-          </Texto>
-        </View>
+        </Secao>
 
-        <View style={{ gap: espaco.xs }}>
-          <Botao
-            titulo="Exportar meus dados (CSV)"
-            variante="secundario"
-            onPress={() => void dados.exportar()}
-            disabled={dados.exportando}
-          />
-          {/* Rótulo distinto de backup (task 5.3/design D7): planilha legível, não restaurável. */}
-          <Texto papel="caption" tom="secondary">
-            Uma planilha com o que está na despensa hoje — não é uma cópia de segurança.
-          </Texto>
-        </View>
-      </Secao>
-
-      <Secao titulo="Diagnóstico">
-        <Botao
-          titulo="Verificar consistência"
-          variante="secundario"
-          onPress={() => router.push('/diagnostico')}
-        />
-      </Secao>
-
-      <Secao titulo="Despensa">
-        {/* Recalibração semanal (ARQUITETURA §1.1) — saiu do cabeçalho da
+        <Secao titulo="Despensa">
+          {/* Recalibração semanal (ARQUITETURA §1.1) — saiu do cabeçalho da
             Despensa (que agora só tem os ícones de buscar/adicionar) e
             passou a ficar aqui, junto das outras ações de baixa frequência. */}
-        <Botao
-          titulo="Conferência de estoque"
-          variante="secundario"
-          onPress={() => router.push('/conferencia')}
-        />
-      </Secao>
+          <Botao
+            titulo="Conferência de estoque"
+            variante="secundario"
+            onPress={() => router.push('/conferencia')}
+          />
+        </Secao>
+      </ScrollView>
 
       {restauracao.estado.fase === 'confirmando' ? (
         <View
@@ -164,8 +166,8 @@ export default function Configuracoes() {
         >
           <Texto papel="body.md">
             Restaurar {restauracao.estado.resumo.totalProdutos} produtos e{' '}
-            {restauracao.estado.resumo.totalMovimentos} movimentos deste backup? Isso sobrescreve
-            os dados existentes.
+            {restauracao.estado.resumo.totalMovimentos} movimentos deste backup? Isso sobrescreve os
+            dados existentes.
           </Texto>
           <View style={{ flexDirection: 'row', gap: espaco.sm }}>
             <Botao
