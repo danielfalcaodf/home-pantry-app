@@ -1,0 +1,49 @@
+# Plano de testes faseado — projeto Repor
+
+Índice de estado. Cada linha só é marcada `concluída` quando o arquivo correspondente tem saída real de comando, não texto genérico. Plano completo em `/home/devdaniel/.claude/plans/quero-cria-um-plano-resilient-flute.md`.
+
+**Restrição vigente em toda a execução: nenhuma alteração em código de produção** (`src/`, `app/`, `openspec/`). Só se cria/edita `qa/**`, se versiona ferramental já existente, e se registram achados. Achados nunca são corrigidos aqui — viram change OpenSpec depois.
+
+## Fases
+
+| Fase | Descrição | Estado | Detalhe |
+|---|---|---|---|
+| F0 | Ambiente e ferramental (sem emulador) | parcial | [qa/fases/F0-ambiente.md](fases/F0-ambiente.md) |
+| F1 | Baseline no topo da cadeia | concluída | [qa/fases/F1-baseline-topo.md](fases/F1-baseline-topo.md) |
+| F2 | Cadeia incremental por worktree (13 PRs) | pendente | `qa/fases/F2-cadeia-incremental.md` |
+| F3 | Conformidade com specs OpenSpec | pendente | `qa/fases/F3-conformidade-spec.md` |
+| F4 | Smoke no emulador *(requer development build)* | bloqueada | `qa/fases/F4-smoke-emulador.md` |
+| F5 | Fluxos E2E ainda descobertos *(requer F4)* | bloqueada | `qa/fases/F5-fluxos-e2e.md` |
+| F6 | KPI e acessibilidade em uso real *(requer F4)* | bloqueada | `qa/fases/F6-kpi-e-acessibilidade.md` |
+
+**F0 parcial**: pendência de edição em `.claude/settings.json` (permissions.allow) que o modo automático desta sessão não permitiu aplicar — ver detalhe em `qa/fases/F0-ambiente.md`.
+
+## PRs (F2 — ainda não iniciada)
+
+| PR | Branch | Estado | Checklist |
+|---|---|---|---|
+| 1 | `change/bootstrap-projeto-expo` | pendente | `qa/por-pr/PR-01.md` |
+| 2 | `change/fundacao-dominio` | pendente | `qa/por-pr/PR-02.md` |
+| 3 | `change/persistencia-sqlite` | pendente | `qa/por-pr/PR-03.md` |
+| 4 | `change/design-system-tema` | pendente | `qa/por-pr/PR-04.md` |
+| 5 | `change/despensa-e-cadastro-produto` | pendente | `qa/por-pr/PR-05.md` |
+| 6 | `change/dar-baixa-caminho-critico` | pendente | `qa/por-pr/PR-06.md` |
+| 7 | `feature/lista-de-compras` | pendente | `qa/por-pr/PR-07.md` |
+| 8 | `feature/modo-compra-e-fechamento` | pendente | `qa/por-pr/PR-08.md` |
+| 9 | `feature/backup-restore-json` | pendente | `qa/por-pr/PR-09.md` |
+| 10 | `feature/ajuste-e-conferencia-estoque` | pendente | `qa/por-pr/PR-10.md` |
+| 11 | `feature/resumo-valores-e-historico` | pendente | `qa/por-pr/PR-11.md` |
+| 12 | `feat/correcao-navegacao-nativa` | pendente | `qa/por-pr/PR-12.md` |
+| 13 | `feat/ajuste-visual-telas-design-system` | pendente | `qa/por-pr/PR-13.md` |
+
+## Achados registrados
+
+| ID | Severidade | Fase | Estado | Resumo |
+|---|---|---|---|---|
+| [ACHADO-001](achados/ACHADO-001.md) | média | F1 | aberto | Fuso horário em `formatarDataDaCompra` |
+| [ACHADO-002](achados/ACHADO-002.md) | média | F1 | aberto | Fuso horário em `useGastoMensal` (mesma raiz do 001) |
+| [ACHADO-003](achados/ACHADO-003.md) | baixa | F0 | aberto | Inconsistência de gerenciador de pacotes (npm vs pnpm) |
+
+## Como executar a próxima rodada
+
+Rodada única de F2: `/qa:run-pr <NN>` (comando ainda não criado nesta sessão — próximo passo). Ver seção "Execução por sessão" do plano-fonte para o formato do `/loop` sem intervalo.

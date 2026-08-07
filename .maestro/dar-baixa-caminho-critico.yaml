@@ -1,0 +1,19 @@
+appId: com.triasoftware.repor
+---
+# Mede o caminho crítico do produto (KPI K4, CLAUDE.md): dar baixa em
+# um item deve levar no máximo 3 toques, sem confirmação, sem navegação
+# extra, sem spinner — e o toast precisa usar o vocabulário da UI
+# ("Anotado"), nunca termo de domínio ("dar baixa"/"movimento").
+#
+# Usa "Arroz" porque é um item garantido pela lista básica de seed
+# (src/infrastructure/db/lista-base.json) — troque se seu dispositivo
+# não tiver essa massa de dados carregada.
+#
+# Efeito colateral real: decrementa 1 pacote de Arroz no banco do
+# dispositivo de teste. Rode só em build de desenvolvimento/QA.
+- launchApp
+- assertVisible: "Despensa"
+# toque 1: registrar consumo de 1 unidade
+- tapOn: "Registrar consumo de 1 pacote de Arroz"
+# toque "2" não existe — o toast aparece sozinho, sem confirmação extra
+- assertVisible: "Anotado"
