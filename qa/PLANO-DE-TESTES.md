@@ -30,8 +30,8 @@
 | 6 | `change/dar-baixa-caminho-critico` | concluída | [qa/por-pr/PR-06.md](por-pr/PR-06.md) |
 | 7 | `feature/lista-de-compras` | concluída | [qa/por-pr/PR-07.md](por-pr/PR-07.md) |
 | 8 | `feature/modo-compra-e-fechamento` | concluída | [qa/por-pr/PR-08.md](por-pr/PR-08.md) |
-| 9 | `feature/backup-restore-json` | pendente | `qa/por-pr/PR-09.md` |
-| 10 | `feature/ajuste-e-conferencia-estoque` | pendente | `qa/por-pr/PR-10.md` |
+| 9 | `feature/backup-restore-json` | concluída | [qa/por-pr/PR-09.md](por-pr/PR-09.md) |
+| 10 | `feature/ajuste-e-conferencia-estoque` | concluída | [qa/por-pr/PR-10.md](por-pr/PR-10.md) |
 | 11 | `feature/resumo-valores-e-historico` | pendente | `qa/por-pr/PR-11.md` |
 | 12 | `feat/correcao-navegacao-nativa` | pendente | `qa/por-pr/PR-12.md` |
 | 13 | `feat/ajuste-visual-telas-design-system` | pendente | `qa/por-pr/PR-13.md` |
