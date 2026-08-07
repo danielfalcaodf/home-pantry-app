@@ -27,6 +27,14 @@ Falha com `meses[0]` (bucket `'2026-08'`) retornando `{ totalPago: 0, qtdCompras
 
 `src/application/resumo/use-gasto-mensal.test.ts:72` — `waitFor(() => expect(result.current.meses[0]).toEqual({ mes: '2026-08', totalPago: 1234, qtdCompras: 1 }))` recebe `{ mes: '2026-08', totalPago: 0, qtdCompras: 0 }`; a raiz é a mesma de [[ACHADO-001]], um nível acima: o bucket de mês é derivado do horário local, não UTC, e a fixture usa `Date.UTC`.
 
+## Confirmação adicional (rastreamento F2, PR 11)
+
+O agrupamento por hora local é **intencional em ambas as implementações**, não um descuido:
+- SQLite real: `sqlite-compra.repository.ts:349` — `strftime('%Y-%m', finalizada_em / 1000, 'unixepoch', 'localtime')`, com comentário de design "só 'finalizada' entra (design D5, cancelada não [conta])".
+- Repositório falso de teste: `src/application/lista/teste/repositorio-compra-falso.ts:179,190` — comentário explícito "processo (Date getters), não UTC" antes de `data.getFullYear()`/`data.getMonth()`.
+
+Ou seja, **o código de produção está correto e consistente** entre real e fake; o único elemento fora de sincronia é a fixture do próprio teste (`Date.UTC(...)`, pensando em UTC quando o sistema todo assume hora local). Isso reforça que a correção fica inteiramente do lado do ambiente de teste (fixar `TZ`), sem tocar `src/`.
+
 ## Change sugerida (slug proposto, escopo de uma frase)
 
 `fixar-timezone-nos-testes` — mesma change de [[ACHADO-001]]: fixar `TZ` no ambiente Jest resolve os dois, já que a causa raiz é idêntica (mistura de fixtures em UTC com formatação/agrupamento em hora local).

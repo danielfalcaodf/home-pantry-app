@@ -32,8 +32,8 @@
 | 8 | `feature/modo-compra-e-fechamento` | concluída | [qa/por-pr/PR-08.md](por-pr/PR-08.md) |
 | 9 | `feature/backup-restore-json` | concluída | [qa/por-pr/PR-09.md](por-pr/PR-09.md) |
 | 10 | `feature/ajuste-e-conferencia-estoque` | concluída | [qa/por-pr/PR-10.md](por-pr/PR-10.md) |
-| 11 | `feature/resumo-valores-e-historico` | pendente | `qa/por-pr/PR-11.md` |
-| 12 | `feat/correcao-navegacao-nativa` | pendente | `qa/por-pr/PR-12.md` |
+| 11 | `feature/resumo-valores-e-historico` | concluída | [qa/por-pr/PR-11.md](por-pr/PR-11.md) |
+| 12 | `feat/correcao-navegacao-nativa` | concluída (achado crítico) | [qa/por-pr/PR-12.md](por-pr/PR-12.md) |
 | 13 | `feat/ajuste-visual-telas-design-system` | pendente | `qa/por-pr/PR-13.md` |
 
 ## Achados registrados
@@ -46,6 +46,7 @@
 | [ACHADO-004](achados/ACHADO-004.md) | média | F2 (PR 3) | aberto | `backup-pre-migration.ts` sem nenhum teste |
 | [ACHADO-005](achados/ACHADO-005.md) | baixa | F2 (PR 3) | aberto | Import não usado em `sqlite-produto.repository.ts:7` |
 | [ACHADO-006](achados/ACHADO-006.md) | crítica | F2 (PR 5) | descartado | `npm run verificar` falhava isoladamente na PR 5; corrigido via eslint-disable justificado na PR 6 |
+| [ACHADO-007](achados/ACHADO-007.md) | **crítica** | F2 (PR 12) | aberto | `react-native-get-random-values` importado em `app/_layout.tsx` sem estar em `package.json`; `verificar` falha |
 
 ## Como executar a próxima rodada
 
