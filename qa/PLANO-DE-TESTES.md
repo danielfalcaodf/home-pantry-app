@@ -8,23 +8,23 @@
 
 | Fase | Descrição | Estado | Detalhe |
 |---|---|---|---|
-| F0 | Ambiente e ferramental (sem emulador) | parcial | [qa/fases/F0-ambiente.md](fases/F0-ambiente.md) |
+| F0 | Ambiente e ferramental (sem emulador) | concluída | [qa/fases/F0-ambiente.md](fases/F0-ambiente.md) |
 | F1 | Baseline no topo da cadeia | concluída | [qa/fases/F1-baseline-topo.md](fases/F1-baseline-topo.md) |
-| F2 | Cadeia incremental por worktree (13 PRs) | pendente | `qa/fases/F2-cadeia-incremental.md` |
+| F2 | Cadeia incremental por worktree (13 PRs) | em andamento | `qa/fases/F2-cadeia-incremental.md` |
 | F3 | Conformidade com specs OpenSpec | pendente | `qa/fases/F3-conformidade-spec.md` |
 | F4 | Smoke no emulador *(requer development build)* | bloqueada | `qa/fases/F4-smoke-emulador.md` |
 | F5 | Fluxos E2E ainda descobertos *(requer F4)* | bloqueada | `qa/fases/F5-fluxos-e2e.md` |
 | F6 | KPI e acessibilidade em uso real *(requer F4)* | bloqueada | `qa/fases/F6-kpi-e-acessibilidade.md` |
 
-**F0 parcial**: pendência de edição em `.claude/settings.json` (permissions.allow) que o modo automático desta sessão não permitiu aplicar — ver detalhe em `qa/fases/F0-ambiente.md`.
+**F0 concluída** em duas etapas: a estrutura/ferramental nesta sessão, e o `permissions.allow` de `.claude/settings.json` aplicado manualmente pelo usuário (o modo automático bloqueia edição desse arquivo por classificador próprio).
 
 ## PRs (F2 — ainda não iniciada)
 
 | PR | Branch | Estado | Checklist |
 |---|---|---|---|
-| 1 | `change/bootstrap-projeto-expo` | pendente | `qa/por-pr/PR-01.md` |
-| 2 | `change/fundacao-dominio` | pendente | `qa/por-pr/PR-02.md` |
-| 3 | `change/persistencia-sqlite` | pendente | `qa/por-pr/PR-03.md` |
+| 1 | `change/bootstrap-projeto-expo` | concluída | [qa/por-pr/PR-01.md](por-pr/PR-01.md) |
+| 2 | `change/fundacao-dominio` | concluída | [qa/por-pr/PR-02.md](por-pr/PR-02.md) |
+| 3 | `change/persistencia-sqlite` | concluída | [qa/por-pr/PR-03.md](por-pr/PR-03.md) |
 | 4 | `change/design-system-tema` | pendente | `qa/por-pr/PR-04.md` |
 | 5 | `change/despensa-e-cadastro-produto` | pendente | `qa/por-pr/PR-05.md` |
 | 6 | `change/dar-baixa-caminho-critico` | pendente | `qa/por-pr/PR-06.md` |
@@ -43,6 +43,8 @@
 | [ACHADO-001](achados/ACHADO-001.md) | média | F1 | aberto | Fuso horário em `formatarDataDaCompra` |
 | [ACHADO-002](achados/ACHADO-002.md) | média | F1 | aberto | Fuso horário em `useGastoMensal` (mesma raiz do 001) |
 | [ACHADO-003](achados/ACHADO-003.md) | baixa | F0 | aberto | Inconsistência de gerenciador de pacotes (npm vs pnpm) |
+| [ACHADO-004](achados/ACHADO-004.md) | média | F2 (PR 3) | aberto | `backup-pre-migration.ts` sem nenhum teste |
+| [ACHADO-005](achados/ACHADO-005.md) | baixa | F2 (PR 3) | aberto | Import não usado em `sqlite-produto.repository.ts:7` |
 
 ## Como executar a próxima rodada
 
