@@ -5,13 +5,13 @@
 
 ## 2. Infraestrutura de ícone
 
-- [ ] 2.1 Adicionar `react-native-svg` ao `package.json` (`npx expo install react-native-svg`) e rodar o dev build necessário.
-- [ ] 2.2 Criar `src/presentation/theme/icones.ts` com os paths SVG extraídos do design system: buscar, adicionar (`+`), tab Despensa, tab Lista, tab Resumo, voltar (`←`, reaproveitado do `correcao-navegacao-nativa`).
-- [ ] 2.3 Criar `src/presentation/components/icone-svg.tsx`: recebe `path`, `cor`, `tamanho`; renderiza `<Svg><Path .../></Svg>`; teste cobrindo renderização com cor customizada.
+- [x] 2.1 Adicionar `react-native-svg` ao `package.json` (`npx expo install react-native-svg`) e rodar o dev build necessário.
+- [x] 2.2 Criar `src/presentation/theme/icones.ts` com os paths SVG extraídos do design system: buscar, adicionar (`+`), tab Despensa, tab Lista, tab Resumo, voltar (`←`, reaproveitado do `correcao-navegacao-nativa`).
+- [x] 2.3 Criar `src/presentation/components/icone-svg.tsx`: recebe `path`, `cor`, `tamanho`; renderiza `<Svg><Path .../></Svg>`; teste cobrindo renderização com cor customizada.
 
 ## 3. Tab bar com ícone
 
-- [ ] 3.1 Em `app/(tabs)/_layout.tsx`, substituir `tabBarIcon: () => null` (ou omissão) por `tabBarIcon: ({ color }) => <IconeSvg path={...} cor={color} />` para as 3 abas, usando `tabBarActiveTintColor`/`tabBarInactiveTintColor` já configurados para resolver a cor.
+- [x] 3.1 Em `app/(tabs)/_layout.tsx`, substituir `tabBarIcon: () => null` (ou omissão) por `tabBarIcon: ({ color }) => <IconeSvg path={...} cor={color} />` para as 3 abas, usando `tabBarActiveTintColor`/`tabBarInactiveTintColor` já configurados para resolver a cor.
 
 ## 4. Cabeçalho da Despensa
 
