@@ -23,7 +23,8 @@ Para cada uma das 13 PRs, mapear cada `#### Scenario:` do(s) spec(s) OpenSpec da
 | 7 | `lista-de-compras` | `lista-derivada`, `itens-avulsos`, `custo-estimado`, `exportacao-em-texto` | ~20/26 | 6/26 (ACHADO-029 a 033, mais telas finas sem teste) | concluída |
 | 8 | `modo-compra-e-fechamento` | `atualizacao-de-preco-referencia`, `fechamento-de-compra`, `lista-derivada`, `modo-compra` | ~30/45 | 15/45 (ACHADO-034 a 037, mais tela `app/compra/[id].tsx` sem teste) | concluída |
 | 9 | `backup-restore-json` | `exportacao-de-backup`, `restauracao-de-backup`, `tela-de-configuracoes` | ~25/35 | 10/35 (ACHADO-038 a 040, mais tela `configuracoes.tsx` sem teste) | concluída |
-| 10-13 | — | — | — | — | pendente |
+| 10 | `ajuste-e-conferencia-estoque` | `ajuste-de-estoque`, `cadastro-de-produto` (delta), `diagnostico-de-integridade`, `historico-do-produto`, `modo-conferencia` | ~28/45 | 17/45 (ACHADO-041 a 044, mais telas sem teste) | concluída |
+| 11-13 | — | — | — | — | pendente |
 
 ## Detalhe — PR-01 (`bootstrap-projeto-expo`)
 
@@ -108,10 +109,21 @@ Ver `qa/por-pr/PR-09.md` seção `## F3` para a matriz completa (~35 cenários, 
 - [[ACHADO-039]] — divergência pós-restauração sem link direto para a correção em Diagnóstico, origem PR 9. **Aberto.**
 - [[ACHADO-040]] — `ExpoSistemaDeArquivos` (adaptador real de share/document-picker/file-system) sem teste próprio, origem PR 9. **Aberto.**
 
+## Detalhe — PR-10 (`ajuste-e-conferencia-estoque`)
+
+Ver `qa/por-pr/PR-10.md` seção `## F3` para a matriz completa (~45 cenários, 5 capabilities). Padrão sistemático confirmado pela quinta vez consecutiva (PRs 5-10): lógica de domínio/aplicação muito bem coberta (ajuste atômico, reconciliação, correção em bloco, paginação keyset, retomada de conferência), e **nenhuma** das 4 telas novas desta PR (`app/produto/[id].tsx`, `app/produto/[id]/historico.tsx`, `app/conferencia.tsx`, `app/diagnostico.tsx`) tem teste próprio. Identificados também dois gaps pontuais: distinção visual de tipo de movimento (`corDoMovimento`) sem teste (ACHADO-043), e "verificação não altera dados" do diagnóstico sem teste explícito apesar da implementação ser só-leitura por construção (ACHADO-044). Nenhuma divergência de implementação real encontrada nesta rodada (diferente da PR-08).
+
+## Achados produzidos nesta fase (continuação 3)
+
+- [[ACHADO-041]] — `app/produto/[id].tsx` sem teste, origem PR 10. **Aberto.**
+- [[ACHADO-042]] — `app/conferencia.tsx`, `app/diagnostico.tsx` e `app/produto/[id]/historico.tsx` sem teste, origem PR 10. **Aberto.**
+- [[ACHADO-043]] — `cor-do-estado.ts` sem teste, origem PR 10. **Aberto.**
+- [[ACHADO-044]] — "verificação não altera dados" do diagnóstico sem teste explícito, origem PR 10. **Aberto.**
+
 ## Critério de saída
 
 - [ ] 13 arquivos `qa/por-pr/PR-01.md` … `PR-13.md` com seção `## F3` preenchida.
 - [ ] Matriz consolidada acima com as 13 linhas.
 - [ ] Achados de lacuna registrados e ancorados na PR/change de origem.
 
-**F3 em andamento — 9/13 PRs auditadas.**
+**F3 em andamento — 10/13 PRs auditadas.**
