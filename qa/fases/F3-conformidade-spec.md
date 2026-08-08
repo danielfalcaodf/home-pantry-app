@@ -26,7 +26,7 @@ Para cada uma das 13 PRs, mapear cada `#### Scenario:` do(s) spec(s) OpenSpec da
 | 10 | `ajuste-e-conferencia-estoque` | `ajuste-de-estoque`, `cadastro-de-produto` (delta), `diagnostico-de-integridade`, `historico-do-produto`, `modo-conferencia` | ~28/45 | 17/45 (ACHADO-041 a 044, mais telas sem teste) | concluída |
 | 11 | `resumo-valores-e-historico` | `gasto-mensal`, `historico-de-compras`, `resumo-de-valores` | ~20/31 | 11/31 (ACHADO-045 a 047, mais telas sem teste) | concluída |
 | 12 | `correcao-navegacao-nativa` | `chrome-de-navegacao` | 4/11 diretos, 6 parciais | 1 novo (ACHADO-048); verificação original foi manual (documentado na própria change) | concluída |
-| 13 | — | — | — | — | pendente |
+| 13 | `ajuste-visual-telas-design-system` | `chrome-de-navegacao` (delta), `tela-despensa` (delta) | ~7/15 diretos, 6 parciais | 4 novos (ACHADO-049 a 052) | concluída |
 
 ## Detalhe — PR-01 (`bootstrap-projeto-expo`)
 
@@ -140,10 +140,25 @@ Ver `qa/por-pr/PR-12.md` seção `## F3` para a matriz completa (11 cenários, 1
 
 - [[ACHADO-048]] — `headerShown: false` e alvo de toque do `BotaoVoltar` sem teste automatizado, origem PR 12. **Aberto.**
 
+## Detalhe — PR-13 (`ajuste-visual-telas-design-system`)
+
+Ver `qa/por-pr/PR-13.md` seção `## F3` para a matriz completa (~15 cenários, 2 capabilities modificadas + itens sem spec formal). Última PR da cadeia. Lógica de filtro/contagem da despensa (`agrupar-despensa.ts`) muito bem coberta. O padrão sistemático de telas sem teste, observado desde a PR-05, aparece aqui numa variante nova: 7 telas passam a usar `BotaoVoltar`, mas nenhuma tem teste que confirme o **destino específico** da navegação — só o comportamento genérico do componente (`router.back()`) está coberto (ACHADO-049). Nenhuma divergência de implementação real encontrada nesta rodada final — todos os gaps das 13 PRs auditadas são ausência de teste, não comportamento incorreto (única exceção real de divergência foi ACHADO-034, na PR-08).
+
+## Achados produzidos nesta fase (continuação 6)
+
+- [[ACHADO-049]] — botão de voltar estendido a 7 telas novas sem teste de destino de navegação, origem PR 13. **Aberto.**
+- [[ACHADO-050]] — reatividade da contagem de chips e acionabilidade do chip zerado sem teste, origem PR 13. **Aberto.**
+- [[ACHADO-051]] — integração da tab bar (ícones + cor por aba) sem teste, origem PR 13. **Aberto.**
+- [[ACHADO-052]] — posição do `RodapeCompra`, métrica do gasto mensal e corte "últimos 4 meses" do gráfico sem teste de integração, origem PR 13. **Aberto.**
+
 ## Critério de saída
 
-- [ ] 13 arquivos `qa/por-pr/PR-01.md` … `PR-13.md` com seção `## F3` preenchida.
-- [ ] Matriz consolidada acima com as 13 linhas.
-- [ ] Achados de lacuna registrados e ancorados na PR/change de origem.
+- [x] 13 arquivos `qa/por-pr/PR-01.md` … `PR-13.md` com seção `## F3` preenchida.
+- [x] Matriz consolidada acima com as 13 linhas.
+- [x] Achados de lacuna registrados e ancorados na PR/change de origem (ACHADO-008 a ACHADO-052).
 
-**F3 em andamento — 12/13 PRs auditadas.**
+## Síntese final
+
+13/13 PRs auditadas, ~500+ cenários de spec mapeados contra evidência de teste. Padrão dominante e consistente em todas as PRs de UI (05-13): a lógica de domínio, aplicação (hooks) e infraestrutura (repositórios SQLite) tem cobertura forte e muitas vezes exemplar (transações, atomicidade, idempotência, reconciliação); a composição de tela (`app/**/*.tsx`) não tem **nenhum** arquivo de teste em todo o repositório — todo comportamento que só existe na composição visual (navegação, mensagens exibidas, reatividade de UI, geometria) depende de verificação manual ou fica sem cobertura. Uma única divergência de implementação real (não apenas lacuna de teste) foi encontrada: ACHADO-034 (PR-08, aviso de saída do modo compra). Recomendação para a change que vier a consolidar os achados desta fase: priorizar uma estratégia de teste de tela (RTL) ou E2E (Maestro, bloqueado até F4) antes de tratar cada `ACHADO-0XX` de teste ausente como item avulso — é o mesmo gap estrutural se repetindo, não 20+ gaps independentes.
+
+**F3 completa — 13/13 PRs auditadas.**

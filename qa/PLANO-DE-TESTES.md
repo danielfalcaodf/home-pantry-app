@@ -11,7 +11,7 @@
 | F0 | Ambiente e ferramental (sem emulador) | concluída | [qa/fases/F0-ambiente.md](fases/F0-ambiente.md) |
 | F1 | Baseline no topo da cadeia | concluída | [qa/fases/F1-baseline-topo.md](fases/F1-baseline-topo.md) |
 | F2 | Cadeia incremental por worktree (13 PRs) | concluída | [qa/fases/F2-cadeia-incremental.md](fases/F2-cadeia-incremental.md) |
-| F3 | Conformidade com specs OpenSpec | em andamento (7/13) | [qa/fases/F3-conformidade-spec.md](fases/F3-conformidade-spec.md) |
+| F3 | Conformidade com specs OpenSpec | concluída (13/13) | [qa/fases/F3-conformidade-spec.md](fases/F3-conformidade-spec.md) |
 | F4 | Smoke no emulador *(requer development build)* | bloqueada | `qa/fases/F4-smoke-emulador.md` |
 | F5 | Fluxos E2E ainda descobertos *(requer F4)* | bloqueada | `qa/fases/F5-fluxos-e2e.md` |
 | F6 | KPI e acessibilidade em uso real *(requer F4)* | bloqueada | `qa/fases/F6-kpi-e-acessibilidade.md` |
@@ -68,7 +68,31 @@
 | [ACHADO-026](achados/ACHADO-026.md) | média | F3 (PR 6) | aberto | Coreografia do gesto (haptics, timing da contração/mola) sem teste de orquestração |
 | [ACHADO-027](achados/ACHADO-027.md) | baixa | F3 (PR 6) | aberto | `TecladoQuantidade`: caminho "Repus" (reposição específica) sem teste positivo |
 | [ACHADO-028](achados/ACHADO-028.md) | média | F3 (PR 6) | aberto | Prop `animar` de `medidor-nivel.tsx` (animação condicional por item) sem teste |
+| [ACHADO-029](achados/ACHADO-029.md) | média | F3 (PR 7) | aberto | `SheetAvulso` sem teste — validação de nome obrigatório do avulso nunca exercitada |
+| [ACHADO-030](achados/ACHADO-030.md) | média | F3 (PR 7) | aberto | `agrupar-lista.ts` (visão agrupada/contínua por categoria) sem teste |
+| [ACHADO-031](achados/ACHADO-031.md) | baixa | F3 (PR 7) | aberto | `use-preferencia-agrupamento.ts` (persistência da preferência) sem teste |
+| [ACHADO-032](achados/ACHADO-032.md) | baixa | F3 (PR 7) | aberto | `rodape-total.tsx` (rótulo, contagem, total da lista) sem teste |
+| [ACHADO-033](achados/ACHADO-033.md) | baixa | F3 (PR 7) | aberto | `item-lista.tsx` (distinção visual avulso/produto) sem teste |
+| [ACHADO-034](achados/ACHADO-034.md) | média | F3 (PR 8) | aberto | Aviso de saída do modo compra é texto estático, não responde ao botão voltar — divergência de implementação |
+| [ACHADO-035](achados/ACHADO-035.md) | média | F3 (PR 8) | aberto | `app/compra/[id].tsx` (tela do modo compra) sem nenhum teste |
+| [ACHADO-036](achados/ACHADO-036.md) | baixa | F3 (PR 8) | aberto | Campos individuais do movimento de estoque do fechamento sem teste |
+| [ACHADO-037](achados/ACHADO-037.md) | baixa | F3 (PR 8) | aberto | Estilo do item marcado e geometria do controle de marcação sem teste |
+| [ACHADO-038](achados/ACHADO-038.md) | média | F3 (PR 9) | aberto | `app/(tabs)/configuracoes.tsx` sem nenhum teste de componente |
+| [ACHADO-039](achados/ACHADO-039.md) | média | F3 (PR 9) | aberto | Divergência pós-restauração sem link direto para correção em Diagnóstico |
+| [ACHADO-040](achados/ACHADO-040.md) | baixa | F3 (PR 9) | aberto | `ExpoSistemaDeArquivos` (adaptador real de share/document-picker/file-system) sem teste |
+| [ACHADO-041](achados/ACHADO-041.md) | média | F3 (PR 10) | aberto | `app/produto/[id].tsx` sem teste |
+| [ACHADO-042](achados/ACHADO-042.md) | média | F3 (PR 10) | aberto | `app/conferencia.tsx`, `app/diagnostico.tsx`, `app/produto/[id]/historico.tsx` sem teste |
+| [ACHADO-043](achados/ACHADO-043.md) | baixa | F3 (PR 10) | aberto | `cor-do-estado.ts` (distinção visual de tipo de movimento) sem teste |
+| [ACHADO-044](achados/ACHADO-044.md) | baixa | F3 (PR 10) | aberto | "Verificação não altera dados" do diagnóstico sem teste explícito |
+| [ACHADO-045](achados/ACHADO-045.md) | média | F3 (PR 11) | aberto | `resumo.tsx`, `historico.tsx`, `historico/[id].tsx` sem teste |
+| [ACHADO-046](achados/ACHADO-046.md) | baixa | F3 (PR 11) | aberto | "Compra finalizada com total zero" sem teste dedicado na agregação mensal |
+| [ACHADO-047](achados/ACHADO-047.md) | baixa | F3 (PR 11) | aberto | "Itens não comprados distinguíveis" no detalhe da compra sem teste |
+| [ACHADO-048](achados/ACHADO-048.md) | baixa | F3 (PR 12) | aberto | `headerShown: false` e alvo de toque do `BotaoVoltar` sem teste automatizado |
+| [ACHADO-049](achados/ACHADO-049.md) | média | F3 (PR 13) | aberto | Botão de voltar estendido a 7 telas novas, sem teste de destino de navegação |
+| [ACHADO-050](achados/ACHADO-050.md) | média | F3 (PR 13) | aberto | Reatividade da contagem de chips e acionabilidade do chip zerado sem teste |
+| [ACHADO-051](achados/ACHADO-051.md) | baixa | F3 (PR 13) | aberto | Integração da tab bar (ícones + cor por aba) sem teste |
+| [ACHADO-052](achados/ACHADO-052.md) | baixa | F3 (PR 13) | aberto | Posição do `RodapeCompra`, métrica do gasto mensal e corte "últimos 4 meses" sem teste |
 
 ## Próximo passo
 
-F3 em andamento: PR-01 a PR-12 auditadas (12/13). Próxima PR sem seção `## F3`: **PR-13** (`feat/ajuste-visual-telas-design-system`) — última. Continuar `/qa:audit-pr` PR a PR até completar as 13. Nota: o subagent `qa-expert` não estava disponível como `subagent_type` nesta sessão — auditoria feita manualmente seguindo a mesma metodologia (ver `qa/fases/F3-conformidade-spec.md`). F4-F6 seguem bloqueadas até `eas login` + development build.
+**F3 completa — 13/13 PRs auditadas.** Todos os 13 arquivos `qa/por-pr/PR-01.md` … `PR-13.md` têm seção `## F3`; matriz consolidada e síntese final em `qa/fases/F3-conformidade-spec.md`; 45 achados de lacuna registrados (ACHADO-008 a ACHADO-052), todos `aberto`, prontos para virar changes via `/opsx:propose`. Padrão dominante: lógica de domínio/aplicação/infraestrutura bem coberta; nenhuma tela (`app/**/*.tsx`) tem teste automatizado em todo o repositório — recomenda-se tratar isso como uma única iniciativa de teste de tela/E2E, não 20+ achados avulsos. Única divergência de implementação real encontrada (não apenas lacuna de teste): ACHADO-034 (PR-08). F4-F6 seguem bloqueadas até `eas login` + development build.
