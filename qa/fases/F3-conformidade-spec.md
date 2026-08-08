@@ -22,7 +22,8 @@ Para cada uma das 13 PRs, mapear cada `#### Scenario:` do(s) spec(s) OpenSpec da
 | 6 | `dar-baixa-caminho-critico` | `registro-de-consumo`, `desfazer-registro`, `movimento-do-gesto`, `medidor-linha-dagua` (delta) | forte no caminho de dados; nenhuma coreografia visual testada | 3 achados novos (026-028) + reaproveita ACHADO-016/019 (PR-04) | concluída |
 | 7 | `lista-de-compras` | `lista-derivada`, `itens-avulsos`, `custo-estimado`, `exportacao-em-texto` | ~20/26 | 6/26 (ACHADO-029 a 033, mais telas finas sem teste) | concluída |
 | 8 | `modo-compra-e-fechamento` | `atualizacao-de-preco-referencia`, `fechamento-de-compra`, `lista-derivada`, `modo-compra` | ~30/45 | 15/45 (ACHADO-034 a 037, mais tela `app/compra/[id].tsx` sem teste) | concluída |
-| 9-13 | — | — | — | — | pendente |
+| 9 | `backup-restore-json` | `exportacao-de-backup`, `restauracao-de-backup`, `tela-de-configuracoes` | ~25/35 | 10/35 (ACHADO-038 a 040, mais tela `configuracoes.tsx` sem teste) | concluída |
+| 10-13 | — | — | — | — | pendente |
 
 ## Detalhe — PR-01 (`bootstrap-projeto-expo`)
 
@@ -97,10 +98,20 @@ Ver `qa/por-pr/PR-08.md` seção `## F3` para a matriz completa (~45 cenários, 
 - [[ACHADO-036]] — campos individuais do movimento de estoque do fechamento (autor/data/variação/resultado) sem teste, origem PR 8. **Aberto.**
 - [[ACHADO-037]] — estilo do item marcado e geometria do controle de marcação sem asserção de teste, origem PR 8. **Aberto.**
 
+## Detalhe — PR-09 (`backup-restore-json`)
+
+Ver `qa/por-pr/PR-09.md` seção `## F3` para a matriz completa (~35 cenários, 3 capabilities). O caminho de dados (exportar/restaurar/reconciliar via `sqlite-backup.repository.ts`) está muito bem coberto, inclusive idempotência e atomicidade — mesmo padrão forte já visto nas PRs anteriores para lógica pura/hooks. A lacuna concentra-se, mais uma vez, na composição de tela: `app/(tabs)/configuracoes.tsx` não tem nenhum teste de componente (ACHADO-038), e a divergência pós-restauração fica exposta só como toast informativo sem link direto para a correção em Diagnóstico (ACHADO-039) — um gap funcional, não só de teste. Também identificado que o adaptador real de sistema de arquivos (`ExpoSistemaDeArquivos`, share sheet/document picker) nunca é exercitado — só o dublê usado pelos hooks (ACHADO-040).
+
+## Achados produzidos nesta fase (continuação 2)
+
+- [[ACHADO-038]] — `app/(tabs)/configuracoes.tsx` sem nenhum teste de componente/E2E, origem PR 9. **Aberto.**
+- [[ACHADO-039]] — divergência pós-restauração sem link direto para a correção em Diagnóstico, origem PR 9. **Aberto.**
+- [[ACHADO-040]] — `ExpoSistemaDeArquivos` (adaptador real de share/document-picker/file-system) sem teste próprio, origem PR 9. **Aberto.**
+
 ## Critério de saída
 
 - [ ] 13 arquivos `qa/por-pr/PR-01.md` … `PR-13.md` com seção `## F3` preenchida.
 - [ ] Matriz consolidada acima com as 13 linhas.
 - [ ] Achados de lacuna registrados e ancorados na PR/change de origem.
 
-**F3 em andamento — 8/13 PRs auditadas.**
+**F3 em andamento — 9/13 PRs auditadas.**
