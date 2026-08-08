@@ -19,7 +19,8 @@ Para cada uma das 13 PRs, mapear cada `#### Scenario:` do(s) spec(s) OpenSpec da
 | 3 | `persistencia-sqlite` | `banco-local`, `dados-iniciais`, `repositorios` | ~50/55 | 5/55 (ACHADO-011 a 014, + ACHADO-004 já rastreado) | concluída |
 | 4 | `design-system-tema` | `banco-local` (delta), `componentes-base`, `tema-e-tokens`, `tipografia-carregada` | ~26/40 | 14/40 (ACHADO-015 a 021, + itens dependentes de F4/F6) | concluída |
 | 5 | `despensa-e-cadastro-produto` | `adocao-da-lista-base`, `cadastro-de-produto`, `medidor-linha-dagua`, `tela-despensa` | forte na lógica/hooks; fraca nos componentes de tela | ~12 lacunas (ACHADO-022 a 025 + itens dependentes de F4/F6) | concluída |
-| 6-13 | — | — | — | — | pendente |
+| 6 | `dar-baixa-caminho-critico` | `registro-de-consumo`, `desfazer-registro`, `movimento-do-gesto`, `medidor-linha-dagua` (delta) | forte no caminho de dados; nenhuma coreografia visual testada | 3 achados novos (026-028) + reaproveita ACHADO-016/019 (PR-04) | concluída |
+| 7-13 | — | — | — | — | pendente |
 
 ## Detalhe — PR-01 (`bootstrap-projeto-expo`)
 
@@ -62,6 +63,13 @@ Ver `qa/por-pr/PR-04.md` seção `## F3` para a matriz completa (~40 cenários, 
 - [[ACHADO-023]] — `normalizar-busca.ts` (normalização de acento) sem teste unitário, origem PR 5. **Aberto.**
 - [[ACHADO-024]] — ação "ver item existente" no fluxo de duplicidade sem teste, origem PR 5. **Aberto.**
 - [[ACHADO-025]] — ausência de checagem "sem card/borda/sombra" no teste de conformidade da linha da despensa, origem PR 5. **Aberto.**
+- [[ACHADO-026]] — coreografia do gesto (`Haptics.impactAsync`, timing) sem teste de orquestração, origem PR 6. **Aberto.**
+- [[ACHADO-027]] — `TecladoQuantidade`: caminho "Repus" sem teste positivo, origem PR 6. **Aberto.**
+- [[ACHADO-028]] — prop `animar` de `medidor-nivel.tsx` (animação condicional por item) sem teste, origem PR 6. **Aberto.**
+
+## Detalhe — PR-06 (`dar-baixa-caminho-critico`)
+
+Ver `qa/por-pr/PR-06.md` seção `## F3` para a matriz completa (~50 cenários, 4 capabilities incluindo delta de `medidor-linha-dagua`). **Correção a uma nota da própria PR-06.md**: a F2 tratou "janela de desfazer de 10s" como sinônimo do KPI K4 e descartou como "dependente de F6" — são coisas diferentes. A janela de 10s é um timer de UI (`JANELA_DESFAZER` em `toast-desfazer.tsx`, testável em Jest) que herda a lacuna já registrada em ACHADO-016 (`toast.tsx` sem teste, PR-04); o KPI K4 (tempo de tarefa do usuário) é que de fato depende de medição em F6. Padrão desta PR: caminho de dados (registrar, desfazer, atomicidade) muito bem coberto, mas **nenhuma** parte da coreografia visual/animação (haptics, mola, animação condicional por item) tem teste em toda a cadeia até aqui — confirma e amplia o padrão já visto no ACHADO-019 (PR-04).
 
 ## Detalhe — PR-05 (`despensa-e-cadastro-produto`)
 
@@ -73,4 +81,4 @@ Ver `qa/por-pr/PR-05.md` seção `## F3` para a matriz completa (~60 cenários, 
 - [ ] Matriz consolidada acima com as 13 linhas.
 - [ ] Achados de lacuna registrados e ancorados na PR/change de origem.
 
-**F3 em andamento — 5/13 PRs auditadas.**
+**F3 em andamento — 6/13 PRs auditadas.**

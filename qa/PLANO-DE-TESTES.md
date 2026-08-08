@@ -11,7 +11,7 @@
 | F0 | Ambiente e ferramental (sem emulador) | concluída | [qa/fases/F0-ambiente.md](fases/F0-ambiente.md) |
 | F1 | Baseline no topo da cadeia | concluída | [qa/fases/F1-baseline-topo.md](fases/F1-baseline-topo.md) |
 | F2 | Cadeia incremental por worktree (13 PRs) | concluída | [qa/fases/F2-cadeia-incremental.md](fases/F2-cadeia-incremental.md) |
-| F3 | Conformidade com specs OpenSpec | em andamento (5/13) | [qa/fases/F3-conformidade-spec.md](fases/F3-conformidade-spec.md) |
+| F3 | Conformidade com specs OpenSpec | em andamento (6/13) | [qa/fases/F3-conformidade-spec.md](fases/F3-conformidade-spec.md) |
 | F4 | Smoke no emulador *(requer development build)* | bloqueada | `qa/fases/F4-smoke-emulador.md` |
 | F5 | Fluxos E2E ainda descobertos *(requer F4)* | bloqueada | `qa/fases/F5-fluxos-e2e.md` |
 | F6 | KPI e acessibilidade em uso real *(requer F4)* | bloqueada | `qa/fases/F6-kpi-e-acessibilidade.md` |
@@ -65,7 +65,10 @@
 | [ACHADO-023](achados/ACHADO-023.md) | baixa | F3 (PR 5) | aberto | `normalizar-busca.ts` (normalização de acento na busca) sem teste unitário |
 | [ACHADO-024](achados/ACHADO-024.md) | baixa | F3 (PR 5) | aberto | Ação "ver item existente" no fluxo de duplicidade sem teste |
 | [ACHADO-025](achados/ACHADO-025.md) | baixa | F3 (PR 5) | aberto | Teste de conformidade da linha da despensa não checa ausência de card/borda/sombra |
+| [ACHADO-026](achados/ACHADO-026.md) | média | F3 (PR 6) | aberto | Coreografia do gesto (haptics, timing da contração/mola) sem teste de orquestração |
+| [ACHADO-027](achados/ACHADO-027.md) | baixa | F3 (PR 6) | aberto | `TecladoQuantidade`: caminho "Repus" (reposição específica) sem teste positivo |
+| [ACHADO-028](achados/ACHADO-028.md) | média | F3 (PR 6) | aberto | Prop `animar` de `medidor-nivel.tsx` (animação condicional por item) sem teste |
 
 ## Próximo passo
 
-F3 em andamento: PR-01 a PR-05 auditadas (5/13). Próxima PR sem seção `## F3`: **PR-06** (`change/dar-baixa-caminho-critico`). Continuar `/qa:audit-pr` PR a PR até completar as 13. Nota: o subagent `qa-expert` não estava disponível como `subagent_type` nesta sessão — auditoria feita manualmente seguindo a mesma metodologia (ver `qa/fases/F3-conformidade-spec.md`). F4-F6 seguem bloqueadas até `eas login` + development build.
+F3 em andamento: PR-01 a PR-06 auditadas (6/13). Próxima PR sem seção `## F3`: **PR-07** (`feature/lista-de-compras`). Continuar `/qa:audit-pr` PR a PR até completar as 13. Nota: o subagent `qa-expert` não estava disponível como `subagent_type` nesta sessão — auditoria feita manualmente seguindo a mesma metodologia (ver `qa/fases/F3-conformidade-spec.md`). F4-F6 seguem bloqueadas até `eas login` + development build.
