@@ -24,7 +24,8 @@ Para cada uma das 13 PRs, mapear cada `#### Scenario:` do(s) spec(s) OpenSpec da
 | 8 | `modo-compra-e-fechamento` | `atualizacao-de-preco-referencia`, `fechamento-de-compra`, `lista-derivada`, `modo-compra` | ~30/45 | 15/45 (ACHADO-034 a 037, mais tela `app/compra/[id].tsx` sem teste) | concluída |
 | 9 | `backup-restore-json` | `exportacao-de-backup`, `restauracao-de-backup`, `tela-de-configuracoes` | ~25/35 | 10/35 (ACHADO-038 a 040, mais tela `configuracoes.tsx` sem teste) | concluída |
 | 10 | `ajuste-e-conferencia-estoque` | `ajuste-de-estoque`, `cadastro-de-produto` (delta), `diagnostico-de-integridade`, `historico-do-produto`, `modo-conferencia` | ~28/45 | 17/45 (ACHADO-041 a 044, mais telas sem teste) | concluída |
-| 11-13 | — | — | — | — | pendente |
+| 11 | `resumo-valores-e-historico` | `gasto-mensal`, `historico-de-compras`, `resumo-de-valores` | ~20/31 | 11/31 (ACHADO-045 a 047, mais telas sem teste) | concluída |
+| 12-13 | — | — | — | — | pendente |
 
 ## Detalhe — PR-01 (`bootstrap-projeto-expo`)
 
@@ -120,10 +121,20 @@ Ver `qa/por-pr/PR-10.md` seção `## F3` para a matriz completa (~45 cenários, 
 - [[ACHADO-043]] — `cor-do-estado.ts` sem teste, origem PR 10. **Aberto.**
 - [[ACHADO-044]] — "verificação não altera dados" do diagnóstico sem teste explícito, origem PR 10. **Aberto.**
 
+## Detalhe — PR-11 (`resumo-valores-e-historico`)
+
+Ver `qa/por-pr/PR-11.md` seção `## F3` para a matriz completa (~35 cenários, 3 capabilities). Resolve a pendência que a própria F2 tinha deixado aberta: o teste de "compras abertas/canceladas fora do gasto mensal" existe (`sqlite-compra.repository.test.ts:590`), fechando a dúvida sem gerar achado. Padrão sistemático de telas sem teste se repete pela sexta vez (PRs 5-11): `app/(tabs)/resumo.tsx`, `app/compra/historico.tsx` e `app/compra/historico/[id].tsx` sem cobertura própria (ACHADO-045). Dois gaps pontuais de lógica também identificados: "compra finalizada com total zero" na agregação mensal (ACHADO-046) e "itens não comprados distinguíveis" no detalhe (ACHADO-047).
+
+## Achados produzidos nesta fase (continuação 4)
+
+- [[ACHADO-045]] — `resumo.tsx`, `historico.tsx`, `historico/[id].tsx` sem teste, origem PR 11. **Aberto.**
+- [[ACHADO-046]] — "compra finalizada com total zero" sem teste dedicado na agregação mensal, origem PR 11. **Aberto.**
+- [[ACHADO-047]] — "itens não comprados distinguíveis" no detalhe da compra sem teste, origem PR 11. **Aberto.**
+
 ## Critério de saída
 
 - [ ] 13 arquivos `qa/por-pr/PR-01.md` … `PR-13.md` com seção `## F3` preenchida.
 - [ ] Matriz consolidada acima com as 13 linhas.
 - [ ] Achados de lacuna registrados e ancorados na PR/change de origem.
 
-**F3 em andamento — 10/13 PRs auditadas.**
+**F3 em andamento — 11/13 PRs auditadas.**
