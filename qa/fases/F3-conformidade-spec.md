@@ -16,7 +16,8 @@ Para cada uma das 13 PRs, mapear cada `#### Scenario:` do(s) spec(s) OpenSpec da
 |---|---|---|---|---|---|
 | 1 | `bootstrap-projeto-expo` | `fronteiras-de-camada`, `primitivos-compartilhados`, `projeto-base` | 18/24 | 6/24 (ACHADO-008, ACHADO-009, +1 bloqueado por F4) | concluída |
 | 2 | `fundacao-dominio` | `regras-de-compra`, `regras-de-estoque`, `regras-de-movimento`, `unidades-e-valores` | 71/72 | 1/72 (ACHADO-010) | concluída |
-| 3-13 | — | — | — | — | pendente |
+| 3 | `persistencia-sqlite` | `banco-local`, `dados-iniciais`, `repositorios` | ~50/55 | 5/55 (ACHADO-011 a 014, + ACHADO-004 já rastreado) | concluída |
+| 4-13 | — | — | — | — | pendente |
 
 ## Detalhe — PR-01 (`bootstrap-projeto-expo`)
 
@@ -31,11 +32,19 @@ Resumo por capability:
 
 Ver `qa/por-pr/PR-02.md` seção `## F3` para a matriz completa (72 cenários, 4 capabilities de domínio puro). Cobertura quase total via os arquivos de teste já existentes na PR-02 (`compra.rules.test.ts`, `estoque.rules.test.ts`, `validacao.test.ts`, `categoria.test.ts`, `movimento.rules.test.ts`, `quantidade.test.ts`, `unidade.test.ts`, `dinheiro.test.ts`). Única lacuna: o cenário "conjunto fechado de unidades" (compilador rejeita valor fora das 7 unidades) não tem teste de tipo — mesma classe de lacuna do ACHADO-009 (PR-01).
 
+## Detalhe — PR-03 (`persistencia-sqlite`)
+
+Ver `qa/por-pr/PR-03.md` seção `## F3` para a matriz completa (~55 cenários, 3 capabilities). Achado notável: o cenário "aplicação a partir de versão intermediária" era N/A quando a PR-03 foi testada em F2 (só existia a migration `0000_init`), mas hoje há 4 migrations e o cenário ficou testável sem cobertura (ACHADO-013) — exemplo de lacuna que só aparece observando o estado atual do repositório, não o estado da PR isolada. Também sinalizada uma possível divergência de spec (não confirmada, ACHADO-014): `listarDespensa` usa `.select()` sem nomear colunas, ao contrário do padrão do resto do arquivo.
+
 ## Achados produzidos nesta fase
 
 - [[ACHADO-008]] — regras de lint de fronteira (boundaries/hex/import proibido) sem teste automatizado que force a violação, origem PR 1. **Aberto.**
 - [[ACHADO-009]] — `Result<T,E>` sem teste de tipo para a discriminação obrigatória exigida pelo spec, origem PR 1. **Aberto.**
 - [[ACHADO-010]] — `Unidade` sem teste de tipo para o conjunto fechado exigido pelo spec, origem PR 2 (mesma classe do ACHADO-009). **Aberto.**
+- [[ACHADO-011]] — conexão de banco (WAL, singleton, escuta de mudanças) sem teste dedicado, origem PR 3. **Aberto.**
+- [[ACHADO-012]] — fluxo de preparação do banco (`_layout.tsx`) sem teste de sucesso/falha de migration, origem PR 3. **Aberto.**
+- [[ACHADO-013]] — "aplicação a partir de versão intermediária" agora testável e ainda sem teste, origem PR 3. **Aberto.**
+- [[ACHADO-014]] — possível divergência de "colunas explícitas" em `listarDespensa`, origem PR 3 — revisão humana recomendada antes de virar change. **Aberto.**
 
 ## Critério de saída
 
@@ -43,4 +52,4 @@ Ver `qa/por-pr/PR-02.md` seção `## F3` para a matriz completa (72 cenários, 4
 - [ ] Matriz consolidada acima com as 13 linhas.
 - [ ] Achados de lacuna registrados e ancorados na PR/change de origem.
 
-**F3 em andamento — 2/13 PRs auditadas.**
+**F3 em andamento — 3/13 PRs auditadas.**

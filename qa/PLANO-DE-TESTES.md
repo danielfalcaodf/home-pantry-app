@@ -11,7 +11,7 @@
 | F0 | Ambiente e ferramental (sem emulador) | concluída | [qa/fases/F0-ambiente.md](fases/F0-ambiente.md) |
 | F1 | Baseline no topo da cadeia | concluída | [qa/fases/F1-baseline-topo.md](fases/F1-baseline-topo.md) |
 | F2 | Cadeia incremental por worktree (13 PRs) | concluída | [qa/fases/F2-cadeia-incremental.md](fases/F2-cadeia-incremental.md) |
-| F3 | Conformidade com specs OpenSpec | em andamento (2/13) | [qa/fases/F3-conformidade-spec.md](fases/F3-conformidade-spec.md) |
+| F3 | Conformidade com specs OpenSpec | em andamento (3/13) | [qa/fases/F3-conformidade-spec.md](fases/F3-conformidade-spec.md) |
 | F4 | Smoke no emulador *(requer development build)* | bloqueada | `qa/fases/F4-smoke-emulador.md` |
 | F5 | Fluxos E2E ainda descobertos *(requer F4)* | bloqueada | `qa/fases/F5-fluxos-e2e.md` |
 | F6 | KPI e acessibilidade em uso real *(requer F4)* | bloqueada | `qa/fases/F6-kpi-e-acessibilidade.md` |
@@ -50,7 +50,11 @@
 | [ACHADO-008](achados/ACHADO-008.md) | baixa | F3 (PR 1) | aberto | Regras de lint de fronteira (boundaries/hex/import proibido) sem teste automatizado que force a violação |
 | [ACHADO-009](achados/ACHADO-009.md) | baixa | F3 (PR 1) | aberto | `Result<T,E>` sem teste de tipo para discriminação obrigatória exigida pelo spec |
 | [ACHADO-010](achados/ACHADO-010.md) | baixa | F3 (PR 2) | aberto | `Unidade` sem teste de tipo para conjunto fechado exigido pelo spec (mesma classe do ACHADO-009) |
+| [ACHADO-011](achados/ACHADO-011.md) | baixa | F3 (PR 3) | aberto | Conexão de banco (WAL, singleton, escuta de mudanças) sem teste dedicado |
+| [ACHADO-012](achados/ACHADO-012.md) | média | F3 (PR 3) | aberto | Fluxo de preparação do banco (`_layout.tsx`) sem teste de sucesso/falha de migration |
+| [ACHADO-013](achados/ACHADO-013.md) | média | F3 (PR 3) | aberto | "Aplicação a partir de versão intermediária" agora testável (4 migrations) e ainda sem teste |
+| [ACHADO-014](achados/ACHADO-014.md) | baixa | F3 (PR 3) | aberto | Possível divergência de "colunas explícitas" em `listarDespensa` — revisão humana recomendada |
 
 ## Próximo passo
 
-F3 em andamento: PR-01 e PR-02 auditadas (2/13). Próxima PR sem seção `## F3`: **PR-03** (`change/persistencia-sqlite`). Continuar `/qa:audit-pr` PR a PR até completar as 13. Nota: o subagent `qa-expert` não estava disponível como `subagent_type` nesta sessão — auditoria feita manualmente seguindo a mesma metodologia (ver `qa/fases/F3-conformidade-spec.md`). F4-F6 seguem bloqueadas até `eas login` + development build.
+F3 em andamento: PR-01, PR-02 e PR-03 auditadas (3/13). Próxima PR sem seção `## F3`: **PR-04** (`change/design-system-tema`). Continuar `/qa:audit-pr` PR a PR até completar as 13. Nota: o subagent `qa-expert` não estava disponível como `subagent_type` nesta sessão — auditoria feita manualmente seguindo a mesma metodologia (ver `qa/fases/F3-conformidade-spec.md`). F4-F6 seguem bloqueadas até `eas login` + development build.
