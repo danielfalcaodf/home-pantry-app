@@ -18,7 +18,8 @@ Para cada uma das 13 PRs, mapear cada `#### Scenario:` do(s) spec(s) OpenSpec da
 | 2 | `fundacao-dominio` | `regras-de-compra`, `regras-de-estoque`, `regras-de-movimento`, `unidades-e-valores` | 71/72 | 1/72 (ACHADO-010) | concluída |
 | 3 | `persistencia-sqlite` | `banco-local`, `dados-iniciais`, `repositorios` | ~50/55 | 5/55 (ACHADO-011 a 014, + ACHADO-004 já rastreado) | concluída |
 | 4 | `design-system-tema` | `banco-local` (delta), `componentes-base`, `tema-e-tokens`, `tipografia-carregada` | ~26/40 | 14/40 (ACHADO-015 a 021, + itens dependentes de F4/F6) | concluída |
-| 5-13 | — | — | — | — | pendente |
+| 5 | `despensa-e-cadastro-produto` | `adocao-da-lista-base`, `cadastro-de-produto`, `medidor-linha-dagua`, `tela-despensa` | forte na lógica/hooks; fraca nos componentes de tela | ~12 lacunas (ACHADO-022 a 025 + itens dependentes de F4/F6) | concluída |
+| 6-13 | — | — | — | — | pendente |
 
 ## Detalhe — PR-01 (`bootstrap-projeto-expo`)
 
@@ -57,6 +58,14 @@ Ver `qa/por-pr/PR-04.md` seção `## F3` para a matriz completa (~40 cenários, 
 - [[ACHADO-019]] — comportamento de `reduceMotion` sem teste, origem PR 4. **Aberto.**
 - [[ACHADO-020]] — escala de espaçamento sem lint rule de enforcement, origem PR 4. **Aberto.**
 - [[ACHADO-021]] — orçamento de bundle de fontes (696KB > 400KB) sem medição automatizada, origem PR 4. **Aberto.**
+- [[ACHADO-022]] — `formulario-produto.tsx` sem nenhum teste (campos recolhidos, sugestões de categoria), origem PR 5. **Aberto.**
+- [[ACHADO-023]] — `normalizar-busca.ts` (normalização de acento) sem teste unitário, origem PR 5. **Aberto.**
+- [[ACHADO-024]] — ação "ver item existente" no fluxo de duplicidade sem teste, origem PR 5. **Aberto.**
+- [[ACHADO-025]] — ausência de checagem "sem card/borda/sombra" no teste de conformidade da linha da despensa, origem PR 5. **Aberto.**
+
+## Detalhe — PR-05 (`despensa-e-cadastro-produto`)
+
+Ver `qa/por-pr/PR-05.md` seção `## F3` para a matriz completa (~60 cenários, 4 capabilities). Esta rodada resolve a pendência que a própria PR-05.md tinha deixado aberta na F2 ("ordenação/filtro/busca/duplicidade/remoção lógica — a confirmar na F3"): todos esses cenários **estão** cobertos, só que em arquivos de teste de outras PRs já auditadas (repositório SQLite na PR-03, formatadores/hooks nesta PR). Padrão observado: a cobertura é forte na camada de lógica (hooks, domínio, formatadores puros) e fraca nos componentes de tela — nenhuma tela em `app/` tem teste, e `formulario-produto.tsx` (componente, não tela) também não tem.
 
 ## Critério de saída
 
@@ -64,4 +73,4 @@ Ver `qa/por-pr/PR-04.md` seção `## F3` para a matriz completa (~40 cenários, 
 - [ ] Matriz consolidada acima com as 13 linhas.
 - [ ] Achados de lacuna registrados e ancorados na PR/change de origem.
 
-**F3 em andamento — 4/13 PRs auditadas.**
+**F3 em andamento — 5/13 PRs auditadas.**
