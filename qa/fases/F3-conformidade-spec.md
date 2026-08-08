@@ -25,7 +25,8 @@ Para cada uma das 13 PRs, mapear cada `#### Scenario:` do(s) spec(s) OpenSpec da
 | 9 | `backup-restore-json` | `exportacao-de-backup`, `restauracao-de-backup`, `tela-de-configuracoes` | ~25/35 | 10/35 (ACHADO-038 a 040, mais tela `configuracoes.tsx` sem teste) | concluída |
 | 10 | `ajuste-e-conferencia-estoque` | `ajuste-de-estoque`, `cadastro-de-produto` (delta), `diagnostico-de-integridade`, `historico-do-produto`, `modo-conferencia` | ~28/45 | 17/45 (ACHADO-041 a 044, mais telas sem teste) | concluída |
 | 11 | `resumo-valores-e-historico` | `gasto-mensal`, `historico-de-compras`, `resumo-de-valores` | ~20/31 | 11/31 (ACHADO-045 a 047, mais telas sem teste) | concluída |
-| 12-13 | — | — | — | — | pendente |
+| 12 | `correcao-navegacao-nativa` | `chrome-de-navegacao` | 4/11 diretos, 6 parciais | 1 novo (ACHADO-048); verificação original foi manual (documentado na própria change) | concluída |
+| 13 | — | — | — | — | pendente |
 
 ## Detalhe — PR-01 (`bootstrap-projeto-expo`)
 
@@ -131,10 +132,18 @@ Ver `qa/por-pr/PR-11.md` seção `## F3` para a matriz completa (~35 cenários, 
 - [[ACHADO-046]] — "compra finalizada com total zero" sem teste dedicado na agregação mensal, origem PR 11. **Aberto.**
 - [[ACHADO-047]] — "itens não comprados distinguíveis" no detalhe da compra sem teste, origem PR 11. **Aberto.**
 
+## Detalhe — PR-12 (`correcao-navegacao-nativa`)
+
+Ver `qa/por-pr/PR-12.md` seção `## F3` para a matriz completa (11 cenários, 1 capability). Caso atípico: a própria change documenta que a verificação foi feita manualmente via emulador (screenshots `adb`), não por teste automatizado — coerente com a natureza do bug (chrome nativo do Expo Router). Único achado novo é pequeno (ACHADO-048: alvo de toque do `BotaoVoltar` sem asserção de dimensão). O requisito "tab bar sem ícones" desta PR foi **modificado** pela change seguinte (PR-13, `ajuste-visual-telas-design-system`), que reintroduziu ícones — o código atual já reflete essa versão mais nova, então os 2 cenários de tab bar desta PR são marcados N/A (substituídos), não como divergência.
+
+## Achados produzidos nesta fase (continuação 5)
+
+- [[ACHADO-048]] — `headerShown: false` e alvo de toque do `BotaoVoltar` sem teste automatizado, origem PR 12. **Aberto.**
+
 ## Critério de saída
 
 - [ ] 13 arquivos `qa/por-pr/PR-01.md` … `PR-13.md` com seção `## F3` preenchida.
 - [ ] Matriz consolidada acima com as 13 linhas.
 - [ ] Achados de lacuna registrados e ancorados na PR/change de origem.
 
-**F3 em andamento — 11/13 PRs auditadas.**
+**F3 em andamento — 12/13 PRs auditadas.**

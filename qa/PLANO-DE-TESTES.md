@@ -71,4 +71,4 @@
 
 ## Próximo passo
 
-F3 em andamento: PR-01 a PR-11 auditadas (11/13). Próxima PR sem seção `## F3`: **PR-12** (`feat/correcao-navegacao-nativa`). Continuar `/qa:audit-pr` PR a PR até completar as 13. Nota: o subagent `qa-expert` não estava disponível como `subagent_type` nesta sessão — auditoria feita manualmente seguindo a mesma metodologia (ver `qa/fases/F3-conformidade-spec.md`). F4-F6 seguem bloqueadas até `eas login` + development build.
+F3 em andamento: PR-01 a PR-12 auditadas (12/13). Próxima PR sem seção `## F3`: **PR-13** (`feat/ajuste-visual-telas-design-system`) — última. Continuar `/qa:audit-pr` PR a PR até completar as 13. Nota: o subagent `qa-expert` não estava disponível como `subagent_type` nesta sessão — auditoria feita manualmente seguindo a mesma metodologia (ver `qa/fases/F3-conformidade-spec.md`). F4-F6 seguem bloqueadas até `eas login` + development build.
