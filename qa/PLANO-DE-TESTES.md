@@ -12,9 +12,9 @@
 | F1 | Baseline no topo da cadeia | concluída | [qa/fases/F1-baseline-topo.md](fases/F1-baseline-topo.md) |
 | F2 | Cadeia incremental por worktree (13 PRs) | concluída | [qa/fases/F2-cadeia-incremental.md](fases/F2-cadeia-incremental.md) |
 | F3 | Conformidade com specs OpenSpec | concluída (13/13) | [qa/fases/F3-conformidade-spec.md](fases/F3-conformidade-spec.md) |
-| F4 | Smoke no emulador *(requer development build)* | bloqueada | `qa/fases/F4-smoke-emulador.md` |
-| F5 | Fluxos E2E ainda descobertos *(requer F4)* | bloqueada | `qa/fases/F5-fluxos-e2e.md` |
-| F6 | KPI e acessibilidade em uso real *(requer F4)* | bloqueada | `qa/fases/F6-kpi-e-acessibilidade.md` |
+| F4 | Smoke no emulador *(requer development build)* | **desbloqueada, não iniciada** | [qa/fases/F4-smoke-emulador.md](fases/F4-smoke-emulador.md) |
+| F5 | Fluxos E2E ainda descobertos *(requer F4)* | bloqueada (aguarda F4) | `qa/fases/F5-fluxos-e2e.md` |
+| F6 | KPI e acessibilidade em uso real *(requer F4)* | bloqueada (aguarda F4) | `qa/fases/F6-kpi-e-acessibilidade.md` |
 
 **F0 concluída** em duas etapas: a estrutura/ferramental nesta sessão, e o `permissions.allow` de `.claude/settings.json` aplicado manualmente pelo usuário (o modo automático bloqueia edição desse arquivo por classificador próprio).
 
@@ -95,4 +95,6 @@
 
 ## Próximo passo
 
-**F3 completa — 13/13 PRs auditadas.** Todos os 13 arquivos `qa/por-pr/PR-01.md` … `PR-13.md` têm seção `## F3`; matriz consolidada e síntese final em `qa/fases/F3-conformidade-spec.md`; 45 achados de lacuna registrados (ACHADO-008 a ACHADO-052), todos `aberto`, prontos para virar changes via `/opsx:propose`. Padrão dominante: lógica de domínio/aplicação/infraestrutura bem coberta; nenhuma tela (`app/**/*.tsx`) tem teste automatizado em todo o repositório — recomenda-se tratar isso como uma única iniciativa de teste de tela/E2E, não 20+ achados avulsos. Única divergência de implementação real encontrada (não apenas lacuna de teste): ACHADO-034 (PR-08). F4-F6 seguem bloqueadas até `eas login` + development build.
+**F3 completa — 13/13 PRs auditadas.** Todos os 13 arquivos `qa/por-pr/PR-01.md` … `PR-13.md` têm seção `## F3`; matriz consolidada e síntese final em `qa/fases/F3-conformidade-spec.md`; 45 achados de lacuna registrados (ACHADO-008 a ACHADO-052), todos `aberto`, prontos para virar changes via `/opsx:propose`. Padrão dominante: lógica de domínio/aplicação/infraestrutura bem coberta; nenhuma tela (`app/**/*.tsx`) tem teste automatizado em todo o repositório — recomenda-se tratar isso como uma única iniciativa de teste de tela/E2E, não 20+ achados avulsos. Única divergência de implementação real encontrada (não apenas lacuna de teste): ACHADO-034 (PR-08).
+
+**F4 desbloqueada em 2026-08-08** (ver `qa/fases/F4-smoke-emulador.md`): `eas login` já feito, emulador `expo-dev` sobe headless com `-no-qt`, development build (`android/app/build/outputs/apk/debug/app-debug.apk`) instala e abre normalmente no dev client. Falta só subir `npm start` e conectar para rodar `/qa:smoke-pr` PR a PR — infraestrutura pronta, execução ainda não iniciada (decisão do usuário).
