@@ -21,7 +21,8 @@ Para cada uma das 13 PRs, mapear cada `#### Scenario:` do(s) spec(s) OpenSpec da
 | 5 | `despensa-e-cadastro-produto` | `adocao-da-lista-base`, `cadastro-de-produto`, `medidor-linha-dagua`, `tela-despensa` | forte na lógica/hooks; fraca nos componentes de tela | ~12 lacunas (ACHADO-022 a 025 + itens dependentes de F4/F6) | concluída |
 | 6 | `dar-baixa-caminho-critico` | `registro-de-consumo`, `desfazer-registro`, `movimento-do-gesto`, `medidor-linha-dagua` (delta) | forte no caminho de dados; nenhuma coreografia visual testada | 3 achados novos (026-028) + reaproveita ACHADO-016/019 (PR-04) | concluída |
 | 7 | `lista-de-compras` | `lista-derivada`, `itens-avulsos`, `custo-estimado`, `exportacao-em-texto` | ~20/26 | 6/26 (ACHADO-029 a 033, mais telas finas sem teste) | concluída |
-| 8-13 | — | — | — | — | pendente |
+| 8 | `modo-compra-e-fechamento` | `atualizacao-de-preco-referencia`, `fechamento-de-compra`, `lista-derivada`, `modo-compra` | ~30/45 | 15/45 (ACHADO-034 a 037, mais tela `app/compra/[id].tsx` sem teste) | concluída |
+| 9-13 | — | — | — | — | pendente |
 
 ## Detalhe — PR-01 (`bootstrap-projeto-expo`)
 
@@ -85,10 +86,21 @@ Ver `qa/por-pr/PR-05.md` seção `## F3` para a matriz completa (~60 cenários, 
 
 Ver `qa/por-pr/PR-07.md` seção `## F3` para a matriz completa (26 cenários, 4 capabilities). Mesmo padrão das PRs 5 e 6 se repete e se aprofunda: a lógica pura (`lista.rules.ts`, geração de texto) e os hooks de aplicação (`use-lista-compras`, `use-adicionar-avulso`, `use-editar-avulso`, `use-remover-item-lista`) estão bem cobertos, mas **todo** componente de apresentação novo desta PR está sem teste — `SheetAvulso` (inclui a única validação de nome obrigatório do sistema, ACHADO-029), `agrupar-lista.ts` (ACHADO-030), `use-preferencia-agrupamento.ts` (ACHADO-031), `rodape-total.tsx` (ACHADO-032) e `item-lista.tsx` (ACHADO-033). Cenário "Sem tabela de lista" confirmado por inspeção do schema (nenhuma `sqliteTable` de lista), sem necessidade de teste dedicado. `app/(tabs)/lista.tsx` (tela) não tem teste próprio — consistente com o padrão já observado na PR-05, não é achado novo.
 
+## Detalhe — PR-08 (`modo-compra-e-fechamento`)
+
+Ver `qa/por-pr/PR-08.md` seção `## F3` para a matriz completa (~45 cenários, 4 capabilities). Diferente das PRs anteriores, esta rodada identificou não só lacunas de teste mas uma **divergência de implementação real** (ACHADO-034): o spec exige que o app avise o usuário "ao acionar voltar durante uma compra com itens marcados", mas a implementação (`app/compra/[id].tsx:96-98` + `botao-voltar.tsx:13`) mostra um texto estático sempre visível, sem interceptar o gesto de voltar nem condicionar o aviso a haver marcação — o `BotaoVoltar` chama `router.back()` direto, sem checagem. Padrão já visto nas PRs 5-7 se repete e se concentra numa única tela desta vez: `app/compra/[id].tsx` não tem nenhum teste próprio (ACHADO-035), o que deixa sem cobertura direta a ausência de subtelas, o `useKeepAwake`, a atualização do rodapé e a mensagem de fechamento em linguagem do usuário — mesmo com os hooks subjacentes bem testados isoladamente. Também identificadas lacunas menores em asserção de estilo (ACHADO-037) e em campos individuais do movimento de estoque gravado pelo fechamento (ACHADO-036).
+
+## Achados produzidos nesta fase (continuação)
+
+- [[ACHADO-034]] — aviso de saída com compra marcada é texto estático, não responde ao botão voltar nem checa itens marcados; possível divergência real de implementação, origem PR 8. **Aberto.**
+- [[ACHADO-035]] — `app/compra/[id].tsx` (tela do modo compra) sem nenhum teste, origem PR 8. **Aberto.**
+- [[ACHADO-036]] — campos individuais do movimento de estoque do fechamento (autor/data/variação/resultado) sem teste, origem PR 8. **Aberto.**
+- [[ACHADO-037]] — estilo do item marcado e geometria do controle de marcação sem asserção de teste, origem PR 8. **Aberto.**
+
 ## Critério de saída
 
 - [ ] 13 arquivos `qa/por-pr/PR-01.md` … `PR-13.md` com seção `## F3` preenchida.
 - [ ] Matriz consolidada acima com as 13 linhas.
 - [ ] Achados de lacuna registrados e ancorados na PR/change de origem.
 
-**F3 em andamento — 7/13 PRs auditadas.**
+**F3 em andamento — 8/13 PRs auditadas.**

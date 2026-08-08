@@ -71,4 +71,4 @@
 
 ## Próximo passo
 
-F3 em andamento: PR-01 a PR-07 auditadas (7/13). Próxima PR sem seção `## F3`: **PR-08** (`feature/modo-compra-e-fechamento`). Continuar `/qa:audit-pr` PR a PR até completar as 13. Nota: o subagent `qa-expert` não estava disponível como `subagent_type` nesta sessão — auditoria feita manualmente seguindo a mesma metodologia (ver `qa/fases/F3-conformidade-spec.md`). F4-F6 seguem bloqueadas até `eas login` + development build.
+F3 em andamento: PR-01 a PR-08 auditadas (8/13). Próxima PR sem seção `## F3`: **PR-09** (`feature/backup-restore-json`). Continuar `/qa:audit-pr` PR a PR até completar as 13. Nota: o subagent `qa-expert` não estava disponível como `subagent_type` nesta sessão — auditoria feita manualmente seguindo a mesma metodologia (ver `qa/fases/F3-conformidade-spec.md`). F4-F6 seguem bloqueadas até `eas login` + development build.
