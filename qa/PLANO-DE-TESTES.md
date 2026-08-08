@@ -11,7 +11,7 @@
 | F0 | Ambiente e ferramental (sem emulador) | concluída | [qa/fases/F0-ambiente.md](fases/F0-ambiente.md) |
 | F1 | Baseline no topo da cadeia | concluída | [qa/fases/F1-baseline-topo.md](fases/F1-baseline-topo.md) |
 | F2 | Cadeia incremental por worktree (13 PRs) | concluída | [qa/fases/F2-cadeia-incremental.md](fases/F2-cadeia-incremental.md) |
-| F3 | Conformidade com specs OpenSpec | em andamento (3/13) | [qa/fases/F3-conformidade-spec.md](fases/F3-conformidade-spec.md) |
+| F3 | Conformidade com specs OpenSpec | em andamento (4/13) | [qa/fases/F3-conformidade-spec.md](fases/F3-conformidade-spec.md) |
 | F4 | Smoke no emulador *(requer development build)* | bloqueada | `qa/fases/F4-smoke-emulador.md` |
 | F5 | Fluxos E2E ainda descobertos *(requer F4)* | bloqueada | `qa/fases/F5-fluxos-e2e.md` |
 | F6 | KPI e acessibilidade em uso real *(requer F4)* | bloqueada | `qa/fases/F6-kpi-e-acessibilidade.md` |
@@ -54,7 +54,14 @@
 | [ACHADO-012](achados/ACHADO-012.md) | média | F3 (PR 3) | aberto | Fluxo de preparação do banco (`_layout.tsx`) sem teste de sucesso/falha de migration |
 | [ACHADO-013](achados/ACHADO-013.md) | média | F3 (PR 3) | aberto | "Aplicação a partir de versão intermediária" agora testável (4 migrations) e ainda sem teste |
 | [ACHADO-014](achados/ACHADO-014.md) | baixa | F3 (PR 3) | aberto | Possível divergência de "colunas explícitas" em `listarDespensa` — revisão humana recomendada |
+| [ACHADO-015](achados/ACHADO-015.md) | baixa | F3 (PR 4) | aberto | Testes de tipo ausentes para papel inválido (Texto) e tema tipado (mesma classe do ACHADO-009/010) |
+| [ACHADO-016](achados/ACHADO-016.md) | média | F3 (PR 4) | aberto | `toast.tsx` sem nenhum teste (substituição, não bloqueio, barra de tempo) |
+| [ACHADO-017](achados/ACHADO-017.md) | média | F3 (PR 4) | aberto | `ChipEstado` ativo usa cor neutra em vez da cor do estado com opacidade reduzida — possível divergência de implementação |
+| [ACHADO-018](achados/ACHADO-018.md) | média | F3 (PR 4) | aberto | `usePreferenciaDeTemaPersistida` sem teste apesar de repositório injetável |
+| [ACHADO-019](achados/ACHADO-019.md) | baixa | F3 (PR 4) | aberto | Comportamento de `reduceMotion` (esmaecimento, retorno tátil) sem teste |
+| [ACHADO-020](achados/ACHADO-020.md) | baixa | F3 (PR 4) | aberto | Escala de espaçamento sem lint rule de enforcement (ao contrário de cor) |
+| [ACHADO-021](achados/ACHADO-021.md) | baixa | F3 (PR 4) | aberto | Orçamento de bundle de fontes (696KB > 400KB citado no spec) sem medição automatizada |
 
 ## Próximo passo
 
-F3 em andamento: PR-01, PR-02 e PR-03 auditadas (3/13). Próxima PR sem seção `## F3`: **PR-04** (`change/design-system-tema`). Continuar `/qa:audit-pr` PR a PR até completar as 13. Nota: o subagent `qa-expert` não estava disponível como `subagent_type` nesta sessão — auditoria feita manualmente seguindo a mesma metodologia (ver `qa/fases/F3-conformidade-spec.md`). F4-F6 seguem bloqueadas até `eas login` + development build.
+F3 em andamento: PR-01 a PR-04 auditadas (4/13). Próxima PR sem seção `## F3`: **PR-05** (`change/despensa-e-cadastro-produto`). Continuar `/qa:audit-pr` PR a PR até completar as 13. Nota: o subagent `qa-expert` não estava disponível como `subagent_type` nesta sessão — auditoria feita manualmente seguindo a mesma metodologia (ver `qa/fases/F3-conformidade-spec.md`). F4-F6 seguem bloqueadas até `eas login` + development build.

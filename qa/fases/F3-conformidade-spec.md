@@ -17,7 +17,8 @@ Para cada uma das 13 PRs, mapear cada `#### Scenario:` do(s) spec(s) OpenSpec da
 | 1 | `bootstrap-projeto-expo` | `fronteiras-de-camada`, `primitivos-compartilhados`, `projeto-base` | 18/24 | 6/24 (ACHADO-008, ACHADO-009, +1 bloqueado por F4) | concluída |
 | 2 | `fundacao-dominio` | `regras-de-compra`, `regras-de-estoque`, `regras-de-movimento`, `unidades-e-valores` | 71/72 | 1/72 (ACHADO-010) | concluída |
 | 3 | `persistencia-sqlite` | `banco-local`, `dados-iniciais`, `repositorios` | ~50/55 | 5/55 (ACHADO-011 a 014, + ACHADO-004 já rastreado) | concluída |
-| 4-13 | — | — | — | — | pendente |
+| 4 | `design-system-tema` | `banco-local` (delta), `componentes-base`, `tema-e-tokens`, `tipografia-carregada` | ~26/40 | 14/40 (ACHADO-015 a 021, + itens dependentes de F4/F6) | concluída |
+| 5-13 | — | — | — | — | pendente |
 
 ## Detalhe — PR-01 (`bootstrap-projeto-expo`)
 
@@ -36,6 +37,10 @@ Ver `qa/por-pr/PR-02.md` seção `## F3` para a matriz completa (72 cenários, 4
 
 Ver `qa/por-pr/PR-03.md` seção `## F3` para a matriz completa (~55 cenários, 3 capabilities). Achado notável: o cenário "aplicação a partir de versão intermediária" era N/A quando a PR-03 foi testada em F2 (só existia a migration `0000_init`), mas hoje há 4 migrations e o cenário ficou testável sem cobertura (ACHADO-013) — exemplo de lacuna que só aparece observando o estado atual do repositório, não o estado da PR isolada. Também sinalizada uma possível divergência de spec (não confirmada, ACHADO-014): `listarDespensa` usa `.select()` sem nomear colunas, ao contrário do padrão do resto do arquivo.
 
+## Detalhe — PR-04 (`design-system-tema`)
+
+Ver `qa/por-pr/PR-04.md` seção `## F3` para a matriz completa (~40 cenários, 4 capabilities incluindo um delta de `banco-local` para a tabela de configuração). Achado de maior atenção: **ACHADO-017**, `ChipEstado` com `ativo=true` usa `tema.bg.raised` (cor neutra) em vez da cor do estado com opacidade reduzida exigida pelo spec — pode ser uma divergência de implementação real, não só lacuna de teste. Também confirmado por comentário no próprio código (**ACHADO-021**): o orçamento de fontes embarcadas está em 696KB, acima do limiar de 400KB citado no spec, mesmo após a remoção da família de display. Vários cenários desta PR dependem de F4/F6 (splash sem flash, escala 200%) e foram marcados como "descoberto (dependente de F4/F6)" sem achado próprio, por já estarem cobertos pela bloqueante conhecida do plano.
+
 ## Achados produzidos nesta fase
 
 - [[ACHADO-008]] — regras de lint de fronteira (boundaries/hex/import proibido) sem teste automatizado que force a violação, origem PR 1. **Aberto.**
@@ -45,6 +50,13 @@ Ver `qa/por-pr/PR-03.md` seção `## F3` para a matriz completa (~55 cenários, 
 - [[ACHADO-012]] — fluxo de preparação do banco (`_layout.tsx`) sem teste de sucesso/falha de migration, origem PR 3. **Aberto.**
 - [[ACHADO-013]] — "aplicação a partir de versão intermediária" agora testável e ainda sem teste, origem PR 3. **Aberto.**
 - [[ACHADO-014]] — possível divergência de "colunas explícitas" em `listarDespensa`, origem PR 3 — revisão humana recomendada antes de virar change. **Aberto.**
+- [[ACHADO-015]] — testes de tipo ausentes para papel inválido (Texto) e tema tipado, origem PR 4 (mesma classe do ACHADO-009/010). **Aberto.**
+- [[ACHADO-016]] — `toast.tsx` sem nenhum teste, origem PR 4 (já anunciado como pendente na própria PR-04.md). **Aberto.**
+- [[ACHADO-017]] — `ChipEstado` ativo usa cor neutra em vez da cor do estado com opacidade reduzida, origem PR 4 — possível divergência de implementação. **Aberto.**
+- [[ACHADO-018]] — `usePreferenciaDeTemaPersistida` sem teste apesar de repositório injetável, origem PR 4. **Aberto.**
+- [[ACHADO-019]] — comportamento de `reduceMotion` sem teste, origem PR 4. **Aberto.**
+- [[ACHADO-020]] — escala de espaçamento sem lint rule de enforcement, origem PR 4. **Aberto.**
+- [[ACHADO-021]] — orçamento de bundle de fontes (696KB > 400KB) sem medição automatizada, origem PR 4. **Aberto.**
 
 ## Critério de saída
 
@@ -52,4 +64,4 @@ Ver `qa/por-pr/PR-03.md` seção `## F3` para a matriz completa (~55 cenários, 
 - [ ] Matriz consolidada acima com as 13 linhas.
 - [ ] Achados de lacuna registrados e ancorados na PR/change de origem.
 
-**F3 em andamento — 3/13 PRs auditadas.**
+**F3 em andamento — 4/13 PRs auditadas.**
