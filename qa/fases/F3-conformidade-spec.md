@@ -20,7 +20,8 @@ Para cada uma das 13 PRs, mapear cada `#### Scenario:` do(s) spec(s) OpenSpec da
 | 4 | `design-system-tema` | `banco-local` (delta), `componentes-base`, `tema-e-tokens`, `tipografia-carregada` | ~26/40 | 14/40 (ACHADO-015 a 021, + itens dependentes de F4/F6) | concluída |
 | 5 | `despensa-e-cadastro-produto` | `adocao-da-lista-base`, `cadastro-de-produto`, `medidor-linha-dagua`, `tela-despensa` | forte na lógica/hooks; fraca nos componentes de tela | ~12 lacunas (ACHADO-022 a 025 + itens dependentes de F4/F6) | concluída |
 | 6 | `dar-baixa-caminho-critico` | `registro-de-consumo`, `desfazer-registro`, `movimento-do-gesto`, `medidor-linha-dagua` (delta) | forte no caminho de dados; nenhuma coreografia visual testada | 3 achados novos (026-028) + reaproveita ACHADO-016/019 (PR-04) | concluída |
-| 7-13 | — | — | — | — | pendente |
+| 7 | `lista-de-compras` | `lista-derivada`, `itens-avulsos`, `custo-estimado`, `exportacao-em-texto` | ~20/26 | 6/26 (ACHADO-029 a 033, mais telas finas sem teste) | concluída |
+| 8-13 | — | — | — | — | pendente |
 
 ## Detalhe — PR-01 (`bootstrap-projeto-expo`)
 
@@ -66,6 +67,11 @@ Ver `qa/por-pr/PR-04.md` seção `## F3` para a matriz completa (~40 cenários, 
 - [[ACHADO-026]] — coreografia do gesto (`Haptics.impactAsync`, timing) sem teste de orquestração, origem PR 6. **Aberto.**
 - [[ACHADO-027]] — `TecladoQuantidade`: caminho "Repus" sem teste positivo, origem PR 6. **Aberto.**
 - [[ACHADO-028]] — prop `animar` de `medidor-nivel.tsx` (animação condicional por item) sem teste, origem PR 6. **Aberto.**
+- [[ACHADO-029]] — `SheetAvulso` sem teste; validação de nome obrigatório do avulso nunca exercitada, origem PR 7. **Aberto.**
+- [[ACHADO-030]] — `agrupar-lista.ts` (visão agrupada/contínua da lista de compras) sem teste, origem PR 7. **Aberto.**
+- [[ACHADO-031]] — `use-preferencia-agrupamento.ts` sem teste, origem PR 7. **Aberto.**
+- [[ACHADO-032]] — `rodape-total.tsx` (rótulo, contagem e total da lista) sem teste, origem PR 7. **Aberto.**
+- [[ACHADO-033]] — `item-lista.tsx` (distinção visual avulso/produto) sem teste, origem PR 7. **Aberto.**
 
 ## Detalhe — PR-06 (`dar-baixa-caminho-critico`)
 
@@ -75,10 +81,14 @@ Ver `qa/por-pr/PR-06.md` seção `## F3` para a matriz completa (~50 cenários, 
 
 Ver `qa/por-pr/PR-05.md` seção `## F3` para a matriz completa (~60 cenários, 4 capabilities). Esta rodada resolve a pendência que a própria PR-05.md tinha deixado aberta na F2 ("ordenação/filtro/busca/duplicidade/remoção lógica — a confirmar na F3"): todos esses cenários **estão** cobertos, só que em arquivos de teste de outras PRs já auditadas (repositório SQLite na PR-03, formatadores/hooks nesta PR). Padrão observado: a cobertura é forte na camada de lógica (hooks, domínio, formatadores puros) e fraca nos componentes de tela — nenhuma tela em `app/` tem teste, e `formulario-produto.tsx` (componente, não tela) também não tem.
 
+## Detalhe — PR-07 (`lista-de-compras`)
+
+Ver `qa/por-pr/PR-07.md` seção `## F3` para a matriz completa (26 cenários, 4 capabilities). Mesmo padrão das PRs 5 e 6 se repete e se aprofunda: a lógica pura (`lista.rules.ts`, geração de texto) e os hooks de aplicação (`use-lista-compras`, `use-adicionar-avulso`, `use-editar-avulso`, `use-remover-item-lista`) estão bem cobertos, mas **todo** componente de apresentação novo desta PR está sem teste — `SheetAvulso` (inclui a única validação de nome obrigatório do sistema, ACHADO-029), `agrupar-lista.ts` (ACHADO-030), `use-preferencia-agrupamento.ts` (ACHADO-031), `rodape-total.tsx` (ACHADO-032) e `item-lista.tsx` (ACHADO-033). Cenário "Sem tabela de lista" confirmado por inspeção do schema (nenhuma `sqliteTable` de lista), sem necessidade de teste dedicado. `app/(tabs)/lista.tsx` (tela) não tem teste próprio — consistente com o padrão já observado na PR-05, não é achado novo.
+
 ## Critério de saída
 
 - [ ] 13 arquivos `qa/por-pr/PR-01.md` … `PR-13.md` com seção `## F3` preenchida.
 - [ ] Matriz consolidada acima com as 13 linhas.
 - [ ] Achados de lacuna registrados e ancorados na PR/change de origem.
 
-**F3 em andamento — 6/13 PRs auditadas.**
+**F3 em andamento — 7/13 PRs auditadas.**
