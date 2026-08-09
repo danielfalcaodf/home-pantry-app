@@ -1,0 +1,115 @@
+import { useCallback, useEffect, useState } from 'react';
+
+import { CompraItem } from '../../domain/compra/compra';
+import { divergenciaDePreco } from '../../domain/compra/compra.rules';
+import { Centavos } from '../../domain/shared/dinheiro';
+import { Milesimos } from '../../domain/shared/quantidade';
+import { observadorDoBanco } from '../../composicao/observador';
+import { compraRepository } from '../../composicao/repositorios';
+import { CompraRepository, ItemComProduto } from '../../ports/compra.repository';
+import { ObservadorDeMudancas } from '../../ports/observador-de-mudancas';
+
+// `divergePreco` computado aqui (application), nunca na tela: a
+// apresentação só recebe valores prontos (FRONTEND §12.2). Nunca perguntado
+// para item avulso (4.4), pois avulso não tem produto associado.
+export type ItemDaCompra = ItemComProduto & { divergePreco: boolean };
+
+function comDivergencia(item: ItemComProduto): ItemDaCompra {
+  const divergePreco =
+    item.produto !== null &&
+    item.item.valorPagoUnitario !== null &&
+    divergenciaDePreco(item.item, item.produto);
+  return { ...item, divergePreco };
+}
+
+export type EstadoModoCompra = {
+  itens: ItemDaCompra[];
+  carregando: boolean;
+  /** Marca o item, assumindo a quantidade planejada quando não há ajuste (3.1). */
+  marcar: (item: CompraItem) => Promise<void>;
+  desmarcar: (itemId: string) => Promise<void>;
+  ajustarQuantidade: (itemId: string, quantidadeComprada: Milesimos) => Promise<void>;
+  ajustarPreco: (itemId: string, valorPagoUnitario: Centavos | null) => Promise<void>;
+  responderAtualizarPreco: (itemId: string, resposta: boolean) => Promise<void>;
+};
+
+/**
+ * Cada ação grava direto em `compra_item` (design D3): marcar, ajustar e
+ * responder a pergunta de preço nunca tocam produto nem movimento — a
+ * reposição inteira acontece só no fechamento, em uma transação própria
+ * (use-finalizar-compra).
+ */
+export function useModoCompra(
+  compraId: string,
+  compras: CompraRepository = compraRepository,
+  observador: ObservadorDeMudancas = observadorDoBanco,
+): EstadoModoCompra {
+  const [itens, setItens] = useState<ItemDaCompra[]>([]);
+  const [carregando, setCarregando] = useState(true);
+
+  const recarregar = useCallback(
+    async (montado: () => boolean) => {
+      const listaItens = await compras.listarItens(compraId);
+      if (!montado()) {
+        return;
+      }
+      setItens(listaItens.map(comDivergencia));
+      setCarregando(false);
+    },
+    [compras, compraId],
+  );
+
+  useEffect(() => {
+    let montado = true;
+    const estaMontado = () => montado;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void recarregar(estaMontado);
+    const cancelarAssinatura = observador.assinar(() => {
+      void recarregar(estaMontado);
+    });
+    return () => {
+      montado = false;
+      cancelarAssinatura();
+    };
+  }, [recarregar, observador]);
+
+  const marcar = useCallback(
+    async (item: CompraItem) => {
+      await compras.editarItem(item.id, {
+        comprado: true,
+        quantidadeComprada: item.quantidadeComprada ?? item.quantidadePlanejada,
+      });
+    },
+    [compras],
+  );
+
+  const desmarcar = useCallback(
+    async (itemId: string) => {
+      await compras.editarItem(itemId, { comprado: false });
+    },
+    [compras],
+  );
+
+  const ajustarQuantidade = useCallback(
+    async (itemId: string, quantidadeComprada: Milesimos) => {
+      await compras.editarItem(itemId, { quantidadeComprada });
+    },
+    [compras],
+  );
+
+  const ajustarPreco = useCallback(
+    async (itemId: string, valorPagoUnitario: Centavos | null) => {
+      await compras.editarItem(itemId, { valorPagoUnitario });
+    },
+    [compras],
+  );
+
+  const responderAtualizarPreco = useCallback(
+    async (itemId: string, resposta: boolean) => {
+      await compras.editarItem(itemId, { atualizarPreco: resposta });
+    },
+    [compras],
+  );
+
+  return { itens, carregando, marcar, desmarcar, ajustarQuantidade, ajustarPreco, responderAtualizarPreco };
+}

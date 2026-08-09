@@ -3,7 +3,48 @@ import { MovimentoPendente } from '../movimento/movimento.rules';
 import { Produto } from '../produto/produto';
 import { Centavos, centavos, multiplicarQuantidadePorPreco } from '../shared/dinheiro';
 import { Milesimos, milesimos } from '../shared/quantidade';
-import { CompraItem } from './compra';
+import { Compra, CompraItem } from './compra';
+
+/**
+ * A data que representa uma linha do histórico (design D5/D6 da change
+ * resumo-valores-e-historico): `finalizadaEm` quando a compra fechou, ou o
+ * momento do cancelamento quando ela nunca chegou a finalizar — usada tanto
+ * para ordenar/paginar quanto para exibir.
+ */
+export function dataDeReferencia(compra: Pick<Compra, 'finalizadaEm' | 'atualizadoEm'>): number {
+  return compra.finalizadaEm ?? compra.atualizadoEm;
+}
+
+export type GastoDoMes = { mes: string; totalPago: Centavos; qtdCompras: number };
+
+const MESES_DE_HISTORICO = 12;
+
+// "YYYY-MM" menos `quantos` meses — aritmética pura de calendário, sem
+// depender do relógio: o mês de referência é sempre passado por quem chama.
+function mesAnterior(mesDeReferencia: string, quantos: number): string {
+  const [ano, mes] = mesDeReferencia.split('-').map(Number);
+  const data = new Date(ano, mes - 1 - quantos, 1);
+  return `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, '0')}`;
+}
+
+/**
+ * Preenche os meses sem compra com zero (design D6/Open Questions da change
+ * resumo-valores-e-historico): mantém os últimos doze meses contínuos no
+ * eixo do tempo mesmo antes de haver um ano de uso real, do mais recente
+ * para o mais antigo.
+ */
+export function completarMesesSemCompra(
+  gastos: readonly GastoDoMes[],
+  mesDeReferencia: string,
+): GastoDoMes[] {
+  const porMes = new Map(gastos.map((gasto) => [gasto.mes, gasto] as const));
+  const meses: GastoDoMes[] = [];
+  for (let i = 0; i < MESES_DE_HISTORICO; i++) {
+    const mes = mesAnterior(mesDeReferencia, i);
+    meses.push(porMes.get(mes) ?? { mes, totalPago: centavos(0), qtdCompras: 0 });
+  }
+  return meses;
+}
 
 export function totalPago(itens: readonly CompraItem[]): Centavos {
   let total = 0;
@@ -45,8 +86,13 @@ export function efeitoDeReposicao(
 }
 
 // Divergência inclui produto sem preço cadastrado (0): é o caminho para o
-// primeiro preço entrar mediante confirmação.
-export function divergenciaDePreco(item: CompraItem, produto: Produto): boolean {
+// primeiro preço entrar mediante confirmação. Só depende de valorUnitario —
+// aceita o Pick trazido pela junção externa de listarItens, sem exigir o
+// Produto inteiro.
+export function divergenciaDePreco(
+  item: CompraItem,
+  produto: Pick<Produto, 'valorUnitario'>,
+): boolean {
   if (item.valorPagoUnitario === null) {
     return false;
   }

@@ -28,6 +28,22 @@ export function construirMovimento(
   return sucesso({ tipo, variacao });
 }
 
+export type ErroAjuste = ErroMovimento | 'valor_negativo';
+
+// Usuário informa o VALOR FINAL contado, não a diferença (design D2): pedir a
+// diferença exigiria subtração de cabeça sobre um número que ele acabou de
+// constatar estar errado. `variacao_zero` cobre "sem mudança" (task 1.3) —
+// mesmo erro que `construirMovimento` já rejeita, sem necessidade de um caso novo.
+export function calcularAjuste(
+  valorAtual: Milesimos,
+  valorFinal: Milesimos,
+): Result<MovimentoPendente, ErroAjuste> {
+  if (valorFinal < 0) {
+    return falha('valor_negativo');
+  }
+  return construirMovimento('ajuste', milesimos(valorFinal - valorAtual));
+}
+
 export type MovimentoAplicado =
   | { gravar: true; saldoResultante: Milesimos; variacaoAplicada: Milesimos }
   | { gravar: false; saldoResultante: Milesimos };
