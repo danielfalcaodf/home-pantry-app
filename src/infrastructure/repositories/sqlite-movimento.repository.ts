@@ -1,4 +1,4 @@
-import { desc, eq, sql } from 'drizzle-orm';
+import { and, desc, eq, lt, sql } from 'drizzle-orm';
 
 import { MovimentoEstoque, TipoMovimento } from '../../domain/movimento/movimento';
 import { movimentoInverso } from '../../domain/movimento/movimento.rules';
@@ -7,6 +7,7 @@ import {
   DivergenciaReconciliacao,
   MovimentoRepository,
   ResultadoAjuste,
+  ResultadoCorrecaoEmBloco,
   ResultadoDesfazer,
 } from '../../ports/movimento.repository';
 import { gerarId } from '../../shared/id';
@@ -35,11 +36,22 @@ function paraDominio(linha: LinhaMovimento): MovimentoEstoque {
 export class SQLiteMovimentoRepository implements MovimentoRepository {
   constructor(private readonly db: Db) {}
 
-  async historicoPorProduto(produtoId: string, limite = 50): Promise<MovimentoEstoque[]> {
+  // Continuação por data (design D7), não por deslocamento numérico: usa o
+  // índice idx_movimento_produto_data, que não degrada com o tamanho da
+  // tabela append-only (DATABASE §11).
+  async historicoPorProduto(
+    produtoId: string,
+    opcoes: { limite?: number; antesDe?: number } = {},
+  ): Promise<MovimentoEstoque[]> {
+    const { limite = 50, antesDe } = opcoes;
     return this.db
       .select()
       .from(movimentoEstoque)
-      .where(eq(movimentoEstoque.produtoId, produtoId))
+      .where(
+        antesDe === undefined
+          ? eq(movimentoEstoque.produtoId, produtoId)
+          : and(eq(movimentoEstoque.produtoId, produtoId), lt(movimentoEstoque.criadoEm, antesDe)),
+      )
       .orderBy(desc(movimentoEstoque.criadoEm))
       .limit(limite)
       .all()
@@ -186,6 +198,60 @@ export class SQLiteMovimentoRepository implements MovimentoRepository {
         .run();
 
       return sucesso({ movimentoId, saldoResultante: milesimos(calculado) });
+    });
+  }
+
+  // Mesma consulta de reconciliar(), mas dentro da transação de correção —
+  // uma falha no meio do lote (ex.: FK inválida) reverte tudo, sem deixar
+  // metade dos produtos corrigidos (task 4.11).
+  async corrigirTodasDivergencias(
+    casaId: string,
+    usuarioId: string,
+    criadoEm: number,
+  ): Promise<ResultadoCorrecaoEmBloco> {
+    return this.db.transaction((tx): ResultadoCorrecaoEmBloco => {
+      const divergentes = tx.all<{
+        produtoId: string;
+        materializado: number;
+        calculado: number;
+      }>(sql`
+        SELECT p.id AS produtoId,
+               p.quantidade_atual AS materializado,
+               COALESCE(SUM(m.quantidade_delta), 0) AS calculado
+        FROM produto p
+        LEFT JOIN movimento_estoque m
+          ON m.produto_id = p.id AND (m.motivo IS NULL OR m.motivo <> 'reconciliacao')
+        WHERE p.casa_id = ${casaId} AND p.deletado_em IS NULL
+        GROUP BY p.id
+        HAVING materializado <> calculado
+      `);
+
+      for (const divergencia of divergentes) {
+        tx.update(tabelaProduto)
+          .set({
+            quantidadeAtual: divergencia.calculado,
+            atualizadoEm: criadoEm,
+            syncStatus: 'pendente',
+          })
+          .where(eq(tabelaProduto.id, divergencia.produtoId))
+          .run();
+
+        tx.insert(movimentoEstoque)
+          .values({
+            id: gerarId(() => criadoEm),
+            casaId,
+            produtoId: divergencia.produtoId,
+            usuarioId,
+            tipo: 'ajuste',
+            quantidadeDelta: divergencia.calculado - divergencia.materializado,
+            quantidadeResultante: divergencia.calculado,
+            motivo: 'reconciliacao',
+            criadoEm,
+          })
+          .run();
+      }
+
+      return { corrigidos: divergentes.length };
     });
   }
 

@@ -5,11 +5,13 @@ import { Milesimos, milesimos } from '../../../domain/shared/quantidade';
 import { MovimentoRepository } from '../../../ports/movimento.repository';
 import { ObservadorDeMudancas } from '../../../ports/observador-de-mudancas';
 import {
+  ComandoAjuste,
   ComandoBaixa,
   ErroEscritaProduto,
   FaltanteBruto,
   ItemListaBase,
   ProdutoRepository,
+  ResultadoAjuste,
   ResultadoBaixa,
 } from '../../../ports/produto.repository';
 import { falha, Result, sucesso } from '../../../shared/result';
@@ -133,9 +135,22 @@ export class ProdutoRepositorioFalso implements ProdutoRepository {
     return this.produtos.filter((p) => p.casaId === casaId);
   }
 
-  /** Registro de cada movimento, para os testes de desfazer. */
-  movimentos: { id: string; produtoId: string; tipo: 'baixa' | 'reposicao'; delta: number }[] =
-    [];
+  // Espelha a consulta real: bruto (milésimos·centavos), sem dividir por mil.
+  async valorBrutoDoEstoque(casaId: string): Promise<number> {
+    return (await this.listarDespensa(casaId)).reduce(
+      (total, p) => total + p.quantidadeAtual * p.valorUnitario,
+      0,
+    );
+  }
+
+  /** Registro de cada movimento, para os testes de desfazer e de ajuste. */
+  movimentos: {
+    id: string;
+    produtoId: string;
+    tipo: 'baixa' | 'reposicao' | 'ajuste';
+    delta: number;
+    motivo?: string | null;
+  }[] = [];
 
   private aplicar(
     comando: ComandoBaixa,
@@ -170,6 +185,39 @@ export class ProdutoRepositorioFalso implements ProdutoRepository {
 
   async repor(comando: ComandoBaixa): Promise<Result<ResultadoBaixa, 'nao_encontrado'>> {
     return this.aplicar(comando, 'reposicao');
+  }
+
+  async ajustar(comando: ComandoAjuste): Promise<Result<ResultadoAjuste, 'nao_encontrado'>> {
+    const indice = this.produtos.findIndex(
+      (p) => p.id === comando.produtoId && p.deletadoEm === null,
+    );
+    if (indice === -1) {
+      return falha('nao_encontrado');
+    }
+    const atual = this.produtos[indice].quantidadeAtual;
+    const variacao = comando.valorFinal - atual;
+    if (variacao === 0) {
+      return sucesso({ gravou: false, motivo: 'sem_mudanca' });
+    }
+    this.produtos[indice] = {
+      ...this.produtos[indice],
+      quantidadeAtual: milesimos(comando.valorFinal),
+      syncStatus: 'pendente',
+    };
+    this.proximoId += 1;
+    const id = `mov-${this.proximoId}`;
+    this.movimentos.push({
+      id,
+      produtoId: comando.produtoId,
+      tipo: 'ajuste',
+      delta: variacao,
+      motivo: comando.motivo,
+    });
+    return sucesso({
+      gravou: true,
+      saldoResultante: milesimos(comando.valorFinal),
+      movimentoId: id,
+    });
   }
 
   async adotarListaBase(casaId: string, itens: ItemListaBase[]): Promise<Produto[]> {
@@ -244,6 +292,10 @@ export class MovimentoRepositorioFalso implements MovimentoRepository {
       quantidadeAtual: calculado,
     };
     return sucesso({ movimentoId: `ajuste-${produtoId}`, saldoResultante: calculado });
+  }
+
+  async corrigirTodasDivergencias(): Promise<{ corrigidos: number }> {
+    return { corrigidos: 0 };
   }
 
   async listarTudoParaBackup(): Promise<never[]> {

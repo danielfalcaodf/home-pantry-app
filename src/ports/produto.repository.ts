@@ -1,3 +1,4 @@
+import { MotivoAjuste } from '../domain/movimento/movimento';
 import { FaltanteBruto, Produto } from '../domain/produto/produto';
 import { ProdutoValidado } from '../domain/produto/validacao';
 import { Milesimos } from '../domain/shared/quantidade';
@@ -5,6 +6,7 @@ import { Unidade } from '../domain/shared/unidade';
 import { Result } from '../shared/result';
 
 export type { FaltanteBruto } from '../domain/produto/produto';
+export type { MotivoAjuste } from '../domain/movimento/movimento';
 
 export type ErroEscritaProduto = 'nome_duplicado' | 'nao_encontrado';
 
@@ -21,6 +23,20 @@ export type ResultadoBaixa =
   /** Baixa sobre saldo já zerado: variação 0 é rejeitada pelo banco e
    *  poluiria a trilha append-only. */
   | { gravou: false; motivo: 'estoque_zerado' };
+
+export type ComandoAjuste = {
+  produtoId: string;
+  /** Valor final contado pelo usuário, não a diferença (design D2). */
+  valorFinal: Milesimos;
+  usuarioId: string;
+  motivo: MotivoAjuste | null;
+  criadoEm: number;
+};
+
+export type ResultadoAjuste =
+  | { gravou: true; saldoResultante: Milesimos; movimentoId: string }
+  /** Valor final igual ao registrado: nada a gravar (task 1.3). */
+  | { gravou: false; motivo: 'sem_mudanca' };
 
 export type ItemListaBase = {
   nome: string;
@@ -53,10 +69,24 @@ export interface ProdutoRepository {
   obterPorId(id: string): Promise<Produto | null>;
   /** Todos os produtos da casa, inclusive inativos e removidos logicamente — uso exclusivo do backup. */
   listarTudoParaBackup(casaId: string): Promise<Produto[]>;
+  /**
+   * Bruto de `quantidade_atual × valor_unitario` somado sobre a casa inteira
+   * (DATABASE §6.5) — milésimos·centavos, NÃO centavos. A divisão por mil é
+   * responsabilidade exclusiva do domínio (`converterValorBruto`), nunca
+   * desta consulta.
+   */
+  valorBrutoDoEstoque(casaId: string): Promise<number>;
   /** Registro de consumo: UPDATE + INSERT do movimento na MESMA transação. */
   darBaixa(comando: ComandoBaixa): Promise<Result<ResultadoBaixa, 'nao_encontrado'>>;
   /** Reposição sem compra associada, na mesma transação única. */
   repor(comando: ComandoBaixa): Promise<Result<ResultadoBaixa, 'nao_encontrado'>>;
+  /**
+   * Correção manual da quantidade: grava para o VALOR FINAL informado e o
+   * movimento de ajuste correspondente, na mesma transação única. Nunca uma
+   * atualização solta — sem isso a reconciliação (DATABASE §6.6) acusaria
+   * divergência.
+   */
+  ajustar(comando: ComandoAjuste): Promise<Result<ResultadoAjuste, 'nao_encontrado'>>;
   /** Adoção da lista base: insere o subconjunto escolhido em uma transação. */
   adotarListaBase(casaId: string, itens: ItemListaBase[]): Promise<Produto[]>;
 }

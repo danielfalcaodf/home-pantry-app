@@ -65,4 +65,22 @@ describe('useDiagnostico', () => {
 
     expect(movimentos.chamadasCorrigir).toHaveLength(0);
   });
+
+  it('corrigirTudo corrige todas as divergências de uma vez e limpa a lista', async () => {
+    const movimentos = new MovimentoRepositorioFalso();
+    movimentos.divergencias = [
+      { produtoId: 'p1', nome: 'Arroz', materializado: milesimos(999), calculado: milesimos(0) },
+      { produtoId: 'p2', nome: 'Feijão', materializado: milesimos(1), calculado: milesimos(500) },
+    ];
+    const { result } = await renderHook(() => useDiagnostico(movimentos));
+    await act(async () => {
+      await result.current.verificar();
+    });
+
+    await act(async () => {
+      await result.current.corrigirTudo();
+    });
+
+    expect(result.current.divergencias).toEqual([]);
+  });
 });

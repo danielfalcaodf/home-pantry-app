@@ -18,7 +18,7 @@ describe('escala tipográfica', () => {
   });
 
   it('todo papel de dado é monoespaçado e tabular', () => {
-    for (const papel of ['data.lg', 'data.md'] as const) {
+    for (const papel of ['data.xl', 'data.lg', 'data.md'] as const) {
       expect(tipografia[papel].tabular).toBe(true);
       expect(tipografia[papel].fontFamily).toMatch(/Mono/);
     }

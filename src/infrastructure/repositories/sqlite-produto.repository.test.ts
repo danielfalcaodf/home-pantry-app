@@ -1,4 +1,5 @@
 import { validarCadastroProduto } from '../../domain/produto/validacao';
+import { converterValorBruto } from '../../domain/shared/dinheiro';
 import { milesimos } from '../../domain/shared/quantidade';
 import { criarDbDeTeste, semearCasaEUsuario } from '../db/teste/criar-db-teste';
 import { SQLiteProdutoRepository } from './sqlite-produto.repository';
@@ -250,6 +251,157 @@ describe('darBaixa — transação do caminho crítico', () => {
   });
 });
 
+describe('ajustar — usuário informa o valor final', () => {
+  it('ajuste para cima grava o valor final e o movimento com a variação positiva', async () => {
+    const { repo, casaId, usuarioId, sqlite } = montar();
+    const criado = await repo.criar(casaId, usuarioId, dadosValidos('Arroz', 2));
+    if (!criado.ok) throw new Error('setup');
+
+    const ajuste = await repo.ajustar({
+      produtoId: criado.valor.id,
+      valorFinal: milesimos(5000),
+      usuarioId,
+      motivo: null,
+      criadoEm: clock.agora(),
+    });
+    expect(ajuste.ok).toBe(true);
+    if (!ajuste.ok || !ajuste.valor.gravou) throw new Error('setup');
+    expect(ajuste.valor.saldoResultante).toBe(5000);
+    const movimento = sqlite
+      .prepare(
+        'SELECT tipo, quantidade_delta, quantidade_resultante, motivo FROM movimento_estoque WHERE id = ?',
+      )
+      .get(ajuste.valor.movimentoId);
+    expect(movimento).toEqual({
+      tipo: 'ajuste',
+      quantidade_delta: 3000,
+      quantidade_resultante: 5000,
+      motivo: null,
+    });
+    const produto = sqlite
+      .prepare('SELECT quantidade_atual FROM produto WHERE id = ?')
+      .get(criado.valor.id) as { quantidade_atual: number };
+    expect(produto.quantidade_atual).toBe(5000);
+  });
+
+  it('ajuste para baixo grava a variação negativa', async () => {
+    const { repo, casaId, usuarioId, sqlite } = montar();
+    const criado = await repo.criar(casaId, usuarioId, dadosValidos('Arroz', 5));
+    if (!criado.ok) throw new Error('setup');
+
+    const ajuste = await repo.ajustar({
+      produtoId: criado.valor.id,
+      valorFinal: milesimos(2000),
+      usuarioId,
+      motivo: null,
+      criadoEm: clock.agora(),
+    });
+    if (!ajuste.ok || !ajuste.valor.gravou) throw new Error('setup');
+    const movimento = sqlite
+      .prepare(
+        'SELECT quantidade_delta, quantidade_resultante FROM movimento_estoque WHERE id = ?',
+      )
+      .get(ajuste.valor.movimentoId);
+    expect(movimento).toEqual({ quantidade_delta: -3000, quantidade_resultante: 2000 });
+  });
+
+  it('ajuste para zero grava a variação até zero', async () => {
+    const { repo, casaId, usuarioId, sqlite } = montar();
+    const criado = await repo.criar(casaId, usuarioId, dadosValidos('Arroz', 3));
+    if (!criado.ok) throw new Error('setup');
+
+    await repo.ajustar({
+      produtoId: criado.valor.id,
+      valorFinal: milesimos(0),
+      usuarioId,
+      motivo: null,
+      criadoEm: clock.agora(),
+    });
+    const produto = sqlite
+      .prepare('SELECT quantidade_atual FROM produto WHERE id = ?')
+      .get(criado.valor.id) as { quantidade_atual: number };
+    expect(produto.quantidade_atual).toBe(0);
+  });
+
+  it('valor final igual ao registrado não grava movimento', async () => {
+    const { repo, casaId, usuarioId, sqlite } = montar();
+    const criado = await repo.criar(casaId, usuarioId, dadosValidos('Arroz', 3));
+    if (!criado.ok) throw new Error('setup');
+
+    const ajuste = await repo.ajustar({
+      produtoId: criado.valor.id,
+      valorFinal: milesimos(3000),
+      usuarioId,
+      motivo: null,
+      criadoEm: clock.agora(),
+    });
+    expect(ajuste.ok).toBe(true);
+    if (ajuste.ok) {
+      expect(ajuste.valor.gravou).toBe(false);
+    }
+    // `criar` com quantidade inicial 3 já grava um movimento de ajuste — o
+    // teste confirma que NENHUM outro foi acrescentado por esta chamada.
+    expect(sqlite.prepare('SELECT COUNT(*) AS n FROM movimento_estoque').get()).toEqual({ n: 1 });
+  });
+
+  it('motivo é registrado no movimento quando informado', async () => {
+    const { repo, casaId, usuarioId, sqlite } = montar();
+    const criado = await repo.criar(casaId, usuarioId, dadosValidos('Arroz', 3));
+    if (!criado.ok) throw new Error('setup');
+
+    const ajuste = await repo.ajustar({
+      produtoId: criado.valor.id,
+      valorFinal: milesimos(0),
+      usuarioId,
+      motivo: 'vencimento',
+      criadoEm: clock.agora(),
+    });
+    if (!ajuste.ok || !ajuste.valor.gravou) throw new Error('setup');
+    const movimento = sqlite
+      .prepare('SELECT motivo FROM movimento_estoque WHERE id = ?')
+      .get(ajuste.valor.movimentoId);
+    expect(movimento).toEqual({ motivo: 'vencimento' });
+  });
+
+  it('produto inexistente retorna nao_encontrado', async () => {
+    const { repo, usuarioId } = montar();
+    const ajuste = await repo.ajustar({
+      produtoId: 'fantasma',
+      valorFinal: milesimos(1000),
+      usuarioId,
+      motivo: null,
+      criadoEm: clock.agora(),
+    });
+    expect(ajuste.ok).toBe(false);
+  });
+
+  it('rollback: falha na inserção do movimento deixa a quantidade intacta', async () => {
+    const { repo, casaId, usuarioId, sqlite } = montar();
+    // quantidadeAtual inicial 0: sem isso, `criar` já grava um movimento de
+    // ajuste de estoque inicial que a contagem abaixo teria de descontar.
+    const criado = await repo.criar(casaId, usuarioId, dadosValidos('Arroz', 0));
+    if (!criado.ok) throw new Error('setup');
+
+    // usuário inexistente → INSERT do movimento viola FK → transação inteira volta
+    await expect(
+      repo.ajustar({
+        produtoId: criado.valor.id,
+        valorFinal: milesimos(5000),
+        usuarioId: 'usuario-fantasma',
+        motivo: null,
+        criadoEm: clock.agora(),
+      }),
+    ).rejects.toThrow(/FOREIGN KEY/i);
+    const produto = sqlite
+      .prepare('SELECT quantidade_atual FROM produto WHERE id = ?')
+      .get(criado.valor.id) as { quantidade_atual: number };
+    expect(produto.quantidade_atual).toBe(0);
+    expect(
+      sqlite.prepare("SELECT COUNT(*) AS n FROM movimento_estoque WHERE tipo = 'ajuste'").get(),
+    ).toEqual({ n: 0 });
+  });
+});
+
 describe('listarTudoParaBackup', () => {
   it('inclui produtos inativos e removidos logicamente, ao contrário de listarDespensa', async () => {
     const { repo, casaId, usuarioId } = montar();
@@ -273,5 +425,76 @@ describe('listarTudoParaBackup', () => {
       .run('outra-casa', 'Outra casa');
     const outros = await repo.listarTudoParaBackup('outra-casa');
     expect(outros).toHaveLength(0);
+  });
+});
+
+describe('valorBrutoDoEstoque', () => {
+  function dadosCom(nome: string, quantidadeAtual: number, valorUnitario: number) {
+    const resultado = validarCadastroProduto({
+      nome,
+      unidade: 'un',
+      quantidadeNecessaria: 1,
+      quantidadeAtual,
+      valorUnitario,
+    });
+    if (!resultado.ok) {
+      throw new Error('fixture inválida');
+    }
+    return resultado.valor;
+  }
+
+  it('despensa conhecida: dois itens de valores dados produzem o bruto exato esperado', async () => {
+    const { repo, casaId, usuarioId } = montar();
+    await repo.criar(casaId, usuarioId, dadosCom('Arroz', 2, 1290));
+    await repo.criar(casaId, usuarioId, dadosCom('Café', 3, 2250));
+
+    const bruto = await repo.valorBrutoDoEstoque(casaId);
+
+    expect(bruto).toBe(2000 * 1290 + 3000 * 2250);
+    expect(converterValorBruto(bruto)).toBe(9330); // R$ 93,30
+  });
+
+  it('despensa vazia produz bruto zero', async () => {
+    const { repo, casaId } = montar();
+    expect(await repo.valorBrutoDoEstoque(casaId)).toBe(0);
+  });
+
+  it('produto sem preço contribui zero, sem invalidar o total dos demais', async () => {
+    const { repo, casaId, usuarioId } = montar();
+    await repo.criar(casaId, usuarioId, dadosCom('Arroz', 2, 1290));
+    await repo.criar(casaId, usuarioId, dadosCom('Detergente', 1, 0));
+
+    expect(await repo.valorBrutoDoEstoque(casaId)).toBe(2000 * 1290);
+  });
+
+  it('produto removido logicamente não entra no bruto', async () => {
+    const { repo, casaId, usuarioId } = montar();
+    await repo.criar(casaId, usuarioId, dadosCom('Arroz', 2, 1290));
+    const removido = await repo.criar(casaId, usuarioId, dadosCom('Café', 3, 2250));
+    if (!removido.ok) throw new Error('setup');
+    await repo.removerLogicamente(removido.valor.id);
+
+    expect(await repo.valorBrutoDoEstoque(casaId)).toBe(2000 * 1290);
+  });
+
+  it('produto inativo não entra no bruto', async () => {
+    const { repo, casaId, usuarioId, sqlite } = montar();
+    await repo.criar(casaId, usuarioId, dadosCom('Arroz', 2, 1290));
+    const inativo = await repo.criar(casaId, usuarioId, dadosCom('Café', 3, 2250));
+    if (!inativo.ok) throw new Error('setup');
+    // Sem campo de edição de `ativo` na API pública — a coluna existe para
+    // desativação futura, ainda sem caso de uso que a grave.
+    sqlite.prepare('UPDATE produto SET ativo = 0 WHERE id = ?').run(inativo.valor.id);
+
+    expect(await repo.valorBrutoDoEstoque(casaId)).toBe(2000 * 1290);
+  });
+
+  it('não soma o bruto de outra casa', async () => {
+    const { repo, casaId, usuarioId, sqlite } = montar();
+    await repo.criar(casaId, usuarioId, dadosCom('Arroz', 2, 1290));
+    sqlite
+      .prepare('INSERT INTO casa (id, nome, criada_em, atualizado_em) VALUES (?, ?, 0, 0)')
+      .run('outra-casa', 'Outra casa');
+    expect(await repo.valorBrutoDoEstoque('outra-casa')).toBe(0);
   });
 });

@@ -1,6 +1,7 @@
 import { milesimos } from '../shared/quantidade';
 import {
   aplicarMovimento,
+  calcularAjuste,
   construirMovimento,
   movimentoInverso,
 } from './movimento.rules';
@@ -45,6 +46,55 @@ describe('construirMovimento — coerência de sinal', () => {
   it('ajuste aceita qualquer sinal', () => {
     expect(construirMovimento('ajuste', milesimos(300)).ok).toBe(true);
     expect(construirMovimento('ajuste', milesimos(-300)).ok).toBe(true);
+  });
+});
+
+describe('calcularAjuste — usuário informa o valor final, não a diferença', () => {
+  it('ajuste para cima calcula a variação positiva', () => {
+    const resultado = calcularAjuste(milesimos(2000), milesimos(5000));
+    expect(resultado.ok).toBe(true);
+    if (resultado.ok) {
+      expect(resultado.valor).toEqual({ tipo: 'ajuste', variacao: 3000 });
+    }
+  });
+
+  it('ajuste para baixo calcula a variação negativa', () => {
+    const resultado = calcularAjuste(milesimos(5000), milesimos(2000));
+    expect(resultado.ok).toBe(true);
+    if (resultado.ok) {
+      expect(resultado.valor).toEqual({ tipo: 'ajuste', variacao: -3000 });
+    }
+  });
+
+  it('ajuste para zero calcula a variação até zero', () => {
+    const resultado = calcularAjuste(milesimos(3000), milesimos(0));
+    expect(resultado.ok).toBe(true);
+    if (resultado.ok) {
+      expect(resultado.valor).toEqual({ tipo: 'ajuste', variacao: -3000 });
+    }
+  });
+
+  it('valor final igual ao atual não grava — mesmo erro de variação zero', () => {
+    const resultado = calcularAjuste(milesimos(2000), milesimos(2000));
+    expect(resultado.ok).toBe(false);
+    if (!resultado.ok) {
+      expect(resultado.erro).toBe('variacao_zero');
+    }
+  });
+
+  it('valor final negativo é rejeitado', () => {
+    const resultado = calcularAjuste(milesimos(2000), milesimos(-1000));
+    expect(resultado.ok).toBe(false);
+    if (!resultado.ok) {
+      expect(resultado.erro).toBe('valor_negativo');
+    }
+  });
+
+  it('o tipo é sempre ajuste, independentemente do sinal da variação', () => {
+    const paraCima = calcularAjuste(milesimos(1000), milesimos(2000));
+    const paraBaixo = calcularAjuste(milesimos(2000), milesimos(1000));
+    expect(paraCima.ok && paraCima.valor.tipo).toBe('ajuste');
+    expect(paraBaixo.ok && paraBaixo.valor.tipo).toBe('ajuste');
   });
 });
 
