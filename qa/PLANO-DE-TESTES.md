@@ -14,7 +14,7 @@
 | F3 | Conformidade com specs OpenSpec | concluída (13/13) | [qa/fases/F3-conformidade-spec.md](fases/F3-conformidade-spec.md) |
 | F4 | Smoke no emulador *(requer development build)* | concluída (13/13) | [qa/fases/F4-smoke-emulador.md](fases/F4-smoke-emulador.md) |
 | F5 | Fluxos E2E ainda descobertos *(requer F4)* | **concluída (9/9: 5 do plano-fonte + 4 lacunas funcionais adicionais)** | `qa/fases/F5-fluxos-e2e.md` |
-| F6 | KPI e acessibilidade em uso real *(requer F4)* | **em andamento (R1/R2 concluídos, R3 pendente)** | `qa/fases/F6-kpi-e-acessibilidade.md` |
+| F6 | KPI e acessibilidade em uso real *(requer F4)* | **concluída (R1+R2+R3)** | [qa/fases/F6-kpi-e-acessibilidade.md](fases/F6-kpi-e-acessibilidade.md) |
 
 **F0 concluída** em duas etapas: a estrutura/ferramental nesta sessão, e o `permissions.allow` de `.claude/settings.json` aplicado manualmente pelo usuário (o modo automático bloqueia edição desse arquivo por classificador próprio).
 
@@ -101,6 +101,9 @@
 | [ACHADO-059](achados/ACHADO-059.md) | média | F6 (PR 13) | aberto | Três botões de seleção de tema em Configurações com 40dp de alvo de toque |
 | [ACHADO-060](achados/ACHADO-060.md) | baixa | F6 (PR 13) | aberto | Texto visível "Conferência de estoque" reintroduz jargão de sistema em Configurações |
 | [ACHADO-061](achados/ACHADO-061.md) | baixa | F6 (PR 13) | aberto | `accessibilityLabel` do stepper fala "Registrar consumo de X" em vez de "Usei X" |
+| [ACHADO-062](achados/ACHADO-062.md) | **crítica** | F6 (PR 10) | aberto | Tela de conferência sem nenhum botão "Voltar" — única saída é o gesto de sistema |
+| [ACHADO-063](achados/ACHADO-063.md) | média | F6 (PR 10) | aberto | Alvos de toque <48dp no detalhe/cadastro: "Corrigir quantidade atual" 38dp, "Ver histórico" 34dp, "Mais opções" 22dp |
+| [ACHADO-064](achados/ACHADO-064.md) | baixa | F6 (PR 10) | aberto | Linha do histórico do produto fragmentada em 3 TextViews para TalkBack, sem rótulo agrupado |
 
 ## Próximo passo
 
@@ -147,4 +150,8 @@ Achado de teste (não de produto) surgido nesta rodada: o toast "Anotado" é tra
 
 **F6 R2 concluída (2026-08-09).** Auditoria de acessibilidade das 4 tabs (Despensa, Lista, Resumo, Configurações), dois temas (Despensa escuro/Porcelana claro), via hierarquia real (`mcp__maestro__inspect_screen`) e amostragem visual. Resultado: rótulos acessíveis completos (critério 1) e os três canais redundantes de estado na Despensa (critério 3) passam integralmente nas 4 tabs × 2 temas; contraste (critério 4) sem par limítrofe visível; nenhum estado vazio exposto pela massa de dados atual (critério 6, não aplicável). Duas falhas reais: **alvo de toque** (critério 2) abaixo de 48dp em 3 das 4 tabs — Lista ([[ACHADO-057]]), Resumo ([[ACHADO-058]]) e Configurações ([[ACHADO-059]]), todas médias, replicadas nos dois temas; **vocabulário** (critério 5) com 2 divergências baixas — "Conferência de estoque" visível em Configurações ([[ACHADO-060]]) e `accessibilityLabel` "Registrar consumo de X" em vez de "Usei X" no stepper da Despensa ([[ACHADO-061]]), este último só perceptível por leitor de tela. Tema restaurado para Escuro ao final; nenhum dado de domínio alterado. Detalhe completo em `qa/fases/F6-kpi-e-acessibilidade.md`.
 
-**Próximo passo de F6: R3** — acessibilidade das telas secundárias (`produto/[id]`, `produto/novo`, histórico, conferência, diagnóstico, `compra/[id]`), mesmos critérios de R2 mais verificação específica do `BotaoVoltar` (≥48dp) e estados vazios como convite.
+**F6 R3 concluída (2026-08-09) — CAMPANHA ENCERRADA.** 7 telas secundárias auditadas. Rótulos, vocabulário e estados vazios passam nas 7; falhas: [[ACHADO-062]] (**crítica** — conferência é a única tela do app sem botão "Voltar"), [[ACHADO-063]] (média — 3 alvos de toque <48dp no detalhe/cadastro), [[ACHADO-064]] (baixa — linha do histórico fragmentada para TalkBack). A suspeita da R1 sobre o resumo de histórico foi **refutada** (comportamento correto por design — resumo conta só `Usei`).
+
+## Encerramento do plano (2026-08-09)
+
+Todas as 7 fases concluídas (F0–F6). Balanço final: **64 achados** registrados — **62 abertos** (2 críticos: [[ACHADO-056]] e [[ACHADO-062]]; 28 médios; 32 baixos) e 2 críticos históricos já descartados (ACHADO-006/007, corrigidos dentro da própria cadeia de PRs). Dos 62 abertos, **~17 são defeitos/UX observáveis pelo usuário** (056, 062, 001+002, 017, 034, 039, 053, 054, 055, 057, 058, 059, 060, 061, 063, 064) e **~45 são lacunas de teste/ferramental**. Próximo passo: converter os achados em changes OpenSpec via `/opsx:propose`, agrupando por raiz (recomendações de agrupamento nos próprios achados), priorizando os 2 críticos.

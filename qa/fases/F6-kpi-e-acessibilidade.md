@@ -65,3 +65,21 @@ Achados abertos nesta rodada:
 - **[[ACHADO-061]]** (baixa): `accessibilityLabel` do stepper de decremento na Despensa fala "Registrar consumo de X" em vez do verbo documentado "Usei X" — diverge só para quem usa leitor de tela.
 
 Nota de ambiente: um overlay de acessibilidade do próprio sistema/emulador (`a11y="Tools"`, ícone de engrenagem flutuante, bounds fixos `[42,1589][179,1726]`) aparece sobre a lista em várias telas — não é elemento do app Repor, não reportado como achado.
+
+### R3 — Acessibilidade das telas secundárias (2026-08-09, subagent mobile-ux-tester)
+
+7 telas auditadas no tema Escuro: `produto/[id]`, `produto/novo`, `produto/[id]/historico`, `conferencia`, `diagnostico`, `historico` (compras), `historico/[id]`, `compra/[id]`. Nenhum dado de domínio alterado; tema restaurado ao final.
+
+| Verificação | Resultado |
+|---|---|
+| Rótulos acessíveis completos | **Passa nas 7 telas** |
+| Vocabulário (sem termo de domínio) | **Passa** — cadeia "Usei" → "Anotado" → "Você anotou" consistente |
+| Estados vazios como convite | **Passa** (diagnóstico: "Tudo certo — nenhuma divergência encontrada") |
+| `BotaoVoltar` presente e ≥48dp | **Passa em 6 de 7** (126px exatos) — **falha na conferência**: [[ACHADO-062]] (crítica), única tela do app sem nenhum "Voltar" na árvore de acessibilidade |
+| Alvos de toque ≥48dp | **Falha no detalhe/cadastro**: [[ACHADO-063]] (média) — "Corrigir quantidade atual" 38dp, "Ver histórico completo" 34dp, "Mais opções" 22dp (componente compartilhado) |
+| Leitura agrupada por TalkBack | **Falha no histórico do produto**: [[ACHADO-064]] (baixa) — linha de movimento fragmentada em 3 `TextView`s soltos |
+| Suspeita da R1 (resumo de histórico do detalhe) | **Refutada** — o rodapé mostrou "Você anotou 1 uso nos últimos 30 dias" e o histórico completo lista os movimentos de hoje; o resumo conta só entradas `Usei` (correto por design). Não vira achado. |
+
+## Conclusão da F6
+
+**Fase concluída (R1 + R2 + R3).** Balanço: KPI K4 passa com folga no caminho principal (1 toque, <250ms) mas falha no caminho pelo detalhe ([[ACHADO-056]], crítica); acessibilidade estrutural é forte (rótulos, canais redundantes, vocabulário, estados vazios) mas os alvos de toque pequenos são um padrão sistemático em cabeçalhos e botões secundários (ACHADO-057/058/059/063), e a conferência ficou sem botão de voltar ([[ACHADO-062]], crítica). 9 achados novos na fase (2 críticos, 4 médios, 3 baixos): ACHADO-056 a ACHADO-064.
