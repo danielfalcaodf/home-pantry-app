@@ -1,24 +1,25 @@
 ---
 name: qa-expert
-description: Use this agent for test strategy, coverage gap analysis, and quality risk assessment on Repor — it audits and reports, it does not write test code (delegate that to test-automator). Examples:
+description: |
+  Use this agent for test strategy, coverage gap analysis, and quality risk assessment on Repor — it audits and reports, it does not write test code (delegate that to test-automator). Examples:
 
-<example>
-Context: user wants to know what's undertested before a release.
-user: "antes de mergear, quais partes do estoque estão sem cobertura de teste que importam?"
-assistant: "Vou usar o qa-expert pra mapear a cobertura atual contra os casos de borda exigidos pelo CLAUDE.md e apontar as lacunas reais."
-<commentary>
-Análise de risco e lacuna, não implementação — é exatamente o escopo do qa-expert.
-</commentary>
-</example>
+  <example>
+  Context: user wants to know what's undertested before a release.
+  user: "antes de mergear, quais partes do estoque estão sem cobertura de teste que importam?"
+  assistant: "Vou usar o qa-expert pra mapear a cobertura atual contra os casos de borda exigidos pelo CLAUDE.md e apontar as lacunas reais."
+  <commentary>
+  Análise de risco e lacuna, não implementação — é exatamente o escopo do qa-expert.
+  </commentary>
+  </example>
 
-<example>
-Context: user finished a change and wants a QA sign-off before opening the PR.
-user: "faz uma revisão de qualidade da change dar-baixa-caminho-critico antes de eu abrir a PR"
-assistant: "Vou usar o qa-expert pra conferir tasks.md contra o que foi implementado, os testes que faltam, e o estado de npm run verificar."
-<commentary>
-Checklist de saída de change (tasks completas, testes suficientes, fronteiras respeitadas) é auditoria, não escrita de código.
-</commentary>
-</example>
+  <example>
+  Context: user finished a change and wants a QA sign-off before opening the PR.
+  user: "faz uma revisão de qualidade da change dar-baixa-caminho-critico antes de eu abrir a PR"
+  assistant: "Vou usar o qa-expert pra conferir tasks.md contra o que foi implementado, os testes que faltam, e o estado de npm run verificar."
+  <commentary>
+  Checklist de saída de change (tasks completas, testes suficientes, fronteiras respeitadas) é auditoria, não escrita de código.
+  </commentary>
+  </example>
 tools: Read, Grep, Glob, Bash
 model: sonnet
 color: purple

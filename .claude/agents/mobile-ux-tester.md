@@ -1,33 +1,34 @@
 ---
 name: mobile-ux-tester
-description: Use this agent to hunt UX/UI defects in the running Repor app on the Android emulator/device — broken flows, spacing issues, violations of the "linha d'água" design rules, vocabulary violations — by driving the app through the Maestro MCP (or `maestro test` as fallback) and adb screenshots. Examples:
+description: |
+  Use this agent to hunt UX/UI defects in the running Repor app on the Android emulator/device — broken flows, spacing issues, violations of the "linha d'água" design rules, vocabulary violations — by driving the app through the Maestro MCP (or `maestro test` as fallback) and adb screenshots. Examples:
 
-<example>
-Context: user just implemented a new screen and wants it checked against the design rules before opening a PR.
-user: "testa a tela de Resumo que acabei de mexer, o emulador já está aberto"
-assistant: "Vou usar o mobile-ux-tester pra navegar até o Resumo pelo Maestro MCP, conferir os três canais de estado, o vocabulário e tirar screenshots dos dois temas."
-<commentary>
-Verificação de UX real no app rodando, não em código estático — é o caso de uso deste agente.
-</commentary>
-</example>
+  <example>
+  Context: user just implemented a new screen and wants it checked against the design rules before opening a PR.
+  user: "testa a tela de Resumo que acabei de mexer, o emulador já está aberto"
+  assistant: "Vou usar o mobile-ux-tester pra navegar até o Resumo pelo Maestro MCP, conferir os três canais de estado, o vocabulário e tirar screenshots dos dois temas."
+  <commentary>
+  Verificação de UX real no app rodando, não em código estático — é o caso de uso deste agente.
+  </commentary>
+  </example>
 
-<example>
-Context: user is worried the critical path regressed.
-user: "confirma que dar baixa ainda funciona em até 3 toques sem travar"
-assistant: "Vou usar o mobile-ux-tester pra executar o gesto de consumir pelo Maestro e contar os toques até o toast aparecer."
-<commentary>
-KPI K4 é medido no app real rodando — nenhum teste Jest substitui essa verificação.
-</commentary>
-</example>
+  <example>
+  Context: user is worried the critical path regressed.
+  user: "confirma que dar baixa ainda funciona em até 3 toques sem travar"
+  assistant: "Vou usar o mobile-ux-tester pra executar o gesto de consumir pelo Maestro e contar os toques até o toast aparecer."
+  <commentary>
+  KPI K4 é medido no app real rodando — nenhum teste Jest substitui essa verificação.
+  </commentary>
+  </example>
 
-<example>
-Context: after a theme token change.
-user: "conferi se o tema Porcelana não ficou com contraste ruim em algum lugar"
-assistant: "Vou usar o mobile-ux-tester pra percorrer as telas principais nos dois temas e comparar screenshots."
-<commentary>
-Auditoria visual de tema é trabalho de inspeção do app rodando, com evidência (screenshot), não leitura de tokens.ts.
-</commentary>
-</example>
+  <example>
+  Context: after a theme token change.
+  user: "conferi se o tema Porcelana não ficou com contraste ruim em algum lugar"
+  assistant: "Vou usar o mobile-ux-tester pra percorrer as telas principais nos dois temas e comparar screenshots."
+  <commentary>
+  Auditoria visual de tema é trabalho de inspeção do app rodando, com evidência (screenshot), não leitura de tokens.ts.
+  </commentary>
+  </example>
 model: sonnet
 color: orange
 ---

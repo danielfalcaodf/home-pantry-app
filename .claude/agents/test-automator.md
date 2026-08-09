@@ -1,33 +1,34 @@
 ---
 name: test-automator
-description: Use this agent to write or extend automated tests for Repor — Jest unit/component tests (domain, infrastructure, application, presentation) or Maestro E2E flows for critical user journeys. Examples:
+description: |
+  Use this agent to write or extend automated tests for Repor — Jest unit/component tests (domain, infrastructure, application, presentation) or Maestro E2E flows for critical user journeys. Examples:
 
-<example>
-Context: user just added a new pure domain function.
-user: "acabei de criar quantidadeAComprar em domain/produto/estoque.rules.ts, escreve os testes"
-assistant: "Vou usar o test-automator pra cobrir os casos de borda dessa regra, incluindo o arredondamento pra cima em unidades indivisíveis."
-<commentary>
-Nova função pura de domínio precisa dos casos que "quebram silenciosamente" listados no CLAUDE.md — teste explícito, não incidental.
-</commentary>
-</example>
+  <example>
+  Context: user just added a new pure domain function.
+  user: "acabei de criar quantidadeAComprar em domain/produto/estoque.rules.ts, escreve os testes"
+  assistant: "Vou usar o test-automator pra cobrir os casos de borda dessa regra, incluindo o arredondamento pra cima em unidades indivisíveis."
+  <commentary>
+  Nova função pura de domínio precisa dos casos que "quebram silenciosamente" listados no CLAUDE.md — teste explícito, não incidental.
+  </commentary>
+  </example>
 
-<example>
-Context: user wants an end-to-end flow for the critical path.
-user: "cria um teste maestro pro caminho crítico de dar baixa"
-assistant: "Vou usar o test-automator pra escrever o flow .yaml em .maestro/ e rodar com maestro test."
-<commentary>
-Roteiro de usuário ponta a ponta (abrir app → tocar "-" → ver toast → desfazer) é caso de uso do Maestro, não do Jest — jest não sobe o app real.
-</commentary>
-</example>
+  <example>
+  Context: user wants an end-to-end flow for the critical path.
+  user: "cria um teste maestro pro caminho crítico de dar baixa"
+  assistant: "Vou usar o test-automator pra escrever o flow .yaml em .maestro/ e rodar com maestro test."
+  <commentary>
+  Roteiro de usuário ponta a ponta (abrir app → tocar "-" → ver toast → desfazer) é caso de uso do Maestro, não do Jest — jest não sobe o app real.
+  </commentary>
+  </example>
 
-<example>
-Context: a repository method changed and infra coverage needs to catch up.
-user: "adicionei corrigirTodasDivergencias no MovimentoRepository, cobre com teste de integração"
-assistant: "Vou usar o test-automator pra escrever o teste de infra com SQLite em memória, incluindo o caso de rollback com falha injetada no meio do lote."
-<commentary>
-Teste de infrastructure/ usa SQLite real em memória (não fake, diferente de application/) — o test-automator sabe a diferença de convenção por camada deste repo.
-</commentary>
-</example>
+  <example>
+  Context: a repository method changed and infra coverage needs to catch up.
+  user: "adicionei corrigirTodasDivergencias no MovimentoRepository, cobre com teste de integração"
+  assistant: "Vou usar o test-automator pra escrever o teste de infra com SQLite em memória, incluindo o caso de rollback com falha injetada no meio do lote."
+  <commentary>
+  Teste de infrastructure/ usa SQLite real em memória (não fake, diferente de application/) — o test-automator sabe a diferença de convenção por camada deste repo.
+  </commentary>
+  </example>
 tools: Read, Write, Edit, Bash, Glob, Grep
 model: sonnet
 color: green
