@@ -1,0 +1,45 @@
+appId: com.triasoftware.repor
+---
+# Remoção lógica de produto (F5, capability `cadastro-de-produto`, delta de
+# remoção PR-05, `app/produto/[id].tsx`): cobre o caminho que só tinha teste
+# de lógica no hook (`hooks.test.ts:147`, "remoção lógica tira o item da
+# despensa") e nenhum flow E2E tocava o diálogo de confirmação de UI.
+#
+# Na tela de detalhe do produto existe o botão "Tirar da despensa", que abre
+# um Alert nativo do Android com título "Tirar <nome> da despensa?" e corpo
+# "O histórico de uso continua guardado." — confirmado por inspeção real da
+# hierarquia (uiautomator, emulator-5554). Os botões do Alert nativo
+# renderizam em caixa alta ("MANTER" / "TIRAR DA DESPENSA"), mas o `tapOn`
+# do Maestro casa por texto sem diferenciar maiúscula/minúscula, então o
+# seletor abaixo usa o mesmo texto do botão da tela de detalhe sem precisar
+# ajustar para caixa alta. É remoção LÓGICA: o histórico de movimentos
+# continua no banco, só o produto some da Despensa (não aparece mais na
+# lista nem na busca).
+#
+# Usa "Item Teste QA F5" (criado por `cadastro-de-produto.yaml`, depois
+# editado por `editar-produto.yaml` para "5 un necessários" — estado
+# confirmado por inspeção antes de escrever este flow: "0 de 5 un, Acabou").
+# Removê-lo agora é o destino planejado desse produto de teste, fechando o
+# ciclo de vida dele nesta campanha.
+#
+# Efeito colateral real e PERMANENTE: remove (logicamente) "Item Teste QA
+# F5" do banco do dispositivo de teste. O produto não aparece mais na
+# Despensa nem na busca depois deste flow rodar. Se ele não existir mais no
+# dispositivo ao rodar este flow de novo, é porque um run anterior já o
+# removeu — não é falha do flow.
+- launchApp
+- assertVisible: "Despensa"
+- tapOn: "Buscar"
+- inputText: "Item Teste QA F5"
+- hideKeyboard
+- tapOn: "Item Teste QA F5, 0 de 5 un, Acabou"
+- hideKeyboard
+- tapOn: "Tirar da despensa"
+- assertVisible: "Tirar Item Teste QA F5 da despensa?"
+- assertVisible: "O histórico de uso continua guardado."
+- tapOn: "Tirar da despensa"
+- assertVisible: "Despensa"
+- tapOn: "Buscar"
+- inputText: "Item Teste QA F5"
+- hideKeyboard
+- assertNotVisible: "Item Teste QA F5, 0 de 5 un, Acabou"
