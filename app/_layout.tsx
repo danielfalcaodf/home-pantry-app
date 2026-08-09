@@ -1,3 +1,5 @@
+import 'react-native-get-random-values';
+
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
@@ -18,6 +20,7 @@ function Rotas() {
   return (
     <Stack
       screenOptions={{
+        headerShown: false,
         contentStyle: { backgroundColor: tema.bg.base },
         headerStyle: { backgroundColor: tema.bg.surface },
         headerTintColor: tema.text.primary,
@@ -46,7 +49,7 @@ export default function RootLayout() {
   // A tela de erro também usa o tema resolvido — nunca um fundo padrão.
   if (banco.erro) {
     return (
-      <ThemeProvider preferencia={tema.preferencia}>
+      <ThemeProvider preferencia={tema.preferencia} escolher={tema.escolher}>
         <TelaErro
           titulo="Não foi possível preparar seus dados"
           descricao="Feche e abra o app de novo. Seus dados têm uma cópia de segurança automática."
@@ -61,7 +64,7 @@ export default function RootLayout() {
   }
 
   return (
-    <ThemeProvider preferencia={tema.preferencia}>
+    <ThemeProvider preferencia={tema.preferencia} escolher={tema.escolher}>
       <Rotas />
     </ThemeProvider>
   );
