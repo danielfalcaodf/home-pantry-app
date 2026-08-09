@@ -13,7 +13,7 @@
 | F2 | Cadeia incremental por worktree (13 PRs) | concluída | [qa/fases/F2-cadeia-incremental.md](fases/F2-cadeia-incremental.md) |
 | F3 | Conformidade com specs OpenSpec | concluída (13/13) | [qa/fases/F3-conformidade-spec.md](fases/F3-conformidade-spec.md) |
 | F4 | Smoke no emulador *(requer development build)* | concluída (13/13) | [qa/fases/F4-smoke-emulador.md](fases/F4-smoke-emulador.md) |
-| F5 | Fluxos E2E ainda descobertos *(requer F4)* | em andamento (2/5: ciclo de compra, cadastro de produto) | `qa/fases/F5-fluxos-e2e.md` |
+| F5 | Fluxos E2E ainda descobertos *(requer F4)* | em andamento (3/5: ciclo de compra, cadastro de produto, backup/restauração) | `qa/fases/F5-fluxos-e2e.md` |
 | F6 | KPI e acessibilidade em uso real *(requer F4)* | **desbloqueada, não iniciada** | `qa/fases/F6-kpi-e-acessibilidade.md` |
 
 **F0 concluída** em duas etapas: a estrutura/ferramental nesta sessão, e o `permissions.allow` de `.claude/settings.json` aplicado manualmente pelo usuário (o modo automático bloqueia edição desse arquivo por classificador próprio).
@@ -105,6 +105,8 @@
 
 Segunda rodada (`/qa:e2e-pr 5`, cadastro de produto) concluída: `.maestro/cadastro-de-produto.yaml` criado e verde via o subagent `test-automator` (desta vez disponível como `subagent_type` — a indisponibilidade relatada na rodada anterior era do worktree usado naquela sessão, não um problema geral; ver correção de YAML do frontmatter em `151e1db`). `mcp__maestro__*` não estava conectado nesta sessão do subagent; a inspeção de hierarquia real foi feita via `maestro hierarchy`/CLI, mantendo o mesmo princípio de nunca aceitar seletor chutado. Nenhum achado novo de comportamento nesta rodada. Efeito colateral permanente no dispositivo de QA: produto "Item Teste QA F5" criado na despensa do `emulator-5554`.
 
-Faltam 3 lacunas na ordem de valor do plano-fonte: backup/restauração → conferência → troca de tema.
+Terceira rodada (`/qa:e2e-pr 9`, backup/restauração) concluída: `.maestro/backup-restauracao.yaml` criado e verde. Aciona de verdade "Fazer backup agora" (grava JSON no cache, share sheet nativo descartado sem escolher destino) e "Restaurar backup" (abre document picker nativo, descartado sem selecionar arquivo) — avança um degrau sobre a F4 (que não tinha acionado nenhum dos dois). Restauração real nunca é completada por decisão deliberada de segurança: não há controle programático confiável do Maestro sobre o Storage Access Framework do Android para navegar até o arquivo certo sem risco; o round-trip idempotente (backup → restaurar o mesmo arquivo → mesma consistência) permanece coberto só em unidade. Nenhum achado novo.
+
+Faltam 2 lacunas na ordem de valor do plano-fonte: conferência → troca de tema.
 
 **F6 desbloqueada, não iniciada.** KPI K4 (baixa em ≤3 toques/≤10s) e acessibilidade ainda não têm nenhuma medição real, só a garantia estrutural do design documentado no `FRONTEND-DESIGN`.

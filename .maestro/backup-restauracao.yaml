@@ -1,0 +1,96 @@
+appId: com.triasoftware.repor
+---
+# Backup/restauração (F5, capability `backup-restore-json`, PR-09
+# `feature/backup-restore-json`): cobre o único trecho da jornada de
+# Configurações que a campanha de smoke test (F4, qa/por-pr/PR-09.md) evitou
+# deliberadamente, por dois motivos — "Fazer backup agora" abre o share
+# sheet nativo do Android e "Restaurar backup" é destrutivo e irreversível
+# pela própria UI ("substitui os dados existentes... não pode ser
+# desfeito"), e o emulador roda com massa de dados compartilhada entre
+# todas as rodadas de QA da campanha (F2 a F5, 13 PRs).
+#
+# O que este flow REALMENTE exercita (evidência de comportamento real, não
+# dublê):
+# 1. Baseline: "Verificar consistência" no Diagnóstico retorna "Tudo certo
+#    — nenhuma divergência encontrada." antes de qualquer ação de backup.
+# 2. Toca em "Fazer backup agora" — isso grava de verdade um
+#    `repor-backup-AAAA-MM-DD.json` no cache do aparelho e abre o share
+#    sheet nativo do Android (confirmado no nome do arquivo mostrado pela
+#    folha "Sharing 1 file"). No Android, a promise de
+#    `Sharing.shareAsync` resolve ao abrir o intent, não ao usuário
+#    escolher um destino — por isso `configuracoes.gravar('ultimoBackupEm',
+#    ...)` já roda antes da folha ser dispensada. O flow descarta a folha
+#    com `back` sem escolher nenhum destino (nada sai do aparelho, nenhum
+#    app externo recebe o arquivo).
+# 3. Confirma que o aviso abaixo do botão mostra "Último backup em <data de
+#    hoje>" (regex de formato, não texto fixo, pois este flow é
+#    reexecutável e o estado "Você ainda não fez backup" só existe uma
+#    vez, na primeira instalação real do app — depois da primeira
+#    execução deste flow ele nunca mais aparece no aparelho de teste) —
+#    prova em runtime que o backup foi persistido de verdade, não só que
+#    o botão existe.
+# 4. Toca em "Restaurar backup" — abre de verdade o seletor de documentos
+#    nativo do Android (`DocumentPicker.getDocumentAsync`). Chega até aqui
+#    ("Recent files") mas NÃO seleciona nenhum arquivo: o backup gerado no
+#    passo 2 foi só compartilhado (não salvo em local navegável pelo
+#    picker), então não há candidato seguro e verificado para completar um
+#    round-trip real sem risco de escolher o arquivo errado. Descarta o
+#    picker com `back` — `selecionar()` retorna cedo e o estado permanece
+#    'ocioso' nesse caminho (`use-restaurar-backup.ts`), sem nenhuma
+#    escrita.
+# 5. Confirma que a volta do picker não deixou nenhum resumo de
+#    confirmação destrutivo em tela (Configurações continua com os mesmos
+#    três blocos de "Seus dados", sem a barra inferior "Restaurar N
+#    produtos...").
+# 6. Roda "Verificar consistência" de novo — mesmo resultado do passo 1,
+#    "Tudo certo — nenhuma divergência encontrada." — confirma que backup +
+#    tentativa (cancelada) de restauração não corromperam nem duplicaram
+#    nada na massa de dados compartilhada da campanha.
+#
+# O que este flow NÃO exercita, por decisão deliberada de segurança de
+# dado (mesmo raciocínio de risco documentado nas PRs 07 e 09 para picker
+# nativo do sistema):
+# - Não completa a restauração de fato (não seleciona um arquivo no
+#   document picker e não toca em "Restaurar" na barra de confirmação).
+#   O round-trip idempotente (backup → restaurar o mesmo arquivo → mesma
+#   consistência) já está coberto em unidade e é determinístico lá
+#   (`sqlite-backup.repository.test.ts:278`, "restauração repetida é
+#   idempotente — mesmo arquivo duas vezes não duplica nada"); reproduzi-lo
+#   no emulador exigiria navegar o picker nativo até o arquivo certo
+#   (identificação por nome/data, sem controle programático confiável do
+#   Maestro sobre o Storage Access Framework do Android), risco já
+#   sinalizado nas PRs 07/09 anteriores para esse tipo de picker do
+#   sistema — por isso não foi forçado aqui.
+# - Não completa o share sheet do backup (não escolhe "Drive"/"Gmail"/etc.)
+#   pelo mesmo motivo: interação com apps externos ao pacote testado foge
+#   do controle do Maestro e arrisca travar a automação.
+#
+# Efeito colateral real no dispositivo de teste: grava um arquivo
+# `repor-backup-AAAA-MM-DD.json` no cache do app e atualiza
+# `configuracao.ultimoBackupEm` da casa local (campo de metadado, não
+# altera nenhum produto/movimento/compra). Nenhuma escrita de domínio
+# ocorre — a restauração nunca é confirmada.
+- launchApp
+- assertVisible: "Despensa"
+- tapOn: "Configurações"
+- assertVisible: "SUBSTITUI OS DADOS EXISTENTES PELOS DESTE BACKUP. NÃO PODE SER DESFEITO."
+- tapOn: "Verificar consistência"
+- tapOn: "Verificar consistência"
+- assertVisible: "Tudo certo — nenhuma divergência encontrada."
+- tapOn: "Voltar"
+- tapOn: "Fazer backup agora"
+# folha de compartilhamento nativa do Android — descartada sem escolher
+# nenhum destino, o arquivo já foi gravado no cache antes deste ponto
+- back
+- assertVisible:
+    text: "ÚLTIMO BACKUP EM \\d{2}/\\d{2}/\\d{4} ÀS \\d{2}:\\d{2}"
+- tapOn: "Restaurar backup"
+# seletor de documentos nativo do Android — descartado sem selecionar
+# nenhum arquivo, "selecionar()" cancela sem escrever nada
+- back
+- assertVisible: "Configurações"
+- assertVisible: "ÚLTIMO BACKUP EM \\d{2}/\\d{2}/\\d{4} ÀS \\d{2}:\\d{2}"
+- assertNotVisible: "Cancelar"
+- tapOn: "Verificar consistência"
+- tapOn: "Verificar consistência"
+- assertVisible: "Tudo certo — nenhuma divergência encontrada."
