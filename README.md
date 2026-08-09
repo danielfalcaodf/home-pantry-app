@@ -18,9 +18,31 @@ App mobile (React Native + Expo) para controle do estoque doméstico: cada produ
 
 React Native + Expo (EAS development build) · Expo Router · SQLite (`expo-sqlite`) + Drizzle ORM · `react-native-reanimated`
 
+## Como rodar
+
+O app roda **apenas via EAS development build** — o Expo Go **não é suportado** (notificações, widget e scanner previstos nas próximas fases não funcionam nele).
+
+```bash
+npm install
+
+# 1. Gerar e instalar o development build no aparelho (uma vez, requer conta Expo):
+npx eas-cli login
+npx eas-cli build --profile development --platform android   # ou ios
+
+# 2. Desenvolver com o Metro local (o build instalado conecta nele):
+npm start
+```
+
+Qualidade antes de qualquer merge:
+
+```bash
+npm run verificar    # fronteiras de camada + lint + typecheck
+npm test             # testes (domínio roda em Node puro, sem emulador)
+```
+
 ## Status
 
-MVP ainda não implementado — repositório contém apenas a documentação de produto e arquitetura no momento.
+Em implementação — fundação do projeto (Expo + camadas + lint de fronteira) concluída; ver `STATUS.md` para a ordem das changes do MVP.
 
 ## Workflow de branches
 
