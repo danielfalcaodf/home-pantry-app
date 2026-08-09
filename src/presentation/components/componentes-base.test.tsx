@@ -123,9 +123,17 @@ describe('conformidade dos componentes-base', () => {
     .readdirSync(diretorio)
     .filter((nome) => nome.endsWith('.tsx') && !nome.endsWith('.test.tsx'));
 
-  it.each(arquivos)('%s não importa de domain, application nem infrastructure', (nome) => {
+  // Tipos e formatadores do domínio são permitidos (ARQUITETURA §2); regra de
+  // negócio e camadas de fora, não.
+  it.each(arquivos)('%s não importa application, infrastructure nem composicao', (nome) => {
     const fonte = fs.readFileSync(path.join(diretorio, nome), 'utf8');
-    expect(fonte).not.toMatch(/from ['"].*\/(domain|application|infrastructure|composicao)\//);
+    expect(fonte).not.toMatch(/from ['"].*\/(application|infrastructure|composicao)\//);
+  });
+
+  it.each(arquivos)('%s não importa regra de domínio, só tipos e formatadores', (nome) => {
+    const fonte = fs.readFileSync(path.join(diretorio, nome), 'utf8');
+    expect(fonte).not.toMatch(/from ['"].*\.rules['"]/);
+    expect(fonte).not.toMatch(/from ['"].*\/(validacao|produto\/produto)['"]/);
   });
 
   it.each(arquivos)('%s não contém literal hexadecimal de cor', (nome) => {
