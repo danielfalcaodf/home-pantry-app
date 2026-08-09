@@ -43,3 +43,25 @@
 - Caminho principal (lista) é exemplar: 1 toque, latência imperceptível.
 - Observação não investigada (candidata a verificação na R3): "Feijão" mostrou "Sem uso registrado nos últimos 30 dias" logo após consumo de 3 pacotes via bottom sheet — possível atraso/lacuna do resumo de histórico do detalhe.
 - Massa de dados **integralmente restaurada** ao final (todos os consumos de medição revertidos via "+", contadores globais idênticos ao início).
+
+### R2 — Acessibilidade das 4 tabs, dois temas (2026-08-09, subagent mobile-ux-tester)
+
+Dispositivo: `emulator-5554`, densidade 420dpi → limiar de alvo de toque de 48dp = 126px. Hierarquia real via `mcp__maestro__inspect_screen`; evidência visual em `qa/por-pr/evidencias/f6-r2/` (8 screenshots por tab×tema + 1 de restauração do tema). Nenhum dado de domínio alterado; tema restaurado para Escuro (Despensa) ao final, confirmado por screenshot.
+
+| Critério | Despensa | Lista | Resumo | Configurações | Veredito |
+|---|---|---|---|---|---|
+| 1. Rótulos acessíveis completos | Passa | Passa | Passa | Passa | **Passa nas 4 tabs, 2 temas** — nenhum elemento com rótulo vazio/genérico/só-ícone; steppers carregam produto+quantidade+ação no `a11y` |
+| 2. Alvo de toque ≥48×48dp | Passa (stepper e header no limite exato, 126px) | **Falha** — [[ACHADO-057]] | **Falha** — [[ACHADO-058]] | **Falha** — [[ACHADO-059]] | **Falha em 3 tabs de 4**, replicada nos dois temas |
+| 3. Estado nunca só por cor (Despensa) | Passa — `a11y` inclui sempre `Cheio`/`Falta N`/`Acabou` junto da leitura numérica | n/a | n/a | n/a | **Passa** |
+| 4. Contraste por amostragem | Sem par limítrofe nos 2 temas | idem | idem | idem | **Passa** por inspeção visual |
+| 5. Vocabulário | **Falha (a11y falado)** — [[ACHADO-061]] | Passa | Passa | **Falha (texto visível)** — [[ACHADO-060]] | **Falha em 2 pontos** (1 visível, 1 só-leitor-de-tela) |
+| 6. Estados vazios | n/a (40 itens) | n/a (33 itens) | n/a | n/a | Não aplicável — massa de dados atual não expõe estado vazio em nenhuma tab |
+
+Achados abertos nesta rodada:
+- **[[ACHADO-057]]** (média): "Compartilhar lista" e "Agrupar por categoria" no cabeçalho da tab Lista com 58px (22dp) de altura de toque — menos da metade do mínimo.
+- **[[ACHADO-058]]** (média): "Configurações" no cabeçalho da tab Resumo, mesmo padrão (58px/22dp).
+- **[[ACHADO-059]]** (média): três botões de seleção de tema em Configurações com 105px (40dp) de altura.
+- **[[ACHADO-060]]** (baixa): texto visível "Conferência de estoque" em Configurações reintroduz o termo de sistema "estoque" onde o resto do app usa "Despensa".
+- **[[ACHADO-061]]** (baixa): `accessibilityLabel` do stepper de decremento na Despensa fala "Registrar consumo de X" em vez do verbo documentado "Usei X" — diverge só para quem usa leitor de tela.
+
+Nota de ambiente: um overlay de acessibilidade do próprio sistema/emulador (`a11y="Tools"`, ícone de engrenagem flutuante, bounds fixos `[42,1589][179,1726]`) aparece sobre a lista em várias telas — não é elemento do app Repor, não reportado como achado.

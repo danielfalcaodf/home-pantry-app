@@ -14,7 +14,7 @@
 | F3 | Conformidade com specs OpenSpec | concluída (13/13) | [qa/fases/F3-conformidade-spec.md](fases/F3-conformidade-spec.md) |
 | F4 | Smoke no emulador *(requer development build)* | concluída (13/13) | [qa/fases/F4-smoke-emulador.md](fases/F4-smoke-emulador.md) |
 | F5 | Fluxos E2E ainda descobertos *(requer F4)* | **concluída (9/9: 5 do plano-fonte + 4 lacunas funcionais adicionais)** | `qa/fases/F5-fluxos-e2e.md` |
-| F6 | KPI e acessibilidade em uso real *(requer F4)* | **desbloqueada, não iniciada** | `qa/fases/F6-kpi-e-acessibilidade.md` |
+| F6 | KPI e acessibilidade em uso real *(requer F4)* | **em andamento (R1/R2 concluídos, R3 pendente)** | `qa/fases/F6-kpi-e-acessibilidade.md` |
 
 **F0 concluída** em duas etapas: a estrutura/ferramental nesta sessão, e o `permissions.allow` de `.claude/settings.json` aplicado manualmente pelo usuário (o modo automático bloqueia edição desse arquivo por classificador próprio).
 
@@ -96,6 +96,11 @@
 | [ACHADO-054](achados/ACHADO-054.md) | média | F5 (PR 8) | aberto | Marcar 2 itens em sequência rápida no modo compra pode persistir o item errado como comprado — suspeita, não confirmado |
 | [ACHADO-055](achados/ACHADO-055.md) | baixa | F5 (PR 10) | aberto | Campo "Corrigir para" da conferência mostra placeholder indistinguível de valor real; tocar "Corrigir" sem digitar é no-op silencioso |
 | [ACHADO-056](achados/ACHADO-056.md) | **crítica** | F6 (PR 10) | aberto | Autofoco no detalhe do produto sobe o teclado sobre "Usei"/"Repus"; Voltar fecha a tela em vez do teclado — quebra o caminho de 2 toques do K4 |
+| [ACHADO-057](achados/ACHADO-057.md) | média | F6 (PR 7) | aberto | "Compartilhar lista"/"Agrupar por categoria" no cabeçalho da Lista com 22dp de alvo de toque (abaixo de 48dp) |
+| [ACHADO-058](achados/ACHADO-058.md) | média | F6 (PR 13) | aberto | Botão "Configurações" no cabeçalho do Resumo com 22dp de alvo de toque |
+| [ACHADO-059](achados/ACHADO-059.md) | média | F6 (PR 13) | aberto | Três botões de seleção de tema em Configurações com 40dp de alvo de toque |
+| [ACHADO-060](achados/ACHADO-060.md) | baixa | F6 (PR 13) | aberto | Texto visível "Conferência de estoque" reintroduz jargão de sistema em Configurações |
+| [ACHADO-061](achados/ACHADO-061.md) | baixa | F6 (PR 13) | aberto | `accessibilityLabel` do stepper fala "Registrar consumo de X" em vez de "Usei X" |
 
 ## Próximo passo
 
@@ -138,4 +143,8 @@ Achado de teste (não de produto) surgido nesta rodada: o toast "Anotado" é tra
 
 **F5 completa: 9/9 flows Maestro** (5 lacunas do plano-fonte + 4 lacunas funcionais adicionais). F6 (KPI e acessibilidade) segue desbloqueada como próximo passo natural.
 
-**F6 desbloqueada, não iniciada.** KPI K4 (baixa em ≤3 toques/≤10s) e acessibilidade ainda não têm nenhuma medição real, só a garantia estrutural do design documentado no `FRONTEND-DESIGN`.
+**F6 R1 concluída (2026-08-09).** KPI K4 medido em uso real: caminho principal (stepper na Despensa) é exemplar — 1 toque, latência imperceptível, sem diálogo/spinner. Caminho secundário (detalhe → "Usei") falha na prática por regressão de autofoco: [[ACHADO-056]] (crítico, aberto). Massa de dados restaurada integralmente.
+
+**F6 R2 concluída (2026-08-09).** Auditoria de acessibilidade das 4 tabs (Despensa, Lista, Resumo, Configurações), dois temas (Despensa escuro/Porcelana claro), via hierarquia real (`mcp__maestro__inspect_screen`) e amostragem visual. Resultado: rótulos acessíveis completos (critério 1) e os três canais redundantes de estado na Despensa (critério 3) passam integralmente nas 4 tabs × 2 temas; contraste (critério 4) sem par limítrofe visível; nenhum estado vazio exposto pela massa de dados atual (critério 6, não aplicável). Duas falhas reais: **alvo de toque** (critério 2) abaixo de 48dp em 3 das 4 tabs — Lista ([[ACHADO-057]]), Resumo ([[ACHADO-058]]) e Configurações ([[ACHADO-059]]), todas médias, replicadas nos dois temas; **vocabulário** (critério 5) com 2 divergências baixas — "Conferência de estoque" visível em Configurações ([[ACHADO-060]]) e `accessibilityLabel` "Registrar consumo de X" em vez de "Usei X" no stepper da Despensa ([[ACHADO-061]]), este último só perceptível por leitor de tela. Tema restaurado para Escuro ao final; nenhum dado de domínio alterado. Detalhe completo em `qa/fases/F6-kpi-e-acessibilidade.md`.
+
+**Próximo passo de F6: R3** — acessibilidade das telas secundárias (`produto/[id]`, `produto/novo`, histórico, conferência, diagnóstico, `compra/[id]`), mesmos critérios de R2 mais verificação específica do `BotaoVoltar` (≥48dp) e estados vazios como convite.
