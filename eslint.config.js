@@ -33,6 +33,8 @@ module.exports = defineConfig([
         { type: 'infrastructure', pattern: 'src/infrastructure' },
         { type: 'presentation', pattern: 'src/presentation' },
         { type: 'shared', pattern: 'src/shared' },
+        // Raiz de composição: a ÚNICA que amarra interface a implementação.
+        { type: 'composicao', pattern: 'src/composicao' },
         { type: 'app', pattern: 'app' },
       ],
     },
@@ -53,6 +55,9 @@ module.exports = defineConfig([
                 { element: { type: 'application' } },
                 { element: { type: 'domain' } },
                 { element: { type: 'ports' } },
+                // Só o ponto de composição, para o valor padrão do repositório
+                // injetável (design D5) — nunca uma implementação concreta.
+                { element: { type: 'composicao' } },
                 { element: { type: 'shared' } },
               ],
             },
@@ -75,12 +80,25 @@ module.exports = defineConfig([
               ],
             },
             { from: [{ element: { type: 'shared' } }], allow: [{ element: { type: 'shared' } }] },
+            // Só a composição enxerga infrastructure — é o ponto onde a Fase 2
+            // troca o adapter sem que nenhum caso de uso mude (design D5).
+            {
+              from: [{ element: { type: 'composicao' } }],
+              allow: [
+                { element: { type: 'composicao' } },
+                { element: { type: 'infrastructure' } },
+                { element: { type: 'ports' } },
+                { element: { type: 'domain' } },
+                { element: { type: 'shared' } },
+              ],
+            },
             {
               from: [{ element: { type: 'app' } }],
               allow: [
                 { element: { type: 'app' } },
                 { element: { type: 'presentation' } },
                 { element: { type: 'application' } },
+                { element: { type: 'composicao' } },
                 { element: { type: 'domain' } },
                 { element: { type: 'shared' } },
               ],
@@ -116,6 +134,27 @@ module.exports = defineConfig([
                 '@react-native*',
               ],
               message: 'src/domain/ é TypeScript puro — sem React, Expo, Drizzle ou SQLite.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  // Texto sempre pelo componente da escala: `Text` cru reintroduz tamanho e
+  // família arbitrários, que é como a tipografia deriva tela a tela.
+  {
+    files: ['src/**/*.tsx', 'app/**/*.tsx'],
+    ignores: ['src/presentation/components/**'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: 'react-native',
+              importNames: ['Text'],
+              message:
+                'Use o componente Texto de presentation/components — ele aceita só papéis da escala.',
             },
           ],
         },

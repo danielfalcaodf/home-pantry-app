@@ -93,13 +93,16 @@ Duas paletas irmãs, não uma invertida na outra. O tema escuro é **Despensa** 
 | `bg.surface` | `#FFFFFF` | Barras, sheets, campos | — |
 | `line.hairline` | `#D9E0DB` | Divisores de 1px | 1.21 |
 | `text.primary` | `#14201C` | Nome do item, títulos | **15.1** |
-| `text.secondary` | `#5A6B65` | Categoria, unidade, legendas | **5.1** |
+| `text.secondary` | `#556661` | Categoria, unidade, legendas | **5.5** |
+| `bg.raised` | `#E7ECE8` | Sheet elevado, item pressionado | — |
 | `state.cheio` | `#276B44` | Nível OK (texto e ícone) | **5.8** |
 | `state.emFalta` | `#8A6410` | Abaixo do mínimo | **4.9** |
 | `state.critico` | `#B33A20` | Zerado | **5.4** |
 | `action.azulejo` | `#1C5A78` | Ação primária, links, foco | **6.8** |
 
 Branco sobre `action.azulejo`: **7.6**. Branco sobre `state.critico`: **5.9**. Todos os pares passam WCAG AA; a maioria passa AAA.
+
+> **Corrigido na implementação (change `design-system-tema`).** `text.secondary` era `#5A6B65`, que passa AA sobre o fundo limpo (5.09) mas cai para **4.38** sobre a tinta do nível — e é sobre a tinta que esse texto realmente aparece na lista. Escurecido para `#556661`, o mínimo que passa nos dois casos (pior caso 4.72). `bg.raised` não constava desta tabela e foi derivado, para os dois temas exporem o mesmo conjunto de chaves. Ambos os pares são travados por teste em `tokens.test.ts`.
 
 ### 3.3 Tinta do nível
 
@@ -152,6 +155,8 @@ Archivo entra com restrição: só em título de tela e na quantidade grande da 
 | `data.md` | 15 / 20 | Plex Mono 400 tabular | Preço e quantidade na lista |
 
 Nada acima de 34pt. Números gigantes de dashboard não pertencem a este app.
+
+> **Corrigido na implementação (change `design-system-tema`).** Os seis pesos supostos acima **existem** nos três pacotes — a ressalva do §4.1 foi verificada e não se confirmou. O que não coube foi o **orçamento de bundle**: as três famílias somam **936 KB** de TTF, contra o teto de 400 KB. Seguindo a regra do teto, **Archivo foi removida** e os papéis `display.*` passaram a usar IBM Plex Sans 500 com o mesmo tamanho e tracking. Restam duas famílias e quatro pesos, **696 KB** — ainda acima do teto, porque os TTF do Google Fonts trazem Latin Extended, Cyrillic e Greek inteiros. Fechar os 400 KB exige *subsetting* das fontes, que é trabalho de build e ficou fora desta change.
 
 ---
 
@@ -372,7 +377,7 @@ A ação mantém o mesmo nome do começo ao fim: o botão diz `Usei`, o toast di
 **Erros dizem o que houve e o que fazer, sem pedir desculpa:**
 
 - *"Não foi possível salvar. Toque para tentar de novo."*
-- *"Já existe um item chamado Arroz na sua despensa."* · **Ver o item** / **Salvar assim mesmo**
+- *"Já existe um item chamado Arroz na sua despensa."* · **Ver o item** / **Usar outro nome** — salvar duplicado não é oferecido, porque o índice único do banco o rejeitaria (ver PRD US-01 e DATABASE §5)
 - *"O backup é de uma versão mais nova do app. Atualize antes de restaurar."*
 
 ---

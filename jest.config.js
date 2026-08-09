@@ -33,11 +33,20 @@ module.exports = {
       transform: transformTsPuro,
     },
     {
+      displayName: 'infra',
+      testEnvironment: 'node',
+      testMatch: ['<rootDir>/src/infrastructure/**/*.test.ts'],
+      transform: transformTsPuro,
+    },
+    {
       displayName: 'app',
       preset: 'jest-expo',
+      setupFiles: ['<rootDir>/jest.setup.app.js'],
+      // Reanimated 4 depende de react-native-worklets, cujas variantes
+      // `.native` não resolvem sob Jest; o resolver do próprio pacote as filtra.
+      resolver: '<rootDir>/node_modules/react-native-worklets/jest/resolver.js',
       testMatch: [
         '<rootDir>/src/application/**/*.test.{ts,tsx}',
-        '<rootDir>/src/infrastructure/**/*.test.{ts,tsx}',
         '<rootDir>/src/presentation/**/*.test.{ts,tsx}',
         '<rootDir>/app/**/*.test.{ts,tsx}',
       ],

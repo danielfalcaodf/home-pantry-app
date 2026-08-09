@@ -1,6 +1,7 @@
 import { milesimos } from './quantidade';
 import {
   centavos,
+  converterValorBruto,
   deTextoDigitado,
   formatarBRL,
   multiplicarQuantidadePorPreco,
@@ -55,5 +56,30 @@ describe('multiplicarQuantidadePorPreco — a única conversão milésimos × ce
   it('valor zero produz zero', () => {
     expect(multiplicarQuantidadePorPreco(milesimos(2000), centavos(0))).toBe(0);
     expect(multiplicarQuantidadePorPreco(milesimos(0), centavos(1290))).toBe(0);
+  });
+});
+
+describe('converterValorBruto — a única divisão de um bruto já somado por SQL', () => {
+  it('divide por mil um bruto de dois itens, não produz o valor mil vezes maior', () => {
+    // DATABASE §6.5: SUM(quantidade_atual * valor_unitario) de dois itens.
+    const bruto = 2000 * 1290 + 3000 * 2250; // 2.580.000 + 6.750.000
+    expect(converterValorBruto(bruto)).toBe(9330); // R$ 93,30, não R$ 93.300,00
+  });
+
+  it('produz o mesmo resultado que somar os itens já convertidos individualmente', () => {
+    const itens = [
+      { quantidade: milesimos(2000), preco: centavos(1290) },
+      { quantidade: milesimos(3000), preco: centavos(2250) },
+    ];
+    const somaIndividual = itens.reduce(
+      (total, item) => total + multiplicarQuantidadePorPreco(item.quantidade, item.preco),
+      0,
+    );
+    const bruto = itens.reduce((total, item) => total + item.quantidade * item.preco, 0);
+    expect(converterValorBruto(bruto)).toBe(somaIndividual);
+  });
+
+  it('bruto zero produz zero', () => {
+    expect(converterValorBruto(0)).toBe(0);
   });
 });
