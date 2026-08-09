@@ -1,43 +1,71 @@
+import 'react-native-get-random-values';
+
+import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
-import { Text, View } from 'react-native';
+import * as SplashScreen from 'expo-splash-screen';
+import { useEffect } from 'react';
 
+import { usePreferenciaDeTemaPersistida } from '@/application/tema/use-preferencia-de-tema';
 import { usePrepararBanco } from '@/composicao/banco';
-import { obterIdentidadeLocal } from '@/composicao/repositorios';
+import { TelaErro } from '@/presentation/components/tela-erro';
+import { fontesDoApp } from '@/presentation/theme/fontes';
+import { ThemeProvider, useTheme } from '@/presentation/theme/provider';
 
-function TelaCarregando() {
-  return (
-    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-      <Text>Preparando sua despensa…</Text>
-    </View>
-  );
-}
+// A splash só sai quando banco, tema e fontes estiverem prontos — é o que
+// impede o quadro branco antes do tema escuro aparecer (FRONTEND §12.4).
+void SplashScreen.preventAutoHideAsync();
 
-function TelaErroMigration({ mensagem }: { mensagem: string }) {
+function Rotas() {
+  const tema = useTheme();
   return (
-    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-      <Text style={{ fontWeight: 'bold', marginBottom: 8 }}>
-        Não foi possível preparar seus dados
-      </Text>
-      <Text>
-        Feche e abra o app de novo. Se continuar, reinstale a versão anterior — seus dados têm
-        uma cópia de segurança automática.
-      </Text>
-      <Text style={{ marginTop: 16, fontSize: 12 }}>{mensagem}</Text>
-    </View>
+    <Stack
+      screenOptions={{
+        headerShown: false,
+        contentStyle: { backgroundColor: tema.bg.base },
+        headerStyle: { backgroundColor: tema.bg.surface },
+        headerTintColor: tema.text.primary,
+      }}
+    />
   );
 }
 
 export default function RootLayout() {
-  const { pronto, erro } = usePrepararBanco();
+  const banco = usePrepararBanco();
+  const [fontesCarregadas, erroDeFonte] = useFonts(fontesDoApp);
+  const bancoPronto = banco.pronto && !banco.erro;
+  // A leitura da preferência só começa depois das migrations: antes disso a
+  // tabela de configuração não existe.
+  const tema = usePreferenciaDeTemaPersistida(bancoPronto);
 
-  if (erro) {
-    return <TelaErroMigration mensagem={erro.message} />;
+  const tudoPronto =
+    bancoPronto && tema.carregada && (fontesCarregadas || erroDeFonte !== null);
+
+  useEffect(() => {
+    if (tudoPronto || banco.erro) {
+      void SplashScreen.hideAsync();
+    }
+  }, [tudoPronto, banco.erro]);
+
+  // A tela de erro também usa o tema resolvido — nunca um fundo padrão.
+  if (banco.erro) {
+    return (
+      <ThemeProvider preferencia={tema.preferencia} escolher={tema.escolher}>
+        <TelaErro
+          titulo="Não foi possível preparar seus dados"
+          descricao="Feche e abra o app de novo. Seus dados têm uma cópia de segurança automática."
+          detalhe={banco.erro.message}
+        />
+      </ThemeProvider>
+    );
   }
-  if (!pronto) {
-    return <TelaCarregando />;
+
+  if (!tudoPronto) {
+    return null; // splash continua visível
   }
 
-  obterIdentidadeLocal();
-
-  return <Stack />;
+  return (
+    <ThemeProvider preferencia={tema.preferencia} escolher={tema.escolher}>
+      <Rotas />
+    </ThemeProvider>
+  );
 }

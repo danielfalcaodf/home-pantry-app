@@ -8,6 +8,27 @@
       "when": 1785655728775,
       "tag": "0000_init",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1785674075317,
+      "tag": "0001_configuracao",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1785692531323,
+      "tag": "0002_compra_item_exclusao",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1785714583122,
+      "tag": "0003_compra_item_atualizar_preco",
+      "breakpoints": true
     }
   ]
 }

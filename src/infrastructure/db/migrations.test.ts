@@ -4,6 +4,7 @@ const TABELAS_ESPERADAS = [
   'casa',
   'compra',
   'compra_item',
+  'configuracao', // 0001_configuracao
   'movimento_estoque',
   'produto',
   'usuario',
@@ -19,8 +20,8 @@ const INDICES_ESPERADOS = [
   'ux_produto_casa_nome',
 ];
 
-describe('migration 0000_init sobre banco vazio', () => {
-  it('cria as seis tabelas declaradas', () => {
+describe('migrations aplicadas em sequência sobre banco vazio', () => {
+  it('cria todas as tabelas declaradas', () => {
     const { sqlite } = criarDbDeTeste();
     const tabelas = sqlite
       .prepare(
@@ -196,6 +197,25 @@ describe('restrições rejeitam violação em runtime', () => {
         .prepare(
           `INSERT INTO compra_item (id, compra_id, nome_avulso, unidade, quantidade_planejada, comprado)
            VALUES ('i1', 'c1', 'Pilha', 'un', 1000, 1)`,
+        )
+        .run(),
+    ).toThrow(/CHECK/i);
+  });
+
+  it('resposta de atualizar preço fora de 0/1 é rejeitada', () => {
+    const { sqlite } = criarDbDeTeste();
+    semearCasaEUsuario(sqlite);
+    sqlite
+      .prepare(
+        `INSERT INTO compra (id, casa_id, usuario_id, status, criada_em, atualizado_em)
+         VALUES ('c1', 'casa-teste', 'usuario-teste', 'aberta', 0, 0)`,
+      )
+      .run();
+    expect(() =>
+      sqlite
+        .prepare(
+          `INSERT INTO compra_item (id, compra_id, nome_avulso, unidade, quantidade_planejada, atualizar_preco)
+           VALUES ('i1', 'c1', 'Pilha', 'un', 1000, 2)`,
         )
         .run(),
     ).toThrow(/CHECK/i);

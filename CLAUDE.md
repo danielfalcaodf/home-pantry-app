@@ -39,7 +39,7 @@ alterar src/infrastructure/db/schema.ts
 → commit
 ```
 
-**Nunca editar uma migration já publicada.** A partir do primeiro build instalado existem dados reais no aparelho, migrations são forward-only e não há rollback executável lá — corrigir é sempre criar uma migration nova. O `.db` recebe cópia de segurança automática antes de aplicar migration pendente (`src/infrastructure/db/backup-pre-migration.ts`, duas cópias mais recentes).
+**Nunca editar uma migration já publicada.** A partir do primeiro build instalado existem dados reais no aparelho, migrations são forward-only e não há rollback executável lá — corrigir é sempre criar uma migration nova. O `.db` recebe cópia de segurança automática antes de aplicar migration pendente (`src/infrastructure/db/backup-pre-migration.ts`, duas cópias mais recentes) — mas essa cópia é binária, do mesmo schema, e não sobrevive à migration seguinte (DATABASE §9.4). **Gerar um backup JSON pela tela de Configurações antes de atualizar o app é o único mecanismo que sobrevive a mudanças de schema** — é formato, não cópia de arquivo, e a versão declarada no arquivo (`domain/backup/backup.schema.ts`) é o que permite restaurá-lo depois de migrations futuras.
 
 ## Arquitetura — regra de dependência (não violar)
 
