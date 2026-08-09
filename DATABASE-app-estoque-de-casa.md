@@ -586,7 +586,7 @@ export const movimentoEstoque = sqliteTable('movimento_estoque', {
   casaId: text('casa_id').notNull().references(() => casa.id, { onDelete: 'cascade' }),
   produtoId: text('produto_id').notNull().references(() => produto.id, { onDelete: 'cascade' }),
   usuarioId: text('usuario_id').notNull().references(() => usuario.id),
-  compraId: text('compra_id'),
+  compraId: text('compra_id').references(() => compra.id),   // FK declarada no DDL §4
   tipo: text('tipo', { enum: ['baixa', 'reposicao', 'ajuste'] }).notNull(),
   quantidadeDelta: integer('quantidade_delta').notNull(),
   quantidadeResultante: integer('quantidade_resultante').notNull(),
@@ -595,8 +595,11 @@ export const movimentoEstoque = sqliteTable('movimento_estoque', {
   syncStatus: text('sync_status', { enum: ['local', 'pendente', 'sincronizado'] })
     .notNull().default('local'),
 }, (t) => ({
-  idxProdutoData: index('idx_movimento_produto_data').on(t.produtoId, t.criadoEm),
-  idxCasaData: index('idx_movimento_casa_data').on(t.casaId, t.criadoEm),
+  // DESC obrigatório: sem ele o histórico mais-recente-primeiro não usa a ordenação do índice
+  idxProdutoData: index('idx_movimento_produto_data')
+    .on(t.produtoId, sql`${t.criadoEm} DESC`),
+  idxCasaData: index('idx_movimento_casa_data')
+    .on(t.casaId, sql`${t.criadoEm} DESC`),
   ckDeltaSinal: check('ck_movimento_delta_sinal', sql`
     (${t.tipo} = 'baixa'     AND ${t.quantidadeDelta} < 0) OR
     (${t.tipo} = 'reposicao' AND ${t.quantidadeDelta} > 0) OR
