@@ -1,0 +1,58 @@
+appId: com.triasoftware.repor
+---
+# Cobre o gatilho automático da lista derivada — capability `lista-derivada`
+# (PR-07, branch `feature/lista-de-compras`, spec
+# openspec/changes/archive/2026-08-02-lista-de-compras/). É o único
+# cenário central da lista de compras que só tinha teste unitário
+# (use-lista-compras.test.ts:25 "compõe faltantes...", :44 "item reposto
+# sai automaticamente da lista quando a despensa notifica") — nenhum flow
+# provava em runtime que a aba "Lista" reage sozinha, sem ação manual de
+# "adicionar à lista", quando um produto cruza o limiar
+# `quantidade_atual < quantidade_necessaria`. O flow `ciclo-de-compra.yaml`
+# não serve pra isso: ele assume a lista já populada.
+#
+# Usa "Carne moída" porque no dispositivo de QA ela está exatamente em
+# `1 de 1 kg, Cheio` (quantidade_atual == quantidade_necessaria) — folga
+# zero, então um único toque em "Usei" já derruba `quantidade_atual`
+# abaixo de `quantidade_necessaria` e um único toque em "Repor" já
+# restaura a igualdade. Troque o item se seu dispositivo não tiver essa
+# massa de dados carregada (ver Despensa > Carnes).
+#
+# Round-trip DELIBERADAMENTE não-destrutivo, ao contrário dos outros
+# flows desta campanha: consome 1 kg e repõe 1 kg do mesmo item na
+# sequência, terminando exatamente no estado inicial
+# ("Carne moída, 1 de 1 kg, Cheio"). Roda seguro em loop / re-execução.
+#
+# Nota de teste: o toast "Anotado" (ver dar-baixa-caminho-critico.yaml)
+# é transiente demais para o polling do Maestro capturar de forma
+# confiável neste ambiente — confirmado tanto aqui quanto no flow
+# existente (mesma falha reproduzida isoladamente). Este flow não
+# depende dele: a leitura de estado do item na Despensa logo em seguida
+# já prova que o consumo/reposição foi de fato gravado.
+- launchApp
+- assertVisible: "Despensa"
+- assertVisible: "Carne moída, 1 de 1 kg, Cheio"
+
+# 1) confirma que o item Cheio NÃO está na lista derivada antes de mexer
+- tapOn: "Lista"
+- assertNotVisible: "Carne moída"
+- tapOn: "Despensa"
+
+# 2) consumir 1 kg é suficiente pra cruzar o limiar (folga zero)
+- tapOn: "Registrar consumo de 1 kg de Carne moída"
+- assertVisible: "Carne moída, 0 de 1 kg, Acabou"
+
+# 3) o gatilho de ida: item aparece sozinho na Lista, sem ação manual
+- tapOn: "Lista"
+- assertVisible: "Carne moída, 1 kg, sem preço"
+- tapOn: "Despensa"
+
+# 4) repor a mesma quantidade restaura o estado original
+- tapOn: "Repor 1 kg de Carne moída"
+- assertVisible: "Carne moída, 1 de 1 kg, Cheio"
+
+# 5) o gatilho de volta: item some sozinho da Lista
+- tapOn: "Lista"
+- assertNotVisible: "Carne moída"
+- tapOn: "Despensa"
+- assertVisible: "Carne moída, 1 de 1 kg, Cheio"

@@ -1,0 +1,48 @@
+appId: com.triasoftware.repor
+---
+# Edição de produto existente (F5, capability `cadastro-de-produto`,
+# delta de edição PR-05/PR-10, `app/produto/[id].tsx`): cobre o caminho
+# que só tinha teste de lógica (`useEditarProduto`, `hooks.test.ts:122,130`)
+# e nenhum flow E2E — não existe uma tela "editar" separada, o detalhe do
+# produto (aberto ao tocar num item da Despensa) já mostra o mesmo
+# `FormularioProduto` preenchido e editável inline (nome, categoria,
+# quantidade necessária); a quantidade ATUAL não é um campo desse
+# formulário, só o toque no número grande no topo (rótulo acessível
+# "Corrigir quantidade atual") abre esse outro fluxo, fora de escopo aqui.
+#
+# Usa "Item Teste QA F5" (criado por `cadastro-de-produto.yaml`) por ser o
+# item de baixo risco reservado para esse tipo de manipulação. Se ele não
+# existir mais no seu dispositivo, rode `cadastro-de-produto.yaml` primeiro
+# ou troque o nome abaixo por outro produto de teste.
+#
+# Confirmado por inspeção real da hierarquia (uiautomator, emulator-5554):
+# o campo "Quanto quero ter em casa" é um EditText comum, sobreposto pelo
+# teclado logo após abrir a tela (autofoco no campo "O que é") — por isso
+# o `hideKeyboard` antes de interagir com ele; e o botão "Salvar" nasce
+# fora da viewport dentro do ScrollView do formulário, por isso o
+# `scrollUntilVisible` antes do toque.
+#
+# Efeito colateral real, não destrutivo mas permanente: altera a
+# "quantidade necessária" de "Item Teste QA F5" de 3 para 5 un no banco do
+# dispositivo de teste (nome e demais campos ficam iguais). O item
+# continua no estado "Acabou" (0 de 5 un).
+- launchApp
+- assertVisible: "Despensa"
+- tapOn: "Buscar"
+- inputText: "Item Teste QA F5"
+- hideKeyboard
+- tapOn: "Item Teste QA F5, 0 de 3 un, Acabou"
+- hideKeyboard
+- assertVisible: "Quanto quero ter em casa"
+- tapOn: "Quanto quero ter em casa"
+- eraseText: 5
+- inputText: "5"
+- hideKeyboard
+- scrollUntilVisible:
+    element: "Salvar"
+    direction: DOWN
+    speed: 40
+    timeout: 15000
+- tapOn: "Salvar"
+- assertVisible: "Despensa"
+- assertVisible: "Item Teste QA F5, 0 de 5 un, Acabou"

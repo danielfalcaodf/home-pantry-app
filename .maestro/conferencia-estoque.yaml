@@ -1,0 +1,74 @@
+appId: com.triasoftware.repor
+---
+# Cobre a capability `modo-conferencia` (PR-10, branch
+# feature/ajuste-e-conferencia-estoque, spec
+# openspec/changes/archive/2026-08-03-ajuste-e-conferencia-estoque/), que a
+# F4 (qa/por-pr/PR-10.md) só tinha exercitado pelo caminho "Confirmar — está
+# certo". Este flow entra em Configurações → "Conferência de estoque" e
+# exercita o caminho "Corrigir" que faltava, pelo lado mais seguro dele:
+# lê a quantidade do item atual (mostrada em destaque, ex. "1 caixa"),
+# digita esse MESMO número no campo "Corrigir para" e confirma — ou seja,
+# uma correção sem mudança de valor. Isso cobre a regra "ajuste sem
+# mudança não grava" (use-ajustar-estoque.test.ts:56,
+# use-conferencia.test.ts:59) especificamente pelo caminho de correção da
+# conferência (código diferente do de "Confirmar"), e ainda assim avança
+# o progresso do percurso (use-conferencia.test.ts:73) sem criar nenhuma
+# entrada nova no histórico do produto — verificado manualmente durante a
+# autoria deste flow (ver PR-10 §F5 no plano de testes).
+#
+# Achado de comportamento durante a autoria (não é bug, é design
+# intencional não documentado no PR-10.md): o botão "Corrigir" nasce
+# DESABILITADO — o valor mostrado dentro do campo antes de qualquer toque
+# é só o placeholder (`app/conferencia.tsx:116`, "1"/"2"/"3,5" etc.), não
+# um valor real digitado (`valorCorrecao` começa em `''`,
+# `disabled={valorCorrecao.trim() === ''}` em conferencia.tsx:122).
+# Tocar "Corrigir" sem digitar nada é um no-op silencioso — não avança o
+# percurso e não gera erro visível. Por isso este flow precisa digitar
+# ativamente o número antes de tocar "Corrigir", mesmo para reproduzir o
+# caminho "sem mudança".
+#
+# Optamos pelo caminho "sem mudança" (não uma correção real, com valor
+# diferente) porque o flow é reexecutado a cada rodada de CI/QA e cada
+# execução avança para o PRÓXIMO item do percurso (a conferência é
+# retomável — use-conferencia.test.ts:112 — não reseta sozinha). Repetir
+# uma correção com valor arbitrário a cada execução escreveria ajustes
+# não intencionais na massa de dados compartilhada entre todas as PRs
+# desta campanha, e o valor "certo" a digitar dependeria do item (que
+# varia a cada execução) — digitar de volta o mesmo valor já exibido é a
+# única opção genérica e segura para qualquer item. O caminho de
+# correção REAL (grava um ajuste e aparece como "Corrigi para X" no
+# histórico do produto) foi validado manualmente uma vez durante a
+# autoria (Arroz: 2 → 3 pacotes, confirmado em "Histórico de Arroz" como
+# "Corrigi para 3 pacotes") — não incluído aqui por não ser repetível com
+# segurança.
+#
+# Efeito colateral real: avança 1 posição no percurso de conferência do
+# banco do dispositivo de teste (ex.: "6 de 41" → "7 de 41"). Não grava
+# nenhum movimento/ajuste (valor confirmado é igual ao já registrado).
+# Rode só em build de desenvolvimento/QA.
+- launchApp
+- assertVisible: "Despensa"
+- tapOn: "Configurações"
+- assertVisible: "Configurações"
+- scrollUntilVisible:
+    element:
+      text: "Conferência de estoque"
+    direction: DOWN
+- tapOn: "Conferência de estoque"
+- assertVisible:
+    text: "\\d+ de \\d+ conferidos"
+- assertVisible: "Corrigir para"
+- assertVisible: "Confirmar — está certo"
+# Lê a quantidade do item em destaque (ex. "1 caixa") e extrai só o
+# número, pra digitar de volta o mesmo valor no campo de correção.
+- copyTextFrom:
+    text: "^\\d+(,\\d+)? [^\\d]+$"
+- evalScript: ${output.quantidadeAtual = maestro.copiedText.match(/^[0-9]+(,[0-9]+)?/)[0]}
+- tapOn: "Corrigir para"
+- inputText: ${output.quantidadeAtual}
+- hideKeyboard
+- tapOn:
+    text: "^Corrigir$"
+- assertVisible:
+    text: "\\d+ de \\d+ conferidos"
+- assertVisible: "Corrigir para"

@@ -1,0 +1,40 @@
+appId: com.triasoftware.repor
+---
+# Ciclo de compra completo (F5, capability `fechamento-de-compra` /
+# `modo-compra`, PR-08 `feature/modo-compra-e-fechamento`): da Lista até o
+# fechamento real de uma compra, cobrindo o único trecho da jornada que a
+# campanha inteira de smoke test (F4) evitou deliberadamente por ser
+# destrutivo/irreversível.
+#
+# Usa "Arroz" porque é item garantido pela lista básica de seed
+# (src/infrastructure/db/lista-base.json) — troque se seu dispositivo não
+# tiver essa massa de dados carregada, ou se Arroz já estiver reposto
+# (nesse caso ele não aparece mais na lista derivada e "Iniciar compra"
+# materializa uma compra sem ele).
+#
+# Efeito colateral real, irreversível pela UI:
+# - Cria (ou resume, se já houver uma `aberta`) a única compra aberta da
+#   casa (`ux_compra_aberta`).
+# - Marca e fecha a compra com 1 item — repõe Arroz para a quantidade
+#   necessária (2 pacotes), grava um movimento de reposição vinculado à
+#   compra, e a compra passa a `finalizada`, aparecendo no histórico de
+#   compras e no gasto do mês (Resumo).
+#
+# Nota de teste (ver qa/achados/ACHADO-054.md): tocar em dois itens em
+# sequência rápida, sem pausa entre os toques, produziu uma marcação
+# associada ao item errado numa rodada anterior (não reproduzido de forma
+# determinística). Por isso este flow marca só 1 item por vez, com uma
+# assertion de confirmação entre o toque e o próximo passo.
+- launchApp
+- assertVisible: "Despensa"
+- tapOn: "Lista"
+- tapOn:
+    text: "Iniciar compra \\(\\d+\\)"
+- tapOn: "Arroz, 2 pacotes, sem preço"
+# confirma que o toque marcou o item certo antes de prosseguir — ver
+# ACHADO-054 sobre por que essa confirmação intermediária importa aqui
+- assertVisible: "✓, Arroz, 2 pacotes, sem preço"
+- tapOn: "Fechar compra"
+- assertVisible: "Despensa"
+# reposição aplicada: Arroz sai do estado "Acabou"
+- assertVisible: "Arroz, 2 de 2 pacotes, Cheio"
