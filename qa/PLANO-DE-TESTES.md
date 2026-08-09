@@ -13,7 +13,7 @@
 | F2 | Cadeia incremental por worktree (13 PRs) | concluída | [qa/fases/F2-cadeia-incremental.md](fases/F2-cadeia-incremental.md) |
 | F3 | Conformidade com specs OpenSpec | concluída (13/13) | [qa/fases/F3-conformidade-spec.md](fases/F3-conformidade-spec.md) |
 | F4 | Smoke no emulador *(requer development build)* | concluída (13/13) | [qa/fases/F4-smoke-emulador.md](fases/F4-smoke-emulador.md) |
-| F5 | Fluxos E2E ainda descobertos *(requer F4)* | concluída (5/5 do plano-fonte); **4 novas lacunas funcionais encontradas em verificação posterior** — ver seção abaixo | `qa/fases/F5-fluxos-e2e.md` |
+| F5 | Fluxos E2E ainda descobertos *(requer F4)* | **concluída (9/9: 5 do plano-fonte + 4 lacunas funcionais adicionais)** | `qa/fases/F5-fluxos-e2e.md` |
 | F6 | KPI e acessibilidade em uso real *(requer F4)* | **desbloqueada, não iniciada** | `qa/fases/F6-kpi-e-acessibilidade.md` |
 
 **F0 concluída** em duas etapas: a estrutura/ferramental nesta sessão, e o `permissions.allow` de `.claude/settings.json` aplicado manualmente pelo usuário (o modo automático bloqueia edição desse arquivo por classificador próprio).
@@ -126,12 +126,15 @@ Quinta e última rodada (`/qa:e2e-pr 4`, troca de tema) concluída: `.maestro/tr
 | **Lista de compras aparece automaticamente ao faltar produto** | **Não diretamente** — só unitário (`use-lista-compras.test.ts:25,44`); `ciclo-de-compra.yaml` assume a lista já populada, nunca prova o gatilho de derivação em runtime |
 | Fechar compra repõe o estoque automaticamente | Sim — `ciclo-de-compra.yaml` |
 
-**4 lacunas E2E novas identificadas, candidatas à próxima rodada** (extensão da F5 antes ou durante a F6, já que a F6 também vai precisar navegar essas mesmas telas para medir KPI/acessibilidade):
-1. `reposicao-manual.yaml` — caminho "Repus" no teclado de quantidade (fora do modo compra).
-2. `editar-remover-produto.yaml` — editar campos de um produto existente e remover (com confirmação).
-3. `lista-derivada-gatilho.yaml` — reduzir um item a zero, confirmar que aparece na aba Lista automaticamente; repor e confirmar que some.
-4. (já parcialmente coberto) considerar reforçar `ciclo-de-compra.yaml` ou um flow irmão que comece do estado "sem nada faltando" para provar o gatilho de ponta a ponta, não só o resultado final.
+**As 4 lacunas foram fechadas em 2026-08-09**, cada uma com um flow Maestro novo via `test-automator`:
 
-F6 (KPI e acessibilidade) segue desbloqueada e é o próximo passo natural — mas antes dela (ou junto), essas 4 lacunas funcionais deveriam ser fechadas para que a cobertura E2E do produto core (estoque + lista + produto) fique completa.
+1. **`reposicao-manual.yaml`** (PR-06) — botão "+" de reposição rápida (`BotaoReporRapido`), caminho "Repus" fora do modo compra. Repõe 1 pacote de Macarrão, confirma toast e mudança de estado. Fecha o gap do [[ACHADO-027]] (só tinha teste negativo).
+2. **`editar-produto.yaml`** (PR-05) — edição inline via `FormularioProduto` na tela de detalhe (não existe modo "editar" separado). Edita "Item Teste QA F5", quantidade necessária de 3→5 un.
+3. **`remover-produto.yaml`** (PR-05) — remoção lógica com `Alert` nativo de confirmação ("Tirar da despensa?"). Remove "Item Teste QA F5", fechando o ciclo de vida desse produto de teste (criado → editado → removido ao longo da F5).
+4. **`lista-derivada-gatilho.yaml`** (PR-07) — único flow **não-destrutivo** da campanha (round-trip): consome "Carne moída" até cruzar o limiar, confirma que aparece sozinha na Lista sem ação manual, repõe, confirma que some sozinha. Prova o gatilho `quantidade_atual < quantidade_necessaria` em runtime, não só em unidade.
+
+Achado de teste (não de produto) surgido nesta rodada: o toast "Anotado" é transiente demais para o polling do Maestro capturar de forma confiável neste ambiente — reproduzido também no flow pré-existente `dar-baixa-caminho-critico.yaml`; o dado é gravado corretamente (confirmado pela leitura de estado logo em seguida), é só a asserção do toast que é frágil. Candidato a ajuste futuro (`extendedWaitUntil` com timeout curto), não um achado de comportamento do app.
+
+**F5 completa: 9/9 flows Maestro** (5 lacunas do plano-fonte + 4 lacunas funcionais adicionais). F6 (KPI e acessibilidade) segue desbloqueada como próximo passo natural.
 
 **F6 desbloqueada, não iniciada.** KPI K4 (baixa em ≤3 toques/≤10s) e acessibilidade ainda não têm nenhuma medição real, só a garantia estrutural do design documentado no `FRONTEND-DESIGN`.
