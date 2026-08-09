@@ -42,7 +42,59 @@ When ready to implement, run /opsx:apply
    ```
    This creates a scaffolded change in the planning home resolved by the CLI with `.openspec.yaml`.
 
-3. **Get the artifact build order**
+3. **Classify the change type — New Feature vs Bug Fix**
+
+   From the user's description (ask with **AskUserQuestion** if ambiguous), classify the change
+   and record it in `proposal.md` as an explicit line (`**Type:** New Feature` or
+   `**Type:** Bug Fix`). The type dictates the test flow that `tasks.md` must encode
+   and that `/opsx:apply` and `/opsx:test` will enforce:
+
+   - **New Feature (strict TDD)**: tasks that write the automated test scripts/scenarios/flows
+     BEFORE any implementation task, then implementation, then re-run of the same tests to prove
+     the change delivered what was asked. Besides the TDD unit tests, tasks must include the QA
+     level: **E2E (Maestro)** covering the complete journey of the feature, **integration**
+     (infrastructure/application layers talking to the rest of the system), and **regression**
+     (full existing suite + `npm run verificar` still green).
+   - **Bug Fix**: first task implements the fix reported in the change; next task runs
+     the automated test for the specific bug scenario proving it is resolved; then **mandatory**
+     tasks creating and implementing new automated tests for other scenarios and edge cases in
+     the same context of the original bug, widening coverage of that change.
+
+4. **Check ordering against the other active changes and update ORDER.md**
+
+   ```bash
+   openspec list --json
+   ```
+
+   These commands always refer to the **current active changes** of this repository (never
+   archived ones). For every other active change returned (exclude the one just created), read
+   its `proposal.md` — and `design.md` if it exists — to learn what it touches: feature dir
+   (`produto/`, `compra/`, `movimento/`...) in any layer of `src/`, `src/infrastructure/db/schema.ts`
+   or migrations, routes under `app/`, or a capability spec in `openspec/specs/`. Compare against
+   this change's own scope. This project has no branch-per-change isolation — two active changes
+   can silently step on the same file.
+
+   **If overlap found**, use **AskUserQuestion**:
+   - "Sequence this change after `<other-change>`" (the other one defines the base this one assumes)
+   - "No real ordering dependency — proceed in parallel, but record the overlap"
+   - "Stop and review the scope with the user before continuing"
+
+   Record the resolution as a short "Dependencies between changes" note in `proposal.md`'s scope
+   section, naming the other change and the chosen order.
+
+   **Then update the central registry** `openspec/changes/ORDER.md` (create it from the header
+   convention if it doesn't exist yet): add a row for this change (columns
+   `Ordem | Change | Depende de | Motivo`). Position it right after the change it depends on if
+   one was found; otherwise append it at the end with "—" in "Depende de". Never reorder existing
+   rows to resolve an overlap you found for *this* change — if resolving it requires reordering
+   existing rows, that's a decision for the user (ask, don't silently rewrite the plan for other
+   changes). The `Ordem` number assigned here later defines the PR branch name at archive time
+   (`change/<NN>-<nome>`).
+
+   If no other active changes exist, still add this change's row to `ORDER.md` (with "—") and
+   note "No concurrent active changes" in the final summary.
+
+5. **Get the artifact build order**
    ```bash
    openspec status --change "<name>" --json
    ```
@@ -51,7 +103,7 @@ When ready to implement, run /opsx:apply
    - `artifacts`: list of all artifacts with their status and dependencies
    - `planningHome`, `changeRoot`, `artifactPaths`, and `actionContext`: path and scope context. Use these instead of assuming repo-local paths.
 
-4. **Create artifacts in sequence until apply-ready**
+6. **Create artifacts in sequence until apply-ready**
 
    Use the **TodoWrite tool** to track progress through the artifacts.
 
@@ -83,7 +135,11 @@ When ready to implement, run /opsx:apply
       - Use **AskUserQuestion tool** to clarify
       - Then continue with creation
 
-5. **Show final status**
+   When creating `tasks.md`, encode the test flow required by the change type from step 3
+   (TDD + QA E2E/integration/regression for New Feature; fix → bug proof → edge cases
+   for Bug Fix) as explicit, ordered tasks — never leave testing implicit.
+
+7. **Show final status**
    ```bash
    openspec status --change "<name>"
    ```
@@ -92,9 +148,11 @@ When ready to implement, run /opsx:apply
 
 After completing all artifacts, summarize:
 - Change name and location
+- Change type (New Feature / Bug Fix) and the test flow it commits to
+- This change's position in `openspec/changes/ORDER.md` and what it depends on, if anything
 - List of artifacts created with brief descriptions
 - What's ready: "All artifacts created! Ready for implementation."
-- Prompt: "Run `/opsx:apply` or ask me to implement to start working on the tasks."
+- Prompt: "Run `/opsx:apply` or ask me to implement to start working on the tasks. Then run `/opsx:test` to validate the full test flow before `/opsx:archive`."
 
 **Artifact Creation Guidelines**
 
@@ -112,3 +170,7 @@ After completing all artifacts, summarize:
 - If context is critically unclear, ask the user - but prefer making reasonable decisions to keep momentum
 - If a change with that name already exists, ask if user wants to continue it or create a new one
 - Verify each artifact file exists after writing before proceeding to next
+- Every new change MUST have a row in `openspec/changes/ORDER.md` before artifacts are declared
+  done — it's the one place a human can see the whole active queue
+- `tasks.md` MUST encode the test flow of the declared change type; a New Feature whose first
+  tasks are implementation (not tests) violates the TDD rule of this project

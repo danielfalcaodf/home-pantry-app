@@ -49,11 +49,31 @@ Revise a change's existing planning artifacts and keep them coherent. Never edit
 3. **Understand the request**
    - If the user asked for a specific revision ("the design now uses X"), that is the starting edit.
    - If they only said "update" / "make this coherent", treat it as a coherence review: read the existing artifacts and check them against each other for contradictions, gaps, and duplication.
+   - **If invoked because `/opsx:test` reported failures** (the mandatory feedback loop of this
+     project): this always targets a **current, already implemented** change (never an archived
+     one). Register in `tasks.md` the additional code adjustments that must be made before
+     proceeding, as new unchecked tasks, and reflect any design/scope consequence in the other
+     artifacts. The change can only be archived after these tasks are done and `/opsx:test`
+     passes 100%.
 
 4. **Read and reconcile**
    - Read the artifact(s) the request touches and the change's other existing artifacts.
    - Apply the requested edit. Then check every other existing artifact against it - in ANY direction: an edit to a later artifact may require revising an earlier one, not only the other way around. Build order is a useful reading order, not a constraint on which artifacts may be revised.
    - Note everything that is now inconsistent, missing, or contradictory.
+   - If the request reorders or adds tasks in `tasks.md`, re-check: does a task now depend on
+     a later-numbered one? Fix the ordering, don't just flag it. For a New Feature, the TDD
+     order (tests before implementation) must survive the revision; for a Bug Fix, the
+     order fix → bug proof → edge cases must survive it.
+   - If the request expands scope (new files, new feature area touched), run `openspec list
+     --json` and check the other active changes the same way `/opsx:propose` does — same
+     feature dir, `schema.ts`/migrations, route under `app/`, or capability spec. If a new
+     overlap appears, use **AskUserQuestion** with the same three options (sequence after /
+     parallel-but-recorded / stop and revise scope), record the resolution in `proposal.md`,
+     and update this change's row (and only this row, unless the user explicitly asks to
+     reorder others) in `openspec/changes/ORDER.md`.
+   - If the update makes this change no longer depend on what `ORDER.md` says it depends on
+     (or introduces a new dependency), fix that row too — `ORDER.md` must always match the
+     latest `proposal.md`, never a stale snapshot from when the change was first proposed.
    - Revise only files that already exist (`existingOutputPaths`). Do NOT create artifacts that don't exist yet, and do NOT invent new files under a glob artifact - note them and point the user to `/opsx:continue` to create them.
    - If the change is already coherent, say so and make no edits.
 
@@ -84,3 +104,11 @@ After each invocation, show:
 - Do not advance the build frontier: no new artifacts, no new files under glob artifacts - that is `/opsx:continue`'s job.
 - Confirm every edit with the user before writing.
 - If the request changes the change's *intent* rather than refining it, recommend starting fresh with `/opsx:new` (the "Update vs. Start Fresh" heuristic).
+- A `tasks.md` revision must never leave a forward reference (task depending on a later task)
+  nor break the test flow of the change type (TDD-first for feature; fix → proof → edge cases for bug).
+- A scope expansion that creates a new overlap with another active change must be flagged and
+  resolved (or explicitly recorded) before writing - never silently.
+- If this change's row in `openspec/changes/ORDER.md` no longer matches the revised
+  `proposal.md` (dependency added, removed, or changed), update that row in the same run.
+- Test failures reported by `/opsx:test` MUST be registered here as new tasks before any further
+  code work — never fix silently without updating the change.
