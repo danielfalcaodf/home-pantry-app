@@ -1,0 +1,37 @@
+appId: com.triasoftware.repor
+---
+# Cadastro de produto (F5, capability `cadastro-de-produto`, PR-05
+# `change/despensa-e-cadastro-produto`): da Despensa até um produto novo
+# aparecendo na lista com estado calculado corretamente, cobrindo o
+# formulário mínimo (nome + medida + quanto quero ter em casa) que o Jest
+# não alcança porque não sobe o app.
+#
+# Usa "Item Teste QA F5" como nome — escolhido por ser improvável de já
+# existir na massa de dados do dispositivo de QA (evita cair no fluxo de
+# duplicidade de nome, que é outra capability, coberta à parte). Se esse
+# nome já existir no seu dispositivo, troque antes de rodar.
+#
+# Efeito colateral real, não destrutivo mas permanente: cria um produto
+# novo de verdade no banco do dispositivo de teste (categoria "Sem
+# categoria", medida "un", quantidade necessária 3, quantidade atual 0 —
+# por isso nasce no estado "Acabou"). Fica na despensa até ser removido
+# manualmente ou via outro flow.
+- launchApp
+- assertVisible: "Despensa"
+- tapOn: "Adicionar produto"
+- assertVisible: "Novo produto"
+- tapOn: "O que é"
+- inputText: "Item Teste QA F5"
+- hideKeyboard
+- tapOn: "un"
+- tapOn: "Quanto quero ter em casa"
+- inputText: "3"
+- hideKeyboard
+- tapOn: "Adicionar à despensa"
+- assertVisible: "Despensa"
+- scrollUntilVisible:
+    element: "Item Teste QA F5, 0 de 3 un, Acabou"
+    direction: DOWN
+    speed: 60
+    timeout: 30000
+- assertVisible: "Item Teste QA F5, 0 de 3 un, Acabou"
