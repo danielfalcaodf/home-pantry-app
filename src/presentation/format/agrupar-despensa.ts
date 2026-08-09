@@ -1,6 +1,10 @@
 import { EstadoItem } from '../../domain/produto/estoque.rules';
 
-export type FiltroEstado = 'tudo' | EstadoItem;
+// 'faltando' é um filtro só de apresentação (chip da Despensa, spec
+// tela-despensa) que soma os estados 'critico' e 'emFalta' — os valores de
+// EstadoItem continuam existindo para rotas que já apontavam para um estado
+// isolado (ex.: Resumo → `/?filtro=emFalta`), mesmo sem chip próprio na tela.
+export type FiltroEstado = 'tudo' | EstadoItem | 'faltando';
 
 export type ItemAgrupavel = {
   produto: { id: string; nome: string; categoria: string | null };
@@ -51,10 +55,24 @@ export function agruparPorCategoria<T extends ItemAgrupavel>(itens: T[]): LinhaD
 }
 
 export function contarPorEstado(itens: ItemAgrupavel[]): Record<FiltroEstado, number> {
+  const critico = itens.filter((i) => i.estado === 'critico').length;
+  const emFalta = itens.filter((i) => i.estado === 'emFalta').length;
   return {
     tudo: itens.length,
-    critico: itens.filter((i) => i.estado === 'critico').length,
-    emFalta: itens.filter((i) => i.estado === 'emFalta').length,
+    critico,
+    emFalta,
     ok: itens.filter((i) => i.estado === 'ok').length,
+    faltando: critico + emFalta,
   };
+}
+
+/** Casa um item com o filtro ativo — 'faltando' é o único filtro composto. */
+export function casaComFiltro(estado: EstadoItem, filtro: FiltroEstado): boolean {
+  if (filtro === 'tudo') {
+    return true;
+  }
+  if (filtro === 'faltando') {
+    return estado === 'critico' || estado === 'emFalta';
+  }
+  return estado === filtro;
 }

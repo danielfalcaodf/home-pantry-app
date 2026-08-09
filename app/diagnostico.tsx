@@ -3,6 +3,7 @@ import { Pressable, View } from 'react-native';
 import { useDiagnostico } from '@/application/backup/use-diagnostico';
 import { formatarNumero } from '@/domain/shared/quantidade';
 import { Botao } from '@/presentation/components/botao';
+import { BotaoVoltar } from '@/presentation/components/botao-voltar';
 import { Texto } from '@/presentation/components/texto';
 import { espaco } from '@/presentation/theme/espaco';
 import { useTheme } from '@/presentation/theme/provider';
@@ -18,7 +19,10 @@ export default function Diagnostico() {
 
   return (
     <View style={{ flex: 1, backgroundColor: tema.bg.base, padding: espaco.lg, gap: espaco.lg }}>
-      <Texto papel="display.sm">Diagnóstico</Texto>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: espaco.sm }}>
+        <BotaoVoltar />
+        <Texto papel="display.sm">Diagnóstico</Texto>
+      </View>
       <Texto papel="body.md" tom="secondary">
         Compara o que está registrado com a soma do histórico de cada item.
       </Texto>

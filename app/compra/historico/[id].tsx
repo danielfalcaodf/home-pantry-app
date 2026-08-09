@@ -5,6 +5,7 @@ import { ItemComProduto, useDetalheDaCompra } from '@/application/resumo/use-det
 import { dataDeReferencia } from '@/domain/compra/compra.rules';
 import { centavos, formatarBRL } from '@/domain/shared/dinheiro';
 import { formatarQuantidade } from '@/domain/shared/quantidade';
+import { BotaoVoltar } from '@/presentation/components/botao-voltar';
 import { EstadoVazio } from '@/presentation/components/estado-vazio';
 import { Texto } from '@/presentation/components/texto';
 import { formatarDataDaCompra } from '@/presentation/format/historico-de-compras';
@@ -72,7 +73,12 @@ export default function DetalheDaCompra() {
   return (
     <View style={{ flex: 1, backgroundColor: tema.bg.base }}>
       <View style={{ padding: espaco.lg, gap: espaco.xs }}>
-        <Texto papel="display.sm">Compra de {formatarDataDaCompra(dataDeReferencia(compra))}</Texto>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: espaco.sm }}>
+          <BotaoVoltar />
+          <Texto papel="display.sm">
+            Compra de {formatarDataDaCompra(dataDeReferencia(compra))}
+          </Texto>
+        </View>
         {cancelada ? (
           <Texto papel="label" tom="secondary">
             Cancelada — nenhum item foi reposto

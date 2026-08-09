@@ -41,15 +41,22 @@ Para implementar uma delas: `/opsx:apply <nome>`. Para arquivar após concluir: 
 | 10 | `ajuste-e-conferencia-estoque` | ✅ | Ajuste com motivo, modo conferência, diagnóstico de integridade, histórico do produto | Compensa a ausência de US-08. ARQUITETURA §1.1: sem sync, K2 depende da conferência semanal. |
 | 11 | `resumo-valores-e-historico` | ✅ | Valor do estoque, valor da lista, gasto mensal, histórico de compras | Camada de leitura sobre dados existentes. Não bloqueia nada. |
 
+### Pós-MVP — correções e ajustes
+
+| # | Change | Estado | Entrega | Por que nessa posição |
+|---|---|---|---|---|
+| 12 | `correcao-navegacao-nativa` | ✅ | Header nativo oculto em toda rota, `BotaoVoltar` compartilhado no Detalhe do produto/Cadastrar produto/Modo compra, tab bar sem ícone (`MissingIcon`) | Bug encontrado após a change 11: nenhuma tela foi desenhada para o header nativo do Expo Router, que vazava nome de arquivo/rota na UI. |
+| 13 | `ajuste-visual-telas-design-system` | ✅ | Ícone SVG na tab bar (reverte a decisão "sem ícone" da change 12), cabeçalho da Despensa com ícones de buscar/adicionar, chip "Faltando" somando crítico+em falta, rodapé do Modo compra reposicionado, "Gasto este mês" + gráfico de barras no Resumo | Bug visual encontrado após a change 12: comparação direta com o projeto de design (`claude.ai/design`, importado via `claude_design` MCP) mostrou divergências concretas em 4 telas. |
+
 ---
 
 ## Onde a implementação parou
 
-**Última atualização: 2026-08-03.** Retomada em outra máquina começa por aqui.
+**Última atualização: 2026-08-06.** Retomada em outra máquina começa por aqui.
 
 ### Estado do repositório
 
-Todas as 11 changes do MVP estão **implementadas, arquivadas e com PR aberta**. Não há change pendente — o próximo passo é abrir a PR final de `develop` para `main`, depois que as 11 PRs abaixo forem mescladas na ordem da cadeia.
+Todas as 11 changes do MVP mais as 2 changes pós-MVP (`correcao-navegacao-nativa` e `ajuste-visual-telas-design-system`) estão **implementadas, arquivadas e com PR aberta**. Não há change pendente — o próximo passo é abrir a PR final de `develop` para `main`, depois que a cadeia de PRs abaixo for mesclada na ordem indicada.
 
 As branches formam uma cadeia — cada PR aponta para a branch da change anterior, e o merge precisa seguir essa ordem:
 
@@ -65,9 +72,28 @@ As branches formam uma cadeia — cada PR aponta para a branch da change anterio
 | [#8](https://github.com/danielfalcaodf/home-pantry-app/pull/8) | `feature/modo-compra-e-fechamento` | `feature/lista-de-compras` | 8 · modo-compra-e-fechamento |
 | [#9](https://github.com/danielfalcaodf/home-pantry-app/pull/9) | `feature/backup-restore-json` | `feature/modo-compra-e-fechamento` | 9 · backup-restore-json |
 | [#10](https://github.com/danielfalcaodf/home-pantry-app/pull/10) | `feature/ajuste-e-conferencia-estoque` | `feature/backup-restore-json` | 10 · ajuste-e-conferencia-estoque |
-| #11 (a abrir) | `feature/resumo-valores-e-historico` | `feature/ajuste-e-conferencia-estoque` | 11 · resumo-valores-e-historico |
+| [#11](https://github.com/danielfalcaodf/home-pantry-app/pull/11) | `feature/resumo-valores-e-historico` | `feature/ajuste-e-conferencia-estoque` | 11 · resumo-valores-e-historico |
+| [#12](https://github.com/danielfalcaodf/home-pantry-app/pull/12) | `feat/correcao-navegacao-nativa` | `feature/resumo-valores-e-historico` | 12 · correcao-navegacao-nativa |
+| [#13](https://github.com/danielfalcaodf/home-pantry-app/pull/13) | `feat/ajuste-visual-telas-design-system` | `feat/correcao-navegacao-nativa` | 13 · ajuste-visual-telas-design-system |
 
-**A PR de `develop` para `main` ainda não foi aberta** — abrir assim que a PR #11 existir; ela fecha o ciclo do MVP.
+**A PR de `develop` para `main` ainda não foi aberta** — abrir depois que a cadeia de PRs (1 a 13) for mesclada na ordem acima; ela fecha o ciclo do MVP + correções pós-MVP.
+
+### Change 13 — concluída, escopo ampliado durante a validação manual
+
+Todas as tasks do `tasks.md` concluídas (seções 1-8). `npm run verificar` limpo; `npm test` com as mesmas 2 falhas pré-existentes de sempre (`historico-de-compras.test.ts`, `use-gasto-mensal.test.ts` — dependem de fuso/relógio local, confirmadas via `git stash` antes de qualquer mudança desta change).
+
+- Ícones da tab bar, do cabeçalho da Despensa e do botão de voltar vieram dos paths SVG reais do design system (`claude.ai/design`, projeto `aca58fcf-dc7d-4d76-a375-b1aa5a3dc816`), lidos via `claude_design` MCP/`DesignSync` — os primeiros paths que eu tinha estimado sem essa fonte não batiam; corrigidos depois de importar o projeto e ler `PantryScreen.jsx`/`TabBar.jsx`/`ProductDetailScreen.jsx`/`SummaryScreen.jsx` do `_ds_bundle.js`
+- `IconeSvg` aceita `path: string | readonly string[]` — o design usa um único `d` com múltiplos comandos `M` por ícone, não um array
+- Chip "Faltando" da Despensa passou a somar `critico + emFalta`; nova `casaComFiltro` em `agrupar-despensa.ts` reaproveita o `EstadoItem` já calculado no domínio, sem duplicar `estadoDoItem()`. `FiltroEstado` manteve os valores antigos (`emFalta`, `ok`) válidos para não quebrar as rotas que o Resumo já usa (`/?filtro=emFalta`), mesmo sem chip próprio para eles
+- `GraficoBarras` (novo componente) replica `SummaryScreen.jsx`: todas as barras em `action.azulejo`, só a mais recente em opacidade plena, as demais em 0.4 — sem lib de gráfico
+- **Fora do proposal original, pedido em conversa direta com o usuário** depois de comparar o app rodando com o protótipo interativo do design (`Repor Prototype.dc.html`):
+  - Botão "Repor" (+) sempre visível ao lado do "−" em cada linha da Despensa (novo `BotaoReporRapido`, par do `StepperConsumo`) — confirmado com o usuário antes, por mexer numa decisão já documentada em `dar-baixa-caminho-critico` (um único botão no caminho crítico)
+  - Botão de alternar tema claro/escuro do protótipo **não** foi replicado — é controle de prévia do próprio Claude Design (absolute sobre o frame do telefone, sem componente correspondente no `readme.md` do design system), confirmado com o usuário
+  - Tela Configurações virou a 4ª aba (`app/configuracoes.tsx` → `app/(tabs)/configuracoes.tsx`, ícone próprio sem equivalente no design system) e ganhou `ScrollView` (a `View` fixa escondia a nova seção "Despensa" em telas menores — achado na validação manual)
+  - `BotaoVoltar` adicionado em todas as telas empilhadas que ainda não tinham: Configurações, Conferência, Diagnóstico, Lista básica, Histórico de compras (lista e detalhe), Histórico do produto
+- **Dois bugs pré-existentes encontrados e corrigidos na validação manual, fora do escopo original mas bloqueantes:**
+  - `esmaecer`/`molar` (`theme/movimento.ts`) sem a diretiva `'worklet'` — qualquer toque no `StepperConsumo` (o caminho crítico do app inteiro, não só o que esta change tocou) ou no novo `BotaoReporRapido` derrubava a tela com `[Worklets] Tried to synchronously call a Remote Function`. A ação em si já tinha sido registrada antes do crash; só a animação quebrava
+  - `BotaoVoltar` do Detalhe do produto (`app/produto/[id].tsx`) ficava esticado e centralizado na tela em vez de à esquerda — era o único lugar do app onde o botão era filho único de uma `View` sem `flexDirection: 'row'`, herdando `alignItems: 'stretch'` do container em coluna
 
 ### Change 11 — concluída, com pendências documentadas
 

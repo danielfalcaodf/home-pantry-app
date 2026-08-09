@@ -6,6 +6,7 @@ import { CONFERENCIA_TUDO, useConferencia } from '@/application/estoque/use-conf
 import { deDecimal, formatarNumero, paraDecimal } from '@/domain/shared/quantidade';
 import { rotuloDaUnidade } from '@/domain/shared/unidade';
 import { Botao } from '@/presentation/components/botao';
+import { BotaoVoltar } from '@/presentation/components/botao-voltar';
 import { CampoTexto } from '@/presentation/components/campo-texto';
 import { EstadoVazio } from '@/presentation/components/estado-vazio';
 import { Texto } from '@/presentation/components/texto';
@@ -28,7 +29,10 @@ export default function Conferencia() {
   if (conferencia.categoriaEscolhida === null) {
     return (
       <View style={{ flex: 1, backgroundColor: tema.bg.base, padding: espaco.lg, gap: espaco.md }}>
-        <Texto papel="display.sm">O que você quer conferir?</Texto>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: espaco.sm }}>
+          <BotaoVoltar />
+          <Texto papel="display.sm">O que você quer conferir?</Texto>
+        </View>
         <Botao
           titulo="Conferir tudo"
           onPress={() => void conferencia.escolherCategoria(CONFERENCIA_TUDO)}

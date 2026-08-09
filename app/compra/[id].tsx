@@ -10,6 +10,7 @@ import { totalPago } from '@/domain/compra/compra.rules';
 import { centavos } from '@/domain/shared/dinheiro';
 import { deDecimal, paraDecimal } from '@/domain/shared/quantidade';
 import { Botao } from '@/presentation/components/botao';
+import { BotaoVoltar } from '@/presentation/components/botao-voltar';
 import { ItemCompra } from '@/presentation/components/item-compra';
 import { RodapeCompra } from '@/presentation/components/rodape-compra';
 import { SheetAjusteCompra } from '@/presentation/components/sheet-ajuste-compra';
@@ -88,13 +89,14 @@ export default function ModoCompra() {
   return (
     <View style={{ flex: 1, backgroundColor: tema.bg.base }}>
       <View style={{ padding: espaco.lg, paddingBottom: espaco.sm, gap: espaco.xs }}>
-        <Texto papel="display.sm">Compra</Texto>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: espaco.sm }}>
+          <BotaoVoltar />
+          <Texto papel="display.sm">Compra</Texto>
+        </View>
         <Texto papel="label" tom="secondary">
           Toque em cada item para marcar. Se sair, a compra continua aberta com o que você já marcou.
         </Texto>
       </View>
-
-      <RodapeCompra marcados={marcados} totalDeItens={itens.length} total={total} />
 
       <ScrollView style={{ flex: 1 }}>
         {itens.map((linha) => (
@@ -110,15 +112,18 @@ export default function ModoCompra() {
       </ScrollView>
 
       {aviso?.sucesso ? null : (
-        <View style={{ padding: espaco.lg, gap: espaco.md }}>
-          <Botao titulo="Fechar compra" onPress={() => void fecharCompra()} disabled={finalizando} />
-          <Botao
-            titulo="Cancelar compra"
-            variante="secundario"
-            onPress={confirmarCancelamento}
-            disabled={cancelando}
-          />
-        </View>
+        <>
+          <RodapeCompra marcados={marcados} totalDeItens={itens.length} total={total} />
+          <View style={{ padding: espaco.lg, gap: espaco.md }}>
+            <Botao titulo="Fechar compra" onPress={() => void fecharCompra()} disabled={finalizando} />
+            <Botao
+              titulo="Cancelar compra"
+              variante="secundario"
+              onPress={confirmarCancelamento}
+              disabled={cancelando}
+            />
+          </View>
+        </>
       )}
 
       {itemEmAjuste ? (
