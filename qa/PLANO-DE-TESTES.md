@@ -95,6 +95,7 @@
 | [ACHADO-053](achados/ACHADO-053.md) | média | F5 (PR 13) | aberto | Chip "Faltando" do Resumo mostra número diferente (menor) do que a Despensa para os mesmos dados — não soma `critico` |
 | [ACHADO-054](achados/ACHADO-054.md) | média | F5 (PR 8) | aberto | Marcar 2 itens em sequência rápida no modo compra pode persistir o item errado como comprado — suspeita, não confirmado |
 | [ACHADO-055](achados/ACHADO-055.md) | baixa | F5 (PR 10) | aberto | Campo "Corrigir para" da conferência mostra placeholder indistinguível de valor real; tocar "Corrigir" sem digitar é no-op silencioso |
+| [ACHADO-056](achados/ACHADO-056.md) | **crítica** | F6 (PR 10) | aberto | Autofoco no detalhe do produto sobe o teclado sobre "Usei"/"Repus"; Voltar fecha a tela em vez do teclado — quebra o caminho de 2 toques do K4 |
 
 ## Próximo passo
 
