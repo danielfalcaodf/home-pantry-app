@@ -1,8 +1,9 @@
 import { Compra, CompraItem } from '../../../domain/compra/compra';
-import { EfeitosFinalizacao } from '../../../domain/compra/compra.rules';
+import { EfeitosFinalizacao, GastoDoMes } from '../../../domain/compra/compra.rules';
 import { centavos } from '../../../domain/shared/dinheiro';
 import { milesimos } from '../../../domain/shared/quantidade';
 import {
+  CompraDoHistorico,
   CompraRepository,
   EdicaoItemCompra,
   ItemComProduto,
@@ -50,6 +51,10 @@ export class CompraRepositorioFalso implements CompraRepository {
     return this.compras.find((c) => c.casaId === casaId && c.status === 'aberta') ?? null;
   }
 
+  async obterPorId(compraId: string): Promise<Compra | null> {
+    return this.compras.find((c) => c.id === compraId) ?? null;
+  }
+
   async adicionarItem(compraId: string, item: NovoItemCompra): Promise<CompraItem> {
     this.proximoId += 1;
     const ordem = item.ordem ?? this.itens.filter((i) => i.compraId === compraId).length;
@@ -66,6 +71,7 @@ export class CompraRepositorioFalso implements CompraRepository {
       comprado: false,
       ordem,
       excluido: item.excluido ?? false,
+      atualizarPreco: null,
     };
     this.itens.push(criado);
     return criado;
@@ -80,6 +86,25 @@ export class CompraRepositorioFalso implements CompraRepository {
 
   async removerItem(itemId: string): Promise<void> {
     this.itens = this.itens.filter((i) => i.id !== itemId);
+  }
+
+  async cancelar(
+    compraId: string,
+    canceladaEm: number,
+  ): Promise<Result<Compra, 'nao_encontrada' | 'nao_esta_aberta'>> {
+    const indice = this.compras.findIndex((c) => c.id === compraId);
+    if (indice === -1) {
+      return falha('nao_encontrada');
+    }
+    if (this.compras[indice].status !== 'aberta') {
+      return falha('nao_esta_aberta');
+    }
+    this.compras[indice] = {
+      ...this.compras[indice],
+      status: 'cancelada',
+      atualizadoEm: canceladaEm,
+    };
+    return sucesso(this.compras[indice]);
   }
 
   async listarItens(compraId: string): Promise<ItemComProduto[]> {
@@ -130,6 +155,15 @@ export class CompraRepositorioFalso implements CompraRepository {
           };
         }
       }
+      for (const atualizacao of efeitos.atualizacoesDePreco) {
+        const idx = this.produtos.produtos.findIndex((p) => p.id === atualizacao.produtoId);
+        if (idx !== -1) {
+          this.produtos.produtos[idx] = {
+            ...this.produtos.produtos[idx],
+            valorUnitario: atualizacao.novoValorUnitario,
+          };
+        }
+      }
     }
     this.compras[indice] = {
       ...this.compras[indice],
@@ -139,5 +173,60 @@ export class CompraRepositorioFalso implements CompraRepository {
       atualizadoEm: finalizadaEm,
     };
     return sucesso(this.compras[indice]);
+  }
+
+  // Espelha o strftime('localtime') do SQLite usando o fuso local do
+  // processo (Date getters), não UTC.
+  async gastoPorMes(casaId: string, desdeEm: number): Promise<GastoDoMes[]> {
+    const porMes = new Map<string, { totalPago: number; qtdCompras: number }>();
+    for (const c of this.compras) {
+      if (c.casaId !== casaId || c.status !== 'finalizada' || c.finalizadaEm === null) {
+        continue;
+      }
+      if (c.finalizadaEm < desdeEm) {
+        continue;
+      }
+      const data = new Date(c.finalizadaEm);
+      const mes = `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, '0')}`;
+      const atual = porMes.get(mes) ?? { totalPago: 0, qtdCompras: 0 };
+      porMes.set(mes, {
+        totalPago: atual.totalPago + (c.valorTotalPago ?? 0),
+        qtdCompras: atual.qtdCompras + 1,
+      });
+    }
+    return [...porMes.entries()]
+      .map(([mes, dados]) => ({ mes, totalPago: centavos(dados.totalPago), qtdCompras: dados.qtdCompras }))
+      .sort((a, b) => b.mes.localeCompare(a.mes));
+  }
+
+  private dataDeReferencia(compra: Compra): number {
+    return compra.finalizadaEm ?? compra.atualizadoEm;
+  }
+
+  async listarHistorico(
+    casaId: string,
+    opcoes: { limite?: number; antesDe?: number } = {},
+  ): Promise<CompraDoHistorico[]> {
+    const { limite = 30, antesDe } = opcoes;
+    return this.compras
+      .filter((c) => c.casaId === casaId && (c.status === 'finalizada' || c.status === 'cancelada'))
+      .filter((c) => antesDe === undefined || this.dataDeReferencia(c) < antesDe)
+      .sort((a, b) => this.dataDeReferencia(b) - this.dataDeReferencia(a))
+      .slice(0, limite)
+      .map((compra) => ({
+        compra,
+        qtdItensComprados: this.itens.filter((i) => i.compraId === compra.id && i.comprado).length,
+      }));
+  }
+
+  async listarTudoParaBackup(casaId: string): Promise<{ compra: Compra; itens: CompraItem[] }[]> {
+    return this.compras
+      .filter((c) => c.casaId === casaId)
+      .map((compra) => ({
+        compra,
+        itens: this.itens
+          .filter((i) => i.compraId === compra.id)
+          .sort((a, b) => a.ordem - b.ordem),
+      }));
   }
 }

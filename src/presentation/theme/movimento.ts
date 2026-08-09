@@ -16,11 +16,17 @@ export const DURACAO_FADE = 100;
 export const ESCALA_PRESSIONADO = 0.92;
 export const DURACAO_CONTRACAO = 90;
 
+// 'worklet': ambas são chamadas de dentro de callbacks de animação que já
+// rodam na UI thread (ex.: o retorno de withTiming em StepperConsumo) — sem
+// a diretiva, o plugin de worklets não consegue autotransformar uma função
+// importada de outro módulo, só literais inline.
 export function molar<T extends number>(destino: T) {
+  'worklet';
   return withSpring(destino, MOLA);
 }
 
 export function esmaecer<T extends number>(destino: T) {
+  'worklet';
   return withTiming(destino, {
     duration: DURACAO_FADE,
     reduceMotion: ReduceMotion.System,

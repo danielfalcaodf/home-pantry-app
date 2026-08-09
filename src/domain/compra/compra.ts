@@ -38,4 +38,11 @@ export type CompraItem = {
    * faltante. Sempre com `produtoId` preenchido e sem efeito de estoque.
    */
   excluido: boolean;
+  /**
+   * Resposta à pergunta de atualizar o preço de referência (design D4 da
+   * change modo-compra-e-fechamento): `null` quando não perguntado ou não
+   * se aplica (item avulso, sem divergência). A escrita em
+   * `produto.valorUnitario` só acontece na transação de fechamento.
+   */
+  atualizarPreco: boolean | null;
 };
