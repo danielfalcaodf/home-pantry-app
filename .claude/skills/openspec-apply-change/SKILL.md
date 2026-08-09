@@ -27,6 +27,11 @@ Implement tasks from an OpenSpec change.
 
    Always announce: "Using change: <name>" and how to override (e.g., `/opsx:apply <other>`).
 
+   This skill always operates on a **current active change** (never an archived one). Check
+   `openspec/changes/ORDER.md`: if this change's "Depende de" points to another change that is
+   still active (not archived), warn the user that applying out of the registered order risks
+   conflicting edits, and confirm before proceeding.
+
 2. **Check status to understand the schema**
    ```bash
    openspec status --change "<name>" --json
@@ -70,6 +75,16 @@ Implement tasks from an OpenSpec change.
 
 6. **Implement tasks (loop until done or blocked)**
 
+   Respect the test flow declared in `proposal.md` (`**Type:**`):
+   - **New Feature (strict TDD)**: the test-writing tasks (automated scripts, scenarios and
+     flows — unit, integration, E2E Maestro) come BEFORE the implementation tasks and
+     must be executed in that order; after implementing, re-run those same tests to prove the
+     feature delivers what the change asked. Never skip ahead to implementation because the
+     tests "can be done later".
+   - **Bug Fix**: implement the reported fix first, then run the automated test for the
+     specific bug scenario to prove it resolved, then create and implement the mandatory
+     edge-case tests for the same context of the original bug.
+
    For each pending task:
    - Show which task is being worked on
    - Make the code changes required
@@ -88,7 +103,8 @@ Implement tasks from an OpenSpec change.
    Display:
    - Tasks completed this session
    - Overall progress: "N/M tasks complete"
-   - If all done: suggest archive
+   - If all done: point to `/opsx:test` — the full automated test flow of the change (TDD, QA
+     E2E/integration/regression or bug-context coverage) must pass 100% before `/opsx:archive`
    - If paused: explain why and wait for guidance
 
 **Output During Implementation**
@@ -119,7 +135,8 @@ Working on task 4/7: <task description>
 - [x] Task 2
 ...
 
-All tasks complete! Ready to archive this change.
+All tasks complete! Run `/opsx:test` to validate the full test flow — archiving is only
+allowed after it passes 100%.
 ```
 
 **Output On Pause (Issue Encountered)**
@@ -151,6 +168,9 @@ What would you like to do?
 - Update task checkbox immediately after completing each task
 - Pause on errors, blockers, or unclear requirements - don't guess
 - Use contextFiles from CLI output, don't assume specific file names
+- Never invert the test flow of the change type: tests-first for New Feature (TDD), fix →
+  bug proof → edge cases for Bug Fix
+- On completion, the next step is ALWAYS `/opsx:test`, never straight to `/opsx:archive`
 
 **Fluid Workflow Integration**
 

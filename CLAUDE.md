@@ -121,6 +121,27 @@ Direção: **"linha d'água"**. Cada item da lista é um medidor vertical que pr
 - Movimento é orquestrado só no gesto de dar baixa (háptico leve → stepper contrai 0.92 → linha d'água desce em spring damping 18 sobre `react-native-reanimated`, rodando na UI thread → cross-fade dos números → toast). Nada mais anima: sem entrada de tela em cascata, sem skeleton shimmer, sem contagem progressiva de números — isso adiciona latência percebida ao caminho crítico. Com `reduceMotion` do sistema ligado, o nível muda em corte seco (fade 100ms) e o háptico permanece; usar `withSpring(..., { reduceMotion: ReduceMotion.System })` para respeitar a preferência de acessibilidade automaticamente em vez de checar a flag manualmente.
 - Sem biblioteca de design system pronta — os ~12 componentes (`ItemDespensa`, stepper, teclado de quantidade em bottom sheet, toast de desfazer, chip de estado, campo de texto, item do modo compra) são custom. Ver `FRONTEND-DESIGN-app-estoque-de-casa.md` §7 antes de implementar qualquer um deles — a especificação de layout, estados e comportamento de toque já está fechada lá.
 
+## Fluxo de changes do OpenSpec (`opsx`) — ORDEM e gate de testes
+
+Os comandos `opsx` operam sempre sobre as changes **atuais** (ativas) do repositório — nunca
+sobre arquivadas. Como não há isolamento por branch entre changes ativas, `/opsx:propose`,
+`/opsx:update` e `/opsx:archive` mantêm juntos `openspec/changes/ORDER.md`: registro central
+com a ORDEM cronológica recomendada de implementação (colunas `Ordem | Change | Depende de |
+Motivo`). Propose adiciona a linha e checa sobreposição, update corrige a linha quando o escopo
+muda, archive remove a linha. Dentro de uma change, a ordem de tasks já é a numeração de
+`tasks.md` — `ORDER.md` cobre só a ordem **entre** changes.
+
+Ciclo por tipo de change (registrado como `**Type:**` no `proposal.md`):
+- **Nova Feature** — TDD estrito: roteiros/cenários/fluxos de teste antes do código, e re-execução
+  depois; mais o nível QA (E2E Maestro da jornada completa, integração, regressão).
+- **Correção de Bug** — corrigir primeiro, provar com o teste do cenário do bug, e então
+  obrigatoriamente cobrir casos de borda do mesmo contexto.
+
+`/opsx:test` (skill `openspec-test-change`) executa esse fluxo completo. Se algo falhar,
+`/opsx:update` registra os ajustes na change antes de qualquer código. Uma change **só pode ser
+arquivada com o fluxo 100% verde**; imediatamente após o arquivamento, `/opsx:archive` cria o
+PR com tudo da change, na branch `change/<NN>-<nome>` (NN = Ordem do `ORDER.md`).
+
 ## Fora de escopo do MVP (não implementar sem confirmar)
 
 Scanner de código de barras, leitura de nota fiscal, baixa automática por consumo médio, integração com supermercados/e-commerce, controle de validade/lote, receitas/cardápio, multi-casa por usuário, versão web/desktop, divisão de despesas, qualquer feature de IA. Casa compartilhada (US-08) e sync offline (US-09) também estão fora do MVP porque não há backend ainda — isso é intencional (ver ADR-03), não um esquecimento.

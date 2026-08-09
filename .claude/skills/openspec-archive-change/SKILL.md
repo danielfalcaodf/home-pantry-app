@@ -54,7 +54,21 @@ Archive a completed change in the experimental workflow.
 
    **If no tasks file exists:** Proceed without task-related warning.
 
-4. **Assess delta spec sync state**
+4. **Enforce the test gate (hard block)**
+
+   This skill always operates on a **current, implemented** active change — never an archived
+   one. A change can ONLY be archived if 100% of the `/opsx:test` flow passed (TDD, QA
+   E2E/integration/regression for New Feature; bug scenario + edge cases + regression for
+   Bug Fix).
+
+   - If the test flow was not run in this conversation (or its result is not visible), run it
+     now via the `openspec-test-change` skill — or ask the user for the `/opsx:test` verdict.
+   - If any block failed or was skipped: **STOP. Do not archive.** Point to `/opsx:update` to
+     register the pending adjustments, then back to `/opsx:apply` and `/opsx:test`.
+   - Unlike the artifact/task warnings above (which the user may override), this gate is NOT
+     overridable by confirmation.
+
+5. **Assess delta spec sync state**
 
    Use `artifactPaths.specs.existingOutputPaths` from status JSON to check for delta specs. If none exist, proceed without sync prompt.
 
@@ -69,7 +83,7 @@ Archive a completed change in the experimental workflow.
 
    If user chooses sync, use Task tool (subagent_type: "general-purpose", prompt: "Use Skill tool to invoke openspec-sync-specs for change '<name>'. Delta spec analysis: <include the analyzed delta spec summary>"). Proceed to archive regardless of choice.
 
-5. **Perform the archive**
+6. **Perform the archive**
 
    Create an `archive` directory under `planningHome.changesDir` if it doesn't exist:
    ```bash
@@ -86,13 +100,39 @@ Archive a completed change in the experimental workflow.
    mv "<changeRoot>" "<planningHome.changesDir>/archive/YYYY-MM-DD-<name>"
    ```
 
-6. **Display summary**
+7. **Remove the change from the order registry**
+
+   First capture this change's `Ordem` number `<NN>` from `openspec/changes/ORDER.md` — it
+   defines the PR branch name in the next step. Then, if `ORDER.md` has a row for this change,
+   remove that row. Do not renumber or otherwise touch the remaining rows — their relative
+   order is unaffected by one change leaving. If a remaining row's "Depende de" pointed at the
+   change just archived, replace it with "— (`<change>` archived on YYYY-MM-DD)" so the
+   dependency history isn't silently lost.
+
+8. **Create the Pull Request (mandatory, immediately after a successful archive)**
+
+   The PR must contain absolutely everything done in the change: implementation code, tests,
+   the change's planning artifacts (now under `archive/`), spec syncs, and the `ORDER.md`
+   update.
+
+   - The branch name MUST respect the chronological ORDER of the changes:
+     `change/<NN>-<change-name>` (NN = the `Ordem` captured in step 7, two digits).
+   - Create the branch, commit all the work of the change, push, and open the PR with
+     `gh pr create`, summarizing what the change did and the `/opsx:test` verdict (100% green).
+   - If `git`/`gh` state prevents this (dirty tree with unrelated files, missing remote), stop
+     and ask the user instead of guessing.
+
+9. **Display summary**
 
    Show archive completion summary including:
    - Change name
    - Schema that was used
    - Archive location
    - Whether specs were synced (if applicable)
+   - Test gate status (`/opsx:test` 100% green)
+   - Whether it was removed from `openspec/changes/ORDER.md` (and whether any remaining row's
+     dependency was updated)
+   - PR created: branch `change/<NN>-<name>` and URL
    - Note about any warnings (incomplete artifacts/tasks)
 
 **Output On Success**
@@ -104,6 +144,9 @@ Archive a completed change in the experimental workflow.
 **Schema:** <schema-name>
 **Archived to:** the archive path derived from `planningHome.changesDir`/YYYY-MM-DD-<name>/
 **Specs:** ✓ Synced to main specs (or "No delta specs" or "Sync skipped")
+**Tests:** ✓ /opsx:test 100% green
+**ORDER.md:** row removed (Ordem <NN>)
+**PR:** change/<NN>-<name> → <PR URL>
 
 All artifacts complete. All tasks complete.
 ```
@@ -111,7 +154,13 @@ All artifacts complete. All tasks complete.
 **Guardrails**
 - Always prompt for change selection if not provided
 - Use artifact graph (openspec status --json) for completion checking
-- Don't block archive on warnings - just inform and confirm
+- Don't block archive on warnings - just inform and confirm — EXCEPT the `/opsx:test` gate,
+  which is a hard block: a change whose test flow is not 100% green can NEVER be archived
+- Always remove the archived change's row from `openspec/changes/ORDER.md` if present - a
+  stale row for a change that no longer exists is worse than no registry at all
+- Always create the PR immediately after a successful archive, on branch
+  `change/<NN>-<change-name>` — the branch name respects the chronological order registered
+  in `ORDER.md`
 - Preserve .openspec.yaml when moving to archive (it moves with the directory)
 - Show clear summary of what happened
 - If sync is requested, use openspec-sync-specs approach (agent-driven)
