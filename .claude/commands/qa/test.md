@@ -3,6 +3,12 @@ description: Gera ou estende testes automatizados (Jest ou Maestro) via o subage
 argument-hint: [arquivo, função ou descrição do que testar]
 ---
 
+**Antes de invocar**: confirme que `subagent_type: "test-automator"` está disponível (ex. tente a invocação; se a ferramenta responder "agent type not found", o `.claude/agents/test-automator.md` não existe neste worktree — comum quando o diretório atual é um worktree criado para uma PR antiga, cujo branch foi criado antes desse arquivo existir em `qa/plano-de-testes`). Nesse caso:
+1. `git worktree list` para achar outro worktree que tenha o arquivo (normalmente o worktree principal, checkout de `qa/plano-de-testes`).
+2. `cp <worktree-com-o-arquivo>/.claude/agents/test-automator.md .claude/agents/test-automator.md` no worktree atual (crie `.claude/agents/` se não existir).
+3. Repita a invocação do subagent.
+4. **Não** `git add`/commit esse arquivo copiado — é só para a subagent tool resolver o `subagent_type` nesta sessão; ele não pertence à mudança sendo testada.
+
 Invoque o subagent `test-automator` (ferramenta de subagente disponível no ambiente — `Task`/`Agent`, `subagent_type: "test-automator"`) para escrever ou estender testes automatizados no projeto Repor.
 
 **Alvo**: $ARGUMENTS
