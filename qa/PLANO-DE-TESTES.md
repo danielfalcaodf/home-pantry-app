@@ -12,13 +12,13 @@
 | F1 | Baseline no topo da cadeia | concluída | [qa/fases/F1-baseline-topo.md](fases/F1-baseline-topo.md) |
 | F2 | Cadeia incremental por worktree (13 PRs) | concluída | [qa/fases/F2-cadeia-incremental.md](fases/F2-cadeia-incremental.md) |
 | F3 | Conformidade com specs OpenSpec | concluída (13/13) | [qa/fases/F3-conformidade-spec.md](fases/F3-conformidade-spec.md) |
-| F4 | Smoke no emulador *(requer development build)* | **desbloqueada, não iniciada** | [qa/fases/F4-smoke-emulador.md](fases/F4-smoke-emulador.md) |
-| F5 | Fluxos E2E ainda descobertos *(requer F4)* | bloqueada (aguarda F4) | `qa/fases/F5-fluxos-e2e.md` |
-| F6 | KPI e acessibilidade em uso real *(requer F4)* | bloqueada (aguarda F4) | `qa/fases/F6-kpi-e-acessibilidade.md` |
+| F4 | Smoke no emulador *(requer development build)* | concluída (13/13) | [qa/fases/F4-smoke-emulador.md](fases/F4-smoke-emulador.md) |
+| F5 | Fluxos E2E ainda descobertos *(requer F4)* | **desbloqueada, não iniciada** | `qa/fases/F5-fluxos-e2e.md` |
+| F6 | KPI e acessibilidade em uso real *(requer F4)* | **desbloqueada, não iniciada** | `qa/fases/F6-kpi-e-acessibilidade.md` |
 
 **F0 concluída** em duas etapas: a estrutura/ferramental nesta sessão, e o `permissions.allow` de `.claude/settings.json` aplicado manualmente pelo usuário (o modo automático bloqueia edição desse arquivo por classificador próprio).
 
-## PRs (F2 — ainda não iniciada)
+## PRs (F2/F3/F4 — todas concluídas, 13/13)
 
 | PR | Branch | Estado | Checklist |
 |---|---|---|---|
@@ -97,4 +97,6 @@
 
 **F3 completa — 13/13 PRs auditadas.** Todos os 13 arquivos `qa/por-pr/PR-01.md` … `PR-13.md` têm seção `## F3`; matriz consolidada e síntese final em `qa/fases/F3-conformidade-spec.md`; 45 achados de lacuna registrados (ACHADO-008 a ACHADO-052), todos `aberto`, prontos para virar changes via `/opsx:propose`. Padrão dominante: lógica de domínio/aplicação/infraestrutura bem coberta; nenhuma tela (`app/**/*.tsx`) tem teste automatizado em todo o repositório — recomenda-se tratar isso como uma única iniciativa de teste de tela/E2E, não 20+ achados avulsos. Única divergência de implementação real encontrada (não apenas lacuna de teste): ACHADO-034 (PR-08).
 
-**F4 desbloqueada em 2026-08-08** (ver `qa/fases/F4-smoke-emulador.md`): `eas login` já feito, emulador `expo-dev` sobe headless com `-no-qt`, development build (`android/app/build/outputs/apk/debug/app-debug.apk`) instala e abre normalmente no dev client. Falta só subir `npm start` e conectar para rodar `/qa:smoke-pr` PR a PR — infraestrutura pronta, execução ainda não iniciada (decisão do usuário).
+**F4 concluída em 2026-08-09** (ver `qa/fases/F4-smoke-emulador.md`): emulador `expo-dev` + dev build + Metro ficaram de pé durante toda a campanha; `/qa:smoke-pr` rodou uma PR por vez via loop horário (cron, 1 rodada/hora), cada uma com seção `## F4` em `qa/por-pr/PR-NN.md`, evidências em `qa/por-pr/evidencias/PR-NN/` e comentário de merge-readiness na respectiva PR do GitHub. **Limitação metodológica conhecida e sinalizada em toda rodada**: os testes rodaram sobre o estado acumulado da branch `qa/plano-de-testes` (PRs 1-13 mescladas sequencialmente nela), nunca sobre um checkout isolado do commit de cada PR. Achados fechados nesta fase: nenhum novo — ACHADO-006 e ACHADO-007 (críticos) permanecem `descartado`, confirmados corrigidos no estado acumulado. Gap residual explícito: **nenhuma compra foi fechada em toda a campanha** (decisão deliberada, para não corromper a massa de dados compartilhada entre as 13 rodadas) — o fluxo de fechamento com confirmação de preço tri-state, o `GraficoBarras` e o histórico de compras populado nunca foram exercitados com dados reais.
+
+**F5 e F6 desbloqueadas, não iniciadas.** Duas frentes candidatas para F5 (fluxos E2E): (1) fechar uma compra de verdade até o fim, cobrindo o gap acima; (2) qualquer fluxo multi-tela que a F4 tenha evitado por ser destrutivo ou fora do escopo de smoke test. F6 (KPI K4 — baixa em ≤3 toques/≤10s — e acessibilidade) ainda não tem nenhuma medição real, só a garantia estrutural do design documentado no `FRONTEND-DESIGN`.

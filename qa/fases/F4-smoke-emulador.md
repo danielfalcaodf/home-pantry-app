@@ -1,6 +1,16 @@
 ## F4 — Smoke no emulador
 
-**Estado: desbloqueada** em 2026-08-08. Bloqueio original (`eas login` + development build) foi removido — verificado nesta sessão, sem rodar os smoke tests em si.
+**Estado: concluída (13/13)** em 2026-08-09. Bloqueio original (`eas login` + development build) foi removido em 2026-08-08; a execução completa da campanha (uma PR por hora, via loop/cron) fechou a fase no dia seguinte.
+
+## Execução (2026-08-08 → 2026-08-09)
+
+- Emulador `expo-dev` + Metro (`npx expo start --dev-client`) + `adb reverse tcp:8081 tcp:8081` ficaram de pé durante toda a campanha, reaproveitados entre rodadas.
+- `/qa:smoke-pr` rodou uma PR por vez, na ordem 1→13, cada rodada disparada por um cron horário (`Analise... escolha APENAS UMA PR pendente...`).
+- Cada PR recebeu: seção `## F4` em `qa/por-pr/PR-NN.md` com o que foi testado e por quê (incluindo o que foi deliberadamente **não** acionado, e a razão); evidências (`screencap` via `adb`) em `qa/por-pr/evidencias/PR-NN/`; commit próprio; comentário de merge-readiness na PR real do GitHub (`gh pr comment`).
+- **Ressalva metodológica, válida para as 13 rodadas**: os testes rodaram sobre o estado acumulado da branch `qa/plano-de-testes` (PRs 1-13 já mescladas sequencialmente nela), não sobre um checkout isolado do commit de cada PR — decisão explícita do usuário em vez de isolar via worktree, documentada em cada comentário do GitHub.
+- **Ações deliberadamente evitadas** por serem destrutivas/irreversíveis ou por risco de travar a automação (share sheet nativo, dialogs do sistema): restaurar backup, remover produto/item da lista, compartilhar lista/backup, e **fechar uma compra até o fim** — esta última nunca foi exercitada em nenhuma rodada, ficando como gap explícito para a F5 (ver `qa/PLANO-DE-TESTES.md`, "Próximo passo").
+- Achados críticos da F2 (ACHADO-006, ACHADO-007) foram revalidados durante a F4 e confirmados corrigidos no estado acumulado (`npm run verificar` limpo em todas as rodadas).
+- Regressão visual/animação encontrada e corrigida ainda na F2 (crash do stepper por falta de `'worklet'`) foi reconfirmada corrigida em runtime na rodada da PR-13 (Repor + Usei repetidos sem crash).
 
 ## Verificação de desbloqueio
 
