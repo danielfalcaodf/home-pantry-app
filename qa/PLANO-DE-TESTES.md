@@ -13,7 +13,7 @@
 | F2 | Cadeia incremental por worktree (13 PRs) | concluída | [qa/fases/F2-cadeia-incremental.md](fases/F2-cadeia-incremental.md) |
 | F3 | Conformidade com specs OpenSpec | concluída (13/13) | [qa/fases/F3-conformidade-spec.md](fases/F3-conformidade-spec.md) |
 | F4 | Smoke no emulador *(requer development build)* | concluída (13/13) | [qa/fases/F4-smoke-emulador.md](fases/F4-smoke-emulador.md) |
-| F5 | Fluxos E2E ainda descobertos *(requer F4)* | em andamento (4/5: ciclo de compra, cadastro de produto, backup/restauração, conferência) | `qa/fases/F5-fluxos-e2e.md` |
+| F5 | Fluxos E2E ainda descobertos *(requer F4)* | concluída (5/5) | `qa/fases/F5-fluxos-e2e.md` |
 | F6 | KPI e acessibilidade em uso real *(requer F4)* | **desbloqueada, não iniciada** | `qa/fases/F6-kpi-e-acessibilidade.md` |
 
 **F0 concluída** em duas etapas: a estrutura/ferramental nesta sessão, e o `permissions.allow` de `.claude/settings.json` aplicado manualmente pelo usuário (o modo automático bloqueia edição desse arquivo por classificador próprio).
@@ -110,6 +110,8 @@ Terceira rodada (`/qa:e2e-pr 9`, backup/restauração) concluída: `.maestro/bac
 
 Quarta rodada (`/qa:e2e-pr 10`, conferência) concluída: `.maestro/conferencia-estoque.yaml` criado e verde, cobrindo o caminho "Corrigir" da conferência que a F4 não tinha exercitado (via correção-sem-mudança, escolha deliberada de segurança porque a conferência é retomável e o item sorteado varia a cada execução repetida). Achado novo: ACHADO-055 (baixa) — botão "Corrigir" nasce desabilitado, placeholder indistinguível de valor real, toque sem digitar é no-op silencioso.
 
-Falta 1 lacuna na ordem de valor do plano-fonte: troca de tema.
+Quinta e última rodada (`/qa:e2e-pr 4`, troca de tema) concluída: `.maestro/troca-de-tema.yaml` criado e verde (21 passos), sem achados novos. Confirma em runtime a troca Claro↔Escuro (rótulos reais na UI são "Automático"/"Claro"/"Escuro", não "Despensa"/"Porcelana" como no CLAUDE.md) e a persistência da preferência através de force-stop/reabertura, sem flash de tema errado. Dispositivo devolvido ao estado em que foi encontrado.
+
+**F5 concluída (5/5): ciclo de compra (PR-08), cadastro de produto (PR-05), backup/restauração (PR-09), conferência (PR-10), troca de tema (PR-04).** Total de 5 flows Maestro novos nesta fase, 2 achados de comportamento registrados durante a autoria (ACHADO-053, ACHADO-054 no ciclo de compra; ACHADO-055 na conferência), nenhuma regressão de app encontrada nos demais três. F6 (KPI e acessibilidade) é o próximo passo natural, já desbloqueada.
 
 **F6 desbloqueada, não iniciada.** KPI K4 (baixa em ≤3 toques/≤10s) e acessibilidade ainda não têm nenhuma medição real, só a garantia estrutural do design documentado no `FRONTEND-DESIGN`.

@@ -1,0 +1,74 @@
+appId: com.triasoftware.repor
+---
+# Cobre a capability `troca de tema` (PR-04, branch
+# change/design-system-tema, spec
+# openspec/changes/archive/2026-08-02-design-system-tema/). A tela de
+# Configurações → "Tema" mostra só os rótulos "Automático"/"Claro"/"Escuro"
+# (os nomes próprios do CLAUDE.md, Despensa/Porcelana, não aparecem na UI —
+# confirmado por inspeção da hierarquia real do dispositivo de teste antes
+# de escrever este flow). O seletor acessível de cada opção é
+# "Tema Automático"/"Tema Claro"/"Tema Escuro" (accessibilityText do botão);
+# o texto visível sozinho ("Claro") também seria único na tela, mas o rótulo
+# completo é mais específico e documenta a intenção.
+#
+# Exercita: trocar de Escuro (padrão do seed) para Claro, confirmar
+# visualmente que o fundo da tela muda de fato (Configurações e depois a
+# Despensa, onde o medidor "linha d'água" também fica visível no tema
+# claro), sair da tela e forçar o fechamento do app (force-stop) para
+# confirmar que a preferência persiste no SQLite e é lida antes da splash
+# (sem flash de tema errado ao reabrir — CLAUDE.md §Design de UI), e por
+# fim voltar para Escuro, deixando o dispositivo de teste no mesmo estado
+# em que este flow o encontrou.
+#
+# Confirmação visual: como Maestro não tem asserção nativa de cor de fundo,
+# a mudança de tema é confirmada por dois canais redundantes — o estado
+# `selected` do botão de tema tocado (verificado manualmente durante a
+# autoria via `maestro hierarchy`, cada botão fica com
+# `selected=true`/`accessibilityText` só no tema ativo) e visualmente via
+# screenshot em cada tema (ver .maestro/README.md — Maestro grava
+# screenshots de cada passo do relatório de execução).
+#
+# Efeito colateral real: altera a preferência de tema do dispositivo de
+# teste (SQLite local, não dado de domínio) — o flow troca para Claro e
+# volta para Escuro antes de terminar, deixando o dispositivo no estado em
+# que foi encontrado. Rode só em build de desenvolvimento/QA.
+- launchApp
+- assertVisible: "Despensa"
+- tapOn: "Configurações"
+- assertVisible: "Configurações"
+- assertVisible: "Tema"
+
+# tema escuro é o padrão do seed — confirma o ponto de partida antes de trocar
+- assertVisible:
+    text: "Tema Escuro"
+    selected: true
+
+- takeScreenshot: tema-escuro-configuracoes
+
+- tapOn: "Tema Claro"
+- assertVisible:
+    text: "Tema Claro"
+    selected: true
+- takeScreenshot: tema-claro-configuracoes
+
+# navega até a Despensa pra ver o medidor "linha d'água" também no tema claro
+- tapOn: "Despensa"
+- assertVisible: "Despensa"
+- takeScreenshot: tema-claro-despensa
+
+# fecha e reabre o app pra confirmar que a preferência persiste (lida do
+# SQLite antes da splash, sem flash de tema errado)
+- stopApp
+- launchApp
+- assertVisible: "Despensa"
+- tapOn: "Configurações"
+- assertVisible:
+    text: "Tema Claro"
+    selected: true
+
+# devolve o dispositivo de teste ao estado em que foi encontrado (Escuro)
+- tapOn: "Tema Escuro"
+- assertVisible:
+    text: "Tema Escuro"
+    selected: true
+- takeScreenshot: tema-escuro-restaurado
