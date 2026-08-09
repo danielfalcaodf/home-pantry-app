@@ -98,8 +98,6 @@ export default function ModoCompra() {
         </Texto>
       </View>
 
-      <RodapeCompra marcados={marcados} totalDeItens={itens.length} total={total} />
-
       <ScrollView style={{ flex: 1 }}>
         {itens.map((linha) => (
           <ItemCompra
@@ -114,15 +112,18 @@ export default function ModoCompra() {
       </ScrollView>
 
       {aviso?.sucesso ? null : (
-        <View style={{ padding: espaco.lg, gap: espaco.md }}>
-          <Botao titulo="Fechar compra" onPress={() => void fecharCompra()} disabled={finalizando} />
-          <Botao
-            titulo="Cancelar compra"
-            variante="secundario"
-            onPress={confirmarCancelamento}
-            disabled={cancelando}
-          />
-        </View>
+        <>
+          <RodapeCompra marcados={marcados} totalDeItens={itens.length} total={total} />
+          <View style={{ padding: espaco.lg, gap: espaco.md }}>
+            <Botao titulo="Fechar compra" onPress={() => void fecharCompra()} disabled={finalizando} />
+            <Botao
+              titulo="Cancelar compra"
+              variante="secundario"
+              onPress={confirmarCancelamento}
+              disabled={cancelando}
+            />
+          </View>
+        </>
       )}
 
       {itemEmAjuste ? (

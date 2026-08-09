@@ -4,6 +4,7 @@ import { FlatList, Pressable, View } from 'react-native';
 import { CompraDoHistorico, useHistoricoDeCompras } from '@/application/resumo/use-historico-compras';
 import { dataDeReferencia } from '@/domain/compra/compra.rules';
 import { centavos, formatarBRL } from '@/domain/shared/dinheiro';
+import { BotaoVoltar } from '@/presentation/components/botao-voltar';
 import { EstadoVazio } from '@/presentation/components/estado-vazio';
 import { Texto } from '@/presentation/components/texto';
 import { formatarDataDaCompra } from '@/presentation/format/historico-de-compras';
@@ -56,7 +57,8 @@ export default function HistoricoDeCompras() {
 
   return (
     <View style={{ flex: 1, backgroundColor: tema.bg.base }}>
-      <View style={{ padding: espaco.lg }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: espaco.sm, padding: espaco.lg }}>
+        <BotaoVoltar />
         <Texto papel="display.sm">Histórico de compras</Texto>
       </View>
       {historico.compras.length === 0 ? (

@@ -4,6 +4,7 @@ import { FlatList, View } from 'react-native';
 import { useHistoricoDoProduto } from '@/application/estoque/use-historico';
 import { useProduto } from '@/application/estoque/use-editar-produto';
 import { MovimentoEstoque } from '@/domain/movimento/movimento';
+import { BotaoVoltar } from '@/presentation/components/botao-voltar';
 import { EstadoVazio } from '@/presentation/components/estado-vazio';
 import { Texto } from '@/presentation/components/texto';
 import {
@@ -70,7 +71,8 @@ export default function HistoricoDoProduto() {
 
   return (
     <View style={{ flex: 1, backgroundColor: tema.bg.base }}>
-      <View style={{ padding: espaco.lg }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: espaco.sm, padding: espaco.lg }}>
+        <BotaoVoltar />
         <Texto papel="display.sm">Histórico de {nome}</Texto>
       </View>
       {historico.itens.length === 0 ? (

@@ -6,11 +6,18 @@ import { useResumoDeValores } from '@/application/resumo/use-resumo-valores';
 import { EstadoItem } from '@/domain/produto/estoque.rules';
 import { formatarBRL } from '@/domain/shared/dinheiro';
 import { ChipEstado } from '@/presentation/components/chip-estado';
+import { GraficoBarras } from '@/presentation/components/grafico-barras';
 import { Texto } from '@/presentation/components/texto';
 import { corDoEstado } from '@/presentation/theme/cor-do-estado';
 import { espaco } from '@/presentation/theme/espaco';
 import { useTheme } from '@/presentation/theme/provider';
 import { rotuloDoMes } from '@/presentation/format/gasto-mensal';
+
+const MESES_NO_GRAFICO = 4;
+
+function rotuloCurtoDoMes(mes: string): string {
+  return rotuloDoMes(mes).slice(0, 3);
+}
 
 const ESTADOS: { valor: EstadoItem; rotulo: string }[] = [
   { valor: 'critico', rotulo: 'Acabou' },
@@ -105,6 +112,13 @@ export default function Resumo() {
           </View>
         </View>
 
+        <View style={{ gap: espaco.xs }}>
+          <Texto papel="label" tom="secondary">
+            Gasto este mês
+          </Texto>
+          <Texto papel="data.xl">{formatarBRL(gastoMensal.meses[0]?.totalPago ?? 0)}</Texto>
+        </View>
+
         <View style={{ gap: espaco.sm }}>
           <View
             style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}
@@ -126,6 +140,19 @@ export default function Resumo() {
               aparece aqui.
             </Texto>
           ) : (
+            <GraficoBarras
+              altura={96}
+              dados={[...gastoMensal.meses]
+                .slice(0, MESES_NO_GRAFICO)
+                .reverse()
+                .map((mes) => ({
+                  chave: mes.mes,
+                  rotulo: rotuloCurtoDoMes(mes.mes),
+                  valor: mes.totalPago,
+                }))}
+            />
+          )}
+          {nenhumaCompraFechada ? null : (
             gastoMensal.meses.map((mes) => (
               <View
                 key={mes.mes}

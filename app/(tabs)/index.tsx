@@ -13,6 +13,7 @@ import { rotuloDaUnidade } from '@/domain/shared/unidade';
 import { CampoTexto } from '@/presentation/components/campo-texto';
 import { ChipEstado } from '@/presentation/components/chip-estado';
 import { EstadoVazio } from '@/presentation/components/estado-vazio';
+import { IconeSvg } from '@/presentation/components/icone-svg';
 import { ItemDespensa } from '@/presentation/components/item-despensa';
 import { TecladoQuantidade } from '@/presentation/components/teclado-quantidade';
 import { Texto } from '@/presentation/components/texto';
@@ -21,6 +22,7 @@ import { ToastDesfazer } from '@/presentation/components/toast-desfazer';
 import { useRegistroDeConsumo } from '@/presentation/components/use-registro-de-consumo';
 import {
   agruparPorCategoria,
+  casaComFiltro,
   contarPorEstado,
   FiltroEstado,
   LinhaDaLista,
@@ -28,17 +30,17 @@ import {
 import { leituraDeEstoque } from '@/presentation/format/leitura-de-estoque';
 import { casaComBusca } from '@/presentation/format/normalizar-busca';
 import { corDoEstado } from '@/presentation/theme/cor-do-estado';
-import { espaco } from '@/presentation/theme/espaco';
+import { ALVO_TOQUE_MINIMO, espaco } from '@/presentation/theme/espaco';
+import { icones } from '@/presentation/theme/icones';
 import { useTheme } from '@/presentation/theme/provider';
 
 const FILTROS: { valor: FiltroEstado; rotulo: string }[] = [
   { valor: 'tudo', rotulo: 'Tudo' },
   { valor: 'critico', rotulo: 'Acabou' },
-  { valor: 'emFalta', rotulo: 'Faltando' },
-  { valor: 'ok', rotulo: 'Cheio' },
+  { valor: 'faltando', rotulo: 'Faltando' },
 ];
 
-const FILTROS_VALIDOS = new Set<FiltroEstado>(['tudo', 'critico', 'emFalta', 'ok']);
+const FILTROS_VALIDOS = new Set<FiltroEstado>(['tudo', 'critico', 'emFalta', 'ok', 'faltando']);
 
 export default function Despensa() {
   const tema = useTheme();
@@ -52,6 +54,7 @@ export default function Despensa() {
   const [filtro, setFiltro] = useState<FiltroEstado>('tudo');
   const [categoria, setCategoria] = useState<string | null>(null);
   const [busca, setBusca] = useState('');
+  const [buscaAberta, setBuscaAberta] = useState(false);
   const [itemDoTeclado, setItemDoTeclado] = useState<ProdutoNaDespensa | null>(null);
 
   useEffect(() => {
@@ -87,7 +90,7 @@ export default function Despensa() {
     () =>
       itens.filter(
         (item) =>
-          (filtro === 'tudo' || item.estado === filtro) &&
+          casaComFiltro(item.estado, filtro) &&
           (categoria === null || item.produto.categoria === categoria) &&
           casaComBusca(item.produto.nome, busca),
       ),
@@ -143,24 +146,50 @@ export default function Despensa() {
           }}
         >
           <Texto papel="display.sm">Despensa</Texto>
-          {/* Recalibração semanal (ARQUITETURA §1.1) — alcançável, mas fora do
-              caminho crítico de dar baixa (nenhum toque extra nas linhas abaixo). */}
-          <Pressable
-            onPress={() => router.push('/conferencia')}
-            accessibilityRole="button"
-            accessibilityLabel="Conferência de estoque"
-          >
-            <Texto papel="body.md" cor={tema.action.azulejo}>
-              Conferência
-            </Texto>
-          </Pressable>
+          <View style={{ flexDirection: 'row', gap: espaco.sm }}>
+            <Pressable
+              onPress={() => setBuscaAberta((aberta) => !aberta)}
+              accessibilityRole="button"
+              accessibilityLabel="Buscar"
+              accessibilityState={{ selected: buscaAberta }}
+              hitSlop={8}
+              style={{
+                minWidth: ALVO_TOQUE_MINIMO,
+                minHeight: ALVO_TOQUE_MINIMO,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <IconeSvg
+                path={icones.buscar}
+                cor={buscaAberta ? tema.action.azulejo : tema.text.secondary}
+              />
+            </Pressable>
+            <Pressable
+              onPress={() => router.push('/produto/novo')}
+              accessibilityRole="button"
+              accessibilityLabel="Adicionar produto"
+              hitSlop={8}
+              style={{
+                minWidth: ALVO_TOQUE_MINIMO,
+                minHeight: ALVO_TOQUE_MINIMO,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <IconeSvg path={icones.adicionar} cor={tema.text.secondary} />
+            </Pressable>
+          </View>
         </View>
-        <CampoTexto
-          rotulo="Buscar"
-          value={busca}
-          onChangeText={setBusca}
-          placeholder="Nome do item"
-        />
+        {buscaAberta ? (
+          <CampoTexto
+            rotulo="Buscar"
+            value={busca}
+            onChangeText={setBusca}
+            placeholder="Nome do item"
+            autoFocus
+          />
+        ) : null}
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
           <View style={{ flexDirection: 'row', gap: espaco.sm }}>
             {FILTROS.map(({ valor, rotulo }) => (
@@ -169,7 +198,7 @@ export default function Despensa() {
                 rotulo={rotulo}
                 contagem={contagens[valor]}
                 ativo={filtro === valor}
-                cor={valor === 'tudo' ? undefined : corDoEstado(tema, valor)}
+                cor={valor === 'tudo' ? undefined : corDoEstado(tema, valor === 'faltando' ? 'emFalta' : valor)}
                 onPress={() => setFiltro(valor)}
               />
             ))}
@@ -240,8 +269,13 @@ export default function Despensa() {
                   linha.item.produto.unidade,
                   false,
                 )} de ${linha.item.produto.nome}`}
+                rotuloAcaoReposicao={`Repor 1 ${rotuloDaUnidade(
+                  linha.item.produto.unidade,
+                  false,
+                )} de ${linha.item.produto.nome}`}
                 onAbrir={() => router.push(`/produto/${linha.item.produto.id}`)}
                 onConsumir={() => void usar(linha.item)}
+                onRepor={() => void repor(linha.item, 1)}
                 onAbrirTeclado={() => setItemDoTeclado(linha.item)}
               />
             )
