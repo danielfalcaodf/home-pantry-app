@@ -1,0 +1,27 @@
+appId: com.triasoftware.repor
+---
+# Cobre a reposição manual rápida ("Repus", fora do modo compra) —
+# capability registro-de-consumo, PR-06 (branch change/dar-baixa-caminho-
+# critico). Esse caminho nunca teve E2E nem teste unitário positivo
+# (ACHADO-027: onRepus só tinha teste negativo em
+# registro-e-desfazer.test.tsx). O botão "+" (BotaoReporRapido) fica ao
+# lado do stepper de consumo em cada item da Despensa e sempre repõe 1
+# unidade, sem confirmação — mesmo caminho de baixa latência do KPI K4.
+#
+# Usa "Macarrão" porque na massa de dados do dispositivo de QA ele está
+# em "Acabou" (0 de 2 pacotes) — repor 1 unidade é seguro (não cruza
+# nenhum limite de topo) e sai do estado zerado, o que também prova
+# visualmente que a leitura textual do item mudou.
+#
+# Efeito colateral real: incrementa 1 pacote de Macarrão no banco do
+# dispositivo de teste (0 → 1 de 2 pacotes, item passa de "Acabou" para
+# "Falta 1"). Rode só em build de desenvolvimento/QA.
+- launchApp
+- assertVisible: "Despensa"
+- assertVisible: "Macarrão, 0 de 2 pacotes, Acabou"
+- tapOn: "Repor 1 pacote de Macarrão"
+# toast de confirmação usa o mesmo vocabulário do consumo ("Anotado"),
+# mas com o verbo específico de reposição ("repus"), nunca termo de
+# domínio como "movimento"/"entrada de estoque".
+- assertVisible: "Anotado: repus 1 pacote de Macarrão"
+- assertVisible: "Macarrão, 1 de 2 pacotes, Falta 1"
