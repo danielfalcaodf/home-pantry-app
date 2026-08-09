@@ -13,7 +13,7 @@
 | F2 | Cadeia incremental por worktree (13 PRs) | concluída | [qa/fases/F2-cadeia-incremental.md](fases/F2-cadeia-incremental.md) |
 | F3 | Conformidade com specs OpenSpec | concluída (13/13) | [qa/fases/F3-conformidade-spec.md](fases/F3-conformidade-spec.md) |
 | F4 | Smoke no emulador *(requer development build)* | concluída (13/13) | [qa/fases/F4-smoke-emulador.md](fases/F4-smoke-emulador.md) |
-| F5 | Fluxos E2E ainda descobertos *(requer F4)* | em andamento (3/5: ciclo de compra, cadastro de produto, backup/restauração) | `qa/fases/F5-fluxos-e2e.md` |
+| F5 | Fluxos E2E ainda descobertos *(requer F4)* | em andamento (4/5: ciclo de compra, cadastro de produto, backup/restauração, conferência) | `qa/fases/F5-fluxos-e2e.md` |
 | F6 | KPI e acessibilidade em uso real *(requer F4)* | **desbloqueada, não iniciada** | `qa/fases/F6-kpi-e-acessibilidade.md` |
 
 **F0 concluída** em duas etapas: a estrutura/ferramental nesta sessão, e o `permissions.allow` de `.claude/settings.json` aplicado manualmente pelo usuário (o modo automático bloqueia edição desse arquivo por classificador próprio).
@@ -94,6 +94,7 @@
 | [ACHADO-052](achados/ACHADO-052.md) | baixa | F3 (PR 13) | aberto | Posição do `RodapeCompra`, métrica do gasto mensal e corte "últimos 4 meses" sem teste |
 | [ACHADO-053](achados/ACHADO-053.md) | média | F5 (PR 13) | aberto | Chip "Faltando" do Resumo mostra número diferente (menor) do que a Despensa para os mesmos dados — não soma `critico` |
 | [ACHADO-054](achados/ACHADO-054.md) | média | F5 (PR 8) | aberto | Marcar 2 itens em sequência rápida no modo compra pode persistir o item errado como comprado — suspeita, não confirmado |
+| [ACHADO-055](achados/ACHADO-055.md) | baixa | F5 (PR 10) | aberto | Campo "Corrigir para" da conferência mostra placeholder indistinguível de valor real; tocar "Corrigir" sem digitar é no-op silencioso |
 
 ## Próximo passo
 
@@ -107,6 +108,8 @@ Segunda rodada (`/qa:e2e-pr 5`, cadastro de produto) concluída: `.maestro/cadas
 
 Terceira rodada (`/qa:e2e-pr 9`, backup/restauração) concluída: `.maestro/backup-restauracao.yaml` criado e verde. Aciona de verdade "Fazer backup agora" (grava JSON no cache, share sheet nativo descartado sem escolher destino) e "Restaurar backup" (abre document picker nativo, descartado sem selecionar arquivo) — avança um degrau sobre a F4 (que não tinha acionado nenhum dos dois). Restauração real nunca é completada por decisão deliberada de segurança: não há controle programático confiável do Maestro sobre o Storage Access Framework do Android para navegar até o arquivo certo sem risco; o round-trip idempotente (backup → restaurar o mesmo arquivo → mesma consistência) permanece coberto só em unidade. Nenhum achado novo.
 
-Faltam 2 lacunas na ordem de valor do plano-fonte: conferência → troca de tema.
+Quarta rodada (`/qa:e2e-pr 10`, conferência) concluída: `.maestro/conferencia-estoque.yaml` criado e verde, cobrindo o caminho "Corrigir" da conferência que a F4 não tinha exercitado (via correção-sem-mudança, escolha deliberada de segurança porque a conferência é retomável e o item sorteado varia a cada execução repetida). Achado novo: ACHADO-055 (baixa) — botão "Corrigir" nasce desabilitado, placeholder indistinguível de valor real, toque sem digitar é no-op silencioso.
+
+Falta 1 lacuna na ordem de valor do plano-fonte: troca de tema.
 
 **F6 desbloqueada, não iniciada.** KPI K4 (baixa em ≤3 toques/≤10s) e acessibilidade ainda não têm nenhuma medição real, só a garantia estrutural do design documentado no `FRONTEND-DESIGN`.
