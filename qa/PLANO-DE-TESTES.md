@@ -13,7 +13,7 @@
 | F2 | Cadeia incremental por worktree (13 PRs) | concluída | [qa/fases/F2-cadeia-incremental.md](fases/F2-cadeia-incremental.md) |
 | F3 | Conformidade com specs OpenSpec | concluída (13/13) | [qa/fases/F3-conformidade-spec.md](fases/F3-conformidade-spec.md) |
 | F4 | Smoke no emulador *(requer development build)* | concluída (13/13) | [qa/fases/F4-smoke-emulador.md](fases/F4-smoke-emulador.md) |
-| F5 | Fluxos E2E ainda descobertos *(requer F4)* | **desbloqueada, não iniciada** | `qa/fases/F5-fluxos-e2e.md` |
+| F5 | Fluxos E2E ainda descobertos *(requer F4)* | em andamento (1/5: ciclo de compra) | `qa/fases/F5-fluxos-e2e.md` |
 | F6 | KPI e acessibilidade em uso real *(requer F4)* | **desbloqueada, não iniciada** | `qa/fases/F6-kpi-e-acessibilidade.md` |
 
 **F0 concluída** em duas etapas: a estrutura/ferramental nesta sessão, e o `permissions.allow` de `.claude/settings.json` aplicado manualmente pelo usuário (o modo automático bloqueia edição desse arquivo por classificador próprio).
@@ -92,6 +92,8 @@
 | [ACHADO-050](achados/ACHADO-050.md) | média | F3 (PR 13) | aberto | Reatividade da contagem de chips e acionabilidade do chip zerado sem teste |
 | [ACHADO-051](achados/ACHADO-051.md) | baixa | F3 (PR 13) | aberto | Integração da tab bar (ícones + cor por aba) sem teste |
 | [ACHADO-052](achados/ACHADO-052.md) | baixa | F3 (PR 13) | aberto | Posição do `RodapeCompra`, métrica do gasto mensal e corte "últimos 4 meses" sem teste |
+| [ACHADO-053](achados/ACHADO-053.md) | média | F5 (PR 13) | aberto | Chip "Faltando" do Resumo mostra número diferente (menor) do que a Despensa para os mesmos dados — não soma `critico` |
+| [ACHADO-054](achados/ACHADO-054.md) | média | F5 (PR 8) | aberto | Marcar 2 itens em sequência rápida no modo compra pode persistir o item errado como comprado — suspeita, não confirmado |
 
 ## Próximo passo
 
@@ -99,4 +101,6 @@
 
 **F4 concluída em 2026-08-09** (ver `qa/fases/F4-smoke-emulador.md`): emulador `expo-dev` + dev build + Metro ficaram de pé durante toda a campanha; `/qa:smoke-pr` rodou uma PR por vez via loop horário (cron, 1 rodada/hora), cada uma com seção `## F4` em `qa/por-pr/PR-NN.md`, evidências em `qa/por-pr/evidencias/PR-NN/` e comentário de merge-readiness na respectiva PR do GitHub. **Limitação metodológica conhecida e sinalizada em toda rodada**: os testes rodaram sobre o estado acumulado da branch `qa/plano-de-testes` (PRs 1-13 mescladas sequencialmente nela), nunca sobre um checkout isolado do commit de cada PR. Achados fechados nesta fase: nenhum novo — ACHADO-006 e ACHADO-007 (críticos) permanecem `descartado`, confirmados corrigidos no estado acumulado. Gap residual explícito: **nenhuma compra foi fechada em toda a campanha** (decisão deliberada, para não corromper a massa de dados compartilhada entre as 13 rodadas) — o fluxo de fechamento com confirmação de preço tri-state, o `GraficoBarras` e o histórico de compras populado nunca foram exercitados com dados reais.
 
-**F5 e F6 desbloqueadas, não iniciadas.** Duas frentes candidatas para F5 (fluxos E2E): (1) fechar uma compra de verdade até o fim, cobrindo o gap acima; (2) qualquer fluxo multi-tela que a F4 tenha evitado por ser destrutivo ou fora do escopo de smoke test. F6 (KPI K4 — baixa em ≤3 toques/≤10s — e acessibilidade) ainda não tem nenhuma medição real, só a garantia estrutural do design documentado no `FRONTEND-DESIGN`.
+**F5 em andamento (2026-08-09).** Primeira rodada (`/qa:e2e-pr 8`, ciclo de compra) concluída: `.maestro/ciclo-de-compra.yaml` criado e verde, fechando pela primeira vez em toda a campanha uma compra real (produto Arroz reposto, compra `finalizada`, primeiro registro real em `GraficoBarras`/histórico de compras). Descoberta relevante do processo: o subagent `test-automator` não está disponível como `subagent_type` neste ambiente de sessão (apesar de `.claude/agents/test-automator.md` existir) — os flows desta fase estão sendo escritos manualmente, seguindo o mesmo rigor (inspecionar a hierarquia real antes de cada seletor, nunca aceitar seletor chutado). Dois achados novos surgiram do próprio processo de construção do flow (não do fluxo em si, mas de inconsistências reais encontradas ao validar passo a passo): ACHADO-053 (chip "Faltando" da Resumo diverge da Despensa) e ACHADO-054 (suspeita de mis-marcação em toques rápidos consecutivos, não confirmada). Faltam 4 lacunas na ordem de valor do plano-fonte: cadastro de produto → backup/restauração → conferência → troca de tema.
+
+**F6 desbloqueada, não iniciada.** KPI K4 (baixa em ≤3 toques/≤10s) e acessibilidade ainda não têm nenhuma medição real, só a garantia estrutural do design documentado no `FRONTEND-DESIGN`.
