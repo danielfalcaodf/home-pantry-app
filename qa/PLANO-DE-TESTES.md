@@ -13,7 +13,7 @@
 | F2 | Cadeia incremental por worktree (13 PRs) | concluída | [qa/fases/F2-cadeia-incremental.md](fases/F2-cadeia-incremental.md) |
 | F3 | Conformidade com specs OpenSpec | concluída (13/13) | [qa/fases/F3-conformidade-spec.md](fases/F3-conformidade-spec.md) |
 | F4 | Smoke no emulador *(requer development build)* | concluída (13/13) | [qa/fases/F4-smoke-emulador.md](fases/F4-smoke-emulador.md) |
-| F5 | Fluxos E2E ainda descobertos *(requer F4)* | concluída (5/5) | `qa/fases/F5-fluxos-e2e.md` |
+| F5 | Fluxos E2E ainda descobertos *(requer F4)* | concluída (5/5 do plano-fonte); **4 novas lacunas funcionais encontradas em verificação posterior** — ver seção abaixo | `qa/fases/F5-fluxos-e2e.md` |
 | F6 | KPI e acessibilidade em uso real *(requer F4)* | **desbloqueada, não iniciada** | `qa/fases/F6-kpi-e-acessibilidade.md` |
 
 **F0 concluída** em duas etapas: a estrutura/ferramental nesta sessão, e o `permissions.allow` de `.claude/settings.json` aplicado manualmente pelo usuário (o modo automático bloqueia edição desse arquivo por classificador próprio).
@@ -112,6 +112,26 @@ Quarta rodada (`/qa:e2e-pr 10`, conferência) concluída: `.maestro/conferencia-
 
 Quinta e última rodada (`/qa:e2e-pr 4`, troca de tema) concluída: `.maestro/troca-de-tema.yaml` criado e verde (21 passos), sem achados novos. Confirma em runtime a troca Claro↔Escuro (rótulos reais na UI são "Automático"/"Claro"/"Escuro", não "Despensa"/"Porcelana" como no CLAUDE.md) e a persistência da preferência através de force-stop/reabertura, sem flash de tema errado. Dispositivo devolvido ao estado em que foi encontrado.
 
-**F5 concluída (5/5): ciclo de compra (PR-08), cadastro de produto (PR-05), backup/restauração (PR-09), conferência (PR-10), troca de tema (PR-04).** Total de 5 flows Maestro novos nesta fase, 2 achados de comportamento registrados durante a autoria (ACHADO-053, ACHADO-054 no ciclo de compra; ACHADO-055 na conferência), nenhuma regressão de app encontrada nos demais três. F6 (KPI e acessibilidade) é o próximo passo natural, já desbloqueada.
+**F5 concluída (5/5) para as lacunas identificadas originalmente no plano-fonte: ciclo de compra (PR-08), cadastro de produto (PR-05), backup/restauração (PR-09), conferência (PR-10), troca de tema (PR-04).** Total de 5 flows Maestro novos nesta fase, 2 achados de comportamento registrados durante a autoria (ACHADO-053, ACHADO-054 no ciclo de compra; ACHADO-055 na conferência), nenhuma regressão de app encontrada nos demais três.
+
+**Verificação adicional (2026-08-09) contra 4 cenários funcionais centrais do produto — resultado misto, gaps identificados para a próxima rodada de E2E:**
+
+| Cenário | Coberto por E2E? |
+|---|---|
+| Reduzir quantidade em estoque ("Usei") | Sim — `dar-baixa-caminho-critico.yaml` |
+| **Adicionar quantidade manual ("Repus", fora do modo compra)** | **Não** — nenhum flow; nem teste unitário positivo existe ([[ACHADO-027]]: `onRepus` só tem teste negativo) |
+| Cadastrar produto | Sim — `cadastro-de-produto.yaml` |
+| **Editar produto existente** | **Não** — só lógica (`useEditarProduto` em `hooks.test.ts`), sem flow tocando a tela |
+| **Remover produto** | **Não** — só lógica (remoção lógica em `hooks.test.ts`), sem flow do fluxo de confirmação de UI |
+| **Lista de compras aparece automaticamente ao faltar produto** | **Não diretamente** — só unitário (`use-lista-compras.test.ts:25,44`); `ciclo-de-compra.yaml` assume a lista já populada, nunca prova o gatilho de derivação em runtime |
+| Fechar compra repõe o estoque automaticamente | Sim — `ciclo-de-compra.yaml` |
+
+**4 lacunas E2E novas identificadas, candidatas à próxima rodada** (extensão da F5 antes ou durante a F6, já que a F6 também vai precisar navegar essas mesmas telas para medir KPI/acessibilidade):
+1. `reposicao-manual.yaml` — caminho "Repus" no teclado de quantidade (fora do modo compra).
+2. `editar-remover-produto.yaml` — editar campos de um produto existente e remover (com confirmação).
+3. `lista-derivada-gatilho.yaml` — reduzir um item a zero, confirmar que aparece na aba Lista automaticamente; repor e confirmar que some.
+4. (já parcialmente coberto) considerar reforçar `ciclo-de-compra.yaml` ou um flow irmão que comece do estado "sem nada faltando" para provar o gatilho de ponta a ponta, não só o resultado final.
+
+F6 (KPI e acessibilidade) segue desbloqueada e é o próximo passo natural — mas antes dela (ou junto), essas 4 lacunas funcionais deveriam ser fechadas para que a cobertura E2E do produto core (estoque + lista + produto) fique completa.
 
 **F6 desbloqueada, não iniciada.** KPI K4 (baixa em ≤3 toques/≤10s) e acessibilidade ainda não têm nenhuma medição real, só a garantia estrutural do design documentado no `FRONTEND-DESIGN`.
