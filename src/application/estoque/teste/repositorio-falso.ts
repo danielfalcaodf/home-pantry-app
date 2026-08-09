@@ -1,14 +1,17 @@
 import { Produto } from '../../../domain/produto/produto';
 import { ProdutoValidado } from '../../../domain/produto/validacao';
 import { centavos } from '../../../domain/shared/dinheiro';
-import { milesimos } from '../../../domain/shared/quantidade';
+import { Milesimos, milesimos } from '../../../domain/shared/quantidade';
+import { MovimentoRepository } from '../../../ports/movimento.repository';
 import { ObservadorDeMudancas } from '../../../ports/observador-de-mudancas';
 import {
+  ComandoAjuste,
   ComandoBaixa,
   ErroEscritaProduto,
   FaltanteBruto,
   ItemListaBase,
   ProdutoRepository,
+  ResultadoAjuste,
   ResultadoBaixa,
 } from '../../../ports/produto.repository';
 import { falha, Result, sucesso } from '../../../shared/result';
@@ -95,8 +98,20 @@ export class ProdutoRepositorioFalso implements ProdutoRepository {
     );
   }
 
-  async listarFaltantes(): Promise<FaltanteBruto[]> {
-    return [];
+  async listarFaltantes(casaId: string): Promise<FaltanteBruto[]> {
+    return (await this.listarDespensa(casaId))
+      .filter((p) => p.quantidadeAtual < p.quantidadeNecessaria)
+      .map((p) => ({
+        id: p.id,
+        nome: p.nome,
+        categoria: p.categoria,
+        unidade: p.unidade,
+        valorUnitario: p.valorUnitario,
+        quantidadeAtual: p.quantidadeAtual,
+        quantidadeNecessaria: p.quantidadeNecessaria,
+        faltaBruta: milesimos(p.quantidadeNecessaria - p.quantidadeAtual),
+      }))
+      .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
   }
 
   async buscarPorNome(casaId: string, termo: string): Promise<Produto[]> {
@@ -116,8 +131,93 @@ export class ProdutoRepositorioFalso implements ProdutoRepository {
     return this.produtos.find((p) => p.id === id) ?? null;
   }
 
-  async darBaixa(_comando: ComandoBaixa): Promise<Result<ResultadoBaixa, 'nao_encontrado'>> {
-    return falha('nao_encontrado');
+  async listarTudoParaBackup(casaId: string): Promise<Produto[]> {
+    return this.produtos.filter((p) => p.casaId === casaId);
+  }
+
+  // Espelha a consulta real: bruto (milésimos·centavos), sem dividir por mil.
+  async valorBrutoDoEstoque(casaId: string): Promise<number> {
+    return (await this.listarDespensa(casaId)).reduce(
+      (total, p) => total + p.quantidadeAtual * p.valorUnitario,
+      0,
+    );
+  }
+
+  /** Registro de cada movimento, para os testes de desfazer e de ajuste. */
+  movimentos: {
+    id: string;
+    produtoId: string;
+    tipo: 'baixa' | 'reposicao' | 'ajuste';
+    delta: number;
+    motivo?: string | null;
+  }[] = [];
+
+  private aplicar(
+    comando: ComandoBaixa,
+    tipo: 'baixa' | 'reposicao',
+  ): Result<ResultadoBaixa, 'nao_encontrado'> {
+    const indice = this.produtos.findIndex(
+      (p) => p.id === comando.produtoId && p.deletadoEm === null,
+    );
+    if (indice === -1) {
+      return falha('nao_encontrado');
+    }
+    const atual = this.produtos[indice].quantidadeAtual;
+    if (tipo === 'baixa' && atual <= 0) {
+      return sucesso({ gravou: false, motivo: 'estoque_zerado' });
+    }
+    const saldo =
+      tipo === 'baixa' ? Math.max(0, atual - comando.quantidade) : atual + comando.quantidade;
+    this.produtos[indice] = {
+      ...this.produtos[indice],
+      quantidadeAtual: milesimos(saldo),
+      syncStatus: 'pendente',
+    };
+    this.proximoId += 1;
+    const id = `mov-${this.proximoId}`;
+    this.movimentos.push({ id, produtoId: comando.produtoId, tipo, delta: saldo - atual });
+    return sucesso({ gravou: true, saldoResultante: milesimos(saldo), movimentoId: id });
+  }
+
+  async darBaixa(comando: ComandoBaixa): Promise<Result<ResultadoBaixa, 'nao_encontrado'>> {
+    return this.aplicar(comando, 'baixa');
+  }
+
+  async repor(comando: ComandoBaixa): Promise<Result<ResultadoBaixa, 'nao_encontrado'>> {
+    return this.aplicar(comando, 'reposicao');
+  }
+
+  async ajustar(comando: ComandoAjuste): Promise<Result<ResultadoAjuste, 'nao_encontrado'>> {
+    const indice = this.produtos.findIndex(
+      (p) => p.id === comando.produtoId && p.deletadoEm === null,
+    );
+    if (indice === -1) {
+      return falha('nao_encontrado');
+    }
+    const atual = this.produtos[indice].quantidadeAtual;
+    const variacao = comando.valorFinal - atual;
+    if (variacao === 0) {
+      return sucesso({ gravou: false, motivo: 'sem_mudanca' });
+    }
+    this.produtos[indice] = {
+      ...this.produtos[indice],
+      quantidadeAtual: milesimos(comando.valorFinal),
+      syncStatus: 'pendente',
+    };
+    this.proximoId += 1;
+    const id = `mov-${this.proximoId}`;
+    this.movimentos.push({
+      id,
+      produtoId: comando.produtoId,
+      tipo: 'ajuste',
+      delta: variacao,
+      motivo: comando.motivo,
+    });
+    return sucesso({
+      gravou: true,
+      saldoResultante: milesimos(comando.valorFinal),
+      movimentoId: id,
+    });
   }
 
   async adotarListaBase(casaId: string, itens: ItemListaBase[]): Promise<Produto[]> {
@@ -135,6 +235,71 @@ export class ProdutoRepositorioFalso implements ProdutoRepository {
     );
     this.produtos.push(...criados);
     return criados;
+  }
+}
+
+/** Espelha o append-only do real: desfazer insere o inverso, nunca apaga. */
+export class MovimentoRepositorioFalso implements MovimentoRepository {
+  constructor(private readonly produtos: ProdutoRepositorioFalso) {}
+
+  async historicoPorProduto(): Promise<never[]> {
+    return [];
+  }
+
+  async historicoPorCasa(): Promise<never[]> {
+    return [];
+  }
+
+  async desfazer(
+    movimentoOriginalId: string,
+  ): Promise<Result<{ movimentoInversoId: string; saldoResultante: Milesimos }, 'nao_encontrado'>> {
+    const original = this.produtos.movimentos.find((m) => m.id === movimentoOriginalId);
+    if (!original) {
+      return falha('nao_encontrado');
+    }
+    const indice = this.produtos.produtos.findIndex((p) => p.id === original.produtoId);
+    const atual = this.produtos.produtos[indice].quantidadeAtual;
+    const saldo = milesimos(Math.max(0, atual - original.delta));
+    this.produtos.produtos[indice] = {
+      ...this.produtos.produtos[indice],
+      quantidadeAtual: saldo,
+    };
+    const inversoId = `${movimentoOriginalId}-inverso`;
+    this.produtos.movimentos.push({
+      id: inversoId,
+      produtoId: original.produtoId,
+      tipo: original.tipo === 'baixa' ? 'reposicao' : 'baixa',
+      delta: -original.delta,
+    });
+    return sucesso({ movimentoInversoId: inversoId, saldoResultante: saldo });
+  }
+
+  async reconciliar(): Promise<never[]> {
+    return [];
+  }
+
+  async corrigirDivergencia(
+    produtoId: string,
+    _usuarioId: string,
+    calculado: Milesimos,
+  ): Promise<Result<{ movimentoId: string; saldoResultante: Milesimos }, 'nao_encontrado'>> {
+    const indice = this.produtos.produtos.findIndex((p) => p.id === produtoId);
+    if (indice === -1) {
+      return falha('nao_encontrado');
+    }
+    this.produtos.produtos[indice] = {
+      ...this.produtos.produtos[indice],
+      quantidadeAtual: calculado,
+    };
+    return sucesso({ movimentoId: `ajuste-${produtoId}`, saldoResultante: calculado });
+  }
+
+  async corrigirTodasDivergencias(): Promise<{ corrigidos: number }> {
+    return { corrigidos: 0 };
+  }
+
+  async listarTudoParaBackup(): Promise<never[]> {
+    return [];
   }
 }
 

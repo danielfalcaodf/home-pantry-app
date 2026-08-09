@@ -15,6 +15,7 @@ export type PapelTipografico =
   | 'body.md'
   | 'label'
   | 'caption'
+  | 'data.xl'
   | 'data.lg'
   | 'data.md';
 
@@ -74,6 +75,16 @@ export const tipografia: Record<PapelTipografico, EstiloTipografico> = {
     letterSpacing: 0.44, // +4%
     textTransform: 'uppercase',
     tabular: false,
+  },
+  // Só a tela Resumo usa este papel (FRONTEND §8.4): "aqui — e só aqui — os
+  // números podem ser grandes". Mono e tabular como todo dado, mas no topo
+  // da escala — o resto do app nunca precisa de um número deste tamanho.
+  'data.xl': {
+    fontFamily: familias.mono500,
+    fontSize: 32,
+    lineHeight: 36,
+    letterSpacing: 0,
+    tabular: true,
   },
   'data.lg': {
     fontFamily: familias.mono500,

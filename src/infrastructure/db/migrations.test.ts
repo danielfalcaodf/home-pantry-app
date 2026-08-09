@@ -202,6 +202,25 @@ describe('restrições rejeitam violação em runtime', () => {
     ).toThrow(/CHECK/i);
   });
 
+  it('resposta de atualizar preço fora de 0/1 é rejeitada', () => {
+    const { sqlite } = criarDbDeTeste();
+    semearCasaEUsuario(sqlite);
+    sqlite
+      .prepare(
+        `INSERT INTO compra (id, casa_id, usuario_id, status, criada_em, atualizado_em)
+         VALUES ('c1', 'casa-teste', 'usuario-teste', 'aberta', 0, 0)`,
+      )
+      .run();
+    expect(() =>
+      sqlite
+        .prepare(
+          `INSERT INTO compra_item (id, compra_id, nome_avulso, unidade, quantidade_planejada, atualizar_preco)
+           VALUES ('i1', 'c1', 'Pilha', 'un', 1000, 2)`,
+        )
+        .run(),
+    ).toThrow(/CHECK/i);
+  });
+
   it('perfil de usuário fora de admin/membro é rejeitado', () => {
     const { sqlite } = criarDbDeTeste();
     semearCasaEUsuario(sqlite);

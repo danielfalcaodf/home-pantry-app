@@ -25,6 +25,9 @@ export function useCategorias(
   useEffect(() => {
     let montado = true;
     const estaMontado = () => montado;
+    // O lint não enxerga que `recarregar` só escreve estado depois do await —
+    // a escrita nunca é síncrona aqui, então não há render em cascata.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void recarregar(estaMontado);
     const cancelarAssinatura = observador.assinar(() => {
       void recarregar(estaMontado);

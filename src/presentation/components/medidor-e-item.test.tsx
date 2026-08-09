@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react-native';
+import { fireEvent, render, screen } from '@testing-library/react-native';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { ReactNode } from 'react';
@@ -36,9 +36,9 @@ describe('MedidorNivel', () => {
 
   it('zerado: nenhuma tinta, só a régua na base em crítico', async () => {
     await comTema(<MedidorNivel fracao={0} estado="critico" temSobra={false} />);
-    expect(estilos(camada('medidor-tinta')).height).toBe(0);
+    expect(estilos(camada('medidor-tinta')).height).toBe('0%');
     const regua = estilos(camada('medidor-regua'));
-    expect(regua.bottom).toBe(0);
+    expect(regua.bottom).toBe('0%');
     expect(regua.backgroundColor).toBe(despensa.state.critico);
   });
 
@@ -97,6 +97,26 @@ describe('ItemDespensa', () => {
     expect(estilo.width).toBe(48);
     expect(estilo.height).toBe(48);
     expect(botao.props.accessibilityState).toEqual(expect.objectContaining({ disabled: true }));
+  });
+
+  it('sem onRepor, o botão de repor rápido não aparece', async () => {
+    await comTema(<ItemDespensa {...base} onConsumir={jest.fn()} />);
+    expect(screen.queryByLabelText(/^Repor /)).toBeNull();
+  });
+
+  it('com onRepor, o botão de repor rápido aparece e chama a ação ao tocar', async () => {
+    const onRepor = jest.fn();
+    await comTema(
+      <ItemDespensa
+        {...base}
+        onConsumir={jest.fn()}
+        onRepor={onRepor}
+        rotuloAcaoReposicao="Repor 1 pacote de Café em pó"
+      />,
+    );
+    const botao = screen.getByLabelText('Repor 1 pacote de Café em pó');
+    fireEvent.press(botao);
+    expect(onRepor).toHaveBeenCalledTimes(1);
   });
 });
 
