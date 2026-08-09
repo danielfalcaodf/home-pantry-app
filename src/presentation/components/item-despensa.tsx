@@ -5,6 +5,7 @@ import { corDoEstado } from '../theme/cor-do-estado';
 import { ALTURA_ITEM, espaco, raio } from '../theme/espaco';
 import { DURACAO_FADE } from '../theme/movimento';
 import { useTheme } from '../theme/provider';
+import { BotaoReporRapido } from './botao-repor-rapido';
 import { EstadoDoMedidor, MedidorNivel } from './medidor-nivel';
 import { StepperConsumo } from './stepper-consumo';
 import { Texto } from './texto';
@@ -20,9 +21,13 @@ export type ItemDespensaProps = {
   temSobra: boolean;
   /** Rótulo do leitor de tela para o botão, com a ação completa. */
   rotuloAcaoConsumo: string;
+  /** Rótulo do leitor de tela para o botão de repor rápido (design system:
+   *  um botão de repor sempre visível ao lado do de usar). */
+  rotuloAcaoReposicao?: string;
   onAbrir: () => void;
   onConsumir?: () => void;
   onAbrirTeclado?: () => void;
+  onRepor?: () => void;
   /** Falso na primeira pintura: nenhuma entrada em cascata na lista. */
   animar?: boolean;
 };
@@ -40,9 +45,11 @@ export function ItemDespensa({
   fracao,
   temSobra,
   rotuloAcaoConsumo,
+  rotuloAcaoReposicao,
   onAbrir,
   onConsumir,
   onAbrirTeclado,
+  onRepor,
   animar = true,
 }: ItemDespensaProps) {
   const tema = useTheme();
@@ -99,13 +106,19 @@ export function ItemDespensa({
         </Pressable>
         {/* O botão permanece mesmo zerado, só esmaecido: removê-lo mudaria o
             layout da linha e quebraria o alinhamento da lista (FRONTEND §7.2). */}
-        <View style={{ marginRight: espaco.md }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: espaco.sm }}>
           <StepperConsumo
             rotuloAcessivel={rotuloAcaoConsumo}
             desabilitado={zerado || !onConsumir}
             onRegistrar={() => onConsumir?.()}
             onAbrirTeclado={onAbrirTeclado}
           />
+          {onRepor ? (
+            <BotaoReporRapido
+              rotuloAcessivel={rotuloAcaoReposicao ?? `Repor ${nome}`}
+              onRegistrar={onRepor}
+            />
+          ) : null}
         </View>
       </View>
     </View>

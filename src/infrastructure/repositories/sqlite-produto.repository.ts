@@ -265,6 +265,20 @@ export class SQLiteProdutoRepository implements ProdutoRepository {
     return linhas.map(paraDominio);
   }
 
+  // DATABASE §6.5: entrega o bruto (milésimos·centavos), sem dividir por mil
+  // — essa conversão é exclusiva do domínio (design D1 da change
+  // resumo-valores-e-historico).
+  async valorBrutoDoEstoque(casaId: string): Promise<number> {
+    const linha = this.db
+      .select({
+        bruto: sql<number>`COALESCE(SUM(${tabelaProduto.quantidadeAtual} * ${tabelaProduto.valorUnitario}), 0)`,
+      })
+      .from(tabelaProduto)
+      .where(and(eq(tabelaProduto.casaId, casaId), eq(tabelaProduto.ativo, true), naoRemovido))
+      .get();
+    return linha?.bruto ?? 0;
+  }
+
   // Caminho crítico (DATABASE §6.3): UPDATE com proteção de não-negativo e
   // INSERT do movimento lendo o saldo do banco DEPOIS do update — tudo na
   // mesma transação. Nunca separar as duas escritas.

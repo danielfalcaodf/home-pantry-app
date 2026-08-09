@@ -6,6 +6,7 @@ import { Pressable, View } from 'react-native';
 import { useListaBase } from '@/application/estoque/use-lista-base';
 import { formatarQuantidade } from '@/domain/shared/quantidade';
 import { Botao } from '@/presentation/components/botao';
+import { BotaoVoltar } from '@/presentation/components/botao-voltar';
 import { Texto } from '@/presentation/components/texto';
 import { ALTURA_ITEM, ALVO_TOQUE_MINIMO, espaco } from '@/presentation/theme/espaco';
 import { useTheme } from '@/presentation/theme/provider';
@@ -40,7 +41,10 @@ export default function ListaBase() {
   return (
     <View style={{ flex: 1, backgroundColor: tema.bg.base }}>
       <View style={{ padding: espaco.lg, gap: espaco.xs }}>
-        <Texto papel="display.sm">O básico de uma casa</Texto>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: espaco.sm }}>
+          <BotaoVoltar />
+          <Texto papel="display.sm">O básico de uma casa</Texto>
+        </View>
         <Texto papel="body.md" tom="secondary">
           Desmarque o que você não usa. Dá para ajustar tudo depois.
         </Texto>
