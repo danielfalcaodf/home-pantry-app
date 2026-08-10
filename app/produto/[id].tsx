@@ -37,6 +37,7 @@ import {
   MENSAGEM_FALHA_AO_GRAVAR,
 } from '@/presentation/format/mensagem-de-registro';
 import { useRegistroDeConsumo } from '@/presentation/components/use-registro-de-consumo';
+import { useVoltarFechaTeclado } from '@/presentation/components/use-voltar-fecha-teclado';
 import { espaco } from '@/presentation/theme/espaco';
 import { useTheme } from '@/presentation/theme/provider';
 
@@ -95,6 +96,8 @@ function Detalhe({ id, item }: { id: string; item: ProdutoNaDespensa }) {
   const { desfazer } = useDesfazerMovimento();
   const confirmacao = useRegistroDeConsumo();
   const resumoHistorico = useResumoHistoricoRecente(id);
+
+  useVoltarFechaTeclado();
 
   async function usar(quantidade = milesimos(1000)) {
     const resultado = await registrarConsumo(id, quantidade);

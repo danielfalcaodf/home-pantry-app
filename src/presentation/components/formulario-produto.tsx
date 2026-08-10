@@ -46,6 +46,12 @@ export type FormularioProdutoProps = {
   avisoDeNome?: { mensagem: string; acoes: { titulo: string; onPress: () => void }[] };
   /** Cabeçalho com título + voltar — só o Cadastrar produto usa (D3). */
   tituloCabecalho?: string;
+  /**
+   * Foco automático no nome só faz sentido quando digitá-lo é a primeira
+   * ação (cadastro novo). No detalhe, o teclado cobriria "Usei"/"Repus"
+   * (ACHADO-056, KPI K4) — por isso o default é não focar.
+   */
+  autofocarNome?: boolean;
 };
 
 export function FormularioProduto({
@@ -59,6 +65,7 @@ export function FormularioProduto({
   quantidadeAtualEditavel = true,
   avisoDeNome,
   tituloCabecalho,
+  autofocarNome = false,
 }: FormularioProdutoProps) {
   const tema = useTheme();
   const [maisOpcoes, setMaisOpcoes] = useState(false);
@@ -91,7 +98,7 @@ export function FormularioProduto({
         value={valores.nome}
         onChangeText={definir('nome')}
         erro={erros.nome}
-        autoFocus
+        autoFocus={autofocarNome}
       />
 
       {avisoDeNome ? (

@@ -86,7 +86,7 @@ O sistema SHALL impedir dois produtos ativos com o mesmo nome na mesma casa, ign
 
 ### Requirement: Detalhe e edição do produto
 
-A tela de detalhe SHALL exibir a quantidade atual em destaque, permitir corrigi-la pelo caminho de ajuste, permitir editar todos os campos de cadastro do produto, e exibir no rodapé um resumo do histórico recente de registros com acesso ao histórico completo.
+A tela de detalhe SHALL exibir a quantidade atual em destaque, permitir corrigi-la pelo caminho de ajuste, permitir editar todos os campos de cadastro do produto, e exibir no rodapé um resumo do histórico recente de registros com acesso ao histórico completo. A abertura da tela NÃO SHALL atribuir foco automático a nenhum campo de texto nem invocar o teclado, e Voltar com o teclado aberto SHALL fechar o teclado sem sair da tela.
 
 #### Scenario: Quantidade em destaque
 
@@ -122,6 +122,21 @@ A tela de detalhe SHALL exibir a quantidade atual em destaque, permitir corrigi-
 
 - **WHEN** a quantidade necessária é aumentada acima da quantidade atual
 - **THEN** o item passa a aparecer como faltando na despensa, sem gravar nenhum movimento
+
+#### Scenario: Abertura sem foco automático nem teclado
+
+- **WHEN** o usuário abre o detalhe de um produto a partir da Despensa
+- **THEN** nenhum campo de texto recebe foco automático, o teclado não é invocado, e os botões "Usei" e "Repus" permanecem visíveis e tocáveis
+
+#### Scenario: Voltar com teclado aberto fecha só o teclado
+
+- **WHEN** o usuário focou um campo de texto no detalhe (teclado aberto) e pressiona Voltar
+- **THEN** o teclado é fechado e a tela de detalhe permanece aberta; um novo Voltar aí sim navega de volta
+
+#### Scenario: Cadastro de produto novo preserva o autofoco
+
+- **WHEN** o usuário abre a tela de cadastro de produto novo
+- **THEN** o campo de nome recebe foco automático normalmente (comportamento existente, sem regressão)
 
 ### Requirement: Remoção lógica de produto
 
