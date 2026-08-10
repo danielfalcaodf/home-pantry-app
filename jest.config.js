@@ -22,6 +22,7 @@ const transformTsPuro = {
 
 module.exports = {
   passWithNoTests: true,
+  globalSetup: '<rootDir>/jest.tz.js',
   projects: [
     {
       displayName: 'domain',
