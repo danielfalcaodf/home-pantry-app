@@ -5,7 +5,8 @@ change: 2026-08-03-ajuste-e-conferencia-estoque
 capability: historico-do-produto
 severidade: baixa
 fase: F6
-estado: aberto
+estado: virou-change
+change-correcao: alvos-de-toque-e-acessibilidade
 ---
 ## O que quebra
 

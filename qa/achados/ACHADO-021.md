@@ -5,7 +5,8 @@ change: design-system-tema
 capability: tipografia-carregada
 severidade: baixa
 fase: F3
-estado: aberto
+estado: virou-change
+change-correcao: guardas-de-tipo-lint-e-tooling
 ---
 ## O que quebra
 

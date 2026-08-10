@@ -5,7 +5,8 @@ change: 2026-08-03-ajuste-e-conferencia-estoque
 capability: modo-conferencia
 severidade: baixa
 fase: F5
-estado: aberto
+estado: virou-change
+change-correcao: botao-voltar-conferencia
 ---
 ## O que quebra
 

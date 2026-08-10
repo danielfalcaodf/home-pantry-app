@@ -5,7 +5,8 @@ change: fundacao-dominio
 capability: unidades-e-valores
 severidade: baixa
 fase: F3
-estado: aberto
+estado: virou-change
+change-correcao: guardas-de-tipo-lint-e-tooling
 ---
 ## O que quebra
 

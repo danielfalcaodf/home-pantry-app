@@ -5,7 +5,8 @@ change: persistencia-sqlite
 capability: persistencia-sqlite
 severidade: baixa
 fase: F2
-estado: aberto
+estado: virou-change
+change-correcao: cobertura-banco-e-migrations
 ---
 ## O que quebra
 

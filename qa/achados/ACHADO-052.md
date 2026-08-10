@@ -5,7 +5,8 @@ change: 2026-08-06-ajuste-visual-telas-design-system
 capability: n/a
 severidade: baixa
 fase: F3
-estado: aberto
+estado: virou-change
+change-correcao: cobertura-telas-e-navegacao
 ---
 ## O que quebra
 

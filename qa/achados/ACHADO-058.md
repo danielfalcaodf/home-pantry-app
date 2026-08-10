@@ -5,7 +5,8 @@ change: null
 capability: resumo-mensal
 severidade: media
 fase: F6
-estado: aberto
+estado: virou-change
+change-correcao: alvos-de-toque-e-acessibilidade
 ---
 ## O que quebra
 

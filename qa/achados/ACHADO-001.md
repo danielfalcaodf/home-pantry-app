@@ -5,7 +5,8 @@ change: resumo-valores-e-historico
 capability: historico-de-compras
 severidade: media
 fase: F1
-estado: aberto
+estado: virou-change
+change-correcao: correcao-fuso-horario-testes
 ---
 ## O que quebra
 

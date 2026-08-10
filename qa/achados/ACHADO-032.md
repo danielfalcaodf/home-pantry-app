@@ -5,7 +5,8 @@ change: lista-de-compras
 capability: custo-estimado
 severidade: baixa
 fase: F3
-estado: aberto
+estado: virou-change
+change-correcao: cobertura-lista-e-compra
 ---
 ## O que quebra
 

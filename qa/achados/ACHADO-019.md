@@ -5,7 +5,8 @@ change: design-system-tema
 capability: componentes-base
 severidade: baixa
 fase: F3
-estado: aberto
+estado: virou-change
+change-correcao: cobertura-componentes-apresentacao
 ---
 ## O que quebra
 

@@ -5,7 +5,8 @@ change: 2026-08-03-ajuste-e-conferencia-estoque
 capability: cadastro-de-produto
 severidade: critica
 fase: F6
-estado: aberto
+estado: virou-change
+change-correcao: correcao-autofoco-detalhe-produto
 ---
 ## O que quebra
 

@@ -5,7 +5,8 @@ change: despensa-e-cadastro-produto
 capability: medidor-linha-dagua
 severidade: baixa
 fase: F3
-estado: aberto
+estado: virou-change
+change-correcao: cobertura-componentes-apresentacao
 ---
 ## O que quebra
 
