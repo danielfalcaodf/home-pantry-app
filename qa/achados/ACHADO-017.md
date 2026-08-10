@@ -5,7 +5,8 @@ change: design-system-tema
 capability: componentes-base
 severidade: media
 fase: F3
-estado: aberto
+estado: virou-change
+change-correcao: correcao-chips-de-estado
 ---
 ## O que quebra
 

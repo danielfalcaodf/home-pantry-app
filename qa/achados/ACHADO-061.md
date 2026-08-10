@@ -5,7 +5,8 @@ change: null
 capability: despensa
 severidade: baixa
 fase: F6
-estado: aberto
+estado: virou-change
+change-correcao: alvos-de-toque-e-acessibilidade
 ---
 ## O que quebra
 

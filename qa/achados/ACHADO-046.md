@@ -5,7 +5,8 @@ change: 2026-08-03-resumo-valores-e-historico
 capability: gasto-mensal
 severidade: baixa
 fase: F3
-estado: aberto
+estado: virou-change
+change-correcao: cobertura-lista-e-compra
 ---
 ## O que quebra
 

@@ -5,7 +5,8 @@ change: 2026-08-03-backup-restore-json
 capability: restauracao-de-backup
 severidade: media
 fase: F3
-estado: aberto
+estado: virou-change
+change-correcao: configuracoes-e-backup
 ---
 ## O que quebra
 

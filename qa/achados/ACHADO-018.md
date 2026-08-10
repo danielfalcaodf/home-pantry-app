@@ -5,7 +5,8 @@ change: design-system-tema
 capability: tema-e-tokens
 severidade: media
 fase: F3
-estado: aberto
+estado: virou-change
+change-correcao: cobertura-componentes-apresentacao
 ---
 ## O que quebra
 

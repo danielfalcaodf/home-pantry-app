@@ -5,7 +5,8 @@ change: 2026-08-03-modo-compra-e-fechamento
 capability: modo-compra
 severidade: media
 fase: F3
-estado: aberto
+estado: virou-change
+change-correcao: correcao-fluxo-modo-compra
 ---
 ## O que quebra
 

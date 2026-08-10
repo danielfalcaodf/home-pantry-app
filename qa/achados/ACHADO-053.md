@@ -5,7 +5,8 @@ change: 2026-08-06-ajuste-visual-telas-design-system
 capability: tela-despensa / resumo-de-valores
 severidade: media
 fase: F5
-estado: aberto
+estado: virou-change
+change-correcao: correcao-chips-de-estado
 ---
 ## O que quebra
 

@@ -5,7 +5,8 @@ change: 2026-08-03-ajuste-e-conferencia-estoque
 capability: modo-conferencia
 severidade: media
 fase: F3
-estado: aberto
+estado: virou-change
+change-correcao: cobertura-telas-e-navegacao
 ---
 ## O que quebra
 

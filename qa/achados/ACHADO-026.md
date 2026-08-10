@@ -5,7 +5,8 @@ change: dar-baixa-caminho-critico
 capability: movimento-do-gesto
 severidade: media
 fase: F3
-estado: aberto
+estado: virou-change
+change-correcao: cobertura-componentes-apresentacao
 ---
 ## O que quebra
 

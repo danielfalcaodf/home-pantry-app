@@ -5,7 +5,8 @@ change: bootstrap-projeto-expo
 capability: ferramental-de-build
 severidade: baixa
 fase: F0
-estado: aberto
+estado: virou-change
+change-correcao: guardas-de-tipo-lint-e-tooling
 ---
 ## O que quebra
 

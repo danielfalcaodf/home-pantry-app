@@ -5,7 +5,8 @@ change: persistencia-sqlite
 capability: backup-automatico-pre-migration
 severidade: media
 fase: F2
-estado: aberto
+estado: virou-change
+change-correcao: cobertura-banco-e-migrations
 ---
 ## O que quebra
 
