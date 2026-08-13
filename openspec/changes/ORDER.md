@@ -25,4 +25,5 @@ Regras:
 
 | Ordem | Change | Depende de | Motivo |
 |---|---|---|---|
-| 12 | guardas-de-tipo-lint-e-tooling | — | Guardas de tipo/lint e tooling (003, 008-010, 015, 020, 021); não toca código de produto |
+
+Nenhuma change ativa no momento — todas as 12 changes da campanha de QA foram implementadas e arquivadas.

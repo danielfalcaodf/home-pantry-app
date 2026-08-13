@@ -24,7 +24,7 @@ O sistema SHALL fornecer dois temas de primeira classe — escuro e claro — co
 #### Scenario: Tema tipado
 
 - **WHEN** um componente acessa um token inexistente
-- **THEN** o compilador de tipos rejeita o acesso
+- **THEN** o compilador de tipos rejeita o acesso, comprovado por um teste de tipo (`@ts-expect-error` acessando uma chave de token inexistente em `Theme`) validado via `tsc --noEmit`
 
 ### Requirement: Nenhuma cor fora dos tokens
 
@@ -42,12 +42,17 @@ Valores de cor SHALL existir exclusivamente no arquivo de tokens. Componentes e 
 
 ### Requirement: Escala de espaço, raio e tipografia
 
-O sistema SHALL fornecer tokens fechados de espaçamento, raio e tipografia. Valores arbitrários NÃO devem ser usados diretamente em componentes.
+O sistema SHALL fornecer tokens fechados de espaçamento, raio e tipografia. Valores arbitrários NÃO devem ser usados diretamente em componentes, e a conformidade com a escala fechada de espaçamento SHALL ser verificada por um mecanismo executável (regra de lint dedicada ou teste de conformidade por varredura de `src/presentation/components/`), não apenas por revisão de código.
 
 #### Scenario: Espaçamento restrito à escala
 
 - **WHEN** um componente aplica espaçamento
 - **THEN** o valor vem da escala de 4, 8, 12, 16, 24, 32 e 48
+
+#### Scenario: Valor de espaçamento fora da escala é rejeitado
+
+- **WHEN** um arquivo em `src/presentation/components/` usa um valor numérico literal de espaçamento (ex. `padding`, `margin`, `gap`) fora da escala fechada
+- **THEN** o mecanismo de verificação (lint ou teste de conformidade) acusa a violação, sem falsos positivos para propriedades numéricas legítimas que não são espaçamento (ex. `flex`, `fontSize`, `opacity`)
 
 #### Scenario: Raio zero na linha da lista
 
