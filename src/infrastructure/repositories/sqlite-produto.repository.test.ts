@@ -97,6 +97,34 @@ describe('edição e remoção lógica', () => {
 });
 
 describe('consultas de leitura', () => {
+  // ACHADO-014: listarDespensa alinhada a .select({...}) explícito, como
+  // listarFaltantes — este teste prova que nenhum campo consumido pelo
+  // domínio (paraDominio) foi omitido ao nomear as colunas.
+  it('despensa retorna exatamente os campos esperados de Produto', async () => {
+    const { repo, casaId, usuarioId } = montar();
+    await repo.criar(casaId, usuarioId, dadosValidos('Arroz', 2));
+
+    const [item] = await repo.listarDespensa(casaId);
+
+    expect(item).toEqual({
+      id: expect.any(String),
+      casaId,
+      nome: 'Arroz',
+      categoria: null,
+      unidade: 'pacote',
+      quantidadeAtual: expect.any(Number),
+      quantidadeNecessaria: expect.any(Number),
+      valorUnitario: expect.any(Number),
+      marcaPreferida: null,
+      observacao: null,
+      ativo: true,
+      criadoEm: expect.any(Number),
+      atualizadoEm: expect.any(Number),
+      deletadoEm: null,
+      syncStatus: expect.any(String),
+    });
+  });
+
   it('despensa ordena por estado (crítico, falta, ok) e alfabético dentro do grupo', async () => {
     const { repo, casaId, usuarioId } = montar();
     await repo.criar(casaId, usuarioId, dadosValidos('Zerado', 0));
