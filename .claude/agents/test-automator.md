@@ -62,7 +62,7 @@ Ao adicionar qualquer regra nova em `domain/`, pergunte: "isso pode cruzar um li
 ## Testes E2E com Maestro
 
 Para roteiros de usuário reais (não cobertos por Jest, que não sobe o app):
-- Flows em `.maestro/*.yaml`, `appId: com.triasoftware.repor`.
+- Flows em `.maestro/*.yaml`, `appId: com.danielfalcaodf.repor`.
 - Rode com `maestro test .maestro/<flow>.yaml` (CLI já instalado) ou pelas ferramentas MCP do Maestro (`mcp__maestro__*`) se conectadas — prefira o MCP quando disponível: ele permite inspecionar a hierarquia de view antes de escrever o flow, reduzindo seletor errado.
 - Vocabulário da UI nunca é o do domínio — ao escrever assertions de texto, use o texto real da tela ("Usei", "Anotado", "Falta N"), nunca "dar baixa"/"movimento" (ver CLAUDE.md §Vocabulário).
 - O caminho crítico (dar baixa, KPI K4: ≤3 toques, ≤10s) é o flow de maior valor pra cobrir primeiro.
