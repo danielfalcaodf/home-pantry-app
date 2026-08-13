@@ -10,7 +10,7 @@ import { GraficoBarras } from '@/presentation/components/grafico-barras';
 import { Texto } from '@/presentation/components/texto';
 import { contarPorEstado, FiltroEstado } from '@/presentation/format/agrupar-despensa';
 import { corDoEstado } from '@/presentation/theme/cor-do-estado';
-import { espaco } from '@/presentation/theme/espaco';
+import { ALVO_TOQUE_MINIMO, espaco } from '@/presentation/theme/espaco';
 import { useTheme } from '@/presentation/theme/provider';
 import { rotuloDoMes } from '@/presentation/format/gasto-mensal';
 
@@ -66,6 +66,8 @@ export default function Resumo() {
           onPress={() => router.push('/configuracoes')}
           accessibilityRole="button"
           accessibilityLabel="Configurações"
+          hitSlop={8}
+          style={{ minHeight: ALVO_TOQUE_MINIMO, justifyContent: 'center' }}
         >
           <Texto papel="body.md" cor={tema.action.azulejo}>
             Configurações

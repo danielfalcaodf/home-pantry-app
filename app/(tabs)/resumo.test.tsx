@@ -1,12 +1,20 @@
-import { render, screen } from '@testing-library/react-native';
+import { fireEvent, render, screen } from '@testing-library/react-native';
 import { ReactNode } from 'react';
 
+import { ALVO_TOQUE_MINIMO } from '@/presentation/theme/espaco';
 import { ThemeProvider } from '@/presentation/theme/provider';
 import Resumo from './resumo';
 
+const mockPush = jest.fn();
+
 jest.mock('expo-router', () => ({
-  router: { push: jest.fn() },
+  router: { push: (...a: unknown[]) => mockPush(...a) },
 }));
+
+function estiloResolvido(elemento: { props: { style?: unknown } }) {
+  const { style } = elemento.props;
+  return Array.isArray(style) ? Object.assign({}, ...style) : style;
+}
 
 type ItemFake = { produto: { id: string; nome: string; categoria: string | null }; estado: 'critico' | 'emFalta' | 'ok' };
 
@@ -71,5 +79,26 @@ describe('Resumo — chip "Faltando"', () => {
     await comTema(<Resumo />);
     expect(screen.getByLabelText('Acabou, 5')).toBeTruthy();
     expect(screen.getByLabelText('Cheio, 9')).toBeTruthy();
+  });
+});
+
+describe('Resumo — botão "Configurações"', () => {
+  beforeEach(() => {
+    mockPush.mockClear();
+    mockItens = itensDe(1, 0, 1);
+  });
+
+  // ACHADO-058 (task 2.2): alvo de toque precisa medir ≥48dp de altura.
+  it('mede ao menos 48dp de altura tocável', async () => {
+    await comTema(<Resumo />);
+    const botao = screen.getByLabelText('Configurações');
+    expect(estiloResolvido(botao).minHeight).toBeGreaterThanOrEqual(ALVO_TOQUE_MINIMO);
+  });
+
+  // (task 2.3): o toque continua navegando para /configuracoes.
+  it('tocar continua navegando para /configuracoes', async () => {
+    await comTema(<Resumo />);
+    fireEvent.press(screen.getByLabelText('Configurações'));
+    expect(mockPush).toHaveBeenCalledWith('/configuracoes');
   });
 });

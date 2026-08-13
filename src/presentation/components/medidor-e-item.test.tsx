@@ -64,7 +64,7 @@ describe('ItemDespensa', () => {
     estado: 'emFalta' as const,
     fracao: 0.667,
     temSobra: false,
-    rotuloAcaoConsumo: 'Registrar consumo de 1 pacote de Café em pó',
+    rotuloAcaoConsumo: 'Usei 1 pacote de Café em pó',
     onAbrir: jest.fn(),
   };
 
@@ -75,7 +75,7 @@ describe('ItemDespensa', () => {
 
   it('anuncia o botão com a ação completa, nunca só "menos"', async () => {
     await comTema(<ItemDespensa {...base} onConsumir={jest.fn()} />);
-    const botao = screen.getByLabelText('Registrar consumo de 1 pacote de Café em pó');
+    const botao = screen.getByLabelText('Usei 1 pacote de Café em pó');
     expect(botao.props.accessibilityState).toEqual(
       expect.objectContaining({ disabled: false }),
     );

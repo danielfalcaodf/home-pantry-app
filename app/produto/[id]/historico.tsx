@@ -37,8 +37,18 @@ export default function HistoricoDoProduto() {
   function Linha({ movimento }: { movimento: MovimentoEstoque }) {
     const descricao = descreverMovimento(movimento, unidade);
     const cor = corDoMovimento(tema, movimento.tipo);
+    const data = formatarDataDoMovimento(movimento.criadoEm);
+    const temMotivo = Boolean(movimento.motivo) && movimento.tipo === 'ajuste';
+    // Uma unidade acessível única por linha (mesmo padrão de ItemDespensa),
+    // não três Textos soltos — o TalkBack precisa anunciar ação, quantidade,
+    // data e motivo juntos (task 6.1). O texto visível interno não muda.
+    const rotuloAcessivel = `${descricao.verbo} ${descricao.quantidade}, ${data}${
+      temMotivo ? ` · ${movimento.motivo}` : ''
+    }`;
     return (
       <View
+        accessible
+        accessibilityLabel={rotuloAcessivel}
         style={{
           paddingVertical: espaco.md,
           paddingHorizontal: espaco.lg,

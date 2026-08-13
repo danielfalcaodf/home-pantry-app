@@ -10,7 +10,7 @@ import { BotaoVoltar } from '@/presentation/components/botao-voltar';
 import { Texto } from '@/presentation/components/texto';
 import { Toast } from '@/presentation/components/toast';
 import { formatarDataDoUltimoBackup } from '@/presentation/format/data-do-backup';
-import { espaco, raio } from '@/presentation/theme/espaco';
+import { ALVO_TOQUE_MINIMO, espaco, raio } from '@/presentation/theme/espaco';
 import { useEscolherTema, usePreferenciaDeTema, useTheme } from '@/presentation/theme/provider';
 import { PreferenciaDeTema } from '@/presentation/theme/resolver';
 
@@ -76,6 +76,8 @@ export default function Configuracoes() {
                   accessibilityLabel={`Tema ${opcao.rotulo}`}
                   accessibilityState={{ selected: ativo }}
                   style={{
+                    minHeight: ALVO_TOQUE_MINIMO,
+                    justifyContent: 'center',
                     paddingVertical: espaco.sm,
                     paddingHorizontal: espaco.md,
                     borderRadius: raio.campo,
@@ -143,7 +145,7 @@ export default function Configuracoes() {
             Despensa (que agora só tem os ícones de buscar/adicionar) e
             passou a ficar aqui, junto das outras ações de baixa frequência. */}
           <Botao
-            titulo="Conferência de estoque"
+            titulo="Conferência da despensa"
             variante="secundario"
             onPress={() => router.push('/conferencia')}
           />
