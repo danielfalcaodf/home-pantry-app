@@ -121,6 +121,34 @@ Direção: **"linha d'água"**. Cada item da lista é um medidor vertical que pr
 - Movimento é orquestrado só no gesto de dar baixa (háptico leve → stepper contrai 0.92 → linha d'água desce em spring damping 18 sobre `react-native-reanimated`, rodando na UI thread → cross-fade dos números → toast). Nada mais anima: sem entrada de tela em cascata, sem skeleton shimmer, sem contagem progressiva de números — isso adiciona latência percebida ao caminho crítico. Com `reduceMotion` do sistema ligado, o nível muda em corte seco (fade 100ms) e o háptico permanece; usar `withSpring(..., { reduceMotion: ReduceMotion.System })` para respeitar a preferência de acessibilidade automaticamente em vez de checar a flag manualmente.
 - Sem biblioteca de design system pronta — os ~12 componentes (`ItemDespensa`, stepper, teclado de quantidade em bottom sheet, toast de desfazer, chip de estado, campo de texto, item do modo compra) são custom. Ver `FRONTEND-DESIGN-app-estoque-de-casa.md` §7 antes de implementar qualquer um deles — a especificação de layout, estados e comportamento de toque já está fechada lá.
 
+## Fluxo Git — branches, commits e PRs (GitFlow)
+
+Duas branches longas: `main` (produção, sempre deployável) e `develop` (integração — base padrão
+de todo PR). Todo trabalho novo sai de `develop` numa branch de vida curta, nomeada por tipo:
+
+| Prefixo | Quando usar | Base | Merge em |
+|---|---|---|---|
+| `feature/<slug>` | Nova funcionalidade (Type: Nova Feature) | `develop` | `develop` |
+| `fix/<slug>` | Correção de bug (Type: Correção de Bug) | `develop` | `develop` |
+| `chore/<slug>` | Tooling, config, dependências — sem mudar comportamento do app | `develop` | `develop` |
+| `docs/<slug>` | Só documentação (`.md`, comentário de arquitetura) | `develop` | `develop` |
+| `release/<versao>` | Estabilização pré-publicação (freeze de escopo, só bugfix) | `develop` | `main` **e** `develop` |
+| `hotfix/<slug>` | Correção urgente já em produção, não espera o próximo release | `main` | `main` **e** `develop` |
+
+`<slug>` é kebab-case, curto, em português do domínio (`fix/baixa-cruza-zero`, não `fix/bug-1`).
+Changes do OpenSpec usam uma variante numerada do prefixo `feature/`/`fix/` — ver seção seguinte.
+
+**Commits**: Conventional Commits, no formato já usado neste histórico — `tipo: descrição` (ou
+`tipo(escopo): descrição`), descrição em português, minúscula, sem ponto final, no infinitivo/
+imperativo (`adiciona`, não `adicionado`). Tipos: `feat`, `fix`, `chore`, `refactor`, `test`,
+`docs`, `perf`, `build`, `ci`. Commit de merge de PR mantém o formato padrão do GitHub
+(`Merge pull request #N from ...`) — não editar manualmente.
+
+**PRs**: título no mesmo formato do commit (`tipo: descrição`), sem prefixo de branch
+(`fix: fixa TZ do Jest`, não `change/01: fixa TZ do Jest`) — o título vira o commit de merge em
+squash, e precisa ser legível sozinho no changelog. Base é sempre `develop`, exceto `hotfix/*`
+(base `main`, com back-merge para `develop` depois).
+
 ## Fluxo de changes do OpenSpec (`opsx`) — ORDEM e gate de testes
 
 Os comandos `opsx` operam sempre sobre as changes **atuais** (ativas) do repositório — nunca
@@ -140,7 +168,10 @@ Ciclo por tipo de change (registrado como `**Type:**` no `proposal.md`):
 `/opsx:test` (skill `openspec-test-change`) executa esse fluxo completo. Se algo falhar,
 `/opsx:update` registra os ajustes na change antes de qualquer código. Uma change **só pode ser
 arquivada com o fluxo 100% verde**; imediatamente após o arquivamento, `/opsx:archive` cria o
-PR com tudo da change, na branch `change/<NN>-<nome>` (NN = Ordem do `ORDER.md`).
+PR com tudo da change, na branch `feature/<NN>-<nome>` ou `fix/<NN>-<nome>` — prefixo conforme
+o `**Type:**` do `proposal.md` (Nova Feature → `feature/`, Correção de Bug → `fix/`), NN = Ordem
+do `ORDER.md` — e título de PR `feat: <descrição>` / `fix: <descrição>`, seguindo a convenção de
+commits da seção anterior.
 
 ## Fora de escopo do MVP (não implementar sem confirmar)
 

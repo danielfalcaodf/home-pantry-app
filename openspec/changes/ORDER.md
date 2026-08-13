@@ -15,8 +15,11 @@ Regras:
   "—" em "Depende de" — ainda assim ocupa uma posição, para deixar claro que não há ordem
   forçada com o que já está na lista.
 - A coluna **Ordem** também define o nome da branch do PR criado no arquivamento:
-  `change/<NN>-<nome-da-change>` (NN = Ordem com dois dígitos). A branch do PR respeita,
-  obrigatoriamente, a ordem cronológica das changes.
+  `feature/<NN>-<nome-da-change>` ou `fix/<NN>-<nome-da-change>` (prefixo conforme o
+  `**Type:**` do `proposal.md` da change — Nova Feature → `feature/`, Correção de Bug →
+  `fix/`; NN = Ordem com dois dígitos). A branch do PR respeita, obrigatoriamente, a ordem
+  cronológica das changes. Título do PR segue a mesma convenção de commit do projeto:
+  `feat: <descrição>` / `fix: <descrição>` (ver CLAUDE.md, seção "Fluxo Git").
 - Uma change só pode ser arquivada (e virar PR) quando 100% do fluxo de testes de `/opsx:test`
   passa (TDD, QA e testes de contexto do bug, conforme o tipo).
 
