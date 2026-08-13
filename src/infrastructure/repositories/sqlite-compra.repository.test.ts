@@ -256,6 +256,23 @@ describe('finalização', () => {
       .get(ctx.compra.id);
     expect(reposicoes).toEqual({ n: 3 });
 
+    // ACHADO-036 (task 6.1): não só a contagem — os campos do movimento
+    // gravado para um produto específico precisam bater individualmente.
+    const movimentoDeP1 = ctx.sqlite
+      .prepare(
+        'SELECT usuario_id, criado_em, quantidade_delta, quantidade_resultante FROM movimento_estoque WHERE tipo = ? AND compra_id = ? AND produto_id = ?',
+      )
+      .get('reposicao', ctx.compra.id, p1.id) as {
+      usuario_id: string;
+      criado_em: number;
+      quantidade_delta: number;
+      quantidade_resultante: number;
+    };
+    expect(movimentoDeP1.usuario_id).toBe(ctx.usuarioId);
+    expect(movimentoDeP1.criado_em).toBe(clock.agora() + 5000);
+    expect(movimentoDeP1.quantidade_delta).toBe(2000); // 1000 (inicial) → 3000
+    expect(movimentoDeP1.quantidade_resultante).toBe(3000);
+
     // banco coerente após a finalização
     expect(await ctx.movimentos.reconciliar(ctx.casaId)).toHaveLength(0);
   });
