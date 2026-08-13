@@ -25,5 +25,4 @@ Regras:
 
 | Ordem | Change | Depende de | Motivo |
 |---|---|---|---|
-| 11 | cobertura-telas-e-navegacao | — (`correcao-autofoco-detalhe-produto` arquivada em 2026-08-09; `botao-voltar-conferencia` arquivada em 2026-08-13; `alvos-de-toque-e-acessibilidade` arquivada em 2026-08-13; `configuracoes-e-backup` arquivada em 2026-08-13) | Testes de telas/navegação (041, 042, 045, 048, 049, 051, 052) devem asserir o estado pós-correções |
 | 12 | guardas-de-tipo-lint-e-tooling | — | Guardas de tipo/lint e tooling (003, 008-010, 015, 020, 021); não toca código de produto |
