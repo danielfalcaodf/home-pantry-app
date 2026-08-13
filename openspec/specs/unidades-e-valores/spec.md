@@ -43,7 +43,7 @@ O domínio SHALL classificar `un`, `pacote` e `caixa` como indivisíveis, e `kg`
 #### Scenario: Conjunto fechado de unidades
 
 - **WHEN** um valor fora das sete unidades suportadas é usado
-- **THEN** o compilador de tipos rejeita o valor
+- **THEN** o compilador de tipos rejeita o valor, comprovado por um teste de tipo (`@ts-expect-error` atribuindo uma string arbitrária, ex. `'tonelada'`, a uma variável tipada `Unidade`) validado via `tsc --noEmit`, e não apenas pela forma do tipo literal derivado de `UNIDADES as const`
 
 ### Requirement: Arredondamento para cima em unidade indivisível
 

@@ -22,6 +22,7 @@ const transformTsPuro = {
 
 module.exports = {
   passWithNoTests: true,
+  globalSetup: '<rootDir>/jest.tz.js',
   projects: [
     {
       displayName: 'domain',
@@ -59,6 +60,7 @@ module.exports = {
     'src/domain/**/*.ts',
     'src/shared/**/*.ts',
     '!**/*.test.ts',
+    '!**/*.test-types.ts',
   ],
   coverageThreshold: {
     global: {

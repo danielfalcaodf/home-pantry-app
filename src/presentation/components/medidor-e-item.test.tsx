@@ -3,10 +3,19 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { ReactNode } from 'react';
 
+import { molar } from '../theme/movimento';
 import { ThemeProvider } from '../theme/provider';
 import { despensa } from '../theme/tokens';
 import { ItemDespensa } from './item-despensa';
 import { MedidorNivel } from './medidor-nivel';
+
+// Mesma técnica de espionagem usada em `theme/movimento.test.tsx`: preserva o
+// comportamento real (o mock do Reanimated aplica o valor de imediato), só
+// envolve em jest.fn para provar SE `molar()` foi chamado.
+jest.mock('../theme/movimento', () => {
+  const real = jest.requireActual('../theme/movimento');
+  return { __esModule: true, ...real, molar: jest.fn(real.molar) };
+});
 
 async function comTema(no: ReactNode) {
   await render(<ThemeProvider preferencia="escuro">{no}</ThemeProvider>);
@@ -53,6 +62,35 @@ describe('MedidorNivel', () => {
     expect(screen.queryByText(/\d/)).toBeNull();
     expect(estilos(camada('medidor-sobra')).height).toBe(1);
   });
+
+  // Falso na primeira pintura: a lista não entra em cascata (ACHADO-028).
+  describe('prop animar', () => {
+    beforeEach(() => {
+      jest.clearAllMocks();
+    });
+
+    it('animar={false}: o valor final é aplicado direto, sem chamar molar()', async () => {
+      await comTema(<MedidorNivel fracao={0.5} estado="ok" temSobra={false} animar={false} />);
+      expect(molar).not.toHaveBeenCalled();
+      expect(estilos(camada('medidor-tinta')).height).toBe('50%');
+    });
+
+    it('animar={true} (padrão): a transição passa por molar()', async () => {
+      await comTema(<MedidorNivel fracao={0.5} estado="ok" temSobra={false} />);
+      expect(molar).toHaveBeenCalledWith(0.5);
+    });
+
+    it('lista com dois itens onde só um mudou de quantidade: só esse anima', async () => {
+      await comTema(
+        <>
+          <MedidorNivel fracao={0.3} estado="ok" temSobra={false} animar={false} />
+          <MedidorNivel fracao={0.7} estado="ok" temSobra={false} animar />
+        </>,
+      );
+      expect(molar).toHaveBeenCalledTimes(1);
+      expect(molar).toHaveBeenCalledWith(0.7);
+    });
+  });
 });
 
 describe('ItemDespensa', () => {
@@ -64,7 +102,7 @@ describe('ItemDespensa', () => {
     estado: 'emFalta' as const,
     fracao: 0.667,
     temSobra: false,
-    rotuloAcaoConsumo: 'Registrar consumo de 1 pacote de Café em pó',
+    rotuloAcaoConsumo: 'Usei 1 pacote de Café em pó',
     onAbrir: jest.fn(),
   };
 
@@ -75,7 +113,7 @@ describe('ItemDespensa', () => {
 
   it('anuncia o botão com a ação completa, nunca só "menos"', async () => {
     await comTema(<ItemDespensa {...base} onConsumir={jest.fn()} />);
-    const botao = screen.getByLabelText('Registrar consumo de 1 pacote de Café em pó');
+    const botao = screen.getByLabelText('Usei 1 pacote de Café em pó');
     expect(botao.props.accessibilityState).toEqual(
       expect.objectContaining({ disabled: false }),
     );
@@ -135,5 +173,21 @@ describe('conformidade do medidor e da linha', () => {
   it('a linha não registra nenhum gesto de deslizar', () => {
     const fonte = fs.readFileSync(path.join(__dirname, 'item-despensa.tsx'), 'utf8');
     expect(fonte).not.toMatch(/Swipe|PanGesture|onSwipe|Swipeable/i);
+  });
+
+  // Sem card, sem sombra, sem borda — a hierarquia vem do nível de tinta, não
+  // de um contêiner visual (FRONTEND §5 e §7.1, ACHADO-025).
+  it('item-despensa.tsx não define sombra nem elevação', () => {
+    const fonte = fs.readFileSync(path.join(__dirname, 'item-despensa.tsx'), 'utf8');
+    expect(fonte).not.toMatch(/shadowColor|shadowOpacity|shadowRadius|shadowOffset|elevation\s*:/);
+  });
+
+  it('item-despensa.tsx só usa raio.linha (0) — nenhum borderRadius divergente', () => {
+    const fonte = fs.readFileSync(path.join(__dirname, 'item-despensa.tsx'), 'utf8');
+    const usos = fonte.match(/borderRadius\s*:\s*([^,\n]+)/g) ?? [];
+    expect(usos.length).toBeGreaterThan(0);
+    for (const uso of usos) {
+      expect(uso).toMatch(/raio\.linha/);
+    }
   });
 });

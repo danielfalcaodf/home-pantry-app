@@ -11,7 +11,9 @@ jest.mock('../../composicao/repositorios', () => ({
 }));
 jest.mock('../../composicao/observador', () => ({ observadorDoBanco: undefined }));
 
-const AGORA = Date.UTC(2026, 7, 3); // 2026-08-03
+// Fixtures em hora local: o agrupamento mensal é por fuso local (spec
+// gasto-mensal), e o TZ da suíte é fixado em jest.tz.js.
+const AGORA = new Date(2026, 7, 3).getTime(); // 2026-08-03 local
 // Referência estável entre renders — uma arrow function nova a cada
 // renderização recriaria `recarregar` e refaria o efeito indefinidamente.
 const agoraFixo = () => AGORA;
@@ -50,8 +52,8 @@ describe('useGastoMensal', () => {
 
   it('mês com compra real preserva total e contagem; os demais vêm zerados', async () => {
     const compras = new CompraRepositorioFalso();
-    await finalizarComTotal(compras, Date.UTC(2026, 6, 10), 5000);
-    await finalizarComTotal(compras, Date.UTC(2026, 6, 20), 3000);
+    await finalizarComTotal(compras, new Date(2026, 6, 10).getTime(), 5000);
+    await finalizarComTotal(compras, new Date(2026, 6, 20).getTime(), 3000);
 
     const { result } = await montar(compras);
 
@@ -61,12 +63,38 @@ describe('useGastoMensal', () => {
     expect(junho).toEqual({ mes: '2026-06', totalPago: 0, qtdCompras: 0 });
   });
 
+  it('agrupa pela virada de mês local, minuto a minuto', async () => {
+    const compras = new CompraRepositorioFalso();
+    await finalizarComTotal(compras, new Date(2026, 6, 31, 23, 59).getTime(), 1000);
+    await finalizarComTotal(compras, new Date(2026, 7, 1, 0, 1).getTime(), 2000);
+
+    const { result } = await montar(compras);
+
+    const julho = result.current.meses.find((m) => m.mes === '2026-07');
+    expect(julho).toEqual({ mes: '2026-07', totalPago: 1000, qtdCompras: 1 });
+    const agosto = result.current.meses.find((m) => m.mes === '2026-08');
+    expect(agosto).toEqual({ mes: '2026-08', totalPago: 2000, qtdCompras: 1 });
+  });
+
+  // ACHADO-046: compra finalizada sem itens marcados (totalPago zero) precisa
+  // entrar na contagem do mês sem distorcer o total pago das demais.
+  it('compra finalizada com total zero entra na contagem sem distorcer o total pago', async () => {
+    const compras = new CompraRepositorioFalso();
+    await finalizarComTotal(compras, new Date(2026, 6, 5).getTime(), 5000);
+    await finalizarComTotal(compras, new Date(2026, 6, 10).getTime(), 0);
+
+    const { result } = await montar(compras);
+
+    const julho = result.current.meses.find((m) => m.mes === '2026-07');
+    expect(julho).toEqual({ mes: '2026-07', totalPago: 5000, qtdCompras: 2 });
+  });
+
   it('reage a mudanças notificadas pelo observador', async () => {
     const compras = new CompraRepositorioFalso();
     const { result, observador } = await montar(compras);
     expect(result.current.meses[0]).toEqual({ mes: '2026-08', totalPago: 0, qtdCompras: 0 });
 
-    await finalizarComTotal(compras, Date.UTC(2026, 7, 1), 1234);
+    await finalizarComTotal(compras, new Date(2026, 7, 1).getTime(), 1234);
     observador.notificar();
 
     await waitFor(() =>

@@ -9,6 +9,15 @@ import { ProdutoRepository } from '../../ports/produto.repository';
 
 export type ContagensPorEstado = Record<EstadoItem, number>;
 
+/** Formato de `presentation/format/agrupar-despensa.ts:ItemAgrupavel` — a
+ *  apresentação deriva a contagem "Faltando" (critico + emFalta) chamando
+ *  `contarPorEstado` sobre esta lista, o mesmo cálculo usado na Despensa
+ *  (application/ não importa presentation/, por isso a soma não é feita aqui). */
+export type ItemDaDespensaPorEstado = {
+  produto: { id: string; nome: string; categoria: string | null };
+  estado: EstadoItem;
+};
+
 export type ResumoDeValores = {
   carregando: boolean;
   /** Patrimônio: o que já está em casa (design D2 — nunca somado ao da lista). */
@@ -18,6 +27,7 @@ export type ResumoDeValores = {
   valorDaLista: Centavos;
   contagemSemPrecoLista: number;
   contagensPorEstado: ContagensPorEstado;
+  itensDaDespensaPorEstado: ItemDaDespensaPorEstado[];
 };
 
 const CONTAGENS_VAZIAS: ContagensPorEstado = { critico: 0, emFalta: 0, ok: 0 };
@@ -38,6 +48,7 @@ export function useResumoDeValores(
     valorDaLista: centavos(0),
     contagemSemPrecoLista: 0,
     contagensPorEstado: CONTAGENS_VAZIAS,
+    itensDaDespensaPorEstado: [],
   });
   const [carregando, setCarregando] = useState(true);
 
@@ -53,11 +64,12 @@ export function useResumoDeValores(
         return;
       }
 
-      const contagensPorEstado = despensa.reduce<ContagensPorEstado>(
-        (contagens, produto) => {
-          const estadoDoProduto = estadoDoItem(produto);
-          return { ...contagens, [estadoDoProduto]: contagens[estadoDoProduto] + 1 };
-        },
+      const itensDaDespensaPorEstado = despensa.map((produto) => ({
+        produto: { id: produto.id, nome: produto.nome, categoria: produto.categoria },
+        estado: estadoDoItem(produto),
+      }));
+      const contagensPorEstado = itensDaDespensaPorEstado.reduce<ContagensPorEstado>(
+        (contagens, item) => ({ ...contagens, [item.estado]: contagens[item.estado] + 1 }),
         { ...CONTAGENS_VAZIAS },
       );
       const contagemSemPrecoEstoque = despensa.filter((produto) => produto.valorUnitario <= 0).length;
@@ -69,6 +81,7 @@ export function useResumoDeValores(
         valorDaLista,
         contagemSemPrecoLista,
         contagensPorEstado,
+        itensDaDespensaPorEstado,
       });
       setCarregando(false);
     },

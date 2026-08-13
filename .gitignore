@@ -56,3 +56,9 @@ coverage/
 
 # Editor local history
 .history/
+
+# Gerenciador de pacotes único do projeto é npm (ver CLAUDE.md) — artefatos
+# de outro gerenciador não devem entrar no repositório por engano.
+pnpm-lock.yaml
+pnpm-workspace.yaml
+.pnpm-store/

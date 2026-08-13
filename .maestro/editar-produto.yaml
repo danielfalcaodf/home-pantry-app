@@ -15,12 +15,12 @@ appId: com.triasoftware.repor
 # existir mais no seu dispositivo, rode `cadastro-de-produto.yaml` primeiro
 # ou troque o nome abaixo por outro produto de teste.
 #
-# Confirmado por inspeção real da hierarquia (uiautomator, emulator-5554):
-# o campo "Quanto quero ter em casa" é um EditText comum, sobreposto pelo
-# teclado logo após abrir a tela (autofoco no campo "O que é") — por isso
-# o `hideKeyboard` antes de interagir com ele; e o botão "Salvar" nasce
-# fora da viewport dentro do ScrollView do formulário, por isso o
-# `scrollUntilVisible` antes do toque.
+# Desde a change correcao-autofoco-detalhe-produto (ACHADO-056), o detalhe
+# abre SEM autofoco e sem teclado: o primeiro toque em "Repus" precisa
+# funcionar de imediato (KPI K4) — o flow prova isso tocando "Repus" logo
+# após abrir a tela e desfazendo em seguida para não deixar efeito
+# colateral. O botão "Salvar" nasce fora da viewport dentro do ScrollView
+# do formulário, por isso o `scrollUntilVisible` antes do toque.
 #
 # Efeito colateral real, não destrutivo mas permanente: altera a
 # "quantidade necessária" de "Item Teste QA F5" de 3 para 5 un no banco do
@@ -31,8 +31,14 @@ appId: com.triasoftware.repor
 - tapOn: "Buscar"
 - inputText: "Item Teste QA F5"
 - hideKeyboard
-- tapOn: "Item Teste QA F5, 0 de 3 un, Acabou"
-- hideKeyboard
+# O regex casa só com o rótulo da linha (com estado), nunca com o texto
+# digitado no campo de busca.
+- tapOn: "Item Teste QA F5, 0 de .*"
+# Sem autofoco o teclado não sobe sozinho: se subisse, este toque acertaria
+# o IME e o "Desfazer" abaixo nunca apareceria (prova do ACHADO-056).
+- tapOn: "Repus"
+- assertVisible: "Desfazer"
+- tapOn: "Desfazer"
 - assertVisible: "Quanto quero ter em casa"
 - tapOn: "Quanto quero ter em casa"
 - eraseText: 5

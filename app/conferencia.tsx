@@ -94,9 +94,12 @@ export default function Conferencia() {
 
   return (
     <View style={{ flex: 1, backgroundColor: tema.bg.base, padding: espaco.lg, gap: espaco.lg }}>
-      <Texto papel="label" tom="secondary">
-        {conferencia.indice + 1} de {conferencia.itens.length} conferidos
-      </Texto>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: espaco.sm }}>
+        <BotaoVoltar />
+        <Texto papel="label" tom="secondary">
+          {conferencia.indice + 1} de {conferencia.itens.length} conferidos
+        </Texto>
+      </View>
 
       <View style={{ gap: espaco.xs }}>
         <Texto papel="body.lg">{item.nome}</Texto>
