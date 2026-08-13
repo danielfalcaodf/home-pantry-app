@@ -80,7 +80,7 @@ A despensa SHALL permitir filtrar por categoria, a partir das categorias efetiva
 
 ### Requirement: Busca por nome
 
-A despensa SHALL permitir buscar itens por nome, ignorando diferença de caixa e acentuação.
+A despensa SHALL permitir buscar itens por nome, ignorando diferença de caixa e acentuação. A normalização SHALL ser feita por uma função pura (`normalizarParaBusca`/`casaComBusca`, em `src/presentation/format/normalizar-busca.ts`), diretamente testável e independente do `COLLATE NOCASE` do SQLite (que é ASCII-only e não resolve acento).
 
 #### Scenario: Busca parcial
 

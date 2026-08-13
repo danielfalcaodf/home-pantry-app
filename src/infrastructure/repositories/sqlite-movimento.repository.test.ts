@@ -137,6 +137,47 @@ describe('reconciliação', () => {
       expect.objectContaining({ materializado: 999, calculado: 2000 }),
     );
   });
+
+  // ACHADO-044: reconciliar() é só leitura — a contagem de linhas antes/depois
+  // prova isso sem depender da API interna do driver (design D4).
+  function contarLinhas(sqlite: ReturnType<typeof criarDbDeTeste>['sqlite']) {
+    const movimento = sqlite
+      .prepare('SELECT COUNT(*) AS n FROM movimento_estoque')
+      .get() as { n: number };
+    const produto = sqlite.prepare('SELECT COUNT(*) AS n FROM produto').get() as { n: number };
+    return { movimento: movimento.n, produto: produto.n };
+  }
+
+  it('não altera a contagem de linhas de movimento_estoque nem produto — sem divergência', async () => {
+    const { movimentos, casaId, sqlite } = await montarComBaixa();
+    const antes = contarLinhas(sqlite);
+
+    await movimentos.reconciliar(casaId);
+
+    expect(contarLinhas(sqlite)).toEqual(antes);
+  });
+
+  it('não altera a contagem de linhas de movimento_estoque nem produto — com divergência', async () => {
+    const { db, sqlite } = criarDbDeTeste();
+    const { casaId, usuarioId } = semearCasaEUsuario(sqlite);
+    const produtos = new SQLiteProdutoRepository(db, clock);
+    const movimentos = new SQLiteMovimentoRepository(db);
+    const dados = validarCadastroProduto({ nome: 'Feijão', unidade: 'un', quantidadeNecessaria: 2 });
+    if (!dados.ok) {
+      throw new Error('setup');
+    }
+    const criado = await produtos.criar(casaId, usuarioId, dados.valor);
+    if (!criado.ok) {
+      throw new Error('setup');
+    }
+    sqlite.prepare('UPDATE produto SET quantidade_atual = 999 WHERE id = ?').run(criado.valor.id);
+    const antes = contarLinhas(sqlite);
+
+    const divergencias = await movimentos.reconciliar(casaId);
+
+    expect(divergencias).toHaveLength(1);
+    expect(contarLinhas(sqlite)).toEqual(antes);
+  });
 });
 
 describe('corrigirDivergencia', () => {

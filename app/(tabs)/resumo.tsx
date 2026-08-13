@@ -1,15 +1,16 @@
 import { router } from 'expo-router';
+import { useMemo } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 
 import { useGastoMensal } from '@/application/resumo/use-gasto-mensal';
 import { useResumoDeValores } from '@/application/resumo/use-resumo-valores';
-import { EstadoItem } from '@/domain/produto/estoque.rules';
 import { formatarBRL } from '@/domain/shared/dinheiro';
 import { ChipEstado } from '@/presentation/components/chip-estado';
 import { GraficoBarras } from '@/presentation/components/grafico-barras';
 import { Texto } from '@/presentation/components/texto';
+import { contarPorEstado, FiltroEstado } from '@/presentation/format/agrupar-despensa';
 import { corDoEstado } from '@/presentation/theme/cor-do-estado';
-import { espaco } from '@/presentation/theme/espaco';
+import { ALVO_TOQUE_MINIMO, espaco } from '@/presentation/theme/espaco';
 import { useTheme } from '@/presentation/theme/provider';
 import { rotuloDoMes } from '@/presentation/format/gasto-mensal';
 
@@ -19,9 +20,11 @@ function rotuloCurtoDoMes(mes: string): string {
   return rotuloDoMes(mes).slice(0, 3);
 }
 
-const ESTADOS: { valor: EstadoItem; rotulo: string }[] = [
+// 'faltando' soma critico + emFalta (mesma semântica do chip "Faltando" da
+// Despensa — spec resumo-de-valores, "Faltando idêntico ao da Despensa").
+const ESTADOS: { valor: Exclude<FiltroEstado, 'tudo'>; rotulo: string }[] = [
   { valor: 'critico', rotulo: 'Acabou' },
-  { valor: 'emFalta', rotulo: 'Faltando' },
+  { valor: 'faltando', rotulo: 'Faltando' },
   { valor: 'ok', rotulo: 'Cheio' },
 ];
 
@@ -35,6 +38,10 @@ export default function Resumo() {
   const tema = useTheme();
   const resumo = useResumoDeValores();
   const gastoMensal = useGastoMensal();
+  const contagens = useMemo(
+    () => contarPorEstado(resumo.itensDaDespensaPorEstado),
+    [resumo.itensDaDespensaPorEstado],
+  );
 
   if (resumo.carregando || gastoMensal.carregando) {
     return null;
@@ -59,6 +66,8 @@ export default function Resumo() {
           onPress={() => router.push('/configuracoes')}
           accessibilityRole="button"
           accessibilityLabel="Configurações"
+          hitSlop={8}
+          style={{ minHeight: ALVO_TOQUE_MINIMO, justifyContent: 'center' }}
         >
           <Texto papel="body.md" cor={tema.action.azulejo}>
             Configurações
@@ -104,8 +113,8 @@ export default function Resumo() {
               <ChipEstado
                 key={valor}
                 rotulo={rotulo}
-                contagem={resumo.contagensPorEstado[valor]}
-                cor={corDoEstado(tema, valor)}
+                contagem={contagens[valor]}
+                cor={corDoEstado(tema, valor === 'faltando' ? 'emFalta' : valor)}
                 onPress={() => router.push(`/?filtro=${valor}`)}
               />
             ))}

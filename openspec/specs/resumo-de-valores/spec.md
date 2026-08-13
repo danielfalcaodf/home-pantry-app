@@ -66,7 +66,7 @@ Os dois valores SHALL ser exibidos separadamente, com rótulos que impeçam conf
 
 ### Requirement: Contagens de apoio
 
-O resumo SHALL exibir a contagem de itens por estado e a contagem de itens sem preço cadastrado.
+O resumo SHALL exibir a contagem de itens por estado e a contagem de itens sem preço cadastrado. Toda contagem que usa um rótulo do vocabulário do usuário compartilhado com outra tela SHALL ter exatamente a mesma semântica daquela tela: o chip "Faltando" SHALL contar `critico + emFalta`, como na Despensa, nunca a leitura bruta de um único estado.
 
 #### Scenario: Contagem por estado
 
@@ -82,6 +82,16 @@ O resumo SHALL exibir a contagem de itens por estado e a contagem de itens sem p
 
 - **WHEN** o usuário toca em uma contagem de estado
 - **THEN** ele é levado à despensa já filtrada por aquele estado
+
+#### Scenario: "Faltando" idêntico ao da Despensa
+
+- **WHEN** a despensa tem 37 itens zerados (`critico`) e 0 itens parcialmente em falta (`emFalta`)
+- **THEN** o chip "Faltando" do Resumo exibe 37 — o mesmo número que o chip "Faltando" da Despensa exibe no mesmo instante
+
+#### Scenario: Semântica consistente após mutação
+
+- **WHEN** uma compra é fechada e itens mudam de estado
+- **THEN** os chips "Faltando" do Resumo e da Despensa continuam exibindo o mesmo número entre si
 
 ### Requirement: Números grandes permitidos apenas aqui
 
@@ -102,6 +112,20 @@ Esta tela SHALL poder usar tipografia de maior destaque para os valores, respeit
 - **WHEN** um valor é atualizado
 - **THEN** ele troca diretamente para o novo valor, sem animação de contagem
 
+### Requirement: Atalho de cabeçalho para Configurações
+
+A tela de Resumo SHALL oferecer, no cabeçalho, um atalho para a tela de Configurações, com alvo de toque mínimo de 48×48dp.
+
+#### Scenario: Atalho abre Configurações
+
+- **WHEN** o usuário toca no atalho "Configurações" do cabeçalho do Resumo
+- **THEN** a tela de Configurações é aberta
+
+#### Scenario: Alvo de toque do atalho
+
+- **WHEN** o botão "Configurações" do cabeçalho do Resumo é medido
+- **THEN** sua área tocável mede no mínimo 48 por 48 pontos independentes, sem alterar seu tamanho visual
+
 ### Requirement: Somente leitura
 
 O resumo SHALL derivar todos os seus números em tempo de consulta, e NÃO deve persistir nenhum dos valores exibidos nem oferecer escrita.
@@ -115,3 +139,22 @@ O resumo SHALL derivar todos os seus números em tempo de consulta, e NÃO deve 
 
 - **WHEN** a tela de resumo é usada
 - **THEN** nenhuma escrita no banco ocorre
+
+### Requirement: Mini gráfico dos últimos meses
+
+O Resumo SHALL exibir um mini gráfico de barras com exatamente os 4 meses mais recentes de gasto, em ordem cronológica ascendente (mês mais antigo à esquerda, mais recente à direita), alimentado pelos mesmos dados agregados que a seção "Gasto por mês".
+
+#### Scenario: Exatamente 4 meses no gráfico
+
+- **WHEN** existem gastos agregados em mais de 4 meses
+- **THEN** o mini gráfico exibe exatamente os 4 meses mais recentes, e nenhum mês mais antigo aparece nele
+
+#### Scenario: Ordem cronológica ascendente no gráfico
+
+- **WHEN** o mini gráfico é exibido
+- **THEN** os meses aparecem da esquerda para a direita do mais antigo dos 4 para o mais recente — ordem inversa à da lista "Gasto por mês" (que é do mais recente para o mais antigo)
+
+#### Scenario: Menos de 4 meses com dado
+
+- **WHEN** existem gastos agregados em menos de 4 meses
+- **THEN** o mini gráfico exibe apenas os meses existentes, na mesma ordem cronológica ascendente
