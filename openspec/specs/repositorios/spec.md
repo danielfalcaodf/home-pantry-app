@@ -52,7 +52,7 @@ O repositório de produto SHALL fornecer a lista de produtos ativos e não remov
 #### Scenario: Colunas explícitas
 
 - **WHEN** a consulta é inspecionada
-- **THEN** ela nomeia as colunas retornadas e NÃO usa seleção de todas as colunas
+- **THEN** ela nomeia cada coluna retornada através de `.select({...})` do Drizzle, no mesmo padrão usado pela consulta irmã de faltantes — **não** basta o SQL gerado nomear as colunas implicitamente (o Drizzle já faz isso mesmo com `.select()` vazio, por conhecer o schema); o requisito é sobre a prática de código na camada de repositório, para deixar explícito no código-fonte quais colunas a consulta traz para a aplicação
 
 ### Requirement: Consulta de faltantes entrega valores brutos
 

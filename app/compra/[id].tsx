@@ -90,7 +90,16 @@ export default function ModoCompra() {
     <View style={{ flex: 1, backgroundColor: tema.bg.base }}>
       <View style={{ padding: espaco.lg, paddingBottom: espaco.sm, gap: espaco.xs }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: espaco.sm }}>
-          <BotaoVoltar />
+          <BotaoVoltar
+            confirmar={
+              marcados > 0
+                ? {
+                    titulo: 'Sair da compra?',
+                    mensagem: 'A compra continua aberta com o que você já marcou.',
+                  }
+                : undefined
+            }
+          />
           <Texto papel="display.sm">Compra</Texto>
         </View>
         <Texto papel="label" tom="secondary">

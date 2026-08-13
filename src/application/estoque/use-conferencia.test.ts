@@ -29,6 +29,15 @@ async function montar(produtos: ProdutoRepositorioFalso, configuracoes: Configur
   return result;
 }
 
+async function montarComUnmount(
+  produtos: ProdutoRepositorioFalso,
+  configuracoes: ConfiguracaoRepositorioFalso,
+) {
+  const { result, unmount } = await renderHook(() => useConferencia(produtos, configuracoes, relogio));
+  await waitFor(() => expect(result.current.carregando).toBe(false));
+  return { result, unmount };
+}
+
 afterEach(cleanup);
 
 describe('useConferencia', () => {
@@ -119,6 +128,28 @@ describe('useConferencia', () => {
     expect(result.current.categoriaEscolhida).toBe('Grãos');
     expect(result.current.indice).toBe(1);
     expect(result.current.itemAtual?.nome).toBe('Feijão');
+  });
+
+  it('sair no meio do percurso (sem confirmar) e remontar retoma o mesmo item, sem gravar movimento extra', async () => {
+    const repo = montarRepo();
+    const configuracoes = new ConfiguracaoRepositorioFalso();
+    const { result: primeiraMontagem, unmount } = await montarComUnmount(repo, configuracoes);
+    await act(async () => {
+      await primeiraMontagem.current.escolherCategoria('Grãos');
+    });
+    await act(async () => {
+      await primeiraMontagem.current.confirmar();
+    });
+    // Usuário sai (equivalente ao botão Voltar) sem confirmar/corrigir o item seguinte.
+    await act(async () => {
+      unmount();
+    });
+
+    const segundaMontagem = await montar(repo, configuracoes);
+    expect(segundaMontagem.current.categoriaEscolhida).toBe('Grãos');
+    expect(segundaMontagem.current.indice).toBe(1);
+    expect(segundaMontagem.current.itemAtual?.nome).toBe('Feijão');
+    expect(repo.movimentos).toHaveLength(0);
   });
 
   it('percurso concluído limpa a posição salva', async () => {

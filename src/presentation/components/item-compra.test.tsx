@@ -5,8 +5,15 @@ import { ItemDaCompra } from '../../application/compra/use-modo-compra';
 import { CompraItem } from '../../domain/compra/compra';
 import { centavos } from '../../domain/shared/dinheiro';
 import { milesimos } from '../../domain/shared/quantidade';
+import { ALVO_TOQUE_MINIMO, raio } from '../theme/espaco';
 import { ThemeProvider } from '../theme/provider';
+import { despensa } from '../theme/tokens';
 import { ItemCompra } from './item-compra';
+
+function estiloResolvido(elemento: { props: { style?: unknown } }) {
+  const { style } = elemento.props;
+  return Array.isArray(style) ? Object.assign({}, ...style) : style;
+}
 
 async function comTema(no: ReactNode) {
   await render(<ThemeProvider preferencia="escuro">{no}</ThemeProvider>);
@@ -107,5 +114,46 @@ describe('ItemCompra', () => {
     expect(screen.getByText(/Atualizar o preço de Arroz para R\$ 9,50/)).toBeTruthy();
     fireEvent.press(screen.getByRole('button', { name: 'Sim' }));
     expect(onResponderPreco).toHaveBeenCalledWith(true);
+  });
+
+  // ACHADO-037 (task 7.1): item marcado perde toda a tinta (design D7) —
+  // risco no nome, cor secundária, sem preenchimento no fundo do preço.
+  it('item marcado tem risco e cor secundária no nome', async () => {
+    await comTema(
+      <ItemCompra
+        linha={linhaBase({ item: itemBase({ comprado: true, quantidadeComprada: milesimos(2000) }) })}
+        onMarcar={jest.fn()}
+        onDesmarcar={jest.fn()}
+        onAjustar={jest.fn()}
+        onResponderPreco={jest.fn()}
+      />,
+    );
+    const nome = screen.getByText('Arroz');
+    expect(estiloResolvido(nome).textDecorationLine).toBe('line-through');
+    expect(estiloResolvido(nome).color).toBe(despensa.text.secondary);
+  });
+
+  it('item não marcado não tem risco no nome', async () => {
+    await comTema(
+      <ItemCompra linha={linhaBase()} onMarcar={jest.fn()} onDesmarcar={jest.fn()} onAjustar={jest.fn()} onResponderPreco={jest.fn()} />,
+    );
+    const nome = screen.getByText('Arroz');
+    expect(estiloResolvido(nome)?.textDecorationLine).toBeUndefined();
+    expect(estiloResolvido(nome).color).toBe(despensa.text.primary);
+  });
+
+  // ACHADO-037 (task 7.2): controle de marcação é quadrado (raio.linha),
+  // não circular, com área tocável de no mínimo 48×48.
+  it('controle de marcação é quadrado e a área tocável mede no mínimo 48×48', async () => {
+    await comTema(
+      <ItemCompra linha={linhaBase()} onMarcar={jest.fn()} onDesmarcar={jest.fn()} onAjustar={jest.fn()} onResponderPreco={jest.fn()} />,
+    );
+    const areaTocavel = screen.getByLabelText('Marcar Arroz');
+    const estiloArea = estiloResolvido(areaTocavel);
+    expect(estiloArea.width).toBeGreaterThanOrEqual(ALVO_TOQUE_MINIMO);
+    expect(estiloArea.height).toBeGreaterThanOrEqual(ALVO_TOQUE_MINIMO);
+
+    const quadrado = screen.getByTestId('marcacao-quadrado');
+    expect(estiloResolvido(quadrado).borderRadius).toBe(raio.linha);
   });
 });

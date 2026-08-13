@@ -38,7 +38,7 @@ import {
 } from '@/presentation/format/mensagem-de-registro';
 import { useRegistroDeConsumo } from '@/presentation/components/use-registro-de-consumo';
 import { useVoltarFechaTeclado } from '@/presentation/components/use-voltar-fecha-teclado';
-import { espaco } from '@/presentation/theme/espaco';
+import { ALVO_TOQUE_MINIMO, espaco } from '@/presentation/theme/espaco';
 import { useTheme } from '@/presentation/theme/provider';
 
 function valoresDoItem(item: ProdutoNaDespensa): ValoresDoProduto {
@@ -189,6 +189,8 @@ function Detalhe({ id, item }: { id: string; item: ProdutoNaDespensa }) {
           onPress={() => setAjusteAberto(true)}
           accessibilityRole="button"
           accessibilityLabel="Corrigir quantidade atual"
+          hitSlop={8}
+          style={{ minWidth: ALVO_TOQUE_MINIMO, minHeight: ALVO_TOQUE_MINIMO, justifyContent: 'center' }}
         >
           <Texto papel="display.lg" style={{ textAlign: 'center' }}>
             {formatarNumero(produto.quantidadeAtual)}{' '}
@@ -242,7 +244,13 @@ function Detalhe({ id, item }: { id: string; item: ProdutoNaDespensa }) {
           onPress={() => router.push(`/produto/${id}/historico`)}
           accessibilityRole="button"
           accessibilityLabel="Ver histórico completo"
-          style={{ paddingHorizontal: espaco.lg, paddingVertical: espaco.sm }}
+          hitSlop={8}
+          style={{
+            minHeight: ALVO_TOQUE_MINIMO,
+            justifyContent: 'center',
+            paddingHorizontal: espaco.lg,
+            paddingVertical: espaco.sm,
+          }}
         >
           <Texto papel="label" tom="secondary">
             {resumoHistorico.quantidadeDeUsos === 0
