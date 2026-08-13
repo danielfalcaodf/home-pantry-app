@@ -14,7 +14,7 @@ O sistema SHALL fornecer um componente de texto que aceita apenas os papéis tip
 #### Scenario: Papel inválido é rejeitado
 
 - **WHEN** um papel fora da escala é passado
-- **THEN** o compilador de tipos rejeita
+- **THEN** o compilador de tipos rejeita, comprovado por um teste de tipo (`@ts-expect-error` passando um papel fora da escala tipográfica ao componente `Texto`) validado via `tsc --noEmit`
 
 #### Scenario: Números não deslocam o layout
 

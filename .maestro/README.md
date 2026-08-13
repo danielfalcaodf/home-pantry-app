@@ -14,7 +14,7 @@ Requer o app já instalado no emulador/dispositivo ativo (`adb devices`) e o Met
 
 ## Convenções
 
-- `appId: com.triasoftware.repor` em todo flow.
+- `appId: com.danielfalcaodf.repor` em todo flow.
 - Selecionar por texto visível/rótulo acessível, nunca por índice de posição.
 - Vocabulário de assertion é o da UI ("Usei"/"Anotado"/"Falta N"), nunca termo de domínio ("dar baixa"/"movimento") — CLAUDE.md §Vocabulário.
 - Flows que alteram dados (consumir, repor, fechar compra) são side-effect real no banco do dispositivo — documentar isso no comentário do flow, como em `dar-baixa-caminho-critico.yaml`.
