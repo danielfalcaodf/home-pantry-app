@@ -66,7 +66,7 @@ Os dois valores SHALL ser exibidos separadamente, com rótulos que impeçam conf
 
 ### Requirement: Contagens de apoio
 
-O resumo SHALL exibir a contagem de itens por estado e a contagem de itens sem preço cadastrado.
+O resumo SHALL exibir a contagem de itens por estado e a contagem de itens sem preço cadastrado. Toda contagem que usa um rótulo do vocabulário do usuário compartilhado com outra tela SHALL ter exatamente a mesma semântica daquela tela: o chip "Faltando" SHALL contar `critico + emFalta`, como na Despensa, nunca a leitura bruta de um único estado.
 
 #### Scenario: Contagem por estado
 
@@ -82,6 +82,16 @@ O resumo SHALL exibir a contagem de itens por estado e a contagem de itens sem p
 
 - **WHEN** o usuário toca em uma contagem de estado
 - **THEN** ele é levado à despensa já filtrada por aquele estado
+
+#### Scenario: "Faltando" idêntico ao da Despensa
+
+- **WHEN** a despensa tem 37 itens zerados (`critico`) e 0 itens parcialmente em falta (`emFalta`)
+- **THEN** o chip "Faltando" do Resumo exibe 37 — o mesmo número que o chip "Faltando" da Despensa exibe no mesmo instante
+
+#### Scenario: Semântica consistente após mutação
+
+- **WHEN** uma compra é fechada e itens mudam de estado
+- **THEN** os chips "Faltando" do Resumo e da Despensa continuam exibindo o mesmo número entre si
 
 ### Requirement: Números grandes permitidos apenas aqui
 
