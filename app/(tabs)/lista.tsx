@@ -20,7 +20,7 @@ import { Texto } from '@/presentation/components/texto';
 import { Toast } from '@/presentation/components/toast';
 import { agruparListaPorCategoria, listaContinua } from '@/presentation/format/agrupar-lista';
 import { gerarTextoDaLista } from '@/presentation/format/lista-texto';
-import { espaco } from '@/presentation/theme/espaco';
+import { ALVO_TOQUE_MINIMO, espaco } from '@/presentation/theme/espaco';
 import { useTheme } from '@/presentation/theme/provider';
 
 export default function Lista() {
@@ -116,6 +116,8 @@ export default function Lista() {
             onPress={() => void exportar()}
             accessibilityRole="button"
             accessibilityLabel="Compartilhar lista"
+            hitSlop={8}
+            style={{ minHeight: ALVO_TOQUE_MINIMO, justifyContent: 'center' }}
           >
             <Texto papel="body.md" cor={tema.action.azulejo}>
               Compartilhar
@@ -126,6 +128,8 @@ export default function Lista() {
             accessibilityRole="button"
             accessibilityLabel="Agrupar por categoria"
             accessibilityState={{ selected: agrupado }}
+            hitSlop={8}
+            style={{ minHeight: ALVO_TOQUE_MINIMO, justifyContent: 'center' }}
           >
             <Texto papel="body.md" cor={tema.action.azulejo}>
               Agrupar

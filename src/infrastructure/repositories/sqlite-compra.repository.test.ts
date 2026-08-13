@@ -256,6 +256,23 @@ describe('finalização', () => {
       .get(ctx.compra.id);
     expect(reposicoes).toEqual({ n: 3 });
 
+    // ACHADO-036 (task 6.1): não só a contagem — os campos do movimento
+    // gravado para um produto específico precisam bater individualmente.
+    const movimentoDeP1 = ctx.sqlite
+      .prepare(
+        'SELECT usuario_id, criado_em, quantidade_delta, quantidade_resultante FROM movimento_estoque WHERE tipo = ? AND compra_id = ? AND produto_id = ?',
+      )
+      .get('reposicao', ctx.compra.id, p1.id) as {
+      usuario_id: string;
+      criado_em: number;
+      quantidade_delta: number;
+      quantidade_resultante: number;
+    };
+    expect(movimentoDeP1.usuario_id).toBe(ctx.usuarioId);
+    expect(movimentoDeP1.criado_em).toBe(clock.agora() + 5000);
+    expect(movimentoDeP1.quantidade_delta).toBe(2000); // 1000 (inicial) → 3000
+    expect(movimentoDeP1.quantidade_resultante).toBe(3000);
+
     // banco coerente após a finalização
     expect(await ctx.movimentos.reconciliar(ctx.casaId)).toHaveLength(0);
   });
@@ -610,6 +627,28 @@ describe('gastoPorMes', () => {
     const gastos = await compras.gastoPorMes(casaId, Date.UTC(2025, 0, 1));
 
     expect(gastos).toEqual([{ mes: '2026-07', totalPago: 100, qtdCompras: 1 }]);
+  });
+
+  // ACHADO-046: compra finalizada sem itens marcados (totalPago zero) precisa
+  // contar na quantidade de compras do mês, sem distorcer o total pago.
+  it('compra finalizada com total zero entra na contagem do mês sem distorcer o total pago', async () => {
+    const { compras, casaId, usuarioId } = await montar();
+    await finalizarComTotal(compras, casaId, usuarioId, Date.UTC(2026, 6, 10), 0);
+
+    const gastos = await compras.gastoPorMes(casaId, Date.UTC(2025, 0, 1));
+
+    expect(gastos).toEqual([{ mes: '2026-07', totalPago: 0, qtdCompras: 1 }]);
+  });
+
+  it('compra com total zero no mesmo mês de outras com valor não altera o total pago das demais', async () => {
+    const { compras, casaId, usuarioId } = await montar();
+    await finalizarComTotal(compras, casaId, usuarioId, Date.UTC(2026, 6, 5), 5000);
+    await finalizarComTotal(compras, casaId, usuarioId, Date.UTC(2026, 6, 10), 0);
+    await finalizarComTotal(compras, casaId, usuarioId, Date.UTC(2026, 6, 20), 3000);
+
+    const gastos = await compras.gastoPorMes(casaId, Date.UTC(2025, 0, 1));
+
+    expect(gastos).toEqual([{ mes: '2026-07', totalPago: 8000, qtdCompras: 3 }]);
   });
 });
 

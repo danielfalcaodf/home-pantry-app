@@ -1,4 +1,44 @@
+import Database from 'better-sqlite3';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+
 import { criarDbDeTeste, semearCasaEUsuario } from './teste/criar-db-teste';
+
+const DIR_MIGRATIONS = path.join(__dirname, 'migrations');
+const ARQUIVOS_DE_MIGRATION = fs
+  .readdirSync(DIR_MIGRATIONS)
+  .filter((nome) => nome.endsWith('.sql'))
+  .sort();
+
+function aplicarArquivos(sqlite: Database.Database, arquivos: string[]): void {
+  for (const arquivo of arquivos) {
+    const sql = fs.readFileSync(path.join(DIR_MIGRATIONS, arquivo), 'utf8');
+    for (const trecho of sql.split('--> statement-breakpoint')) {
+      sqlite.exec(trecho);
+    }
+  }
+}
+
+function criarSqliteVazio(): Database.Database {
+  const sqlite = new Database(':memory:');
+  sqlite.pragma('foreign_keys = ON');
+  return sqlite;
+}
+
+function schemaDoBanco(sqlite: Database.Database) {
+  return {
+    tabelas: sqlite
+      .prepare(
+        "SELECT name, sql FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' ORDER BY name",
+      )
+      .all(),
+    indices: sqlite
+      .prepare(
+        "SELECT name, sql FROM sqlite_master WHERE type = 'index' AND name NOT LIKE 'sqlite_%' ORDER BY name",
+      )
+      .all(),
+  };
+}
 
 const TABELAS_ESPERADAS = [
   'casa',
@@ -263,3 +303,65 @@ describe('índice parcial de faltantes', () => {
     expect(detalhes).not.toMatch(/SCAN produto/);
   });
 });
+
+// ACHADO-013 — design D2: parametrizado por migration (não um teste fixo),
+// para ganhar mais casos automaticamente à medida que migrations são
+// adicionadas, sem exigir atualização manual deste arquivo.
+describe.each(ARQUIVOS_DE_MIGRATION.slice(1).map((_arquivo, indice) => indice + 1))(
+  'aplicação a partir da migration intermediária %i',
+  (n) => {
+    it('schema final é idêntico ao produzido pela aplicação completa desde vazio, e os dados sobrevivem', () => {
+      const parcial = criarSqliteVazio();
+      aplicarArquivos(parcial, ARQUIVOS_DE_MIGRATION.slice(0, n));
+
+      // Dados representativos das tabelas já existentes neste ponto
+      // (casa/usuario/produto existem desde a migration 0000).
+      parcial
+        .prepare('INSERT INTO casa (id, nome, criada_em, atualizado_em) VALUES (?, ?, 0, 0)')
+        .run('casa-intermediaria', 'Casa intermediária');
+      parcial
+        .prepare(
+          "INSERT INTO usuario (id, casa_id, nome, perfil, criado_em, atualizado_em) VALUES (?, ?, 'Eu', 'admin', 0, 0)",
+        )
+        .run('usuario-intermediario', 'casa-intermediaria');
+      parcial
+        .prepare(
+          `INSERT INTO produto (id, casa_id, nome, unidade, quantidade_necessaria, criado_em, atualizado_em)
+           VALUES ('produto-intermediario', 'casa-intermediaria', 'Arroz', 'un', 1000, 0, 0)`,
+        )
+        .run();
+      // configuracao só existe a partir da migration 0001.
+      const configuracaoDisponivel = ARQUIVOS_DE_MIGRATION.slice(0, n).includes(
+        '0001_configuracao.sql',
+      );
+      if (configuracaoDisponivel) {
+        parcial
+          .prepare(
+            "INSERT INTO configuracao (casa_id, chave, valor, atualizado_em) VALUES ('casa-intermediaria', 'tema', 'escuro', 0)",
+          )
+          .run();
+      }
+
+      aplicarArquivos(parcial, ARQUIVOS_DE_MIGRATION.slice(n));
+
+      const completo = criarSqliteVazio();
+      aplicarArquivos(completo, ARQUIVOS_DE_MIGRATION);
+
+      expect(schemaDoBanco(parcial)).toEqual(schemaDoBanco(completo));
+
+      expect(parcial.prepare('SELECT * FROM casa WHERE id = ?').get('casa-intermediaria')).toEqual(
+        expect.objectContaining({ nome: 'Casa intermediária' }),
+      );
+      expect(
+        parcial.prepare('SELECT * FROM produto WHERE id = ?').get('produto-intermediario'),
+      ).toEqual(expect.objectContaining({ nome: 'Arroz' }));
+      if (configuracaoDisponivel) {
+        expect(
+          parcial
+            .prepare("SELECT * FROM configuracao WHERE casa_id = ? AND chave = 'tema'")
+            .get('casa-intermediaria'),
+        ).toEqual(expect.objectContaining({ valor: 'escuro' }));
+      }
+    });
+  },
+);

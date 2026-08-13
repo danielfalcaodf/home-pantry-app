@@ -14,7 +14,7 @@ O sistema SHALL fornecer um componente de texto que aceita apenas os papéis tip
 #### Scenario: Papel inválido é rejeitado
 
 - **WHEN** um papel fora da escala é passado
-- **THEN** o compilador de tipos rejeita
+- **THEN** o compilador de tipos rejeita, comprovado por um teste de tipo (`@ts-expect-error` passando um papel fora da escala tipográfica ao componente `Texto`) validado via `tsc --noEmit`
 
 #### Scenario: Números não deslocam o layout
 
@@ -23,7 +23,7 @@ O sistema SHALL fornecer um componente de texto que aceita apenas os papéis tip
 
 ### Requirement: Botão com alvo de toque mínimo
 
-O sistema SHALL fornecer um componente de botão cuja área tocável tem no mínimo 48 por 48 pontos independentes, e que expressa os estados normal, pressionado e desabilitado.
+O sistema SHALL fornecer um componente de botão cuja área tocável tem no mínimo 48 por 48 pontos independentes, e que expressa os estados normal, pressionado e desabilitado. O mínimo de 48×48dp SHALL valer para **qualquer** elemento tocável interativo da interface — inclusive botões de cabeçalho, seletores e ações secundárias implementados diretamente com `Pressable`, não apenas instâncias do componente `Botao`.
 
 #### Scenario: Alvo mínimo respeitado
 
@@ -34,6 +34,11 @@ O sistema SHALL fornecer um componente de botão cuja área tocável tem no mín
 
 - **WHEN** o botão está desabilitado
 - **THEN** ele é anunciado como desabilitado ao leitor de tela, além da mudança visual
+
+#### Scenario: Alvo mínimo vale para `Pressable` fora do componente `Botao`
+
+- **WHEN** um elemento tocável é implementado diretamente com `Pressable` (por exemplo, um botão de cabeçalho ou um seletor de opção), sem usar o componente `Botao`
+- **THEN** sua área tocável, incluindo `hitSlop` quando aplicável, ainda mede no mínimo 48 por 48 pontos independentes
 
 ### Requirement: Campo de texto com rótulo persistente
 
@@ -70,7 +75,7 @@ O sistema SHALL fornecer um componente de chip usado para filtrar, exibindo rót
 
 ### Requirement: Toast que não bloqueia e não empilha
 
-O sistema SHALL fornecer um componente de toast ancorado acima da barra de abas, com duração e barra de tempo visível, com ação opcional. Um novo toast SHALL substituir o anterior, e toasts NÃO devem se acumular.
+O sistema SHALL fornecer um componente de toast ancorado acima da barra de abas, com duração e barra de tempo visível, com ação opcional. Um novo toast SHALL substituir o anterior, e toasts NÃO devem se acumular. O mecanismo de substituição SHALL ser verificável diretamente: disparar um segundo toast com o primeiro ainda visível deixa exatamente um toast na árvore de componentes.
 
 #### Scenario: Substituição em vez de empilhamento
 
@@ -117,7 +122,7 @@ O sistema SHALL fornecer uma tela de erro que declara o que aconteceu e o que fa
 
 ### Requirement: Movimento respeita a preferência de acessibilidade
 
-Animações SHALL respeitar a preferência de redução de movimento do sistema automaticamente. Quando ela estiver ativa, transições de valor SHALL ocorrer em corte seco com esmaecimento curto, e o retorno tátil SHALL permanecer.
+Animações SHALL respeitar a preferência de redução de movimento do sistema automaticamente. Quando ela estiver ativa, transições de valor SHALL ocorrer em corte seco com esmaecimento curto (`withTiming` com a duração de `DURACAO_FADE`, nunca `withSpring`), e o retorno tátil SHALL permanecer.
 
 #### Scenario: Redução de movimento ativa
 

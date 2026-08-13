@@ -4,7 +4,7 @@
 
 ### Requirement: Exportar a lista como texto compartilhável
 
-O usuário SHALL poder exportar a lista corrente como texto simples, para compartilhar por qualquer aplicativo de mensagens do aparelho.
+O usuário SHALL poder exportar a lista corrente como texto simples, para compartilhar por qualquer aplicativo de mensagens do aparelho. O controle que aciona o compartilhamento SHALL ter alvo de toque mínimo de 48×48dp.
 
 #### Scenario: Compartilhamento acionado
 
@@ -35,6 +35,11 @@ O usuário SHALL poder exportar a lista corrente como texto simples, para compar
 
 - **WHEN** a lista não tem itens e o usuário aciona a exportação
 - **THEN** a ação está indisponível ou informa que não há nada a compartilhar
+
+#### Scenario: Alvo de toque do controle de compartilhamento
+
+- **WHEN** o botão "Compartilhar lista" do cabeçalho da Lista é medido
+- **THEN** sua área tocável mede no mínimo 48 por 48 pontos independentes, sem alterar seu tamanho visual
 
 ### Requirement: Texto legível sem o app
 
