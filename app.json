@@ -9,10 +9,10 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.triasoftware.repor"
+      "bundleIdentifier": "com.danielfalcaodf.repor"
     },
     "android": {
-      "package": "com.triasoftware.repor",
+      "package": "com.danielfalcaodf.repor",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",

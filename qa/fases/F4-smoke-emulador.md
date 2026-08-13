@@ -24,7 +24,7 @@
 4. Emulador bootou (~3 min): `adb devices` → `emulator-5554 device`; `adb shell getprop sys.boot_completed` → `1`.
 5. Existe um **development build já compilado** e não versionado (gerado localmente, `android/` está no `.gitignore`): `android/app/build/outputs/apk/debug/app-debug.apk` (datado de 6/ago/2026).
 6. Instalado com sucesso: `adb install -r android/app/build/outputs/apk/debug/app-debug.apk` → `Success`.
-7. App abre normalmente: `adb shell monkey -p com.triasoftware.repor -c android.intent.category.LAUNCHER 1` → `topResumedActivity=...DevLauncherActivity`. Screenshot confirma a tela padrão do Expo Dev Client ("Repor — Development Build", campo para conectar em `npx expo start`).
+7. App abre normalmente: `adb shell monkey -p com.danielfalcaodf.repor -c android.intent.category.LAUNCHER 1` → `topResumedActivity=...DevLauncherActivity`. Screenshot confirma a tela padrão do Expo Dev Client ("Repor — Development Build", campo para conectar em `npx expo start`).
 
 ## O que falta para rodar os smoke tests de fato
 
