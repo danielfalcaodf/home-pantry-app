@@ -65,7 +65,7 @@ O projeto SHALL executar os testes de `src/domain/` em ambiente Node puro, sem M
 
 ### Requirement: Comandos de qualidade documentados
 
-O projeto SHALL expor comandos de `dev`, `test`, `lint` e `typecheck`, e a documentação de trabalho do repositório SHALL registrar os comandos reais assim que existirem.
+O projeto SHALL expor comandos de `dev`, `test`, `lint` e `typecheck`, e a documentação de trabalho do repositório SHALL registrar os comandos reais assim que existirem. O projeto SHALL usar um **único** gerenciador de pacotes — `npm`, conforme documentado em `CLAUDE.md` e nos scripts de `package.json` — e o repositório NÃO deve conter artefatos de um segundo gerenciador de pacotes coexistindo (lockfile ou arquivo de workspace de outra ferramenta).
 
 #### Scenario: Comandos declarados
 
@@ -76,6 +76,11 @@ O projeto SHALL expor comandos de `dev`, `test`, `lint` e `typecheck`, e a docum
 
 - **WHEN** o scaffold é concluído
 - **THEN** a seção de comandos do guia do repositório contém os comandos reais e não mais o aviso de "a confirmar"
+
+#### Scenario: Gerenciador de pacotes único
+
+- **WHEN** a raiz do repositório é inspecionada
+- **THEN** existe no máximo um arquivo de lockfile/workspace de gerenciador de pacotes, correspondente ao gerenciador documentado (`npm`), e nenhum artefato de um segundo gerenciador (ex. `pnpm-lock.yaml`, `pnpm-workspace.yaml`) está presente, rastreado ou não
 
 ### Requirement: Ambiente de teste com fuso horário fixado
 A suíte de testes SHALL rodar com o fuso horário do processo fixado (`TZ=America/Sao_Paulo`) na configuração do Jest, de modo que `npm test` produza o mesmo resultado em qualquer máquina, e as fixtures de data SHALL expressar instantes coerentes com esse fuso fixado.

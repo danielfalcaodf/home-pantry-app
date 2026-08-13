@@ -101,7 +101,7 @@ Ao marcar um item, o usuário SHALL poder ajustar a quantidade realmente comprad
 
 ### Requirement: Rodapé de acompanhamento
 
-O modo compra SHALL exibir, em rodapé fixo, quantos itens foram marcados de quantos, e o total corrente do que já está no carrinho, em família monoespaçada.
+O modo compra SHALL exibir, em rodapé fixo, quantos itens foram marcados de quantos, e o total corrente do que já está no carrinho, em família monoespaçada. O rodapé SHALL aparecer imediatamente acima do botão "Fechar compra", na mesma região inferior da tela.
 
 #### Scenario: Contador atualiza a cada marcação
 
@@ -122,6 +122,11 @@ O modo compra SHALL exibir, em rodapé fixo, quantos itens foram marcados de qua
 
 - **WHEN** o total muda de largura de dígitos
 - **THEN** nenhum elemento adjacente se desloca
+
+#### Scenario: Posição do rodapé
+
+- **WHEN** o modo compra é exibido com o rodapé visível
+- **THEN** o rodapé de acompanhamento aparece imediatamente acima do botão "Fechar compra", nessa ordem visual (rodapé, depois botão)
 
 ### Requirement: Iniciar a compra a partir da lista
 
