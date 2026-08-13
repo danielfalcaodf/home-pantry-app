@@ -75,7 +75,7 @@ Um consumo maior que o saldo SHALL resultar em quantidade zero, e o app SHALL in
 
 ### Requirement: Quantidade específica por toque longo
 
-Um toque longo no botão de consumo SHALL abrir um painel inferior para informar uma quantidade específica, com as ações de registrar consumo e de registrar reposição.
+Um toque longo no botão de consumo SHALL abrir um painel inferior para informar uma quantidade específica, com as ações de registrar consumo e de registrar reposição. Os dois caminhos (`onUsei` e `onRepus`) SHALL ter cobertura de teste simétrica: cada um confirmado tanto no caminho positivo (chamado com o valor digitado, painel fecha) quanto no negativo (fechar sem confirmar não chama nenhum dos dois).
 
 #### Scenario: Painel abre com toque longo
 
@@ -106,6 +106,11 @@ Um toque longo no botão de consumo SHALL abrir um painel inferior para informar
 
 - **WHEN** o usuário fecha o painel sem confirmar
 - **THEN** nenhuma alteração é feita
+
+#### Scenario: Cobertura simétrica dos dois caminhos de confirmação
+
+- **WHEN** o usuário informa uma quantidade e escolhe registrar reposição
+- **THEN** `onRepus` é chamado com o valor digitado e o painel fecha — o mesmo padrão de verificação já aplicado ao caminho de registrar consumo
 
 ### Requirement: Caminho alternativo visível ao toque longo
 

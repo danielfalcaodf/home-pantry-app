@@ -75,7 +75,7 @@ O sistema SHALL fornecer um componente de chip usado para filtrar, exibindo rót
 
 ### Requirement: Toast que não bloqueia e não empilha
 
-O sistema SHALL fornecer um componente de toast ancorado acima da barra de abas, com duração e barra de tempo visível, com ação opcional. Um novo toast SHALL substituir o anterior, e toasts NÃO devem se acumular.
+O sistema SHALL fornecer um componente de toast ancorado acima da barra de abas, com duração e barra de tempo visível, com ação opcional. Um novo toast SHALL substituir o anterior, e toasts NÃO devem se acumular. O mecanismo de substituição SHALL ser verificável diretamente: disparar um segundo toast com o primeiro ainda visível deixa exatamente um toast na árvore de componentes.
 
 #### Scenario: Substituição em vez de empilhamento
 
@@ -122,7 +122,7 @@ O sistema SHALL fornecer uma tela de erro que declara o que aconteceu e o que fa
 
 ### Requirement: Movimento respeita a preferência de acessibilidade
 
-Animações SHALL respeitar a preferência de redução de movimento do sistema automaticamente. Quando ela estiver ativa, transições de valor SHALL ocorrer em corte seco com esmaecimento curto, e o retorno tátil SHALL permanecer.
+Animações SHALL respeitar a preferência de redução de movimento do sistema automaticamente. Quando ela estiver ativa, transições de valor SHALL ocorrer em corte seco com esmaecimento curto (`withTiming` com a duração de `DURACAO_FADE`, nunca `withSpring`), e o retorno tátil SHALL permanecer.
 
 #### Scenario: Redução de movimento ativa
 

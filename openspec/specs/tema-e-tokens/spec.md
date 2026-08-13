@@ -66,7 +66,7 @@ O sistema SHALL fornecer tokens fechados de espaçamento, raio e tipografia. Val
 
 ### Requirement: Preferência de tema persistida
 
-O usuário SHALL poder escolher entre automático pelo sistema, claro e escuro, com automático como padrão. A escolha SHALL ser persistida no banco local, e NÃO em estado volátil.
+O usuário SHALL poder escolher entre automático pelo sistema, claro e escuro, com automático como padrão. A escolha SHALL ser persistida no banco local, e NÃO em estado volátil. A persistência SHALL ser feita pelo hook de aplicação (`usePreferenciaDeTemaPersistida`) através de um repositório injetável, permitindo verificar diretamente — com um repositório fake — que gravar a escolha e montar o hook novamente reflete o valor salvo, sem depender apenas da função pura de resolução de tema.
 
 #### Scenario: Padrão é automático
 
