@@ -1,5 +1,6 @@
 import { Pressable, View } from 'react-native';
 
+import { sobrepor } from '../theme/contraste';
 import { ALVO_TOQUE_MINIMO, espaco, raio } from '../theme/espaco';
 import { useTheme } from '../theme/provider';
 import { Texto } from './texto';
@@ -16,6 +17,10 @@ export type ChipEstadoProps = {
 export function ChipEstado({ rotulo, contagem, cor, ativo, onPress }: ChipEstadoProps) {
   const tema = useTheme();
   const corDaBorda = cor ?? tema.line.hairline;
+  // Fundo do estado ativo: cor do estado com a opacidade do tema, composta
+  // sobre o fundo (componentes-base spec, "Chip ativo é distinguível") —
+  // nunca `tema.bg.raised`, que é neutro e não carrega o estado.
+  const fundoAtivo = cor ? sobrepor(cor, tema.bg.base, tema.fillOpacity) : tema.bg.raised;
 
   return (
     <Pressable
@@ -30,7 +35,7 @@ export function ChipEstado({ rotulo, contagem, cor, ativo, onPress }: ChipEstado
         borderRadius: raio.campo,
         borderWidth: 1,
         borderColor: corDaBorda,
-        backgroundColor: ativo ? tema.bg.raised : 'transparent',
+        backgroundColor: ativo ? fundoAtivo : 'transparent',
         flexDirection: 'row',
         alignItems: 'center',
         gap: espaco.sm,

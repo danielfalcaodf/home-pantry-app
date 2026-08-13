@@ -70,6 +70,7 @@ export default function NovoProduto() {
       categoriasExistentes={categorias}
       tituloCabecalho="Novo produto"
       tituloAcao="Adicionar à despensa"
+      autofocarNome
       aoSalvar={salvar}
       salvando={salvando}
       avisoDeNome={

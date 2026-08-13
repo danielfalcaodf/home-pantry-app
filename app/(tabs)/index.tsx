@@ -265,7 +265,7 @@ export default function Despensa() {
                 estado={linha.item.estado}
                 fracao={linha.item.fracao}
                 temSobra={linha.item.temSobra}
-                rotuloAcaoConsumo={`Registrar consumo de 1 ${rotuloDaUnidade(
+                rotuloAcaoConsumo={`Usei 1 ${rotuloDaUnidade(
                   linha.item.produto.unidade,
                   false,
                 )} de ${linha.item.produto.nome}`}

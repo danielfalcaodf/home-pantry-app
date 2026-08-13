@@ -157,7 +157,23 @@ export class SQLiteProdutoRepository implements ProdutoRepository {
 
   async listarDespensa(casaId: string): Promise<Produto[]> {
     const linhas = this.db
-      .select()
+      .select({
+        id: tabelaProduto.id,
+        casaId: tabelaProduto.casaId,
+        nome: tabelaProduto.nome,
+        categoria: tabelaProduto.categoria,
+        unidade: tabelaProduto.unidade,
+        quantidadeAtual: tabelaProduto.quantidadeAtual,
+        quantidadeNecessaria: tabelaProduto.quantidadeNecessaria,
+        valorUnitario: tabelaProduto.valorUnitario,
+        marcaPreferida: tabelaProduto.marcaPreferida,
+        observacao: tabelaProduto.observacao,
+        ativo: tabelaProduto.ativo,
+        criadoEm: tabelaProduto.criadoEm,
+        atualizadoEm: tabelaProduto.atualizadoEm,
+        deletadoEm: tabelaProduto.deletadoEm,
+        syncStatus: tabelaProduto.syncStatus,
+      })
       .from(tabelaProduto)
       .where(
         and(eq(tabelaProduto.casaId, casaId), eq(tabelaProduto.ativo, true), naoRemovido),

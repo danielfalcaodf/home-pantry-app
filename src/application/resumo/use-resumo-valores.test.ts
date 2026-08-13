@@ -107,6 +107,28 @@ describe('useResumoDeValores', () => {
     expect(result.current.contagensPorEstado).toEqual({ critico: 1, emFalta: 1, ok: 2 });
   });
 
+  it('contagem por estado reage a mudanças do observador sem remontar (ACHADO-050)', async () => {
+    const produtos = new ProdutoRepositorioFalso([
+      produtoFalso({ id: 'p1', quantidadeAtual: milesimos(1000), quantidadeNecessaria: milesimos(1000) }),
+    ]);
+    const { result, observador } = await montar(produtos);
+    expect(result.current.contagensPorEstado).toEqual({ critico: 0, emFalta: 0, ok: 1 });
+    expect(result.current.itensDaDespensaPorEstado).toEqual([
+      { produto: { id: 'p1', nome: 'Arroz', categoria: 'Grãos' }, estado: 'ok' },
+    ]);
+
+    // O mesmo item zera e passa a 'critico' — nenhum unmount/remount no meio.
+    produtos.produtos[0] = { ...produtos.produtos[0], quantidadeAtual: milesimos(0) };
+    observador.notificar();
+
+    await waitFor(() =>
+      expect(result.current.contagensPorEstado).toEqual({ critico: 1, emFalta: 0, ok: 0 }),
+    );
+    expect(result.current.itensDaDespensaPorEstado).toEqual([
+      { produto: { id: 'p1', nome: 'Arroz', categoria: 'Grãos' }, estado: 'critico' },
+    ]);
+  });
+
   it('reage a mudanças notificadas pelo observador', async () => {
     const produtos = new ProdutoRepositorioFalso([
       produtoFalso({

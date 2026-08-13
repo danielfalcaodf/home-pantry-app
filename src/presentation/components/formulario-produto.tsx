@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 
 import { UNIDADES, Unidade } from '../../domain/shared/unidade';
-import { espaco } from '../theme/espaco';
+import { ALVO_TOQUE_MINIMO, espaco } from '../theme/espaco';
 import { useTheme } from '../theme/provider';
 import { Botao } from './botao';
 import { BotaoVoltar } from './botao-voltar';
@@ -46,6 +46,12 @@ export type FormularioProdutoProps = {
   avisoDeNome?: { mensagem: string; acoes: { titulo: string; onPress: () => void }[] };
   /** Cabeçalho com título + voltar — só o Cadastrar produto usa (D3). */
   tituloCabecalho?: string;
+  /**
+   * Foco automático no nome só faz sentido quando digitá-lo é a primeira
+   * ação (cadastro novo). No detalhe, o teclado cobriria "Usei"/"Repus"
+   * (ACHADO-056, KPI K4) — por isso o default é não focar.
+   */
+  autofocarNome?: boolean;
 };
 
 export function FormularioProduto({
@@ -59,6 +65,7 @@ export function FormularioProduto({
   quantidadeAtualEditavel = true,
   avisoDeNome,
   tituloCabecalho,
+  autofocarNome = false,
 }: FormularioProdutoProps) {
   const tema = useTheme();
   const [maisOpcoes, setMaisOpcoes] = useState(false);
@@ -91,7 +98,7 @@ export function FormularioProduto({
         value={valores.nome}
         onChangeText={definir('nome')}
         erro={erros.nome}
-        autoFocus
+        autoFocus={autofocarNome}
       />
 
       {avisoDeNome ? (
@@ -135,7 +142,12 @@ export function FormularioProduto({
         keyboardType="decimal-pad"
       />
 
-      <Pressable onPress={() => setMaisOpcoes(!maisOpcoes)} accessibilityRole="button">
+      <Pressable
+        onPress={() => setMaisOpcoes(!maisOpcoes)}
+        accessibilityRole="button"
+        hitSlop={8}
+        style={{ minHeight: ALVO_TOQUE_MINIMO, justifyContent: 'center' }}
+      >
         <Texto papel="body.md" cor={tema.action.azulejo}>
           {maisOpcoes ? 'Menos opções' : 'Mais opções'}
         </Texto>

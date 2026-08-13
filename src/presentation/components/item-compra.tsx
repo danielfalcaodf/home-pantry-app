@@ -68,6 +68,7 @@ export function ItemCompra({ linha, onMarcar, onDesmarcar, onAjustar, onResponde
           }}
         >
           <View
+            testID="marcacao-quadrado"
             style={{
               width: LADO_MARCACAO,
               height: LADO_MARCACAO,

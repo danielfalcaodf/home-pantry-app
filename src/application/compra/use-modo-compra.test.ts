@@ -136,7 +136,9 @@ describe('useModoCompra', () => {
     const primeira = await renderHook(() => useModoCompra(compraId, compras, observador));
     await waitFor(() => expect(primeira.result.current.carregando).toBe(false));
     expect(primeira.result.current.itens[0].item.comprado).toBe(true);
-    primeira.unmount();
+    await act(async () => {
+      primeira.unmount();
+    });
 
     // "voltar à tela": nova instância do hook, mesmo compraId.
     const segunda = await renderHook(() => useModoCompra(compraId, compras, observador));
@@ -144,4 +146,9 @@ describe('useModoCompra', () => {
     expect(segunda.result.current.itens[0].item.comprado).toBe(true);
     expect(segunda.result.current.itens[0].item.quantidadeComprada).toBe(2000);
   });
+
+  // ACHADO-054 (task 4): reproduzido e não confirmado com um componente real
+  // — teste dedicado em app/compra/toques-consecutivos.test.tsx, pois
+  // renderizar `ItemCompra` (presentation/) aqui violaria a regra de
+  // dependência application/ → presentation/ (CLAUDE.md).
 });

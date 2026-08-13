@@ -1,0 +1,83 @@
+import { render, screen } from '@testing-library/react-native';
+import { ReactNode } from 'react';
+
+import { milesimos } from '@/domain/shared/quantidade';
+import { ALVO_TOQUE_MINIMO } from '@/presentation/theme/espaco';
+import { ThemeProvider } from '@/presentation/theme/provider';
+import Lista from './lista';
+
+jest.mock('expo-router', () => ({
+  router: { push: jest.fn() },
+}));
+
+const mockItens = [
+  {
+    tipo: 'produto' as const,
+    produtoId: 'p1',
+    nome: 'Arroz',
+    categoria: 'Grãos',
+    unidade: 'kg' as const,
+    quantidadeAComprar: milesimos(1000),
+    valorUnitario: 500,
+    custo: 500,
+    semPreco: false,
+  },
+];
+
+jest.mock('@/application/lista/use-lista-compras', () => ({
+  useListaDeCompras: () => ({ itens: mockItens, carregando: false }),
+}));
+jest.mock('@/application/lista/use-preferencia-agrupamento', () => ({
+  usePreferenciaDeAgrupamento: () => ({ agrupado: false, alternar: jest.fn() }),
+}));
+jest.mock('@/application/lista/use-adicionar-avulso', () => ({
+  useAdicionarAvulso: () => ({ adicionar: jest.fn() }),
+}));
+jest.mock('@/application/lista/use-editar-avulso', () => ({
+  useEditarAvulso: () => ({ editar: jest.fn(), remover: jest.fn() }),
+}));
+jest.mock('@/application/lista/use-remover-item-lista', () => ({
+  useRemoverItemDaLista: () => ({
+    ultimaRemocao: null,
+    remover: jest.fn(),
+    desfazer: jest.fn(),
+    limpar: jest.fn(),
+  }),
+}));
+jest.mock('@/application/compra/use-iniciar-compra', () => ({
+  useIniciarCompra: () => ({ iniciando: false, iniciar: jest.fn() }),
+}));
+
+function estiloResolvido(elemento: { props: { style?: unknown } }) {
+  const { style } = elemento.props;
+  return Array.isArray(style) ? Object.assign({}, ...style) : style;
+}
+
+async function comTema(no: ReactNode) {
+  await render(<ThemeProvider preferencia="escuro">{no}</ThemeProvider>);
+}
+
+describe('Lista — alvos de toque do cabeçalho', () => {
+  // ACHADO-057 (task 1.2): os dois botões do cabeçalho precisam medir
+  // ≥48dp de altura tocável (eram ~22dp).
+  it('"Compartilhar lista" e "Agrupar por categoria" medem ao menos 48dp de altura', async () => {
+    await comTema(<Lista />);
+    const compartilhar = screen.getByLabelText('Compartilhar lista');
+    const agrupar = screen.getByLabelText('Agrupar por categoria');
+    expect(estiloResolvido(compartilhar).minHeight).toBeGreaterThanOrEqual(ALVO_TOQUE_MINIMO);
+    expect(estiloResolvido(agrupar).minHeight).toBeGreaterThanOrEqual(ALVO_TOQUE_MINIMO);
+  });
+
+  // (task 1.3): hitSlop de 8 em cada lado não fecha o gap de 16 entre eles.
+  it('os dois botões lado a lado não têm hitSlop que sobreponha a área tocável um do outro', async () => {
+    await comTema(<Lista />);
+    const compartilhar = screen.getByLabelText('Compartilhar lista');
+    const agrupar = screen.getByLabelText('Agrupar por categoria');
+    const hitSlopCompartilhar = compartilhar.props.hitSlop;
+    const hitSlopAgrupar = agrupar.props.hitSlop;
+    const GAP_ENTRE_BOTOES = 16; // espaco.lg, gap do container pai
+    const expansaoTotal =
+      (hitSlopCompartilhar?.right ?? 0) + (hitSlopAgrupar?.left ?? 0);
+    expect(expansaoTotal).toBeLessThan(GAP_ENTRE_BOTOES);
+  });
+});

@@ -5,7 +5,7 @@ argument-hint: [número da PR, 1-13 — se vazio, usa a próxima pendente]
 
 Execute uma rodada da fase **F4** do plano de testes (`qa/PLANO-DE-TESTES.md`) para **uma PR**, sem alterar código de produção.
 
-**Pré-requisito único, verifique antes de tudo**: existe development build instalado no emulador `expo-dev`? Rode `mcp__maestro__list_devices` — se nenhum device aparecer, ou se o app `com.triasoftware.repor` não abrir com `launchApp`, **pare e reporte**: a F4 depende de `eas login` + `eas build --profile development` + instalação manual no AVD, que ninguém fez ainda nesta sessão. Não tente contornar rodando em modo Expo Go.
+**Pré-requisito único, verifique antes de tudo**: existe development build instalado no emulador `expo-dev`? Rode `mcp__maestro__list_devices` — se nenhum device aparecer, ou se o app `com.danielfalcaodf.repor` não abrir com `launchApp`, **pare e reporte**: a F4 depende de `eas login` + `eas build --profile development` + instalação manual no AVD, que ninguém fez ainda nesta sessão. Não tente contornar rodando em modo Expo Go.
 
 **PR alvo**: $ARGUMENTS (se vazio, use a próxima PR sem seção `## F4` em `qa/por-pr/PR-NN.md`, na ordem 1→13)
 
