@@ -4,7 +4,7 @@
 
 ### Requirement: Cadastro com campos essenciais em primeiro plano
 
-A tela de cadastro SHALL exigir nome, unidade e quantidade necessária, e SHALL apresentar no máximo quatro campos em primeiro plano. Os campos opcionais — quantidade atual, valor unitário, categoria, marca preferida e observação — SHALL ficar em uma seção recolhida.
+A tela de cadastro SHALL exigir nome, unidade e quantidade necessária, e SHALL apresentar no máximo quatro campos em primeiro plano. Os campos opcionais — quantidade atual, valor unitário, categoria, marca preferida e observação — SHALL ficar em uma seção recolhida. O controle que expande/recolhe essa seção ("Mais opções"/"Menos opções") SHALL ter alvo de toque mínimo de 48×48dp.
 
 #### Scenario: Cadastro mínimo
 
@@ -35,6 +35,11 @@ A tela de cadastro SHALL exigir nome, unidade e quantidade necessária, e SHALL 
 
 - **WHEN** o campo de quantidade necessária é rotulado
 - **THEN** o rótulo usa linguagem do usuário, como quanto se quer ter em casa, e não o termo de sistema
+
+#### Scenario: Alvo de toque do controle "Mais opções"
+
+- **WHEN** o controle "Mais opções"/"Menos opções" é medido, em qualquer tela que use `FormularioProduto` (Cadastrar produto ou Detalhe do produto)
+- **THEN** sua área tocável mede no mínimo 48 por 48 pontos independentes, sem alterar seu tamanho visual
 
 ### Requirement: Autocomplete de categoria a partir do existente
 
@@ -86,7 +91,7 @@ O sistema SHALL impedir dois produtos ativos com o mesmo nome na mesma casa, ign
 
 ### Requirement: Detalhe e edição do produto
 
-A tela de detalhe SHALL exibir a quantidade atual em destaque, permitir corrigi-la pelo caminho de ajuste, permitir editar todos os campos de cadastro do produto, e exibir no rodapé um resumo do histórico recente de registros com acesso ao histórico completo. A abertura da tela NÃO SHALL atribuir foco automático a nenhum campo de texto nem invocar o teclado, e Voltar com o teclado aberto SHALL fechar o teclado sem sair da tela.
+A tela de detalhe SHALL exibir a quantidade atual em destaque, permitir corrigi-la pelo caminho de ajuste, permitir editar todos os campos de cadastro do produto, e exibir no rodapé um resumo do histórico recente de registros com acesso ao histórico completo. A abertura da tela NÃO SHALL atribuir foco automático a nenhum campo de texto nem invocar o teclado, e Voltar com o teclado aberto SHALL fechar o teclado sem sair da tela. O controle que abre o caminho de ajuste (a quantidade em destaque) e o controle que abre o histórico completo SHALL ter, cada um, alvo de toque mínimo de 48×48dp.
 
 #### Scenario: Quantidade em destaque
 
@@ -137,6 +142,16 @@ A tela de detalhe SHALL exibir a quantidade atual em destaque, permitir corrigi-
 
 - **WHEN** o usuário abre a tela de cadastro de produto novo
 - **THEN** o campo de nome recebe foco automático normalmente (comportamento existente, sem regressão)
+
+#### Scenario: Alvo de toque da quantidade em destaque
+
+- **WHEN** o controle "Corrigir quantidade atual" (a quantidade em display que abre o ajuste) é medido
+- **THEN** sua área tocável mede no mínimo 48 por 48 pontos independentes, sem alterar seu tamanho visual
+
+#### Scenario: Alvo de toque do resumo do histórico
+
+- **WHEN** o controle "Ver histórico completo" é medido
+- **THEN** sua área tocável mede no mínimo 48 por 48 pontos independentes, sem alterar seu tamanho visual
 
 ### Requirement: Remoção lógica de produto
 

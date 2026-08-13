@@ -4,7 +4,7 @@
 
 ### Requirement: Histórico de movimentos do produto
 
-O app SHALL exibir, para cada produto, a lista de seus movimentos com tipo, quantidade, data e motivo quando houver, do mais recente para o mais antigo.
+O app SHALL exibir, para cada produto, a lista de seus movimentos com tipo, quantidade, data e motivo quando houver, do mais recente para o mais antigo. Cada linha SHALL ser um único contêiner acessível (`accessible`), com `accessibilityLabel` combinando ação, quantidade, data e motivo quando houver — nunca fragmentos soltos na árvore de acessibilidade.
 
 #### Scenario: Ordem cronológica inversa
 
@@ -30,6 +30,11 @@ O app SHALL exibir, para cada produto, a lista de seus movimentos com tipo, quan
 
 - **WHEN** quantidades e datas são exibidas no histórico
 - **THEN** elas usam o papel tipográfico de dado
+
+#### Scenario: Linha anunciada como unidade única
+
+- **WHEN** o leitor de tela foca uma linha do histórico
+- **THEN** ela é anunciada em uma única parada de foco, com ação, quantidade, data e motivo (quando houver) combinados no mesmo rótulo — não em três ou mais paradas de foco separadas
 
 ### Requirement: Vocabulário de usuário no histórico
 

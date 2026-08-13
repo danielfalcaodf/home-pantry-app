@@ -1,6 +1,4 @@
-# exportacao-em-texto
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Exportar a lista como texto compartilhável
 
@@ -40,22 +38,3 @@ O usuário SHALL poder exportar a lista corrente como texto simples, para compar
 
 - **WHEN** o botão "Compartilhar lista" do cabeçalho da Lista é medido
 - **THEN** sua área tocável mede no mínimo 48 por 48 pontos independentes, sem alterar seu tamanho visual
-
-### Requirement: Texto legível sem o app
-
-O texto exportado SHALL ser compreensível para quem não usa o app, sem jargão de sistema e sem identificadores internos.
-
-#### Scenario: Sem identificadores internos
-
-- **WHEN** o texto é gerado
-- **THEN** ele não contém identificadores de registro nem nomes de campo do banco
-
-#### Scenario: Vocabulário do usuário
-
-- **WHEN** o texto é gerado
-- **THEN** ele usa o mesmo vocabulário da interface, sem termos de sistema
-
-#### Scenario: Valores formatados para leitura
-
-- **WHEN** quantidades e preços aparecem no texto
-- **THEN** eles estão formatados como exibidos na interface, e não em unidades internas

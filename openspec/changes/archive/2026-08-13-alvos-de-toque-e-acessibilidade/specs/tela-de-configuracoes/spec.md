@@ -1,6 +1,4 @@
-# tela-de-configuracoes
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Tela de configurações acessível
 
@@ -26,6 +24,8 @@ O app SHALL oferecer uma tela de configurações contendo a escolha de tema, as 
 - **WHEN** qualquer uma das três opções de tema ("Tema Automático", "Tema Claro", "Tema Escuro") é medida
 - **THEN** sua área tocável mede no mínimo 48 por 48 pontos independentes, sem alterar seu tamanho visual
 
+## ADDED Requirements
+
 ### Requirement: Vocabulário sem jargão de sistema
 
 Os rótulos da tela de configurações SHALL usar o vocabulário de usuário já consolidado no restante do app, evitando termos de sistema como "estoque" quando um equivalente de produto já existe ("despensa").
@@ -34,31 +34,3 @@ Os rótulos da tela de configurações SHALL usar o vocabulário de usuário já
 
 - **WHEN** a seção "Despensa" da tela de configurações é exibida
 - **THEN** o botão de atalho para a auditoria de itens exibe o texto "Conferência da despensa", não "Conferência de estoque"
-
-### Requirement: Ações destrutivas sinalizadas
-
-Ações que sobrescrevem dados SHALL ser visualmente distinguidas das demais e SHALL exigir confirmação.
-
-#### Scenario: Restauração sinalizada
-
-- **WHEN** a ação de restaurar é exibida
-- **THEN** ela é distinguida das ações não destrutivas e descreve seu efeito
-
-#### Scenario: Exportação não pede confirmação
-
-- **WHEN** a ação de exportar é acionada
-- **THEN** ela executa diretamente, por não alterar dados
-
-### Requirement: Recomendação de backup periódico
-
-A tela SHALL informar quando o último backup foi feito, para que o usuário perceba se está desprotegido.
-
-#### Scenario: Data do último backup
-
-- **WHEN** um backup já foi gerado
-- **THEN** a tela informa quando ele foi feito
-
-#### Scenario: Nunca feito
-
-- **WHEN** nenhum backup foi gerado
-- **THEN** a tela informa que ainda não há backup e convida a fazer um

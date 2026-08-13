@@ -49,7 +49,7 @@ Cada item da lista SHALL exibir a quantidade a comprar calculada pela regra de d
 
 ### Requirement: Ordenação e agrupamento por categoria
 
-A lista SHALL ser ordenada por categoria e, dentro dela, por nome, e SHALL oferecer alternar entre a visão agrupada por categoria e a visão em lista contínua.
+A lista SHALL ser ordenada por categoria e, dentro dela, por nome, e SHALL oferecer alternar entre a visão agrupada por categoria e a visão em lista contínua. O controle que alterna o agrupamento SHALL ter alvo de toque mínimo de 48×48dp.
 
 #### Scenario: Visão agrupada
 
@@ -65,6 +65,11 @@ A lista SHALL ser ordenada por categoria e, dentro dela, por nome, e SHALL ofere
 
 - **WHEN** o usuário alterna o agrupamento e sai da tela
 - **THEN** ao voltar, a escolha anterior permanece
+
+#### Scenario: Alvo de toque do controle de agrupamento
+
+- **WHEN** o botão "Agrupar por categoria" do cabeçalho da Lista é medido
+- **THEN** sua área tocável mede no mínimo 48 por 48 pontos independentes, sem alterar seu tamanho visual
 
 ### Requirement: Remover item da lista sem alterar o estoque
 

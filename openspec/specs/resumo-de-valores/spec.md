@@ -112,6 +112,20 @@ Esta tela SHALL poder usar tipografia de maior destaque para os valores, respeit
 - **WHEN** um valor é atualizado
 - **THEN** ele troca diretamente para o novo valor, sem animação de contagem
 
+### Requirement: Atalho de cabeçalho para Configurações
+
+A tela de Resumo SHALL oferecer, no cabeçalho, um atalho para a tela de Configurações, com alvo de toque mínimo de 48×48dp.
+
+#### Scenario: Atalho abre Configurações
+
+- **WHEN** o usuário toca no atalho "Configurações" do cabeçalho do Resumo
+- **THEN** a tela de Configurações é aberta
+
+#### Scenario: Alvo de toque do atalho
+
+- **WHEN** o botão "Configurações" do cabeçalho do Resumo é medido
+- **THEN** sua área tocável mede no mínimo 48 por 48 pontos independentes, sem alterar seu tamanho visual
+
 ### Requirement: Somente leitura
 
 O resumo SHALL derivar todos os seus números em tempo de consulta, e NÃO deve persistir nenhum dos valores exibidos nem oferecer escrita.
