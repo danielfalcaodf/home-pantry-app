@@ -16,4 +16,4 @@
 
 ## 4. Gate de qualidade
 
-- [ ] 4.1 Rodar `npm test` e `npm run verificar` — tudo verde.
+- [x] 4.1 Rodar `npm test` e `npm run verificar` — tudo verde.
