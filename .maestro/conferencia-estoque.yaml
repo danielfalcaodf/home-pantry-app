@@ -72,3 +72,16 @@ appId: com.triasoftware.repor
 - assertVisible:
     text: "\\d+ de \\d+ conferidos"
 - assertVisible: "Corrigir para"
+# ACHADO-062 / task 3.3: a tela de item da conferência precisa ter saída
+# visível ("←", accessibilityLabel "Voltar"), e sair no meio do percurso
+# não pode perder o progresso já avançado — ao retomar, o app volta
+# exatamente na mesma posição ("X de Y conferidos"), sem regravar nem
+# pular itens.
+- assertVisible: "←"
+- copyTextFrom:
+    text: "\\d+ de \\d+ conferidos"
+- evalScript: ${output.progressoAntesDeSair = maestro.copiedText}
+- tapOn: "←"
+- assertVisible: "Configurações"
+- tapOn: "Conferência de estoque"
+- assertVisible: ${output.progressoAntesDeSair}
