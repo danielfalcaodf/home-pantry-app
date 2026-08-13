@@ -628,6 +628,28 @@ describe('gastoPorMes', () => {
 
     expect(gastos).toEqual([{ mes: '2026-07', totalPago: 100, qtdCompras: 1 }]);
   });
+
+  // ACHADO-046: compra finalizada sem itens marcados (totalPago zero) precisa
+  // contar na quantidade de compras do mês, sem distorcer o total pago.
+  it('compra finalizada com total zero entra na contagem do mês sem distorcer o total pago', async () => {
+    const { compras, casaId, usuarioId } = await montar();
+    await finalizarComTotal(compras, casaId, usuarioId, Date.UTC(2026, 6, 10), 0);
+
+    const gastos = await compras.gastoPorMes(casaId, Date.UTC(2025, 0, 1));
+
+    expect(gastos).toEqual([{ mes: '2026-07', totalPago: 0, qtdCompras: 1 }]);
+  });
+
+  it('compra com total zero no mesmo mês de outras com valor não altera o total pago das demais', async () => {
+    const { compras, casaId, usuarioId } = await montar();
+    await finalizarComTotal(compras, casaId, usuarioId, Date.UTC(2026, 6, 5), 5000);
+    await finalizarComTotal(compras, casaId, usuarioId, Date.UTC(2026, 6, 10), 0);
+    await finalizarComTotal(compras, casaId, usuarioId, Date.UTC(2026, 6, 20), 3000);
+
+    const gastos = await compras.gastoPorMes(casaId, Date.UTC(2025, 0, 1));
+
+    expect(gastos).toEqual([{ mes: '2026-07', totalPago: 8000, qtdCompras: 3 }]);
+  });
 });
 
 describe('obterPorId', () => {

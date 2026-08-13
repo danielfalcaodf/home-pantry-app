@@ -25,8 +25,5 @@ Regras:
 
 | Ordem | Change | Depende de | Motivo |
 |---|---|---|---|
-| 08 | cobertura-banco-e-migrations | — (`correcao-fuso-horario-testes` arquivada em 2026-08-09) | Dívida de teste de infra/db (004, 005, 011-014, 044); independe da UI |
-| 09 | cobertura-componentes-apresentacao | — (`correcao-chips-de-estado` arquivada em 2026-08-13; `alvos-de-toque-e-acessibilidade` arquivada em 2026-08-13) | Testes de componentes (016, 018, 019, 022-028, 043) devem cobrir o comportamento já corrigido de chips/labels |
-| 10 | cobertura-lista-e-compra | — (`correcao-fluxo-modo-compra` arquivada em 2026-08-13; `alvos-de-toque-e-acessibilidade` arquivada em 2026-08-13) | Testes de lista/compra (029-033, 046, 047) sobre telas tocadas por 05 e 06 |
-| 11 | cobertura-telas-e-navegacao | — (`correcao-autofoco-detalhe-produto` arquivada em 2026-08-09; `botao-voltar-conferencia` arquivada em 2026-08-13; `alvos-de-toque-e-acessibilidade` arquivada em 2026-08-13; `configuracoes-e-backup` arquivada em 2026-08-13) | Testes de telas/navegação (041, 042, 045, 048, 049, 051, 052) devem asserir o estado pós-correções |
-| 12 | guardas-de-tipo-lint-e-tooling | — | Guardas de tipo/lint e tooling (003, 008-010, 015, 020, 021); não toca código de produto |
+
+Nenhuma change ativa no momento — todas as 12 changes da campanha de QA foram implementadas e arquivadas.

@@ -68,4 +68,44 @@ describe('useDetalheDaCompra', () => {
     expect(result.current.itens[0].produto).toBeNull();
     expect(result.current.itens[0].item.nomeAvulso).toBe('Pilha AA');
   });
+
+  // ACHADO-047: item não marcado (comprado: false) precisa ser distinguível
+  // dos comprados diretamente no retorno do hook, não só na tela.
+  it('item comprado: false vem com a marcação preservada, distinguível dos comprados', async () => {
+    const produtos = new ProdutoRepositorioFalso([
+      produtoFalso({ id: 'p1', nome: 'Arroz', valorUnitario: centavos(500) }),
+      produtoFalso({ id: 'p2', nome: 'Feijão', valorUnitario: centavos(700) }),
+    ]);
+    const compras = new CompraRepositorioFalso(produtos);
+    const aberta = await compras.abrir('casa-teste', 'usuario-teste', 1);
+    if (!aberta.ok) throw new Error('setup');
+    const comprado = await compras.adicionarItem(aberta.valor.id, {
+      produtoId: 'p1',
+      unidade: 'un',
+      quantidadePlanejada: milesimos(1000),
+    });
+    await compras.editarItem(comprado.id, {
+      comprado: true,
+      quantidadeComprada: milesimos(1000),
+      valorPagoUnitario: centavos(500),
+    });
+    await compras.adicionarItem(aberta.valor.id, {
+      produtoId: 'p2',
+      unidade: 'un',
+      quantidadePlanejada: milesimos(1000),
+    });
+    await compras.finalizar(
+      aberta.valor.id,
+      { reposicoes: [], atualizacoesDePreco: [], totalPago: centavos(500) },
+      'usuario-teste',
+      2000,
+    );
+
+    const result = await montar(aberta.valor.id, compras);
+
+    const naoComprado = result.current.itens.find((i) => i.produto?.nome === 'Feijão');
+    const comprou = result.current.itens.find((i) => i.produto?.nome === 'Arroz');
+    expect(naoComprado?.item.comprado).toBe(false);
+    expect(comprou?.item.comprado).toBe(true);
+  });
 });

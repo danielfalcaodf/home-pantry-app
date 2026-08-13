@@ -28,7 +28,7 @@ O app SHALL listar as compras finalizadas com data, quantidade de itens e total 
 
 ### Requirement: Detalhe de uma compra
 
-O usuário SHALL poder abrir uma compra finalizada e ver seus itens com quantidade comprada e valor pago por unidade.
+O usuário SHALL poder abrir uma compra finalizada e ver seus itens com quantidade comprada e valor pago por unidade. A distinção de itens não marcados (`comprado: false`) SHALL ser verificável diretamente no hook `use-detalhe-compra` (`src/application/resumo/use-detalhe-compra.ts`), não apenas visualmente na tela.
 
 #### Scenario: Itens listados
 
@@ -54,6 +54,11 @@ O usuário SHALL poder abrir uma compra finalizada e ver seus itens com quantida
 
 - **WHEN** um produto comprado foi removido posteriormente
 - **THEN** o item da compra continua aparecendo no histórico, sem quebrar a tela
+
+#### Scenario: Hook retorna o item com `comprado: false` marcado
+
+- **WHEN** `use-detalhe-compra` monta o detalhe de uma compra que contém um item com `comprado: false`
+- **THEN** o item retornado preserva essa marcação, distinguível dos itens comprados
 
 ### Requirement: Histórico é somente leitura
 

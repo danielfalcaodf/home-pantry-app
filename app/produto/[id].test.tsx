@@ -4,6 +4,7 @@ import { ReactNode } from 'react';
 import { milesimos } from '@/domain/shared/quantidade';
 import { ALVO_TOQUE_MINIMO } from '@/presentation/theme/espaco';
 import { ThemeProvider } from '@/presentation/theme/provider';
+import { tipografia } from '@/presentation/theme/tipografia';
 import DetalheProduto from './[id]';
 
 const mockBack = jest.fn();
@@ -86,5 +87,39 @@ describe('Detalhe do produto — alvos de toque (ACHADO-063)', () => {
     await comTema(<DetalheProduto />);
     fireEvent.press(screen.getByLabelText('Ver histórico completo'));
     expect(mockPush).toHaveBeenCalledWith('/produto/p1/historico');
+  });
+});
+
+describe('Detalhe do produto — quantidade em destaque (ACHADO-041)', () => {
+  beforeEach(() => {
+    mockBack.mockClear();
+    mockPush.mockClear();
+  });
+
+  // Task 1.2: cenário exato do bug — tocar a quantidade abre o sheet de ajuste.
+  it('tocar a quantidade em destaque abre o SheetAjusteEstoque', async () => {
+    await comTema(<DetalheProduto />);
+    expect(screen.queryByText('Corrigir Arroz')).toBeNull();
+    fireEvent.press(screen.getByLabelText('Corrigir quantidade atual'));
+    await waitFor(() => expect(screen.getByText('Corrigir Arroz')).toBeTruthy());
+  });
+
+  // Task 1.3: com quantidadeAtualEditavel={false}, nenhum campo de texto
+  // solto de "Quanto tenho agora" aparece no formulário embutido, mesmo com
+  // "Mais opções" expandido.
+  it('com quantidadeAtualEditavel={false}, o formulário embutido nunca expõe "Quanto tenho agora"', async () => {
+    await comTema(<DetalheProduto />);
+    fireEvent.press(screen.getByText('Mais opções'));
+    await waitFor(() => expect(screen.getByText('Menos opções')).toBeTruthy());
+    expect(screen.queryByLabelText('Quanto tenho agora')).toBeNull();
+  });
+
+  // Task 1.4: a quantidade em destaque usa o papel tipográfico display.lg.
+  it('a quantidade em destaque usa o papel tipográfico display.lg', async () => {
+    await comTema(<DetalheProduto />);
+    const texto = screen.getByText('2 kg');
+    const estilo = estiloResolvido(texto);
+    expect(estilo.fontSize).toBe(tipografia['display.lg'].fontSize);
+    expect(estilo.fontFamily).toBe(tipografia['display.lg'].fontFamily);
   });
 });

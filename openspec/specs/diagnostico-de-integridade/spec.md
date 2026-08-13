@@ -19,7 +19,7 @@ O app SHALL oferecer uma verificação que compara, para cada produto, a quantid
 #### Scenario: Verificação não altera dados
 
 - **WHEN** a verificação é executada
-- **THEN** nenhuma escrita ocorre no banco
+- **THEN** nenhuma escrita ocorre no banco, comprovado por teste automatizado que registra a contagem de linhas de `movimento_estoque` e de `produto` imediatamente antes e imediatamente depois da chamada e confirma que as duas contagens são idênticas
 
 #### Scenario: Acessível pelas configurações
 
