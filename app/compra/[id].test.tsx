@@ -223,4 +223,18 @@ describe('ModoCompra (app/compra/[id].tsx)', () => {
     });
     await waitFor(() => expect(screen.getByText('Você repôs 1 item')).toBeTruthy());
   });
+
+  // ACHADO-052 (task 7.3): RodapeCompra aparece imediatamente acima do botão
+  // "Fechar compra", nessa ordem visual, conforme `modo-compra` spec.
+  it('RodapeCompra aparece imediatamente antes do botão "Fechar compra" na árvore', async () => {
+    mockItensIniciais = [itemFake('i1', 'Arroz')];
+    await comTema(<ModoCompra />);
+
+    const arvore = JSON.stringify(screen.toJSON());
+    const indiceRodape = arvore.indexOf('R$ 0,00');
+    const indiceBotao = arvore.indexOf('Fechar compra');
+
+    expect(indiceRodape).toBeGreaterThan(-1);
+    expect(indiceBotao).toBeGreaterThan(indiceRodape);
+  });
 });
