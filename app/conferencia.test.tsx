@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import { ReactNode } from 'react';
 
+import { milesimos } from '@/domain/shared/quantidade';
 import { ThemeProvider } from '@/presentation/theme/provider';
 import Conferencia from './conferencia';
 
@@ -13,32 +14,49 @@ jest.mock('expo-router', () => ({
   useRouter: () => ({ back: mockBack }),
 }));
 
-jest.mock('@/application/estoque/use-conferencia', () => {
-  const { milesimos: paraMilesimos } = jest.requireActual('@/domain/shared/quantidade');
-  const itemAtual = {
-    id: 'p1',
-    nome: 'Arroz',
-    categoria: 'Grãos',
-    unidade: 'kg',
-    quantidadeAtual: paraMilesimos(2000),
-  };
-  return {
-    CONFERENCIA_TUDO: '__TUDO__',
-    useConferencia: () => ({
-      carregando: false,
-      categorias: ['Grãos'],
-      categoriaEscolhida: 'Grãos',
-      itens: [itemAtual],
-      indice: 0,
-      itemAtual,
-      concluida: false,
-      resumo: null,
-      escolherCategoria: jest.fn(),
-      confirmar: mockConfirmar,
-      corrigir: mockCorrigir,
-    }),
-  };
-});
+const itemAtualPadrao = {
+  id: 'p1',
+  nome: 'Arroz',
+  categoria: 'Grãos',
+  unidade: 'kg',
+  quantidadeAtual: milesimos(2000),
+};
+
+// Estado mutável lido a cada render — permite reconfigurar o hook por teste
+// (task 2.7) sem recorrer a `resetModules`/`doMock` (padrão já usado em
+// `resumo.test.tsx` com `mockItens`).
+let mockEstado: {
+  categoriaEscolhida: string | null;
+  itens: (typeof itemAtualPadrao)[];
+  indice: number;
+  itemAtual: typeof itemAtualPadrao | null;
+  concluida: boolean;
+  resumo: { corretos: number; corrigidos: number } | null;
+} = {
+  categoriaEscolhida: 'Grãos',
+  itens: [itemAtualPadrao],
+  indice: 0,
+  itemAtual: itemAtualPadrao,
+  concluida: false,
+  resumo: null,
+};
+
+jest.mock('@/application/estoque/use-conferencia', () => ({
+  CONFERENCIA_TUDO: '__TUDO__',
+  useConferencia: () => ({
+    carregando: false,
+    categorias: ['Grãos'],
+    categoriaEscolhida: mockEstado.categoriaEscolhida,
+    itens: mockEstado.itens,
+    indice: mockEstado.indice,
+    itemAtual: mockEstado.itemAtual,
+    concluida: mockEstado.concluida,
+    resumo: mockEstado.resumo,
+    escolherCategoria: jest.fn(),
+    confirmar: mockConfirmar,
+    corrigir: mockCorrigir,
+  }),
+}));
 
 async function comTema(no: ReactNode) {
   await render(<ThemeProvider preferencia="escuro">{no}</ThemeProvider>);
@@ -49,6 +67,14 @@ describe('Conferencia — item atual', () => {
     mockBack.mockClear();
     mockConfirmar.mockClear();
     mockCorrigir.mockClear();
+    mockEstado = {
+      categoriaEscolhida: 'Grãos',
+      itens: [itemAtualPadrao],
+      indice: 0,
+      itemAtual: itemAtualPadrao,
+      concluida: false,
+      resumo: null,
+    };
   });
 
   // Cenário exato do ACHADO-062: a tela do item era a única sem saída visível.
@@ -87,5 +113,56 @@ describe('Conferencia — item atual', () => {
     fireEvent.press(screen.getByLabelText('Voltar'));
     expect(mockConfirmar).not.toHaveBeenCalled();
     expect(mockCorrigir).not.toHaveBeenCalled();
+  });
+
+  // Task 2.1: o progresso "N de M" está visível durante o percurso.
+  it('exibe o progresso "N de M conferidos" durante o percurso', async () => {
+    await comTema(<Conferencia />);
+    expect(screen.getByText('1 de 1 conferidos')).toBeTruthy();
+  });
+
+  // Task 2.2: confirmar a quantidade correta exige um único toque, sem diálogo.
+  it('confirmar a quantidade correta grava com um único toque, sem diálogo', async () => {
+    await comTema(<Conferencia />);
+    fireEvent.press(screen.getByText('Confirmar — está certo'));
+    await waitFor(() => expect(mockConfirmar).toHaveBeenCalledTimes(1));
+    expect(mockCorrigir).not.toHaveBeenCalled();
+  });
+
+  // Task 2.3: informar uma correção grava o ajuste e avança, sem diálogo extra.
+  it('informar uma correção grava o ajuste e avança, sem diálogo de confirmação', async () => {
+    await comTema(<Conferencia />);
+    fireEvent.changeText(screen.getByLabelText('Corrigir para'), '1,5');
+    await waitFor(() => expect(screen.getByLabelText('Corrigir para').props.value).toBe('1,5'));
+    fireEvent.press(screen.getByRole('button', { name: 'Corrigir' }));
+    await waitFor(() => expect(mockCorrigir).toHaveBeenCalledTimes(1));
+    expect(mockConfirmar).not.toHaveBeenCalled();
+  });
+});
+
+describe('Conferencia — conclusão da categoria (ACHADO-042, task 2.7)', () => {
+  beforeEach(() => {
+    mockBack.mockClear();
+    mockEstado = {
+      categoriaEscolhida: 'Grãos',
+      itens: [],
+      indice: 0,
+      itemAtual: null,
+      concluida: true,
+      resumo: { corretos: 4, corrigidos: 2 },
+    };
+  });
+
+  it('categoria já totalmente conferida exibe quantos corrigidos e quantos corretos', async () => {
+    await comTema(<Conferencia />);
+    expect(
+      screen.getByText('Conferência concluída: 4 estavam certos, 2 foram corrigidos.'),
+    ).toBeTruthy();
+  });
+
+  it('a ação "Voltar para a despensa" da tela de conclusão chama router.back()', async () => {
+    await comTema(<Conferencia />);
+    fireEvent.press(screen.getByText('Voltar para a despensa'));
+    expect(mockBack).toHaveBeenCalledTimes(1);
   });
 });

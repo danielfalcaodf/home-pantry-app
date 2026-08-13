@@ -38,4 +38,4 @@ O projeto SHALL fornecer um tipo `Result<T, E>` usado no domínio e nos casos de
 #### Scenario: Discriminação obriga tratamento
 
 - **WHEN** o consumidor acessa o valor de um `Result` sem antes discriminar sucesso de falha
-- **THEN** o compilador de tipos rejeita o acesso
+- **THEN** o compilador de tipos rejeita o acesso, comprovado por um teste de tipo (`@ts-expect-error` sobre `resultado.valor` fora de um bloco `if (resultado.ok)`) validado via `tsc --noEmit`, e não apenas pela forma do tipo union

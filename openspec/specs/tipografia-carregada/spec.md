@@ -40,6 +40,11 @@ O app SHALL carregar somente os pesos tipográficos que a interface realmente us
 - **WHEN** o peso total das fontes embarcadas é medido
 - **THEN** o valor é registrado, e ultrapassar 400 quilobytes dispara a decisão de remover a família de display
 
+#### Scenario: Orçamento de bundle medido automaticamente
+
+- **WHEN** um script/teste automatizado soma o tamanho dos arquivos de fonte resolvidos pelos pacotes `@expo-google-fonts/*` efetivamente carregados
+- **THEN** o valor medido é registrado e comparado ao limiar de 400 quilobytes citado neste requisito — substituindo o comentário manual como única fonte da medição — e o script/teste falha se o peso ultrapassar o limite rígido de regressão acordado em `design.md`, impedindo que o orçamento cresça mais sem que ninguém perceba
+
 ### Requirement: Escala do sistema respeitada
 
 O layout SHALL suportar a escala de fonte do sistema até 200 por cento sem truncar o nome do item.

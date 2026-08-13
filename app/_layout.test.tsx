@@ -33,15 +33,23 @@ jest.mock('expo-splash-screen', () => ({
   hideAsync: () => mockHideAsync(),
 }));
 
+const mockStack = jest.fn();
+
 jest.mock('expo-router', () => {
   const { Text } = jest.requireActual('react-native');
-  return { Stack: () => <Text>Rotas</Text> };
+  return {
+    Stack: (props: { screenOptions?: unknown }) => {
+      mockStack(props);
+      return <Text>Rotas</Text>;
+    },
+  };
 });
 
 describe('RootLayout — preparação do banco (ACHADO-012)', () => {
   beforeEach(() => {
     mockUseMigrations.mockClear();
     mockHideAsync.mockClear();
+    mockStack.mockClear();
   });
 
   it('useMigrations com sucesso renderiza a rota normal, não TelaErro', async () => {
@@ -62,5 +70,23 @@ describe('RootLayout — preparação do banco (ACHADO-012)', () => {
 
     expect(screen.getByText('Não foi possível preparar seus dados')).toBeTruthy();
     expect(screen.getByText('falha ao migrar')).toBeTruthy();
+  });
+});
+
+// Task 4.1 (ACHADO-048): render raso, só inspeciona screenOptions do Stack
+// raiz — não monta a árvore de navegação inteira (design decision #2).
+describe('RootLayout — screenOptions do Stack raiz', () => {
+  beforeEach(() => {
+    mockUseMigrations.mockClear();
+    mockHideAsync.mockClear();
+    mockStack.mockClear();
+  });
+
+  it('headerShown é false em todas as rotas', async () => {
+    mockUseMigrations.mockReturnValue({ success: true, error: undefined });
+    await render(<RootLayout />);
+    expect(mockStack).toHaveBeenCalledTimes(1);
+    const { screenOptions } = mockStack.mock.calls[0][0] as { screenOptions: { headerShown: boolean } };
+    expect(screenOptions.headerShown).toBe(false);
   });
 });

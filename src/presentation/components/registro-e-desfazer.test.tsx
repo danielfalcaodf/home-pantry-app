@@ -1,4 +1,5 @@
 import { act, cleanup, fireEvent, render, renderHook, screen, waitFor } from '@testing-library/react-native';
+import * as Haptics from 'expo-haptics';
 import { ReactNode, useState } from 'react';
 
 import { milesimos } from '../../domain/shared/quantidade';
@@ -158,6 +159,27 @@ describe('StepperConsumo', () => {
     fireEvent(screen.getByLabelText('Registrar consumo'), 'longPress');
     expect(aoAbrir).toHaveBeenCalled();
   });
+
+  // O háptico sai no instante do toque, antes de qualquer resposta do banco
+  // (ACHADO-026) — é o que faz o gesto parecer instantâneo (KPI K4).
+  it('o toque dispara o retorno tátil antes do callback de registro terminar', async () => {
+    const ordem: string[] = [];
+    const aoRegistrar = jest.fn(() => {
+      ordem.push('onRegistrar resolvido');
+    });
+    (Haptics.impactAsync as jest.Mock).mockImplementationOnce(async () => {
+      ordem.push('Haptics.impactAsync chamado');
+    });
+
+    await comTema(
+      <StepperConsumo rotuloAcessivel="Registrar consumo" onRegistrar={aoRegistrar} />,
+    );
+    fireEvent.press(screen.getByLabelText('Registrar consumo'));
+
+    expect(Haptics.impactAsync).toHaveBeenCalledWith(Haptics.ImpactFeedbackStyle.Light);
+    expect(aoRegistrar).toHaveBeenCalledTimes(1);
+    expect(ordem).toEqual(['Haptics.impactAsync chamado', 'onRegistrar resolvido']);
+  });
 });
 
 // Ordem importa aqui: sob Jest, um Modal fechado em um teste deixa o
@@ -195,6 +217,17 @@ describe('TecladoQuantidade', () => {
     await waitFor(() => expect(screen.getByLabelText('Usei').props.accessibilityState.disabled).toBe(false));
     fireEvent.press(screen.getByLabelText('Usei'));
     expect(onUsei).toHaveBeenCalledWith(1.5);
+  });
+
+  // Espelha o teste anterior para o caminho "Repus" (ACHADO-027): mesma
+  // simetria de cobertura entre registrar consumo e registrar reposição.
+  it('registra reposição com o valor digitado e fecha', async () => {
+    const onRepus = jest.fn();
+    await comTema(<Painel onUsei={jest.fn()} onRepus={onRepus} />);
+    fireEvent.changeText(screen.getByLabelText('Quantidade'), '1,5');
+    await waitFor(() => expect(screen.getByLabelText('Repus').props.accessibilityState.disabled).toBe(false));
+    fireEvent.press(screen.getByLabelText('Repus'));
+    expect(onRepus).toHaveBeenCalledWith(1.5);
   });
 
   it('fechar sem confirmar não altera nada', async () => {
