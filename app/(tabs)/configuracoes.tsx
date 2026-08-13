@@ -197,6 +197,11 @@ export default function Configuracoes() {
               ? 'Backup restaurado.'
               : `Backup restaurado — ${restauracao.estado.divergencias.length} produto(s) com divergência.`
           }
+          acao={
+            restauracao.estado.divergencias.length > 0
+              ? { titulo: 'Corrigir', onPress: () => router.push('/diagnostico') }
+              : undefined
+          }
           onFim={restauracao.cancelar}
         />
       ) : null}
