@@ -25,7 +25,7 @@ Como o contador do rodapé mostrou "2 de 37" (número correto) mas o item persis
 1. Garantir uma compra recém-materializada com pelo menos 5 itens em falta, nenhum ainda marcado.
 2. Sem esperar entre os toques, executar dois `tapOn` consecutivos por texto em dois itens da lista (ex.: 1º e 4º item visíveis).
 3. Fechar a compra.
-4. Consultar `compra_item` no banco do dispositivo (`adb shell run-as com.triasoftware.repor sqlite3 files/SQLite/estoque.db "SELECT p.nome, ci.comprado FROM compra_item ci JOIN produto p ON p.id=ci.produto_id JOIN compra c ON c.id=ci.compra_id WHERE ci.comprado=1;"`) e comparar com os dois itens realmente tocados.
+4. Consultar `compra_item` no banco do dispositivo (`adb shell run-as com.danielfalcaodf.repor sqlite3 files/SQLite/estoque.db "SELECT p.nome, ci.comprado FROM compra_item ci JOIN produto p ON p.id=ci.produto_id JOIN compra c ON c.id=ci.compra_id WHERE ci.comprado=1;"`) e comparar com os dois itens realmente tocados.
 
 Não reproduzido de forma determinística nesta rodada — só uma ocorrência registrada, e uma segunda tentativa com toque único não reproduziu o problema. Fica como suspeita fundamentada, não confirmação.
 

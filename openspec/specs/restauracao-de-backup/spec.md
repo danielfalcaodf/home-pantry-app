@@ -66,17 +66,22 @@ A restauração SHALL recusar backups cuja versão de schema seja **mais nova** 
 
 ### Requirement: Reconciliação após restaurar
 
-Ao final de toda restauração bem-sucedida, o app SHALL verificar se a quantidade materializada de cada produto corresponde à soma das variações de seus movimentos, e SHALL informar qualquer divergência.
+Ao final de toda restauração bem-sucedida, o app SHALL verificar se a quantidade materializada de cada produto corresponde à soma das variações de seus movimentos, e SHALL informar qualquer divergência oferecendo um caminho direto para corrigi-la.
 
 #### Scenario: Banco coerente após restaurar
 
 - **WHEN** a reconciliação roda após uma restauração de backup íntegro
 - **THEN** nenhuma divergência é encontrada
 
-#### Scenario: Divergência é informada
+#### Scenario: Divergência é informada com ação para corrigir
 
 - **WHEN** a reconciliação encontra produtos cuja quantidade não corresponde à soma dos movimentos
-- **THEN** o app informa quais produtos divergem e oferece corrigir pela soma dos movimentos
+- **THEN** o app informa quantos produtos divergem e oferece uma ação que leva à correção pela soma dos movimentos
+
+#### Scenario: Ação do aviso leva ao Diagnóstico
+
+- **WHEN** o usuário toca na ação oferecida junto ao aviso de divergência
+- **THEN** o app navega para a tela de Diagnóstico, onde a correção pode ser aplicada
 
 #### Scenario: Correção registra a mudança
 

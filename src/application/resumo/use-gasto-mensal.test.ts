@@ -76,6 +76,19 @@ describe('useGastoMensal', () => {
     expect(agosto).toEqual({ mes: '2026-08', totalPago: 2000, qtdCompras: 1 });
   });
 
+  // ACHADO-046: compra finalizada sem itens marcados (totalPago zero) precisa
+  // entrar na contagem do mês sem distorcer o total pago das demais.
+  it('compra finalizada com total zero entra na contagem sem distorcer o total pago', async () => {
+    const compras = new CompraRepositorioFalso();
+    await finalizarComTotal(compras, new Date(2026, 6, 5).getTime(), 5000);
+    await finalizarComTotal(compras, new Date(2026, 6, 10).getTime(), 0);
+
+    const { result } = await montar(compras);
+
+    const julho = result.current.meses.find((m) => m.mes === '2026-07');
+    expect(julho).toEqual({ mes: '2026-07', totalPago: 5000, qtdCompras: 2 });
+  });
+
   it('reage a mudanças notificadas pelo observador', async () => {
     const compras = new CompraRepositorioFalso();
     const { result, observador } = await montar(compras);

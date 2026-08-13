@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 
 import { UNIDADES, Unidade } from '../../domain/shared/unidade';
-import { espaco } from '../theme/espaco';
+import { ALVO_TOQUE_MINIMO, espaco } from '../theme/espaco';
 import { useTheme } from '../theme/provider';
 import { Botao } from './botao';
 import { BotaoVoltar } from './botao-voltar';
@@ -142,7 +142,12 @@ export function FormularioProduto({
         keyboardType="decimal-pad"
       />
 
-      <Pressable onPress={() => setMaisOpcoes(!maisOpcoes)} accessibilityRole="button">
+      <Pressable
+        onPress={() => setMaisOpcoes(!maisOpcoes)}
+        accessibilityRole="button"
+        hitSlop={8}
+        style={{ minHeight: ALVO_TOQUE_MINIMO, justifyContent: 'center' }}
+      >
         <Texto papel="body.md" cor={tema.action.azulejo}>
           {maisOpcoes ? 'Menos opções' : 'Mais opções'}
         </Texto>
