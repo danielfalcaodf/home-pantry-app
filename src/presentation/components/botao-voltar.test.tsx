@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react-native';
 import { Alert } from 'react-native';
 
+import { ALVO_TOQUE_MINIMO } from '../theme/espaco';
 import { ThemeProvider } from '../theme/provider';
 import { BotaoVoltar } from './botao-voltar';
 
@@ -37,6 +38,20 @@ describe('BotaoVoltar', () => {
       </ThemeProvider>,
     );
     expect(screen.getByLabelText('Voltar')).toBeTruthy();
+  });
+
+  // Task 4.3 (ACHADO-048): alvo de toque mínimo de 48×48dp no Pressable.
+  it('tem área de toque de no mínimo 48×48dp (ALVO_TOQUE_MINIMO)', async () => {
+    await render(
+      <ThemeProvider preferencia="escuro">
+        <BotaoVoltar />
+      </ThemeProvider>,
+    );
+    const botao = screen.getByLabelText('Voltar');
+    const { style } = botao.props;
+    const estilo = Array.isArray(style) ? Object.assign({}, ...style) : style;
+    expect(estilo.minWidth).toBeGreaterThanOrEqual(ALVO_TOQUE_MINIMO);
+    expect(estilo.minHeight).toBeGreaterThanOrEqual(ALVO_TOQUE_MINIMO);
   });
 
   it('chama router.back() ao tocar', async () => {
