@@ -235,7 +235,10 @@ describe('TecladoQuantidade', () => {
     const onRepus = jest.fn();
     await comTema(<Painel onUsei={onUsei} onRepus={onRepus} />);
     fireEvent.changeText(screen.getByLabelText('Quantidade'), '2');
-    fireEvent.press(screen.getByLabelText('Fechar'));
+    // Existem dois elementos com accessibilityLabel "Fechar" agora (o fundo
+    // do sheet e o novo botão de fechar visível, ACHADO Affordance) — usa o
+    // controle de fechar visível, especificamente.
+    fireEvent.press(screen.getByRole('button', { name: 'Fechar' }));
     expect(onUsei).not.toHaveBeenCalled();
     expect(onRepus).not.toHaveBeenCalled();
   });

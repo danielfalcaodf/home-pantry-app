@@ -3,11 +3,14 @@ import { Modal, Pressable, View } from 'react-native';
 
 import { MotivoAjuste } from '../../domain/movimento/movimento';
 import { rotuloDaUnidade, Unidade } from '../../domain/shared/unidade';
-import { espaco, raio } from '../theme/espaco';
+import { ALVO_TOQUE_MINIMO, espaco, raio } from '../theme/espaco';
+import { icones } from '../theme/icones';
 import { useTheme } from '../theme/provider';
 import { Botao } from './botao';
 import { CampoTexto } from './campo-texto';
 import { ChipEstado } from './chip-estado';
+import { EvitaTeclado } from './evita-teclado';
+import { IconeSvg } from './icone-svg';
 import { Texto } from './texto';
 
 export type SheetAjusteEstoqueProps = {
@@ -70,6 +73,7 @@ export function SheetAjusteEstoque({
         accessibilityLabel="Fechar"
         style={{ flex: 1, justifyContent: 'flex-end' }}
       >
+        <EvitaTeclado style={{ flex: undefined }} testID="evita-teclado-ajuste-estoque">
         <Pressable
           onPress={() => {}}
           style={{
@@ -80,7 +84,23 @@ export function SheetAjusteEstoque({
             gap: espaco.lg,
           }}
         >
-          <Texto papel="body.lg">Corrigir {nome}</Texto>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Texto papel="body.lg">Corrigir {nome}</Texto>
+            <Pressable
+              onPress={fechar}
+              accessibilityRole="button"
+              accessibilityLabel="Fechar"
+              hitSlop={8}
+              style={{
+                minWidth: ALVO_TOQUE_MINIMO,
+                minHeight: ALVO_TOQUE_MINIMO,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <IconeSvg path={icones.fechar} cor={tema.text.secondary} tamanho={20} />
+            </Pressable>
+          </View>
           <CampoTexto
             rotulo={`Quanto você tem agora (${rotuloDaUnidade(unidade, true)})`}
             value={valor}
@@ -90,6 +110,7 @@ export function SheetAjusteEstoque({
             }}
             erro={erro}
             keyboardType="decimal-pad"
+            tipo="quantidade"
           />
           <View style={{ gap: espaco.sm }}>
             <Texto papel="label" tom="secondary">
@@ -108,6 +129,7 @@ export function SheetAjusteEstoque({
           </View>
           <Botao titulo="Corrigir" onPress={salvar} />
         </Pressable>
+        </EvitaTeclado>
       </Pressable>
     </Modal>
   );

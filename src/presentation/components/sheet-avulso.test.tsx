@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react-native';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react-native';
 import { ReactNode } from 'react';
 
 import { DadosDoAvulso } from '../../domain/lista/lista';
@@ -57,6 +57,51 @@ describe('SheetAvulso', () => {
     await fireEvent.press(screen.getByText('Adicionar'));
 
     expect(onSalvar).toHaveBeenCalledWith(expect.objectContaining({ preco: null }));
+  });
+
+  it('quantidade inválida é rejeitada com erro em texto, sem chamar onSalvar (Error Prevention)', async () => {
+    const onSalvar = jest.fn();
+    await comTema(<SheetAvulso visivel onFechar={jest.fn()} onSalvar={onSalvar} />);
+
+    await fireEvent.changeText(screen.getByLabelText('O que é'), 'Gelo');
+    await fireEvent.changeText(screen.getByLabelText('Quantidade'), '0');
+    await fireEvent.press(screen.getByText('Adicionar'));
+
+    expect(screen.getByText('Diga quanto você está levando')).toBeTruthy();
+    expect(onSalvar).not.toHaveBeenCalled();
+  });
+
+  it('preço nunca fica em estado inválido — a máscara só deixa dígitos virarem centavos (Error Prevention)', async () => {
+    const onSalvar = jest.fn();
+    await comTema(<SheetAvulso visivel onFechar={jest.fn()} onSalvar={onSalvar} />);
+
+    await fireEvent.changeText(screen.getByLabelText('O que é'), 'Gelo');
+    // Digitar algo que não é dígito não produz um valor inválido — a
+    // máscara "de caixa registradora" já impede isso na digitação, não
+    // sobra pro salvar rejeitar depois.
+    await fireEvent.changeText(screen.getByLabelText('Preço (opcional)'), '-');
+    expect(screen.getByLabelText('Preço (opcional)').props.value).toBe('');
+
+    await fireEvent.press(screen.getByText('Adicionar'));
+
+    expect(onSalvar).toHaveBeenCalledWith(expect.objectContaining({ preco: null }));
+  });
+
+  it('tem um controle de fechar visível, além do toque fora (affordance)', async () => {
+    const onFechar = jest.fn();
+    await comTema(<SheetAvulso visivel onFechar={onFechar} onSalvar={jest.fn()} />);
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Fechar' }));
+
+    expect(onFechar).toHaveBeenCalledTimes(1);
+  });
+
+  it('o campo em foco e o botão de ação estão dentro do wrapper que evita o teclado (Keyboard Overlap)', async () => {
+    await comTema(<SheetAvulso visivel onFechar={jest.fn()} onSalvar={jest.fn()} />);
+
+    const avoidingView = screen.getByTestId('evita-teclado-avulso');
+    expect(within(avoidingView).getByLabelText('O que é')).toBeTruthy();
+    expect(within(avoidingView).getByText('Adicionar')).toBeTruthy();
   });
 
   it('modo de edição popula os campos a partir do item existente', async () => {

@@ -1,11 +1,13 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import { ReactNode } from 'react';
 
+import { LIMITE_SANIDADE_QUANTIDADE } from '@/presentation/components/formulario-produto';
 import { ThemeProvider } from '@/presentation/theme/provider';
 import NovoProduto from './novo';
 
 const mockBack = jest.fn();
 const mockReplace = jest.fn();
+const mockCadastrar = jest.fn().mockResolvedValue({ ok: true });
 
 jest.mock('expo-router', () => ({
   router: { back: () => mockBack(), replace: (...a: unknown[]) => mockReplace(...a) },
@@ -14,7 +16,7 @@ jest.mock('expo-router', () => ({
 }));
 
 jest.mock('@/application/estoque/use-cadastrar-produto', () => ({
-  useCadastrarProduto: () => ({ cadastrar: jest.fn(), salvando: false }),
+  useCadastrarProduto: () => ({ cadastrar: mockCadastrar, salvando: false }),
 }));
 jest.mock('@/application/estoque/use-categorias', () => ({ useCategorias: () => [] }));
 
@@ -80,5 +82,34 @@ describe('Novo produto — navegação "ver item existente" na duplicidade (ACHA
     });
 
     expect(screen.queryByText(/Já existe um item/)).toBeNull();
+  });
+});
+
+describe('Novo produto — teto de sanidade em "Quanto quero ter em casa" (Error Prevention)', () => {
+  beforeEach(() => {
+    mockCadastrar.mockClear();
+  });
+
+  it('valor acima do teto é rejeitado com erro em texto, sem chamar cadastrar', async () => {
+    await comTema(<NovoProduto />);
+
+    fireEvent.changeText(screen.getByLabelText('O que é'), 'Arroz');
+    await waitFor(() => expect(screen.getByLabelText('O que é').props.value).toBe('Arroz'));
+
+    fireEvent.changeText(
+      screen.getByLabelText('Quanto quero ter em casa'),
+      String(LIMITE_SANIDADE_QUANTIDADE + 1),
+    );
+    await waitFor(() =>
+      expect(screen.getByLabelText('Quanto quero ter em casa').props.value).toBe(
+        String(LIMITE_SANIDADE_QUANTIDADE + 1),
+      ),
+    );
+    fireEvent.press(screen.getByRole('button', { name: 'Adicionar à despensa' }));
+
+    await waitFor(() =>
+      expect(screen.getByText(`Valor muito alto — no máximo ${LIMITE_SANIDADE_QUANTIDADE}`)).toBeTruthy(),
+    );
+    expect(mockCadastrar).not.toHaveBeenCalled();
   });
 });

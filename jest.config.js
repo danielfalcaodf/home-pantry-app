@@ -51,8 +51,15 @@ module.exports = {
         '<rootDir>/src/presentation/**/*.test.{ts,tsx}',
         '<rootDir>/app/**/*.test.{ts,tsx}',
       ],
+      // pnpm instala tudo achatado dentro de node_modules/.pnpm/<pkg>@<versão>/;
+      // sem tolerar esse segmento aqui, a checagem original (escrita pro
+      // node_modules "chato" do npm) já bate "ignorar" na PRIMEIRA ocorrência
+      // de "node_modules/" (o segmento .pnpm), antes de chegar na ocorrência
+      // real do pacote — quebra a transformação de react-native/expo/etc.
+      // inteira sob pnpm. O alternativo `\.pnpm/[^/]+/` deixa a decisão pra
+      // ocorrência seguinte de "node_modules/", que já resolve certo.
       transformIgnorePatterns: [
-        'node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@sentry/react-native|native-base|react-native-svg)',
+        'node_modules/(?!\\.pnpm/[^/]+/|((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@sentry/react-native|native-base|react-native-svg)',
       ],
     },
   ],

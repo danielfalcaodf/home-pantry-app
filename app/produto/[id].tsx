@@ -23,6 +23,8 @@ import { Botao } from '@/presentation/components/botao';
 import { BotaoVoltar } from '@/presentation/components/botao-voltar';
 import {
   FormularioProduto,
+  LIMITE_SANIDADE_QUANTIDADE,
+  LIMITE_SANIDADE_VALOR,
   ValoresDoProduto,
 } from '@/presentation/components/formulario-produto';
 import { SheetAjusteEstoque } from '@/presentation/components/sheet-ajuste-estoque';
@@ -137,9 +139,17 @@ function Detalhe({ id, item }: { id: string; item: ProdutoNaDespensa }) {
       setErros({ quantidadeNecessaria: 'Diga quanto você quer ter em casa' });
       return;
     }
+    if (quantidade > LIMITE_SANIDADE_QUANTIDADE) {
+      setErros({ quantidadeNecessaria: `Valor muito alto — no máximo ${LIMITE_SANIDADE_QUANTIDADE}` });
+      return;
+    }
     const preco = valores.valorUnitario
       ? Math.round(Number(valores.valorUnitario.replace(',', '.')) * 100)
       : 0;
+    if (preco / 100 > LIMITE_SANIDADE_VALOR) {
+      setErros({ valorUnitario: `Valor muito alto — no máximo ${LIMITE_SANIDADE_VALOR}` });
+      return;
+    }
     const resultado = await editar(id, {
       nome: valores.nome.trim(),
       unidade: valores.unidade,

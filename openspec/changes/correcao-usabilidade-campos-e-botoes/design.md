@@ -27,13 +27,22 @@ Alternativa considerada: `KeyboardAvoidingView` inline em cada um dos 6 arquivos
 
 ### 2. Máscara e placeholder: função pura de formatação por `tipo`, aplicada no `onChangeText` do `CampoTexto`
 
-`CampoTexto` ganha uma prop `tipo?: 'quantidade' | 'dinheiro'` (além do `keyboardType` que já recebe). Quando presente, o valor exibido é formatado a cada tecla reaproveitando `formatarBRL`/`deTextoDigitado` (dinheiro) ou o parsing de vírgula decimal já usado nas telas (quantidade) — a formatação roda em `presentation/`, o `CampoTexto` nunca importa `domain/produto` (só `domain/shared`, que já é a fronteira aceita para formatadores conforme CLAUDE.md). O placeholder passa a ter um default por `tipo` (`"0,000"` para quantidade, `"0,00"` para dinheiro), sobrescrevível via prop existente.
+`CampoTexto` ganha uma prop `tipo?: 'quantidade' | 'dinheiro'` (além do `keyboardType` que já recebe). O tratamento difere por tipo, porque o formato natural de entrada é diferente:
 
-Alternativa considerada: lib de máscara de terceiros (`react-native-mask-input` ou similar). Rejeitada — o projeto já tem os formatadores certos em `domain/shared/`, e adicionar dependência nova para algo que já existe no domínio contraria "sem abstração além do necessário" do CLAUDE.md.
+- **`dinheiro`**: máscara "de caixa registradora" — cada dígito digitado entra pela direita como centavo, e a vírgula se ajusta sozinha a cada tecla (100 → "1,00", 1290 → "12,90"). Só dígitos contam; qualquer outro caractere é ignorado. Efeito colateral desejado: **entrada inválida deixa de existir estruturalmente** para esse tipo de campo — não há como digitar algo que não vire um número válido, o que elimina a necessidade de validar/rejeitar preço depois (`SheetAvulso`/`SheetAjusteCompra` não precisam mais de `erroPreco`).
+- **`quantidade`**: sanitização (dígitos + uma vírgula, truncada em 3 casas, sinal preservado) sem reformatação de dígito-a-dígito — quantidade não tem a convenção de "sempre duas casas" do dinheiro (`5` deve continuar significando `5 unidades`, não `0,005`), então digit-shift quebraria a expectativa mais comum de uso.
 
-### 3. Feedback obrigatório: mover a validação de `SheetAvulso`/`SheetAjusteCompra` para o padrão de `SheetAjusteEstoque`
+A formatação roda inteiramente em `presentation/` (`campo-texto.tsx`); `CampoTexto` não importa `domain/produto`. O placeholder passa a ter um default por `tipo` (`"0,000"` para quantidade, `"0,00"` para dinheiro), sobrescrevível via prop existente.
+
+Alternativa considerada: reaproveitar `formatarBRL`/`deTextoDigitado` de `domain/shared/dinheiro.ts` diretamente na máscara de digitação. Rejeitada — esses formatadores operam sobre `Centavos`/valor já resolvido (borda de exibição de um valor salvo), não sobre uma sequência de teclas parcial; a máscara de dígito-a-dígito é puramente uma preocupação de UI de digitação (não existe "quantidade parcial digitada" no domínio), então vive só em `presentation/`, com a mesma regra de arredondamento (2 casas) que `Centavos` já usa.
+
+Alternativa considerada: lib de máscara de terceiros (`react-native-mask-input` ou similar). Rejeitada — a máscara de dígito-a-dígito é poucas linhas, sem estado próprio além do texto do campo, e adicionar dependência nova pra isso contraria "sem abstração além do necessário" do CLAUDE.md.
+
+### 3. Feedback obrigatório: mover a validação de quantidade de `SheetAvulso`/`SheetAjusteCompra` para o padrão de `SheetAjusteEstoque`
 
 Em vez de `quantidadeNumerica > 0 ? quantidadeNumerica : valorPadrão` (correção silenciosa), passa a ser: se inválido, `setErro('mensagem')` e `return` sem chamar `onSalvar` — igual ao `salvar()` de `sheet-ajuste-estoque.tsx:54-63`. Isso é extensão do padrão já existente no arquivo mais correto do grupo, não uma invenção nova.
+
+Vale só para **quantidade** — preço usa `tipo="dinheiro"` (decisão 2), cuja máscara já impede entrada inválida na digitação; validar de novo no `salvar()` seria checar um cenário que não pode mais acontecer (contraria a regra do CLAUDE.md de não adicionar tratamento de erro pra cenário impossível). `SheetAvulso`/`SheetAjusteCompra` não têm mais `erroPreco`.
 
 ### 4. Teto de sanidade em `FormularioProduto`: constante de UI, não regra de domínio
 

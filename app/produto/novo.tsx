@@ -6,6 +6,8 @@ import { useCategorias } from '@/application/estoque/use-categorias';
 import { useProdutos } from '@/application/estoque/use-produtos';
 import {
   FormularioProduto,
+  LIMITE_SANIDADE_QUANTIDADE,
+  LIMITE_SANIDADE_VALOR,
   ValoresDoProduto,
   VALORES_INICIAIS,
 } from '@/presentation/components/formulario-produto';
@@ -41,16 +43,31 @@ export default function NovoProduto() {
   }, [valores.nome, itens]);
 
   async function salvar() {
+    const quantidadeNecessaria = Number(valores.quantidadeNecessaria.replace(',', '.'));
+    if (quantidadeNecessaria > LIMITE_SANIDADE_QUANTIDADE) {
+      setErros({ quantidadeNecessaria: `Valor muito alto — no máximo ${LIMITE_SANIDADE_QUANTIDADE}` });
+      return;
+    }
+    const quantidadeAtual = valores.quantidadeAtual
+      ? Number(valores.quantidadeAtual.replace(',', '.'))
+      : undefined;
+    if (quantidadeAtual !== undefined && quantidadeAtual > LIMITE_SANIDADE_QUANTIDADE) {
+      setErros({ quantidadeAtual: `Valor muito alto — no máximo ${LIMITE_SANIDADE_QUANTIDADE}` });
+      return;
+    }
+    const valorUnitario = valores.valorUnitario
+      ? Number(valores.valorUnitario.replace(',', '.'))
+      : undefined;
+    if (valorUnitario !== undefined && valorUnitario > LIMITE_SANIDADE_VALOR) {
+      setErros({ valorUnitario: `Valor muito alto — no máximo ${LIMITE_SANIDADE_VALOR}` });
+      return;
+    }
     const resultado = await cadastrar({
       nome: valores.nome,
       unidade: valores.unidade,
-      quantidadeNecessaria: Number(valores.quantidadeNecessaria.replace(',', '.')),
-      quantidadeAtual: valores.quantidadeAtual
-        ? Number(valores.quantidadeAtual.replace(',', '.'))
-        : undefined,
-      valorUnitario: valores.valorUnitario
-        ? Math.round(Number(valores.valorUnitario.replace(',', '.')) * 100)
-        : undefined,
+      quantidadeNecessaria,
+      quantidadeAtual,
+      valorUnitario: valorUnitario !== undefined ? Math.round(valorUnitario * 100) : undefined,
       categoria: valores.categoria || undefined,
     });
 

@@ -24,10 +24,15 @@ O componente de campo SHALL exibir o rótulo **sempre acima** do campo. Texto de
 - **WHEN** o campo tem `tipo="quantidade"` e o usuário digita
 - **THEN** o valor exibido segue o formato decimal com vírgula usado no domínio (`formatarNumero`), sem alterar o valor em milésimos gravado ao salvar
 
-#### Scenario: Máscara de dinheiro formata em tempo real
+#### Scenario: Máscara de dinheiro ajusta as casas decimais a cada dígito
 
-- **WHEN** o campo tem `tipo="dinheiro"` e o usuário digita
-- **THEN** o valor exibido segue o formato de reais com vírgula (reaproveitando `formatarBRL`/`deTextoDigitado` do domínio), sem alterar o valor em centavos gravado ao salvar
+- **WHEN** o campo tem `tipo="dinheiro"` e o usuário digita dígitos em sequência
+- **THEN** cada dígito entra pela direita como centavos, e o valor exibido se reformata sozinho (ex.: digitar "1", "2", "9", "0" mostra sucessivamente "0,01", "0,12", "1,29", "12,90") — só dígitos contam, qualquer outro caractere digitado é ignorado pela máscara
+
+#### Scenario: Máscara de dinheiro nunca produz um valor não numérico
+
+- **WHEN** o usuário digita apenas caracteres que não são dígitos num campo `tipo="dinheiro"`
+- **THEN** o campo permanece vazio (nunca um valor inválido), e um preço vazio é tratado como "sem preço informado", não como erro
 
 #### Scenario: Placeholder padrão por tipo
 

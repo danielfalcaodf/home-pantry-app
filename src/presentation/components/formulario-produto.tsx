@@ -8,7 +8,10 @@ import { Botao } from './botao';
 import { BotaoVoltar } from './botao-voltar';
 import { CampoTexto } from './campo-texto';
 import { ChipEstado } from './chip-estado';
+import { EvitaTeclado } from './evita-teclado';
+import { IconeSvg } from './icone-svg';
 import { Texto } from './texto';
+import { icones } from '../theme/icones';
 
 export type ValoresDoProduto = {
   nome: string;
@@ -20,6 +23,12 @@ export type ValoresDoProduto = {
   marcaPreferida: string;
   observacao: string;
 };
+
+/** Teto de sanidade de UI (não é regra de domínio) — evita erro de digitação
+ *  tipo "26666" passar sem confirmação; alto o bastante pra não incomodar
+ *  quem legitimamente cadastra estoque grande. */
+export const LIMITE_SANIDADE_QUANTIDADE = 99999;
+export const LIMITE_SANIDADE_VALOR = 99999;
 
 export const VALORES_INICIAIS: ValoresDoProduto = {
   nome: '',
@@ -69,18 +78,26 @@ export function FormularioProduto({
 }: FormularioProdutoProps) {
   const tema = useTheme();
   const [maisOpcoes, setMaisOpcoes] = useState(false);
+  const [categoriaFocada, setCategoriaFocada] = useState(false);
 
   const definir = (campo: keyof ValoresDoProduto) => (texto: string) =>
     aoMudar({ ...valores, [campo]: texto });
 
-  const sugestoes = categoriasExistentes.filter(
-    (nome) =>
-      valores.categoria !== '' &&
-      nome.toLowerCase().startsWith(valores.categoria.toLowerCase()) &&
-      nome.toLowerCase() !== valores.categoria.toLowerCase(),
-  );
+  // Sem texto digitado (mas em foco), mostra tudo que já existe — a pessoa
+  // não precisa adivinhar uma categoria pra descobrir que ela já existe.
+  const sugestoes =
+    valores.categoria === ''
+      ? categoriaFocada
+        ? categoriasExistentes
+        : []
+      : categoriasExistentes.filter(
+          (nome) =>
+            nome.toLowerCase().startsWith(valores.categoria.toLowerCase()) &&
+            nome.toLowerCase() !== valores.categoria.toLowerCase(),
+        );
 
   return (
+    <EvitaTeclado testID="evita-teclado-formulario">
     <ScrollView
       style={{ backgroundColor: tema.bg.base }}
       contentContainerStyle={{ padding: espaco.lg, gap: espaco.lg }}
@@ -140,17 +157,27 @@ export function FormularioProduto({
         onChangeText={definir('quantidadeNecessaria')}
         erro={erros.quantidadeNecessaria}
         keyboardType="decimal-pad"
+        tipo="quantidade"
       />
 
       <Pressable
         onPress={() => setMaisOpcoes(!maisOpcoes)}
         accessibilityRole="button"
+        accessibilityState={{ expanded: maisOpcoes }}
         hitSlop={8}
-        style={{ minHeight: ALVO_TOQUE_MINIMO, justifyContent: 'center' }}
+        style={{
+          minHeight: ALVO_TOQUE_MINIMO,
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: espaco.xs,
+        }}
       >
         <Texto papel="body.md" cor={tema.action.azulejo}>
           {maisOpcoes ? 'Menos opções' : 'Mais opções'}
         </Texto>
+        <View style={{ transform: [{ rotate: maisOpcoes ? '180deg' : '0deg' }] }}>
+          <IconeSvg path={icones.cheveron} cor={tema.action.azulejo} tamanho={16} />
+        </View>
       </Pressable>
 
       {maisOpcoes ? (
@@ -162,6 +189,7 @@ export function FormularioProduto({
               onChangeText={definir('quantidadeAtual')}
               erro={erros.quantidadeAtual}
               keyboardType="decimal-pad"
+              tipo="quantidade"
             />
           ) : null}
           <CampoTexto
@@ -170,12 +198,15 @@ export function FormularioProduto({
             onChangeText={definir('valorUnitario')}
             erro={erros.valorUnitario}
             keyboardType="decimal-pad"
+            tipo="dinheiro"
           />
           <View style={{ gap: espaco.sm }}>
             <CampoTexto
               rotulo="Onde guardo"
               value={valores.categoria}
               onChangeText={definir('categoria')}
+              onFocus={() => setCategoriaFocada(true)}
+              onBlur={() => setCategoriaFocada(false)}
             />
             {sugestoes.length > 0 ? (
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: espaco.sm }}>
@@ -205,5 +236,6 @@ export function FormularioProduto({
 
       <Botao titulo={tituloAcao} onPress={aoSalvar} disabled={salvando} />
     </ScrollView>
+    </EvitaTeclado>
   );
 }
