@@ -41,9 +41,30 @@
 
 ## 6. QA em dispositivo/emulador (mobile-ux-tester + Maestro)
 
-- [ ] 6.1 Rodar o fluxo de Detalhe do produto no emulador com o teclado aberto no campo "Quanto quero ter em casa", confirmando visualmente que campo e botão "Salvar" não ficam cobertos (reprodução do print original).
-- [ ] 6.2 Rodar os 4 sheets (Outra quantidade, Adicionar item avulso, Corrigir quantidade atual, Ajuste no modo compra) no emulador com teclado aberto, confirmando visualmente ausência de sobreposição e presença do controle de fechar.
-- [ ] 6.3 Comparar screenshots dos dois temas (Despensa/Porcelana) para os pontos acima, confirmando que a mudança de `KeyboardAvoidingView` e os novos ícones não quebram contraste ou layout em nenhum tema.
+- [x] 6.1 (1ª rodada) Rodar o fluxo de Detalhe do produto no emulador com o teclado aberto no campo "Quanto quero ter em casa" — **usuário testou manualmente e reportou falha**: botão "Salvar" continuava atrás do teclado com `KeyboardAvoidingView` nativo do RN. Ver tarefa 8.1 pra correção e nova rodada de QA.
+- [x] 6.2 (1ª rodada) Rodar os 4 sheets com teclado aberto — **usuário testou manualmente e reportou falha**: teclado aparecia por cima de tudo. Corrigido na tarefa 8.1.
+- [x] 6.3 (1ª rodada) Chevron em "Mais opções" — **usuário confirmou OK** no teste manual.
+- [x] 6.4 (2ª rodada) Reverificado no emulador depois do rebuild nativo — Detalhe do produto, "Outra quantidade", "Adicionar item avulso" e o ajuste do Modo compra confirmados OK (campo e botão de ação visíveis com teclado aberto), nos dois temas.
+- [x] 6.5 (2ª rodada) Máscara de dinheiro confirmada no device: digitar "1290" mostrou "1" → "12" → "1,29" → "12,90", como esperado.
+- [x] 6.6 Comparado nos dois temas (Despensa/Porcelana) — sem quebra de contraste/layout encontrada.
+
+**Achado do QA (aceito como conhecido, não bloqueia o fechamento desta change — decisão do usuário):** o sheet `SheetAjusteEstoque` ("Corrigir quantidade atual") falhou em 1 de 5 tentativas — teclado cobriu campo, chips de motivo e botão "Corrigir" na primeira montagem; as 4 tentativas seguintes (incluindo os dois temas) ficaram corretas. Indício de corrida de timing entre `react-native-keyboard-controller` e a primeira montagem desse `Modal` específico, não reproduzida nos outros 3 sheets. Antes desta change, o overlay falhava 100% das vezes nesse ponto — a regressão residual (~20% intermitente) é uma melhora grande, mas fica registrada como investigação futura antes de considerar o Keyboard Overlap 100% fechado nesse sheet específico.
+
+**Achado fora do escopo desta change (crítico, registrado pra virar change separada depois — decisão do usuário):** `app/(tabs)/lista.tsx` não usa `ScrollView`/`FlashList` — os itens renderizam direto num `View`, então com lista longa (24+ itens, o seed padrão) não há como rolar, e "Adicionar item avulso" fica permanentemente inacessível fora da viewport inicial. Não tem relação com os 3 bugs de usabilidade desta change (é ausência de scroll, não teclado/máscara/affordance) — não corrigido aqui.
+
+## 8. Revisão pós-QA manual: troca pra bibliotecas testadas (pedido do usuário)
+
+QA manual do usuário no emulador (após a implementação inicial) encontrou 2 problemas reais que a suíte automatizada não capturava: `KeyboardAvoidingView` nativo do RN não resolvia o overlay (nem no formulário, nem — pior — dentro dos 4 `Modal`), e a máscara de dinheiro caseira "não tava muito boa". Usuário pediu pesquisa via Context7 e adoção de libs testadas em vez de reimplementar na mão.
+
+- [x] 8.1 Pesquisar via Context7 (`react-native-keyboard-controller`, `react-native-keyboard-aware-scroll-view`, outras) e trocar o `KeyboardAvoidingView` usado em `evita-teclado.tsx` pelo de `react-native-keyboard-controller` (resolve especificamente o caso de `Modal` no Android, documentado pela própria lib). Envolver a raiz do app (`app/_layout.tsx`) com `KeyboardProvider`.
+- [x] 8.2 Pesquisar via Context7 libs de máscara de dinheiro (`react-native-mask-input`, `use-mask-input`, outras) e trocar a máscara de dinheiro caseira em `campo-texto.tsx` por `react-native-mask-input` (`createNumberMask` + `useMaskedInputProps`); manter a máscara de quantidade própria (`aplicarMascaraQuantidade`), sem lib equivalente pra esse formato.
+- [x] 8.3 Corrigir bug encontrado pelos próprios testes automatizados durante a troca: `useMaskedInputProps` espera o `value` como dígitos "não mascarados", não o texto decimal (`"12,90"`) que o resto do app usa como estado — extrair dígitos em `CampoTexto` antes de repassar à lib, e reformatar os 3 pontos que semeiam preço inicial (`sheet-avulso.tsx`, `sheet-ajuste-compra.tsx`, `valoresDoItem()` em `app/produto/[id].tsx`) pra sempre "X,YY" com duas casas.
+- [x] 8.4 `react-native-keyboard-controller` é módulo nativo — instalar mock oficial da lib (`react-native-keyboard-controller/jest`) em `jest.setup.app.js`, senão qualquer teste que importe `evita-teclado.tsx` (direta ou indiretamente) quebra a suíte inteira.
+- [x] 8.5 Rebuild nativo (`npx expo run:android`, confirmado com o usuário antes de disparar por ser operação demorada que reinstala o APK do emulador) — sem isso o dev client instalado crasha ao abrir (`react-native-keyboard-controller` não linkado).
+- [x] 8.6 Rodar `npm run verificar` + `npm test` completos de novo após a troca de libs — 862 testes passando, `npm run verificar` limpo (fronteiras + lint; typecheck com achado de infraestrutura pré-existente não relacionado, ver nota abaixo).
+- [x] 8.7 Verificação visual manual (tasks 6.4–6.6) repetida depois do rebuild — overlay e máscara confirmados resolvidos nos 4 de 5 pontos testados; achado intermitente em `SheetAjusteEstoque` registrado acima, aceito como conhecido por decisão do usuário.
+
+**Achado de infraestrutura, fora do escopo desta change:** `tsc --noEmit` está falhando em ~16 arquivos não tocados por esta change (`app/(tabs)/*.tsx`, `app/compra/*.tsx` etc.) com erro de rota não tipada do Expo Router. Causa: `.expo/types/router.d.ts` (gerado, fora do git) ficou vazio/desatualizado depois de um `expo start -c` interrompido no meio (sessão de QA anterior). `npm test` e `npm run lint` não são afetados (não dependem desse arquivo). O rebuild nativo da task 8.5 deve regenerar esse arquivo corretamente ao concluir; se não regenerar sozinho, é preciso investigar separadamente — não é uma regressão introduzida pelo código desta change.
 
 ## 7. Regressão
 

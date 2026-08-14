@@ -49,16 +49,19 @@ describe('CampoTexto — tipo="quantidade" (máscara)', () => {
 });
 
 describe('CampoTexto — tipo="dinheiro" (máscara "de caixa registradora")', () => {
-  it('cada dígito empurra os centavos, ajustando a vírgula sozinha', async () => {
+  it('a partir do 3º dígito, os centavos empurram e a vírgula se ajusta sozinha', async () => {
     const onChangeText = jest.fn();
     await comTema(<CampoTexto rotulo="Preço" value="" onChangeText={onChangeText} tipo="dinheiro" />);
 
     const campo = screen.getByLabelText('Preço');
+    // react-native-mask-input só insere a vírgula quando há dígitos
+    // suficientes pra preencher as casas decimais — 1º e 2º dígito ainda
+    // aparecem crus, o ajuste "de caixa registradora" começa no 3º.
     fireEvent.changeText(campo, '1');
-    await waitFor(() => expect(onChangeText).toHaveBeenLastCalledWith('0,01'));
-    fireEvent.changeText(campo, '0,01' + '2');
-    await waitFor(() => expect(onChangeText).toHaveBeenLastCalledWith('0,12'));
-    fireEvent.changeText(campo, '0,12' + '9');
+    await waitFor(() => expect(onChangeText).toHaveBeenLastCalledWith('1'));
+    fireEvent.changeText(campo, '1' + '2');
+    await waitFor(() => expect(onChangeText).toHaveBeenLastCalledWith('12'));
+    fireEvent.changeText(campo, '12' + '9');
     await waitFor(() => expect(onChangeText).toHaveBeenLastCalledWith('1,29'));
     fireEvent.changeText(campo, '1,29' + '0');
     await waitFor(() => expect(onChangeText).toHaveBeenLastCalledWith('12,90'));

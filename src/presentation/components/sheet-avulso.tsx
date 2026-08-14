@@ -32,7 +32,11 @@ export function SheetAvulso({ visivel, inicial, onFechar, onSalvar }: SheetAvuls
   const [nome, setNome] = useState(inicial?.nome ?? '');
   const [unidade, setUnidade] = useState<Unidade>(inicial?.unidade ?? 'un');
   const [quantidade, setQuantidade] = useState(String(inicial?.quantidade ?? QUANTIDADE_PADRAO));
-  const [preco, setPreco] = useState(inicial?.preco !== undefined && inicial?.preco !== null ? String(inicial.preco) : '');
+  // Duas casas sempre — é o formato que a máscara de dinheiro espera pra
+  // reconhecer o valor semeado (CampoTexto extrai dígitos do que está aqui).
+  const [preco, setPreco] = useState(
+    inicial?.preco !== undefined && inicial?.preco !== null ? inicial.preco.toFixed(2).replace('.', ',') : '',
+  );
   const [erroNome, setErroNome] = useState<string | undefined>(undefined);
   const [erroQuantidade, setErroQuantidade] = useState<string | undefined>(undefined);
 

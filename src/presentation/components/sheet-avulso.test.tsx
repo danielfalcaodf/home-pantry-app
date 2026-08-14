@@ -115,7 +115,9 @@ describe('SheetAvulso', () => {
 
     expect(screen.getByLabelText('O que é').props.value).toBe('Pilha AA');
     expect(screen.getByLabelText('Quantidade').props.value).toBe('4');
-    expect(screen.getByLabelText('Preço (opcional)').props.value).toBe('12.5');
+    // Duas casas sempre — é o formato que a máscara de dinheiro (tipo="dinheiro")
+    // espera pra reconhecer o valor semeado.
+    expect(screen.getByLabelText('Preço (opcional)').props.value).toBe('12,50');
     expect(screen.getByText('Editar item')).toBeTruthy();
     expect(screen.getByText('Salvar')).toBeTruthy();
   });

@@ -6,7 +6,7 @@ import { espaco, raio, ALVO_TOQUE_MINIMO } from '../theme/espaco';
 import { icones } from '../theme/icones';
 import { useTheme } from '../theme/provider';
 import { tipografia } from '../theme/tipografia';
-import { aplicarMascara } from './campo-texto';
+import { aplicarMascaraQuantidade } from './campo-texto';
 import { Botao } from './botao';
 import { EvitaTeclado } from './evita-teclado';
 import { IconeSvg } from './icone-svg';
@@ -95,7 +95,7 @@ export function TecladoQuantidade({
               // Abre com o campo em foco e o teclado numérico do sistema.
               autoFocus
               value={texto}
-              onChangeText={(valor) => setTexto(aplicarMascara(valor, 'quantidade'))}
+              onChangeText={(valor) => setTexto(aplicarMascaraQuantidade(valor))}
               accessibilityLabel="Quantidade"
               keyboardType={divisivel ? 'decimal-pad' : 'number-pad'}
               placeholder="0"

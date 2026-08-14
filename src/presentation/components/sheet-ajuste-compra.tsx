@@ -38,7 +38,9 @@ export function SheetAjusteCompra({
 }: SheetAjusteCompraProps) {
   const tema = useTheme();
   const [quantidade, setQuantidade] = useState(String(quantidadeInicial).replace('.', ','));
-  const [preco, setPreco] = useState(precoInicial !== null ? String(precoInicial).replace('.', ',') : '');
+  // Duas casas sempre — é o formato que a máscara de dinheiro espera pra
+  // reconhecer o valor semeado (CampoTexto extrai dígitos do que está aqui).
+  const [preco, setPreco] = useState(precoInicial !== null ? precoInicial.toFixed(2).replace('.', ',') : '');
   const [erroQuantidade, setErroQuantidade] = useState<string | undefined>(undefined);
 
   function fechar() {

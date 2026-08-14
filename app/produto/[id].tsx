@@ -50,8 +50,9 @@ function valoresDoItem(item: ProdutoNaDespensa): ValoresDoProduto {
     unidade: produto.unidade,
     quantidadeNecessaria: String(paraDecimal(produto.quantidadeNecessaria)).replace('.', ','),
     quantidadeAtual: '',
-    valorUnitario:
-      produto.valorUnitario > 0 ? String(produto.valorUnitario / 100).replace('.', ',') : '',
+    // Duas casas sempre — é o formato que a máscara de dinheiro espera pra
+    // reconhecer o valor semeado (CampoTexto extrai dígitos do que está aqui).
+    valorUnitario: produto.valorUnitario > 0 ? (produto.valorUnitario / 100).toFixed(2).replace('.', ',') : '',
     categoria: produto.categoria ?? '',
     marcaPreferida: produto.marcaPreferida ?? '',
     observacao: produto.observacao ?? '',
