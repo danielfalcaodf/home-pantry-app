@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react-native';
 import { ReactNode } from 'react';
 
 import { ThemeProvider } from '../theme/provider';
@@ -89,5 +89,40 @@ describe('SheetAjusteEstoque', () => {
 
     await waitFor(() => expect(screen.getByText('Não pode ser negativo')).toBeTruthy());
     expect(onSalvar).not.toHaveBeenCalled();
+  });
+
+  it('tem um controle de fechar visível, além do toque fora (affordance)', async () => {
+    const onFechar = jest.fn();
+    await comTema(
+      <SheetAjusteEstoque
+        visivel
+        nome="Arroz"
+        unidade="pacote"
+        quantidadeAtual={2}
+        onFechar={onFechar}
+        onSalvar={jest.fn()}
+      />,
+    );
+
+    fireEvent.press(screen.getByRole('button', { name: 'Fechar' }));
+
+    expect(onFechar).toHaveBeenCalledTimes(1);
+  });
+
+  it('o campo em foco e o botão de ação estão dentro do wrapper que evita o teclado (Keyboard Overlap)', async () => {
+    await comTema(
+      <SheetAjusteEstoque
+        visivel
+        nome="Arroz"
+        unidade="pacote"
+        quantidadeAtual={2}
+        onFechar={jest.fn()}
+        onSalvar={jest.fn()}
+      />,
+    );
+
+    const avoidingView = screen.getByTestId('evita-teclado-ajuste-estoque');
+    expect(within(avoidingView).getByLabelText(/Quanto você tem agora/)).toBeTruthy();
+    expect(within(avoidingView).getByRole('button', { name: 'Corrigir' })).toBeTruthy();
   });
 });

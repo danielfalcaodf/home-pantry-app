@@ -4,6 +4,7 @@ import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
+import { KeyboardProvider } from 'react-native-keyboard-controller';
 
 import { usePreferenciaDeTemaPersistida } from '@/application/tema/use-preferencia-de-tema';
 import { usePrepararBanco } from '@/composicao/banco';
@@ -49,13 +50,15 @@ export default function RootLayout() {
   // A tela de erro também usa o tema resolvido — nunca um fundo padrão.
   if (banco.erro) {
     return (
-      <ThemeProvider preferencia={tema.preferencia} escolher={tema.escolher}>
-        <TelaErro
-          titulo="Não foi possível preparar seus dados"
-          descricao="Feche e abra o app de novo. Seus dados têm uma cópia de segurança automática."
-          detalhe={banco.erro.message}
-        />
-      </ThemeProvider>
+      <KeyboardProvider>
+        <ThemeProvider preferencia={tema.preferencia} escolher={tema.escolher}>
+          <TelaErro
+            titulo="Não foi possível preparar seus dados"
+            descricao="Feche e abra o app de novo. Seus dados têm uma cópia de segurança automática."
+            detalhe={banco.erro.message}
+          />
+        </ThemeProvider>
+      </KeyboardProvider>
     );
   }
 
@@ -64,8 +67,10 @@ export default function RootLayout() {
   }
 
   return (
-    <ThemeProvider preferencia={tema.preferencia} escolher={tema.escolher}>
-      <Rotas />
-    </ThemeProvider>
+    <KeyboardProvider>
+      <ThemeProvider preferencia={tema.preferencia} escolher={tema.escolher}>
+        <Rotas />
+      </ThemeProvider>
+    </KeyboardProvider>
   );
 }

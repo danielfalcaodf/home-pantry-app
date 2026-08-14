@@ -16,6 +16,8 @@ export const icones = {
   // Configurações, adicionada depois por pedido direto do usuário.
   tabConfiguracoes: 'M4 6h16M4 12h16M4 18h16M8 4v4M14 10v4M10 16v4',
   voltar: 'M15 18l-6-6 6-6',
+  cheveron: 'M6 9l6 6 6-6',
+  fechar: 'M6 6l12 12M18 6L6 18',
 } as const;
 
 export type NomeDoIcone = keyof typeof icones;

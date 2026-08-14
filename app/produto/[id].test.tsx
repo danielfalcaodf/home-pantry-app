@@ -2,6 +2,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react-nativ
 import { ReactNode } from 'react';
 
 import { milesimos } from '@/domain/shared/quantidade';
+import { LIMITE_SANIDADE_QUANTIDADE } from '@/presentation/components/formulario-produto';
 import { ALVO_TOQUE_MINIMO } from '@/presentation/theme/espaco';
 import { ThemeProvider } from '@/presentation/theme/provider';
 import { tipografia } from '@/presentation/theme/tipografia';
@@ -9,6 +10,7 @@ import DetalheProduto from './[id]';
 
 const mockBack = jest.fn();
 const mockPush = jest.fn();
+const mockEditar = jest.fn().mockResolvedValue({ ok: true });
 
 jest.mock('expo-router', () => ({
   router: { back: () => mockBack(), push: (...a: unknown[]) => mockPush(...a) },
@@ -36,7 +38,7 @@ const mockItem = {
 
 jest.mock('@/application/estoque/use-editar-produto', () => ({
   useProduto: () => ({ item: mockItem, carregando: false }),
-  useEditarProduto: () => ({ editar: jest.fn() }),
+  useEditarProduto: () => ({ editar: mockEditar }),
   useRemoverProduto: () => ({ remover: jest.fn() }),
 }));
 jest.mock('@/application/estoque/use-categorias', () => ({ useCategorias: () => [] }));
@@ -121,5 +123,39 @@ describe('Detalhe do produto — quantidade em destaque (ACHADO-041)', () => {
     const estilo = estiloResolvido(texto);
     expect(estilo.fontSize).toBe(tipografia['display.lg'].fontSize);
     expect(estilo.fontFamily).toBe(tipografia['display.lg'].fontFamily);
+  });
+});
+
+describe('Detalhe do produto — teto de sanidade em "Quanto quero ter em casa" (Error Prevention)', () => {
+  beforeEach(() => {
+    mockEditar.mockClear();
+  });
+
+  // Reprodução exata do bug relatado: "26666" era salvo sem confirmação.
+  it('valor acima do teto é rejeitado com erro em texto, sem chamar editar', async () => {
+    await comTema(<DetalheProduto />);
+
+    fireEvent.changeText(screen.getByLabelText('Quanto quero ter em casa'), String(LIMITE_SANIDADE_QUANTIDADE + 1));
+    await waitFor(() =>
+      expect(screen.getByLabelText('Quanto quero ter em casa').props.value).toBe(
+        String(LIMITE_SANIDADE_QUANTIDADE + 1),
+      ),
+    );
+    fireEvent.press(screen.getByRole('button', { name: 'Salvar' }));
+
+    await waitFor(() =>
+      expect(screen.getByText(`Valor muito alto — no máximo ${LIMITE_SANIDADE_QUANTIDADE}`)).toBeTruthy(),
+    );
+    expect(mockEditar).not.toHaveBeenCalled();
+  });
+
+  it('valor dentro do teto continua sendo salvo normalmente', async () => {
+    await comTema(<DetalheProduto />);
+
+    fireEvent.changeText(screen.getByLabelText('Quanto quero ter em casa'), '10');
+    await waitFor(() => expect(screen.getByLabelText('Quanto quero ter em casa').props.value).toBe('10'));
+    fireEvent.press(screen.getByRole('button', { name: 'Salvar' }));
+
+    await waitFor(() => expect(mockEditar).toHaveBeenCalled());
   });
 });

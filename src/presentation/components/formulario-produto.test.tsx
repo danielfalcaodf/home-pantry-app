@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react-native';
 import { ReactNode, useState } from 'react';
 
 import { ALVO_TOQUE_MINIMO } from '../theme/espaco';
@@ -120,5 +120,81 @@ describe('FormularioProduto — alvo de toque de "Mais opções" (ACHADO-063)', 
     await montarFormulario();
     fireEvent.press(screen.getByRole('button', { name: 'Mais opções' }));
     await waitFor(() => expect(screen.getByText('Menos opções')).toBeTruthy());
+  });
+
+  it('anuncia o estado expandido/colapsado, além do ícone visual (affordance)', async () => {
+    await montarFormulario();
+    const botao = screen.getByRole('button', { name: 'Mais opções' });
+    expect(botao.props.accessibilityState?.expanded).toBe(false);
+
+    fireEvent.press(botao);
+
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Menos opções' }).props.accessibilityState?.expanded).toBe(
+        true,
+      ),
+    );
+  });
+});
+
+describe('FormularioProduto — campo em foco não fica coberto pelo teclado (Keyboard Overlap)', () => {
+  it('o conteúdo do formulário está dentro de um KeyboardAvoidingView', async () => {
+    await montarFormulario();
+    // Reprodução estrutural do bug relatado: o campo "Quanto quero ter em
+    // casa" e o botão "Salvar" ficavam atrás do teclado porque nada no
+    // formulário compensava a abertura dele — agora o conteúdo inteiro
+    // (incluindo o campo em foco e o botão de ação) vive dentro do
+    // KeyboardAvoidingView de EvitaTeclado.
+    const avoidingView = screen.getByTestId('evita-teclado-formulario');
+    expect(within(avoidingView).getByLabelText('Quanto quero ter em casa')).toBeTruthy();
+    expect(within(avoidingView).getByRole('button', { name: 'Salvar' })).toBeTruthy();
+  });
+
+  it('o wrapper de teclado também está presente no tema claro (Porcelana)', async () => {
+    await render(
+      <ThemeProvider preferencia="claro">
+        <FormularioProduto
+          valores={VALORES_INICIAIS}
+          aoMudar={() => {}}
+          erros={{}}
+          categoriasExistentes={[]}
+          tituloAcao="Salvar"
+          aoSalvar={() => {}}
+        />
+      </ThemeProvider>,
+    );
+
+    const avoidingView = screen.getByTestId('evita-teclado-formulario');
+    expect(within(avoidingView).getByLabelText('Quanto quero ter em casa')).toBeTruthy();
+  });
+});
+
+describe('FormularioProduto — categoria sugere antes de digitar (affordance)', () => {
+  it('mostra as categorias existentes ao focar o campo, antes de qualquer texto', async () => {
+    await comTema(
+      <FormularioControlado categoriasExistentes={['Mercearia', 'Limpeza', 'Higiene']} />,
+    );
+    fireEvent.press(screen.getByRole('button', { name: 'Mais opções' }));
+    await waitFor(() => expect(screen.getByLabelText('Onde guardo')).toBeTruthy());
+
+    fireEvent(screen.getByLabelText('Onde guardo'), 'focus');
+
+    await waitFor(() => expect(screen.getByText('Mercearia')).toBeTruthy());
+    expect(screen.getByText('Limpeza')).toBeTruthy();
+    expect(screen.getByText('Higiene')).toBeTruthy();
+  });
+
+  it('some com as sugestões ao perder o foco sem ter digitado nada', async () => {
+    await comTema(
+      <FormularioControlado categoriasExistentes={['Mercearia']} />,
+    );
+    fireEvent.press(screen.getByRole('button', { name: 'Mais opções' }));
+    await waitFor(() => expect(screen.getByLabelText('Onde guardo')).toBeTruthy());
+
+    fireEvent(screen.getByLabelText('Onde guardo'), 'focus');
+    await waitFor(() => expect(screen.getByText('Mercearia')).toBeTruthy());
+
+    fireEvent(screen.getByLabelText('Onde guardo'), 'blur');
+    await waitFor(() => expect(screen.queryByText('Mercearia')).toBeNull());
   });
 });
