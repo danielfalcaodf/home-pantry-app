@@ -25,5 +25,4 @@ Regras:
 
 | Ordem | Change | Depende de | Motivo |
 |---|---|---|---|
-
-Nenhuma change ativa no momento — todas as 12 changes da campanha de QA foram implementadas e arquivadas.
+| 1 | correcao-usabilidade-campos-e-botoes | — | Corrige Keyboard Overlap, Error Prevention (correção silenciosa) e Affordance na base compartilhada (CampoTexto, Botao, padrão de Modal dos sheets) — sem dependência de outra change ativa. |
