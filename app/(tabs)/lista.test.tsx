@@ -46,8 +46,9 @@ const mockItens = [
   },
 ];
 
+const mockUseListaDeCompras = jest.fn(() => ({ itens: mockItens, carregando: false }));
 jest.mock('@/application/lista/use-lista-compras', () => ({
-  useListaDeCompras: () => ({ itens: mockItens, carregando: false }),
+  useListaDeCompras: () => mockUseListaDeCompras(),
 }));
 jest.mock('@/application/lista/use-preferencia-agrupamento', () => ({
   usePreferenciaDeAgrupamento: () => ({ agrupado: false, alternar: jest.fn() }),
@@ -56,15 +57,20 @@ jest.mock('@/application/lista/use-adicionar-avulso', () => ({
   useAdicionarAvulso: () => ({ adicionar: jest.fn() }),
 }));
 jest.mock('@/application/lista/use-editar-avulso', () => ({
-  useEditarAvulso: () => ({ editar: jest.fn(), remover: jest.fn() }),
+  useEditarAvulso: () => ({ editar: jest.fn() }),
+}));
+const mockRemoverAvulso = jest.fn();
+const mockDesfazer = jest.fn();
+const mockLimpar = jest.fn();
+const mockUseRemoverItemDaLista = jest.fn(() => ({
+  ultimaRemocao: null as unknown,
+  remover: jest.fn(),
+  removerAvulso: mockRemoverAvulso,
+  desfazer: mockDesfazer,
+  limpar: mockLimpar,
 }));
 jest.mock('@/application/lista/use-remover-item-lista', () => ({
-  useRemoverItemDaLista: () => ({
-    ultimaRemocao: null,
-    remover: jest.fn(),
-    desfazer: jest.fn(),
-    limpar: jest.fn(),
-  }),
+  useRemoverItemDaLista: () => mockUseRemoverItemDaLista(),
 }));
 jest.mock('@/application/compra/use-iniciar-compra', () => ({
   useIniciarCompra: () => ({ iniciando: false, iniciar: jest.fn() }),
@@ -194,5 +200,52 @@ describe('Lista — editar preço de produto direto na lista', () => {
 
     await waitFor(() => expect(screen.queryByText('Preço de Arroz')).toBeNull());
     expect(mockEditarProduto).not.toHaveBeenCalled();
+  });
+});
+
+describe('Lista — toast de "Desfazer" (ACHADOs de QA)', () => {
+  afterEach(() => {
+    mockUseListaDeCompras.mockReturnValue({ itens: mockItens, carregando: false });
+    mockUseRemoverItemDaLista.mockReturnValue({
+      ultimaRemocao: null,
+      remover: jest.fn(),
+      removerAvulso: mockRemoverAvulso,
+      desfazer: mockDesfazer,
+      limpar: mockLimpar,
+    });
+  });
+
+  // ACHADO: o branch de EstadoVazio tinha um `return` antecipado que nunca
+  // chegava a renderizar o <Toast> — remover o último item da lista
+  // deixava a pessoa sem chance de desfazer.
+  it('o toast de desfazer aparece mesmo quando a lista fica vazia', async () => {
+    mockUseListaDeCompras.mockReturnValue({ itens: [], carregando: false });
+    mockUseRemoverItemDaLista.mockReturnValue({
+      ultimaRemocao: { tipo: 'produto', itemExclusaoId: 'x1', nome: 'Arroz', criouNovaLinha: true },
+      remover: jest.fn(),
+      removerAvulso: mockRemoverAvulso,
+      desfazer: mockDesfazer,
+      limpar: mockLimpar,
+    });
+
+    await comTema(<Lista />);
+
+    expect(screen.getByText('Nada faltando por aqui.', { exact: false })).toBeTruthy();
+    expect(screen.getByText('Arroz removido da lista')).toBeTruthy();
+    fireEvent.press(screen.getByRole('button', { name: 'Desfazer' }));
+    expect(mockDesfazer).toHaveBeenCalledTimes(1);
+  });
+
+  // ACHADO: remover um avulso usava um estado (useEditarAvulso) desconectado
+  // do que alimenta o toast — nunca oferecia desfazer. Agora passa por
+  // removerAvulso, do mesmo hook que já alimenta o toast pra produto.
+  it('remover um item avulso aciona removerAvulso (o mesmo hook que alimenta o toast)', async () => {
+    await comTema(<Lista />);
+
+    fireEvent.press(screen.getByLabelText('Remover Pilha AA da lista'));
+
+    expect(mockRemoverAvulso).toHaveBeenCalledWith(
+      expect.objectContaining({ tipo: 'avulso', itemId: 'a1', nome: 'Pilha AA' }),
+    );
   });
 });

@@ -36,7 +36,12 @@
 - [x] 5.2 Suíte específica (`lista.test.tsx`, `item-compra.test.tsx`, `use-lista-compras`, `use-modo-compra`, `use-remover-item-lista`, `sqlite-compra.repository`) — 42 testes, 6 suites, todos passando.
 - [x] 5.3 QA visual final no emulador — os 4 pontos confirmados funcionando nos dois temas: scroll (`FlashList` rola até "Adicionar item avulso"), causa raiz do item sumido (cancelar a compra com a duplicata libera o produto; fluxo completo materializar → remover → uma única linha no Modo Compra → desfazer restaura, tudo validado), ícone de ajuste no Modo Compra, edição de preço na Lista (com e sem preço prévio).
 
-**Achados incidentais do QA (pré-existentes, não introduzidos por esta change — tocam o mesmo `use-remover-item-lista.ts`/`lista.tsx` mexidos aqui, registrados pra decisão do usuário antes de arquivar):**
-- Toast "Desfazer" não aparece ao remover o último item da lista (o branch de `EstadoVazio` em `lista.tsx` não renderiza `<Toast>`, só o branch de baixo).
-- Item avulso removido nunca oferece "Desfazer" (`removerAvulso`/`useEditarAvulso` é desconectado do estado `ultimaRemocao` que alimenta o toast).
-- Preço "por unidade" ambíguo pra produtos em g/ml (achado de UX, cálculo do domínio está correto — falta indicar a unidade de referência no rótulo do campo de preço).
+**Achados incidentais do QA (pré-existentes, não introduzidos por esta change — tocam o mesmo `use-remover-item-lista.ts`/`lista.tsx` mexidos aqui):** usuário decidiu corrigir os dois de severidade média agora, nesta mesma change (o terceiro, de UX de preço por unidade, fica pra depois).
+
+## 6. Fixes extras decididos pelo usuário após o QA (toast de "Desfazer")
+
+- [x] 6.1 `lista.tsx` tinha um `return` antecipado no branch de `EstadoVazio` que nunca renderizava `<Toast>` — reestruturado pra um único `return` com renderização condicional interna, e `Toast`/`SheetPrecoProduto`/`SheetAvulso` sempre montados, dentro ou fora do estado vazio.
+- [x] 6.2 Unificado `useRemoverItemDaLista`: ganhou `removerAvulso`, que apaga a linha do avulso e alimenta o mesmo `ultimaRemocao`/toast que `remover()` (produto) já usava. `RemocaoDaLista` virou união discriminada (`tipo: 'produto' | 'avulso'`) — desfazer de avulso recria a linha do zero (`adicionarItem` com os dados capturados no momento da remoção), já que remoção de avulso é DELETE, não uma marcação reversível.
+- [x] 6.3 `useEditarAvulso` perdeu `remover` (migrado pro hook unificado) — código morto removido, não um shim de compatibilidade.
+- [x] 6.4 Testes escritos: `use-remover-item-lista.test.ts` (`removerAvulso` alimenta `ultimaRemocao`; `desfazer` recria a linha do avulso com os dados originais) e `lista.test.tsx` (toast aparece com a lista vazia; remover avulso aciona `removerAvulso`, não mais um caminho desconectado).
+- [x] 6.5 `npm run verificar` + `npm test` completos de novo — 881 testes, 103 suites, todos passando.

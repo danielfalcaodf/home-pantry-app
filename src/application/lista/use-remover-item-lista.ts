@@ -1,8 +1,10 @@
 import { useCallback, useState } from 'react';
 
 import { compraRepository, obterIdentidadeLocal, relogio } from '../../composicao/repositorios';
-import { ItemListaProduto } from '../../domain/lista/lista';
-import { milesimos } from '../../domain/shared/quantidade';
+import { ItemDaLista, ItemListaProduto } from '../../domain/lista/lista';
+import { Centavos } from '../../domain/shared/dinheiro';
+import { Milesimos, milesimos } from '../../domain/shared/quantidade';
+import { Unidade } from '../../domain/shared/unidade';
 import { CompraRepository } from '../../ports/compra.repository';
 import { obterOuAbrirCompra } from './compra-aberta';
 
@@ -10,19 +12,35 @@ import { obterOuAbrirCompra } from './compra-aberta';
 // de exclusão nunca é exibida, só filtrada na composição da lista.
 const QUANTIDADE_PLACEHOLDER = milesimos(1000);
 
-export type RemocaoDaLista = {
-  itemExclusaoId: string;
-  nome: string;
-  /** Se `remover` criou uma linha nova (true) ou reaproveitou uma já
-   *  materializada por `iniciarCompra` (false) — `desfazer` precisa saber
-   *  qual dos dois pra decidir entre apagar a linha ou só reverter a
-   *  exclusão (ACHADO: duplicata de compra_item pro mesmo produto). */
-  criouNovaLinha: boolean;
-};
+export type RemocaoDaLista =
+  | {
+      tipo: 'produto';
+      itemExclusaoId: string;
+      nome: string;
+      /** Se `remover` criou uma linha nova (true) ou reaproveitou uma já
+       *  materializada por `iniciarCompra` (false) — `desfazer` precisa saber
+       *  qual dos dois pra decidir entre apagar a linha ou só reverter a
+       *  exclusão (ACHADO: duplicata de compra_item pro mesmo produto). */
+      criouNovaLinha: boolean;
+    }
+  | {
+      tipo: 'avulso';
+      nome: string;
+      compraId: string;
+      /** Dados completos do avulso apagado — `desfazer` recria a linha do
+       *  zero, já que a remoção de avulso é DELETE, não uma marcação. */
+      dadosParaRecriar: {
+        nomeAvulso: string;
+        unidade: Unidade;
+        quantidadePlanejada: Milesimos;
+        valorEstimadoUnit: Centavos;
+      };
+    };
 
 export type EstadoRemocaoDaLista = {
   ultimaRemocao: RemocaoDaLista | null;
   remover: (item: ItemListaProduto) => Promise<void>;
+  removerAvulso: (item: Extract<ItemDaLista, { tipo: 'avulso' }>) => Promise<void>;
   desfazer: () => Promise<void>;
   limpar: () => void;
 };
@@ -30,7 +48,10 @@ export type EstadoRemocaoDaLista = {
 /**
  * Remover um faltante da lista não apaga o produto nem mexe no estoque
  * (requisito "Remover item da lista sem alterar o estoque") — grava a
- * exclusão na compra aberta, criada sob demanda (design D1/D2).
+ * exclusão na compra aberta, criada sob demanda (design D1/D2). Remover um
+ * avulso apaga a linha de verdade (avulso não existe fora de `compra_item`),
+ * mas oferece o mesmo desfazer — só que recriando a linha em vez de
+ * reverter uma marcação.
  *
  * Se o produto já tem uma linha de `compra_item` na compra aberta (porque
  * "Iniciar compra" já materializou esse item antes de a pessoa voltar pra
@@ -57,7 +78,12 @@ export function useRemoverItemDaLista(
       );
       if (existente) {
         await compras.editarItem(existente.item.id, { excluido: true });
-        setUltimaRemocao({ itemExclusaoId: existente.item.id, nome: item.nome, criouNovaLinha: false });
+        setUltimaRemocao({
+          tipo: 'produto',
+          itemExclusaoId: existente.item.id,
+          nome: item.nome,
+          criouNovaLinha: false,
+        });
         return;
       }
       const criado = await compras.adicionarItem(compra.id, {
@@ -66,7 +92,32 @@ export function useRemoverItemDaLista(
         quantidadePlanejada: QUANTIDADE_PLACEHOLDER,
         excluido: true,
       });
-      setUltimaRemocao({ itemExclusaoId: criado.id, nome: item.nome, criouNovaLinha: true });
+      setUltimaRemocao({
+        tipo: 'produto',
+        itemExclusaoId: criado.id,
+        nome: item.nome,
+        criouNovaLinha: true,
+      });
+    },
+    [compras],
+  );
+
+  const removerAvulso = useCallback(
+    async (item: Extract<ItemDaLista, { tipo: 'avulso' }>) => {
+      const { casaId, usuarioId } = obterIdentidadeLocal();
+      const compra = await obterOuAbrirCompra(compras, casaId, usuarioId, relogio.agora());
+      await compras.removerItem(item.itemId);
+      setUltimaRemocao({
+        tipo: 'avulso',
+        nome: item.nome,
+        compraId: compra.id,
+        dadosParaRecriar: {
+          nomeAvulso: item.nome,
+          unidade: item.unidade,
+          quantidadePlanejada: item.quantidadeAComprar,
+          valorEstimadoUnit: item.valorUnitario,
+        },
+      });
     },
     [compras],
   );
@@ -75,7 +126,9 @@ export function useRemoverItemDaLista(
     if (!ultimaRemocao) {
       return;
     }
-    if (ultimaRemocao.criouNovaLinha) {
+    if (ultimaRemocao.tipo === 'avulso') {
+      await compras.adicionarItem(ultimaRemocao.compraId, ultimaRemocao.dadosParaRecriar);
+    } else if (ultimaRemocao.criouNovaLinha) {
       await compras.removerItem(ultimaRemocao.itemExclusaoId);
     } else {
       await compras.editarItem(ultimaRemocao.itemExclusaoId, { excluido: false });
@@ -85,5 +138,5 @@ export function useRemoverItemDaLista(
 
   const limpar = useCallback(() => setUltimaRemocao(null), []);
 
-  return { ultimaRemocao, remover, desfazer, limpar };
+  return { ultimaRemocao, remover, removerAvulso, desfazer, limpar };
 }

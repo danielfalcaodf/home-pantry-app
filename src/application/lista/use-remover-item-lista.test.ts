@@ -1,6 +1,6 @@
 import { act, cleanup, renderHook } from '@testing-library/react-native';
 
-import { ItemListaProduto } from '../../domain/lista/lista';
+import { ItemListaAvulso, ItemListaProduto } from '../../domain/lista/lista';
 import { centavos } from '../../domain/shared/dinheiro';
 import { milesimos } from '../../domain/shared/quantidade';
 import { CompraRepositorioFalso } from './teste/repositorio-compra-falso';
@@ -23,6 +23,18 @@ const ITEM: ItemListaProduto = {
   quantidadeAComprar: milesimos(2000),
   valorUnitario: centavos(890),
   custo: centavos(1780),
+  semPreco: false,
+};
+
+const AVULSO: ItemListaAvulso = {
+  tipo: 'avulso',
+  itemId: 'item-avulso-1',
+  nome: 'Pilha AA',
+  categoria: null,
+  unidade: 'un',
+  quantidadeAComprar: milesimos(2000),
+  valorUnitario: centavos(300),
+  custo: centavos(600),
   semPreco: false,
 };
 
@@ -134,5 +146,64 @@ describe('useRemoverItemDaLista', () => {
     expect(compras.itens[0].id).toBe(materializado.id);
     expect(compras.itens[0].excluido).toBe(false);
     expect(compras.itens[0].valorEstimadoUnit).toBe(500);
+  });
+
+  // ACHADO de QA (correcao-lista-de-compras, task 5.3): remover um avulso
+  // nunca oferecia desfazer, porque usava um estado desconectado
+  // (useEditarAvulso) do que alimenta o toast (ultimaRemocao). Unificado
+  // aqui: removerAvulso agora popula o mesmo ultimaRemocao que remover().
+  describe('removerAvulso', () => {
+    it('apaga a linha do avulso e preenche ultimaRemocao pro toast de desfazer', async () => {
+      const compras = new CompraRepositorioFalso();
+      const aberta = await compras.abrir('casa-teste', 'usuario-teste', 1000);
+      if (!aberta.ok) {
+        throw new Error('setup do teste falhou');
+      }
+      const criado = await compras.adicionarItem(aberta.valor.id, {
+        nomeAvulso: AVULSO.nome,
+        unidade: AVULSO.unidade,
+        quantidadePlanejada: AVULSO.quantidadeAComprar,
+        valorEstimadoUnit: AVULSO.valorUnitario,
+      });
+
+      const { result } = await renderHook(() => useRemoverItemDaLista(compras));
+      await act(async () => {
+        await result.current.removerAvulso({ ...AVULSO, itemId: criado.id });
+      });
+
+      expect(compras.itens).toHaveLength(0);
+      expect(result.current.ultimaRemocao?.nome).toBe('Pilha AA');
+    });
+
+    it('desfazer recria a linha do avulso apagada, com os mesmos dados', async () => {
+      const compras = new CompraRepositorioFalso();
+      const aberta = await compras.abrir('casa-teste', 'usuario-teste', 1000);
+      if (!aberta.ok) {
+        throw new Error('setup do teste falhou');
+      }
+      const criado = await compras.adicionarItem(aberta.valor.id, {
+        nomeAvulso: AVULSO.nome,
+        unidade: AVULSO.unidade,
+        quantidadePlanejada: AVULSO.quantidadeAComprar,
+        valorEstimadoUnit: AVULSO.valorUnitario,
+      });
+
+      const { result } = await renderHook(() => useRemoverItemDaLista(compras));
+      await act(async () => {
+        await result.current.removerAvulso({ ...AVULSO, itemId: criado.id });
+      });
+      await act(async () => {
+        await result.current.desfazer();
+      });
+
+      expect(compras.itens).toHaveLength(1);
+      expect(compras.itens[0]).toMatchObject({
+        nomeAvulso: 'Pilha AA',
+        unidade: 'un',
+        quantidadePlanejada: milesimos(2000),
+        valorEstimadoUnit: centavos(300),
+      });
+      expect(result.current.ultimaRemocao).toBeNull();
+    });
   });
 });
