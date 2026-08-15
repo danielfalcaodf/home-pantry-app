@@ -45,3 +45,6 @@
 - [x] 6.3 `useEditarAvulso` perdeu `remover` (migrado pro hook unificado) — código morto removido, não um shim de compatibilidade.
 - [x] 6.4 Testes escritos: `use-remover-item-lista.test.ts` (`removerAvulso` alimenta `ultimaRemocao`; `desfazer` recria a linha do avulso com os dados originais) e `lista.test.tsx` (toast aparece com a lista vazia; remover avulso aciona `removerAvulso`, não mais um caminho desconectado).
 - [x] 6.5 `npm run verificar` + `npm test` completos de novo — 881 testes, 103 suites, todos passando.
+- [x] 6.6 QA visual no emulador confirmando os dois fixes ao vivo (não só nos testes automatizados): toast aparece e desfazer funciona ao remover o último item da lista (produto); toast aparece e desfazer restaura nome/quantidade/preço originais ao remover item avulso; remoção normal de produto (não-último item) sem regressão. Validado 2x cada cenário.
+
+**Achado incidental do QA final (fora do escopo, pré-existente, não bloqueia arquivamento):** `SheetAvulso` não reseta os campos entre aberturas — reabrir "Adicionar item avulso" uma segunda vez mantém nome/quantidade/preço da submissão anterior (nome chega a concatenar com o texto novo digitado). Provável causa: estado do formulário não reseta ao fechar/reabrir o sheet. Não investigado a fundo (fora do escopo desta verificação) — candidato a change separada.
