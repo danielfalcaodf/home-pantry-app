@@ -156,4 +156,22 @@ describe('ItemCompra', () => {
     const quadrado = screen.getByTestId('marcacao-quadrado');
     expect(estiloResolvido(quadrado).borderRadius).toBe(raio.linha);
   });
+
+  // ACHADO affordance (correcao-lista-de-compras, task 3.1): o ajuste por
+  // toque longo não tinha nenhuma pista visual — só o gesto invisível.
+  it('mostra um ícone indicador de que a linha aceita ajuste', async () => {
+    await comTema(
+      <ItemCompra linha={linhaBase()} onMarcar={jest.fn()} onDesmarcar={jest.fn()} onAjustar={jest.fn()} onResponderPreco={jest.fn()} />,
+    );
+    expect(screen.getByTestId('icone-ajustar')).toBeTruthy();
+  });
+
+  it('toque longo na linha continua chamando onAjustar (sem regressão)', async () => {
+    const onAjustar = jest.fn();
+    await comTema(
+      <ItemCompra linha={linhaBase()} onMarcar={jest.fn()} onDesmarcar={jest.fn()} onAjustar={onAjustar} onResponderPreco={jest.fn()} />,
+    );
+    fireEvent(screen.getByLabelText('Marcar Arroz'), 'longPress');
+    expect(onAjustar).toHaveBeenCalledTimes(1);
+  });
 });

@@ -4,8 +4,10 @@ import { CompraItem } from '../../domain/compra/compra';
 import { formatarBRL } from '../../domain/shared/dinheiro';
 import { formatarQuantidade } from '../../domain/shared/quantidade';
 import { ALVO_TOQUE_MINIMO, espaco, raio } from '../theme/espaco';
+import { icones } from '../theme/icones';
 import { useTheme } from '../theme/provider';
 import { ChipEstado } from './chip-estado';
+import { IconeSvg } from './icone-svg';
 import { Texto } from './texto';
 
 const LADO_MARCACAO = 28;
@@ -102,16 +104,25 @@ export function ItemCompra({ linha, onMarcar, onDesmarcar, onAjustar, onResponde
           </Texto>
         </View>
 
-        <View style={{ minWidth: 88, alignItems: 'flex-end' }}>
-          {semPreco ? (
-            <Texto papel="label" tom="secondary">
-              sem preço
-            </Texto>
-          ) : (
-            <Texto papel="data.md" tom={item.comprado ? 'secondary' : 'primary'}>
-              {formatarBRL(precoPorUnidade)}
-            </Texto>
-          )}
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: espaco.xs }}>
+          <View style={{ minWidth: 88, alignItems: 'flex-end' }}>
+            {semPreco ? (
+              <Texto papel="label" tom="secondary">
+                sem preço
+              </Texto>
+            ) : (
+              <Texto papel="data.md" tom={item.comprado ? 'secondary' : 'primary'}>
+                {formatarBRL(precoPorUnidade)}
+              </Texto>
+            )}
+          </View>
+          {/* Sinaliza que a linha aceita ajuste por toque longo (ACHADO
+              affordance) — o próprio ícone não é tocável, só indica que o
+              gesto existe; o alvo continua sendo a linha inteira via
+              onLongPress do Pressable pai. */}
+          <View testID="icone-ajustar">
+            <IconeSvg path={icones.ajustar} cor={tema.text.secondary} tamanho={16} />
+          </View>
         </View>
       </Pressable>
 

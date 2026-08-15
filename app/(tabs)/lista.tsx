@@ -1,3 +1,4 @@
+import { FlashList } from '@shopify/flash-list';
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Pressable, Share, View } from 'react-native';
@@ -8,14 +9,17 @@ import { useListaDeCompras } from '@/application/lista/use-lista-compras';
 import { usePreferenciaDeAgrupamento } from '@/application/lista/use-preferencia-agrupamento';
 import { useRemoverItemDaLista } from '@/application/lista/use-remover-item-lista';
 import { useIniciarCompra } from '@/application/compra/use-iniciar-compra';
+import { useEditarProduto } from '@/application/estoque/use-editar-produto';
 import { DadosDoAvulso, ItemDaLista } from '@/domain/lista/lista';
 import { totalDaListaDeCompras } from '@/domain/lista/lista.rules';
+import { centavos } from '@/domain/shared/dinheiro';
 import { paraDecimal } from '@/domain/shared/quantidade';
 import { Botao } from '@/presentation/components/botao';
 import { EstadoVazio } from '@/presentation/components/estado-vazio';
 import { ItemLista } from '@/presentation/components/item-lista';
 import { RodapeTotal } from '@/presentation/components/rodape-total';
 import { SheetAvulso } from '@/presentation/components/sheet-avulso';
+import { SheetPrecoProduto } from '@/presentation/components/sheet-preco-produto';
 import { Texto } from '@/presentation/components/texto';
 import { Toast } from '@/presentation/components/toast';
 import { agruparListaPorCategoria, listaContinua } from '@/presentation/format/agrupar-lista';
@@ -31,11 +35,15 @@ export default function Lista() {
   const { editar, remover: removerAvulso } = useEditarAvulso();
   const { ultimaRemocao, remover, desfazer, limpar } = useRemoverItemDaLista();
   const { iniciando, iniciar } = useIniciarCompra();
+  const { editar: editarProduto } = useEditarProduto();
 
   const [sheetAberta, setSheetAberta] = useState(false);
   const [avulsoEmEdicao, setAvulsoEmEdicao] = useState<Extract<ItemDaLista, { tipo: 'avulso' }> | null>(
     null,
   );
+  const [produtoEmEdicaoDePreco, setProdutoEmEdicaoDePreco] = useState<
+    Extract<ItemDaLista, { tipo: 'produto' }> | null
+  >(null);
 
   const total = useMemo(() => totalDaListaDeCompras(itens), [itens]);
   const linhas = useMemo(
@@ -51,6 +59,19 @@ export default function Lista() {
   function abrirEdicaoDeAvulso(item: Extract<ItemDaLista, { tipo: 'avulso' }>) {
     setAvulsoEmEdicao(item);
     setSheetAberta(true);
+  }
+
+  function abrirEdicaoDePreco(item: Extract<ItemDaLista, { tipo: 'produto' }>) {
+    setProdutoEmEdicaoDePreco(item);
+  }
+
+  async function salvarPrecoDoProduto(preco: number) {
+    if (!produtoEmEdicaoDePreco) {
+      return;
+    }
+    await editarProduto(produtoEmEdicaoDePreco.produtoId, {
+      valorUnitario: centavos(Math.round(preco * 100)),
+    });
   }
 
   async function salvarAvulso(dados: DadosDoAvulso) {
@@ -152,41 +173,60 @@ export default function Lista() {
         />
       </View>
 
-      {linhas.map((linha) =>
-        linha.tipo === 'cabecalho' ? (
-          <View
-            key={linha.chave}
-            style={{
-              paddingHorizontal: espaco.lg,
-              paddingTop: espaco.lg,
-              paddingBottom: espaco.sm,
-              backgroundColor: tema.bg.base,
-            }}
-          >
-            <Texto papel="caption" tom="secondary">
-              {linha.categoria}
+      <FlashList
+        testID="lista-de-compras"
+        data={linhas}
+        keyExtractor={(linha) => linha.chave}
+        renderItem={({ item: linha }) =>
+          linha.tipo === 'cabecalho' ? (
+            <View
+              style={{
+                paddingHorizontal: espaco.lg,
+                paddingTop: espaco.lg,
+                paddingBottom: espaco.sm,
+                backgroundColor: tema.bg.base,
+              }}
+            >
+              <Texto papel="caption" tom="secondary">
+                {linha.categoria}
+              </Texto>
+            </View>
+          ) : (
+            <Pressable
+              onPress={() =>
+                linha.item.tipo === 'avulso'
+                  ? abrirEdicaoDeAvulso(linha.item)
+                  : abrirEdicaoDePreco(linha.item)
+              }
+            >
+              <ItemLista
+                item={linha.item}
+                categoria={agrupado ? null : linha.item.categoria}
+                onRemover={() => void removerItem(linha.item)}
+              />
+            </Pressable>
+          )
+        }
+        ListFooterComponent={
+          <View style={{ padding: espaco.lg, alignItems: 'center' }}>
+            <Texto papel="body.md" cor={tema.action.azulejo} onPress={abrirNovoAvulso}>
+              Adicionar item avulso
             </Texto>
           </View>
-        ) : (
-          <Pressable
-            key={linha.chave}
-            onPress={() => (linha.item.tipo === 'avulso' ? abrirEdicaoDeAvulso(linha.item) : undefined)}
-            disabled={linha.item.tipo !== 'avulso'}
-          >
-            <ItemLista
-              item={linha.item}
-              categoria={agrupado ? null : linha.item.categoria}
-              onRemover={() => void removerItem(linha.item)}
-            />
-          </Pressable>
-        ),
-      )}
+        }
+      />
 
-      <View style={{ padding: espaco.lg, alignItems: 'center' }}>
-        <Texto papel="body.md" cor={tema.action.azulejo} onPress={abrirNovoAvulso}>
-          Adicionar item avulso
-        </Texto>
-      </View>
+      <SheetPrecoProduto
+        visivel={produtoEmEdicaoDePreco !== null}
+        nome={produtoEmEdicaoDePreco?.nome ?? ''}
+        precoInicial={
+          produtoEmEdicaoDePreco && !produtoEmEdicaoDePreco.semPreco
+            ? produtoEmEdicaoDePreco.valorUnitario / 100
+            : null
+        }
+        onFechar={() => setProdutoEmEdicaoDePreco(null)}
+        onSalvar={(preco) => void salvarPrecoDoProduto(preco)}
+      />
 
       <SheetAvulso
         visivel={sheetAberta}

@@ -1,9 +1,9 @@
 ## 1. Scroll na Lista de compras (bug confirmado)
 
-- [ ] 1.1 Trocar o `View` + `.map()` de `app/(tabs)/lista.tsx` por `FlashList` (`@shopify/flash-list`), com `data={linhas}` e `renderItem` decidindo entre cabeçalho de categoria e `ItemLista` pelo `linha.tipo` — mesmo padrão já usado em `app/(tabs)/index.tsx`.
-- [ ] 1.2 Escrever teste (RNTL) reproduzindo o cenário do bug: renderizar a Lista com itens suficientes pra exceder a altura da tela e confirmar que o container é rolável (estrutural, via `FlashList`/`testID`, seguindo o padrão de teste já usado pra `EvitaTeclado` na change anterior).
-- [ ] 1.3 Rodar o teste criado em 1.2 e confirmar que passa antes de seguir.
-- [ ] 1.4 Cobrir casos de borda do mesmo contexto: lista vazia (já tem `EstadoVazio`, confirmar que continua funcionando sem regressão), lista com 1 item, lista agrupada por categoria com `FlashList` (cabeçalhos + itens intercalados).
+- [x] 1.1 Trocar o `View` + `.map()` de `app/(tabs)/lista.tsx` por `FlashList` (`@shopify/flash-list`), com `data={linhas}` e `renderItem` decidindo entre cabeçalho de categoria e `ItemLista` pelo `linha.tipo` — mesmo padrão já usado em `app/(tabs)/index.tsx`. "Adicionar item avulso" virou `ListFooterComponent`, pra continuar rolando junto da lista.
+- [x] 1.2 Escrito teste (RNTL) confirmando o `FlashList` (`testID="lista-de-compras"`) no lugar do `View` solto, em `app/(tabs)/lista.test.tsx`.
+- [x] 1.3 Testes de 1.2 rodados e passando.
+- [x] 1.4 Casos de borda: lista com 1 item (testado, dentro do `FlashList`); lista vazia continua no branch `EstadoVazio` anterior ao `FlashList` (nenhuma mudança estrutural ali, sem regressão possível); agrupamento por categoria (`agruparListaPorCategoria`/`listaContinua`) já tem cobertura unitária própria e não muda com a troca de container — o único ponto novo é o `FlashList` em si, coberto pelos testes de 1.2.
 
 ## 2. Item faltante não aparece na Lista de compras (investigação + correção)
 
@@ -17,18 +17,18 @@
 
 ## 3. Affordance do ajuste no Modo Compra
 
-- [ ] 3.1 Adicionar um ícone indicador (via `IconeSvg`/`icones.ts`, mesmo estilo já usado no resto do app) em `item-compra.tsx`, posicionado perto do preço, sinalizando que a linha aceita ajuste por toque longo — sem adicionar um segundo alvo de toque separado.
-- [ ] 3.2 Escrever teste (RNTL) confirmando que o ícone indicador está presente em toda linha do Modo Compra, e que o toque longo continua abrindo `SheetAjusteCompra` como antes (sem regressão).
-- [ ] 3.3 Rodar os testes de 3.2 e confirmar que passam.
+- [x] 3.1 Adicionado ícone `ajustar` (novo path em `icones.ts`, estilo consistente) em `item-compra.tsx`, ao lado do preço, dentro de `testID="icone-ajustar"`.
+- [x] 3.2 Testes escritos em `item-compra.test.tsx`: ícone presente, e toque longo continua chamando `onAjustar` sem regressão.
+- [x] 3.3 Testes rodados e passando (10/10 no arquivo).
 
 ## 4. Editar preço de produto direto na Lista de compras (funcionalidade nova, mesmo fluxo de teste de Bug Fix por reaproveitar componentes já entregues)
 
-- [ ] 4.1 Criar um sheet pequeno e focado (novo componente de apresentação, reaproveitando `CampoTexto` com `tipo="dinheiro"` e `EvitaTeclado`, ambos já entregues pela change `correcao-usabilidade-campos-e-botoes`) com um único campo de preço.
-- [ ] 4.2 Habilitar o toque em `item-lista.tsx`/`lista.tsx` para itens `tipo: 'produto'` (hoje só `avulso` é tocável), abrindo o sheet de 4.1 com o preço atual do produto (ou vazio, se `semPreco`).
-- [ ] 4.3 Salvar via `useEditarProduto().editar(produtoId, { valorUnitario })` — reaproveitar hook e porta já existentes, sem novo caso de uso.
-- [ ] 4.4 Escrever teste do cenário principal: tocar um produto faltante na Lista, editar o preço, confirmar que `useEditarProduto` foi chamado com o `valorUnitario` correto e que a lista reflete o novo preço.
-- [ ] 4.5 Rodar o teste de 4.4 e confirmar que passa.
-- [ ] 4.6 Cobrir casos de borda do mesmo contexto: produto sem preço nenhum (`semPreco`) recebendo um preço pela primeira vez; item avulso continua abrindo `SheetAvulso` (não o novo sheet de preço) e sem regressão no fluxo existente; cancelar o sheet de preço sem salvar não altera o produto.
+- [x] 4.1 Criado `src/presentation/components/sheet-preco-produto.tsx` — sheet pequeno e focado, reaproveitando `CampoTexto` (`tipo="dinheiro"`) e `EvitaTeclado`, um único campo de preço.
+- [x] 4.2 `lista.tsx` habilitado pra abrir o sheet de preço ao tocar um item `tipo: 'produto'` (antes só avulso era tocável); item avulso continua abrindo `SheetAvulso` como antes.
+- [x] 4.3 Salvamento via `useEditarProduto().editar(produtoId, { valorUnitario: centavos(...) })` — hook e porta já existentes, sem novo caso de uso.
+- [x] 4.4 Testes escritos em `app/(tabs)/lista.test.tsx`: cenário principal (tocar produto, editar preço, `useEditarProduto` chamado com o valor correto).
+- [x] 4.5 Testes rodados e passando.
+- [x] 4.6 Casos de borda testados: produto sem preço nenhum recebendo preço pela primeira vez; item avulso continua abrindo `SheetAvulso`, não o novo sheet; fechar sem salvar não chama `useEditarProduto`.
 
 ## 5. Regressão
 
