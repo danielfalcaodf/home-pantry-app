@@ -43,6 +43,9 @@ export type EstadoRemocaoDaLista = {
   removerAvulso: (item: Extract<ItemDaLista, { tipo: 'avulso' }>) => Promise<void>;
   desfazer: () => Promise<void>;
   limpar: () => void;
+  /** Reativação manual, pela seção de desativados — reverte a exclusão
+   *  direto pelo id da linha, sem depender de um novo "Usei". */
+  reativar: (itemId: string) => Promise<void>;
 };
 
 /**
@@ -138,5 +141,12 @@ export function useRemoverItemDaLista(
 
   const limpar = useCallback(() => setUltimaRemocao(null), []);
 
-  return { ultimaRemocao, remover, removerAvulso, desfazer, limpar };
+  const reativar = useCallback(
+    async (itemId: string) => {
+      await compras.editarItem(itemId, { excluido: false });
+    },
+    [compras],
+  );
+
+  return { ultimaRemocao, remover, removerAvulso, desfazer, limpar, reativar };
 }

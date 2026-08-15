@@ -206,4 +206,31 @@ describe('useRemoverItemDaLista', () => {
       expect(result.current.ultimaRemocao).toBeNull();
     });
   });
+
+  // ACHADO de usabilidade: exclusão pelo X é temporária, não definitiva —
+  // a seção de desativados oferece um jeito manual de trazer o item de
+  // volta, sem depender de um novo "Usei" (que já reativa sozinho).
+  describe('reativar', () => {
+    it('reverte a exclusão de uma linha, direto pelo id', async () => {
+      const compras = new CompraRepositorioFalso();
+      const aberta = await compras.abrir('casa-teste', 'usuario-teste', 1000);
+      if (!aberta.ok) {
+        throw new Error('setup do teste falhou');
+      }
+      const excluido = await compras.adicionarItem(aberta.valor.id, {
+        produtoId: 'p1',
+        unidade: 'un',
+        quantidadePlanejada: milesimos(1000),
+        excluido: true,
+      });
+
+      const { result } = await renderHook(() => useRemoverItemDaLista(compras));
+      await act(async () => {
+        await result.current.reativar(excluido.id);
+      });
+
+      const linha = compras.itens.find((i) => i.id === excluido.id);
+      expect(linha?.excluido).toBe(false);
+    });
+  });
 });

@@ -73,6 +73,37 @@ describe('useListaDeCompras', () => {
     expect(result.current.itens.map((i) => i.nome)).toEqual(['Sabão']);
   });
 
+  // ACHADO de usabilidade: exclusão não é invisível — a pessoa precisa ver
+  // o que ficou de fora pra poder trazer de volta manualmente.
+  it('faltante excluído aparece em desativados, com o nome do produto', async () => {
+    const produtos = new ProdutoRepositorioFalso([
+      produtoFalso({ id: 'p1', nome: 'Arroz', categoria: 'Grãos', quantidadeAtual: milesimos(0), quantidadeNecessaria: milesimos(2000) }),
+    ]);
+    const compras = new CompraRepositorioFalso(produtos);
+    await compras.abrir('casa-teste', 'usuario-teste', 1);
+    const aberta = await compras.obterAberta('casa-teste');
+    const excluido = await compras.adicionarItem(aberta!.id, {
+      produtoId: 'p1',
+      unidade: 'pacote',
+      quantidadePlanejada: milesimos(1000),
+      excluido: true,
+    });
+
+    const { result } = await montar(produtos, compras);
+    expect(result.current.desativados).toEqual([
+      { itemId: excluido.id, produtoId: 'p1', nome: 'Arroz', categoria: 'Grãos' },
+    ]);
+  });
+
+  it('sem compra aberta, desativados vem vazio', async () => {
+    const produtos = new ProdutoRepositorioFalso([
+      produtoFalso({ id: 'p1', quantidadeAtual: milesimos(0), quantidadeNecessaria: milesimos(2000) }),
+    ]);
+    const compras = new CompraRepositorioFalso(produtos);
+    const { result } = await montar(produtos, compras);
+    expect(result.current.desativados).toEqual([]);
+  });
+
   it('lista vazia quando nada falta e não há avulso', async () => {
     const produtos = new ProdutoRepositorioFalso([
       produtoFalso({ id: 'p1', quantidadeAtual: milesimos(2000), quantidadeNecessaria: milesimos(2000) }),

@@ -57,4 +57,16 @@ Usuário reportou (com prints) que, ao marcar "Carne moída" como "Acabou" na De
 - [x] 7.2 A pedido do usuário, `adb shell pm clear com.triasoftware.repor` — reset completo dos dados do app no emulador, eliminando toda a sujeira acumulada de várias sessões de QA (múltiplas compras de teste, exclusões soltas, produtos de teste).
 - [x] 7.3 Verificação limpa pós-reset via `mobile-ux-tester`: cadastrar produto novo → "Usei" até faltar → aparece na Lista imediatamente, sem trocar de aba nem reiniciar. Confirma que o mecanismo funciona corretamente do zero, sem qualquer interferência de dado de teste antigo.
 
-**Não vira tarefa de código** — não há bug de produto aqui, só a ausência de affordance visual pra "item removido antes continua removido até a compra fechar" (já registrado como sugestão de UX pro achado incidental acima, mesma família de problema).
+**Correção de rota, não só de investigação** — na conversa com o usuário sobre este achado, ficou claro que a expectativa de produto era diferente do que o código fazia: exclusão pelo X deveria ser **temporária**, não permanente até o fechamento da compra. Ver grupo 8.
+
+## 8. Exclusão da Lista é temporária, não definitiva (correção de comportamento, a partir do feedback do usuário no grupo 7)
+
+Usuário, ao revisar o grupo 7: *"quero poder voltar msm item quando estiver faltando ou acabou quando aperta o menos novamente, msm tenha apertado no X (...) não quero excluir da lista para sempre, é algo temporario, não permanente"*. Duas correções, não uma:
+
+- [x] 8.1 **Reativação automática**: `useDarBaixa` (o "Usei") agora injeta `CompraRepository` e, depois de gravar o consumo com sucesso, verifica se existe uma linha excluída da compra aberta pro mesmo produto — se existir, reverte a exclusão (`editarItem(id, {excluido: false})`). Sem compra aberta, não faz nada extra (early return antes de qualquer query). Não interfere no caminho crítico (KPI K4): nenhuma UI nova, nenhum spinner, só uma escrita a mais na mesma transação lógica do "Usei".
+- [x] 8.2 Testes do cenário exato do pedido em `caminho-critico.test.ts`: item excluído reaparece após novo "Usei"; item sem exclusão pendente não sofre nenhuma escrita extra; exclusão de outro produto na mesma compra não é afetada. `useDarBaixa` ganhou um terceiro parâmetro (`compras: CompraRepository`) — todas as chamadas de teste existentes atualizadas para injetar `CompraRepositorioFalso`.
+- [x] 8.3 **Reativação manual + visibilidade**: nova seção "Fora da lista por agora" no rodapé de `app/(tabs)/lista.tsx`, sempre visível quando há itens excluídos na compra aberta (inclusive com a lista de faltantes vazia) — cada linha mostra o nome do produto e um botão "Voltar pra lista". `useListaDeCompras` ganhou `desativados: ItemDesativado[]` (itemId, produtoId, nome, categoria); `useRemoverItemDaLista` ganhou `reativar(itemId)`.
+- [x] 8.4 Testes escritos: `use-lista-compras.test.ts` (desativados populado com o produto certo; vazio sem compra aberta), `use-remover-item-lista.test.ts` (`reativar` reverte a exclusão pelo id), `lista.test.tsx` (seção aparece com nome e botão; some sem desativados; aparece mesmo com a lista principal vazia).
+- [x] 8.5 `npm run verificar` + `npm test` completos — 103 suítes, 890 testes, todos passando (typecheck sem nenhum erro novo — só os pré-existentes de `router.d.ts` já documentados no grupo 5).
+
+**Vocabulário**: seção nomeada "Fora da lista por agora" / botão "Voltar pra lista" — evita termos de domínio ("excluído", "desativado") na UI, seguindo a regra de vocabulário do design.

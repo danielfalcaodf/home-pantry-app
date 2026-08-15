@@ -1,5 +1,6 @@
 import { act, cleanup, renderHook, waitFor } from '@testing-library/react-native';
 
+import { CompraRepositorioFalso } from '../lista/teste/repositorio-compra-falso';
 import { milesimos } from '../../domain/shared/quantidade';
 import {
   MovimentoRepositorioFalso,
@@ -14,6 +15,7 @@ jest.mock('../../composicao/repositorios', () => ({
   obterIdentidadeLocal: () => ({ casaId: 'casa-teste', usuarioId: 'usuario-teste' }),
   produtoRepository: undefined,
   movimentoRepository: undefined,
+  compraRepository: undefined,
   relogio: { agora: () => 1_700_000_000_000 },
 }));
 
@@ -32,7 +34,7 @@ describe('useDarBaixa', () => {
     const repo = new ProdutoRepositorioFalso([
       produtoFalso({ quantidadeAtual: milesimos(3000) }),
     ]);
-    const result = await montar(() => useDarBaixa(repo, relogio));
+    const result = await montar(() => useDarBaixa(repo, relogio, new CompraRepositorioFalso()));
     const registro = await result.current.registrar('p1', milesimos(1000));
     expect(ehFalha(registro)).toBe(false);
     if (!ehFalha(registro) && registro.gravou) {
@@ -46,7 +48,7 @@ describe('useDarBaixa', () => {
     const repo = new ProdutoRepositorioFalso([
       produtoFalso({ quantidadeAtual: milesimos(500) }),
     ]);
-    const result = await montar(() => useDarBaixa(repo, relogio));
+    const result = await montar(() => useDarBaixa(repo, relogio, new CompraRepositorioFalso()));
     const registro = await result.current.registrar('p1', milesimos(2000));
     expect(ehFalha(registro)).toBe(false);
     if (!ehFalha(registro) && registro.gravou) {
@@ -58,7 +60,7 @@ describe('useDarBaixa', () => {
 
   it('item já zerado não grava movimento nenhum', async () => {
     const repo = new ProdutoRepositorioFalso([produtoFalso({ quantidadeAtual: milesimos(0) })]);
-    const result = await montar(() => useDarBaixa(repo, relogio));
+    const result = await montar(() => useDarBaixa(repo, relogio, new CompraRepositorioFalso()));
     const registro = await result.current.registrar('p1', milesimos(1000));
     expect(registro).toEqual({ gravou: false, motivo: 'estoque_zerado' });
     expect(repo.movimentos).toHaveLength(0);
@@ -69,7 +71,7 @@ describe('useDarBaixa', () => {
       produtoFalso({ quantidadeAtual: milesimos(3000) }),
     ]);
     jest.spyOn(repo, 'darBaixa').mockRejectedValueOnce(new Error('banco indisponível'));
-    const result = await montar(() => useDarBaixa(repo, relogio));
+    const result = await montar(() => useDarBaixa(repo, relogio, new CompraRepositorioFalso()));
     const registro = await result.current.registrar('p1', milesimos(1000));
     expect(ehFalha(registro)).toBe(true);
     expect(repo.produtos[0].quantidadeAtual).toBe(3000);
@@ -79,7 +81,7 @@ describe('useDarBaixa', () => {
     const repo = new ProdutoRepositorioFalso([
       produtoFalso({ quantidadeAtual: milesimos(5000) }),
     ]);
-    const result = await montar(() => useDarBaixa(repo, relogio));
+    const result = await montar(() => useDarBaixa(repo, relogio, new CompraRepositorioFalso()));
     await act(async () => {
       await Promise.all([
         result.current.registrar('p1', milesimos(1000)),
@@ -90,6 +92,70 @@ describe('useDarBaixa', () => {
     expect(repo.movimentos).toHaveLength(3);
     expect(repo.movimentos.every((m) => m.delta === -1000)).toBe(true);
     expect(repo.produtos[0].quantidadeAtual).toBe(2000);
+  });
+
+  // ACHADO pós-arquivamento (correcao-lista-de-compras): usuário removeu um
+  // faltante da lista pelo X ("não vou comprar desta vez"), mas depois usou
+  // mais dele — esperava que o item voltasse, não que a exclusão antiga
+  // continuasse escondendo pra sempre. "Usei" de novo é o sinal de que a
+  // necessidade voltou.
+  it('reativa a exclusão da lista quando a pessoa usa mais do item já removido', async () => {
+    const repo = new ProdutoRepositorioFalso([
+      produtoFalso({ id: 'p1', quantidadeAtual: milesimos(1000) }),
+    ]);
+    const compras = new CompraRepositorioFalso();
+    const aberta = await compras.abrir('casa-teste', 'usuario-teste', 1000);
+    if (!aberta.ok) {
+      throw new Error('setup do teste falhou');
+    }
+    const excluido = await compras.adicionarItem(aberta.valor.id, {
+      produtoId: 'p1',
+      unidade: 'un',
+      quantidadePlanejada: milesimos(1000),
+      excluido: true,
+    });
+
+    const result = await montar(() => useDarBaixa(repo, relogio, compras));
+    await result.current.registrar('p1', milesimos(500));
+
+    const linha = compras.itens.find((i) => i.id === excluido.id);
+    expect(linha?.excluido).toBe(false);
+  });
+
+  it('item sem nenhuma exclusão pendente na lista não sofre nenhuma escrita extra', async () => {
+    const repo = new ProdutoRepositorioFalso([
+      produtoFalso({ id: 'p1', quantidadeAtual: milesimos(1000) }),
+    ]);
+    const compras = new CompraRepositorioFalso();
+
+    const result = await montar(() => useDarBaixa(repo, relogio, compras));
+    await result.current.registrar('p1', milesimos(500));
+
+    expect(compras.compras).toHaveLength(0);
+    expect(compras.itens).toHaveLength(0);
+  });
+
+  it('exclusão de OUTRO produto na mesma compra não é afetada', async () => {
+    const repo = new ProdutoRepositorioFalso([
+      produtoFalso({ id: 'p1', quantidadeAtual: milesimos(1000) }),
+    ]);
+    const compras = new CompraRepositorioFalso();
+    const aberta = await compras.abrir('casa-teste', 'usuario-teste', 1000);
+    if (!aberta.ok) {
+      throw new Error('setup do teste falhou');
+    }
+    const excluidoDeOutro = await compras.adicionarItem(aberta.valor.id, {
+      produtoId: 'p2',
+      unidade: 'un',
+      quantidadePlanejada: milesimos(1000),
+      excluido: true,
+    });
+
+    const result = await montar(() => useDarBaixa(repo, relogio, compras));
+    await result.current.registrar('p1', milesimos(500));
+
+    const linha = compras.itens.find((i) => i.id === excluidoDeOutro.id);
+    expect(linha?.excluido).toBe(true);
   });
 });
 
@@ -122,7 +188,7 @@ describe('useDesfazerMovimento', () => {
       produtoFalso({ quantidadeAtual: milesimos(5000) }),
     ]);
     const movimentos = new MovimentoRepositorioFalso(repo);
-    const baixa = await montar(() => useDarBaixa(repo, relogio));
+    const baixa = await montar(() => useDarBaixa(repo, relogio, new CompraRepositorioFalso()));
 
     const primeiro = await baixa.current.registrar('p1', milesimos(1000));
     await baixa.current.registrar('p1', milesimos(1000));
@@ -147,7 +213,7 @@ describe('useDesfazerMovimento', () => {
       produtoFalso({ quantidadeAtual: milesimos(500) }),
     ]);
     const movimentos = new MovimentoRepositorioFalso(repo);
-    const baixa = await montar(() => useDarBaixa(repo, relogio));
+    const baixa = await montar(() => useDarBaixa(repo, relogio, new CompraRepositorioFalso()));
 
     // Pediu 2000, mas só havia 500: a variação aplicada foi -500.
     const registro = await baixa.current.registrar('p1', milesimos(2000));

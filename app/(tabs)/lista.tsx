@@ -29,11 +29,12 @@ import { useTheme } from '@/presentation/theme/provider';
 
 export default function Lista() {
   const tema = useTheme();
-  const { itens, carregando } = useListaDeCompras();
+  const { itens, desativados, carregando } = useListaDeCompras();
   const { agrupado, alternar } = usePreferenciaDeAgrupamento();
   const { adicionar } = useAdicionarAvulso();
   const { editar } = useEditarAvulso();
-  const { ultimaRemocao, remover, removerAvulso, desfazer, limpar } = useRemoverItemDaLista();
+  const { ultimaRemocao, remover, removerAvulso, desfazer, limpar, reativar } =
+    useRemoverItemDaLista();
   const { iniciando, iniciar } = useIniciarCompra();
   const { editar: editarProduto } = useEditarProduto();
 
@@ -210,6 +211,48 @@ export default function Lista() {
           />
         </>
       )}
+
+      {desativados.length > 0 ? (
+        <View
+          testID="secao-desativados"
+          style={{
+            paddingHorizontal: espaco.lg,
+            paddingTop: espaco.md,
+            paddingBottom: espaco.lg,
+            gap: espaco.sm,
+          }}
+        >
+          <Texto papel="caption" tom="secondary">
+            Fora da lista por agora
+          </Texto>
+          {desativados.map((item) => (
+            <View
+              key={item.itemId}
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                minHeight: ALVO_TOQUE_MINIMO,
+              }}
+            >
+              <Texto papel="body.md" tom="secondary">
+                {item.nome}
+              </Texto>
+              <Pressable
+                onPress={() => void reativar(item.itemId)}
+                accessibilityRole="button"
+                accessibilityLabel={`Voltar ${item.nome} pra lista`}
+                hitSlop={8}
+                style={{ minHeight: ALVO_TOQUE_MINIMO, justifyContent: 'center' }}
+              >
+                <Texto papel="body.md" cor={tema.action.azulejo}>
+                  Voltar pra lista
+                </Texto>
+              </Pressable>
+            </View>
+          ))}
+        </View>
+      ) : null}
 
       <SheetPrecoProduto
         visivel={produtoEmEdicaoDePreco !== null}

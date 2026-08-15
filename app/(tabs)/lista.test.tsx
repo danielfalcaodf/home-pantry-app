@@ -46,7 +46,13 @@ const mockItens = [
   },
 ];
 
-const mockUseListaDeCompras = jest.fn(() => ({ itens: mockItens, carregando: false }));
+type ItemDesativadoTeste = { itemId: string; produtoId: string; nome: string; categoria: string | null };
+
+const mockUseListaDeCompras = jest.fn(() => ({
+  itens: mockItens,
+  desativados: [] as ItemDesativadoTeste[],
+  carregando: false,
+}));
 jest.mock('@/application/lista/use-lista-compras', () => ({
   useListaDeCompras: () => mockUseListaDeCompras(),
 }));
@@ -62,12 +68,14 @@ jest.mock('@/application/lista/use-editar-avulso', () => ({
 const mockRemoverAvulso = jest.fn();
 const mockDesfazer = jest.fn();
 const mockLimpar = jest.fn();
+const mockReativar = jest.fn();
 const mockUseRemoverItemDaLista = jest.fn(() => ({
   ultimaRemocao: null as unknown,
   remover: jest.fn(),
   removerAvulso: mockRemoverAvulso,
   desfazer: mockDesfazer,
   limpar: mockLimpar,
+  reativar: mockReativar,
 }));
 jest.mock('@/application/lista/use-remover-item-lista', () => ({
   useRemoverItemDaLista: () => mockUseRemoverItemDaLista(),
@@ -205,13 +213,14 @@ describe('Lista — editar preço de produto direto na lista', () => {
 
 describe('Lista — toast de "Desfazer" (ACHADOs de QA)', () => {
   afterEach(() => {
-    mockUseListaDeCompras.mockReturnValue({ itens: mockItens, carregando: false });
+    mockUseListaDeCompras.mockReturnValue({ itens: mockItens, desativados: [], carregando: false });
     mockUseRemoverItemDaLista.mockReturnValue({
       ultimaRemocao: null,
       remover: jest.fn(),
       removerAvulso: mockRemoverAvulso,
       desfazer: mockDesfazer,
       limpar: mockLimpar,
+      reativar: mockReativar,
     });
   });
 
@@ -219,13 +228,14 @@ describe('Lista — toast de "Desfazer" (ACHADOs de QA)', () => {
   // chegava a renderizar o <Toast> — remover o último item da lista
   // deixava a pessoa sem chance de desfazer.
   it('o toast de desfazer aparece mesmo quando a lista fica vazia', async () => {
-    mockUseListaDeCompras.mockReturnValue({ itens: [], carregando: false });
+    mockUseListaDeCompras.mockReturnValue({ itens: [], desativados: [], carregando: false });
     mockUseRemoverItemDaLista.mockReturnValue({
       ultimaRemocao: { tipo: 'produto', itemExclusaoId: 'x1', nome: 'Arroz', criouNovaLinha: true },
       remover: jest.fn(),
       removerAvulso: mockRemoverAvulso,
       desfazer: mockDesfazer,
       limpar: mockLimpar,
+      reativar: mockReativar,
     });
 
     await comTema(<Lista />);
@@ -247,5 +257,48 @@ describe('Lista — toast de "Desfazer" (ACHADOs de QA)', () => {
     expect(mockRemoverAvulso).toHaveBeenCalledWith(
       expect.objectContaining({ tipo: 'avulso', itemId: 'a1', nome: 'Pilha AA' }),
     );
+  });
+});
+
+describe('Lista — seção de desativados (exclusão é temporária, não some pra sempre)', () => {
+  afterEach(() => {
+    mockUseListaDeCompras.mockReturnValue({ itens: mockItens, desativados: [], carregando: false });
+  });
+
+  it('mostra o nome dos itens desativados e um botão pra trazer cada um de volta', async () => {
+    mockUseListaDeCompras.mockReturnValue({
+      itens: mockItens,
+      desativados: [{ itemId: 'x1', produtoId: 'p9', nome: 'Manteiga', categoria: 'Laticínios' }],
+      carregando: false,
+    });
+
+    await comTema(<Lista />);
+
+    expect(screen.getByText('Fora da lista por agora')).toBeTruthy();
+    expect(screen.getByText('Manteiga')).toBeTruthy();
+    fireEvent.press(screen.getByLabelText('Voltar Manteiga pra lista'));
+    expect(mockReativar).toHaveBeenCalledWith('x1');
+  });
+
+  it('sem itens desativados, a seção não aparece', async () => {
+    mockUseListaDeCompras.mockReturnValue({ itens: mockItens, desativados: [], carregando: false });
+
+    await comTema(<Lista />);
+
+    expect(screen.queryByText('Fora da lista por agora')).toBeNull();
+  });
+
+  it('aparece mesmo com a lista de faltantes vazia', async () => {
+    mockUseListaDeCompras.mockReturnValue({
+      itens: [],
+      desativados: [{ itemId: 'x1', produtoId: 'p9', nome: 'Manteiga', categoria: null }],
+      carregando: false,
+    });
+
+    await comTema(<Lista />);
+
+    expect(screen.getByText('Nada faltando por aqui.', { exact: false })).toBeTruthy();
+    expect(screen.getByText('Fora da lista por agora')).toBeTruthy();
+    expect(screen.getByText('Manteiga')).toBeTruthy();
   });
 });
