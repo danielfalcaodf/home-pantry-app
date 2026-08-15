@@ -1,4 +1,4 @@
-appId: com.triasoftware.repor
+appId: com.danielfalcaodf.repor
 ---
 # Sanidade: o app abre, a tab bar tem as 4 abas e a Despensa renderiza sem
 # tela em branco/redbox. Serve de base pros flows mais específicos.

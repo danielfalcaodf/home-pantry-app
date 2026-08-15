@@ -1,4 +1,4 @@
-appId: com.triasoftware.repor
+appId: com.danielfalcaodf.repor
 ---
 # Edição de produto existente (F5, capability `cadastro-de-produto`,
 # delta de edição PR-05/PR-10, `app/produto/[id].tsx`): cobre o caminho
