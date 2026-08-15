@@ -34,4 +34,9 @@
 
 - [x] 5.1 `npm run verificar` limpo (fronteiras + lint; typecheck só com o achado de infraestrutura pré-existente do `router.d.ts`, não relacionado a este código — confirmado sem nenhum outro erro). `npm test` completo: 878 testes, 103 suites, todos passando.
 - [x] 5.2 Suíte específica (`lista.test.tsx`, `item-compra.test.tsx`, `use-lista-compras`, `use-modo-compra`, `use-remover-item-lista`, `sqlite-compra.repository`) — 42 testes, 6 suites, todos passando.
-- [ ] 5.3 QA visual final no emulador (`mobile-ux-tester`) cobrindo os 4 pontos corrigidos/adicionados (scroll, item faltante único após reprodução, ícone de ajuste no Modo Compra, edição de preço na Lista), nos dois temas.
+- [x] 5.3 QA visual final no emulador — os 4 pontos confirmados funcionando nos dois temas: scroll (`FlashList` rola até "Adicionar item avulso"), causa raiz do item sumido (cancelar a compra com a duplicata libera o produto; fluxo completo materializar → remover → uma única linha no Modo Compra → desfazer restaura, tudo validado), ícone de ajuste no Modo Compra, edição de preço na Lista (com e sem preço prévio).
+
+**Achados incidentais do QA (pré-existentes, não introduzidos por esta change — tocam o mesmo `use-remover-item-lista.ts`/`lista.tsx` mexidos aqui, registrados pra decisão do usuário antes de arquivar):**
+- Toast "Desfazer" não aparece ao remover o último item da lista (o branch de `EstadoVazio` em `lista.tsx` não renderiza `<Toast>`, só o branch de baixo).
+- Item avulso removido nunca oferece "Desfazer" (`removerAvulso`/`useEditarAvulso` é desconectado do estado `ultimaRemocao` que alimenta o toast).
+- Preço "por unidade" ambíguo pra produtos em g/ml (achado de UX, cálculo do domínio está correto — falta indicar a unidade de referência no rótulo do campo de preço).
