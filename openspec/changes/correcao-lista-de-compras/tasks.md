@@ -48,3 +48,13 @@
 - [x] 6.6 QA visual no emulador confirmando os dois fixes ao vivo (não só nos testes automatizados): toast aparece e desfazer funciona ao remover o último item da lista (produto); toast aparece e desfazer restaura nome/quantidade/preço originais ao remover item avulso; remoção normal de produto (não-último item) sem regressão. Validado 2x cada cenário.
 
 **Achado incidental do QA final (fora do escopo, pré-existente, não bloqueia arquivamento):** `SheetAvulso` não reseta os campos entre aberturas — reabrir "Adicionar item avulso" uma segunda vez mantém nome/quantidade/preço da submissão anterior (nome chega a concatenar com o texto novo digitado). Provável causa: estado do formulário não reseta ao fechar/reabrir o sheet. Não investigado a fundo (fora do escopo desta verificação) — candidato a change separada.
+
+## 7. Falso alarme pós-arquivamento: "Carne moída" não aparecia na Lista
+
+Usuário reportou (com prints) que, ao marcar "Carne moída" como "Acabou" na Despensa, o item não aparecia na Lista — parecia ser o mesmo bug do grupo 2 de volta.
+
+- [x] 7.1 Investigado puxando o banco do emulador de novo (`adb exec-out run-as ... cat files/SQLite/estoque.db`). **Não é regressão do fix**: a compra aberta no dispositivo (criada 2026-08-15 01:49, durante a própria sessão de QA do grupo 6) tinha 5 produtos marcados `excluido=1` — Manteiga, Aveia, Carne moída, Detergente, Amaciante — sobra do agente de QA errando coordenada de toque e não conseguindo desfazer a tempo em várias tentativas (ele mesmo relatou isso no resumo do grupo 6.6). Cada produto tinha só UMA linha de `compra_item` (não duplicada) — o mecanismo de exclusão funcionou exatamente como projetado (`use-remover-item-lista.ts`), só que a exclusão antiga ficou "presa" numa compra de teste nunca fechada. Não tem nenhuma pista visual pro usuário de que um item foi excluído antes, então de fora parece indistinguível do bug original.
+- [x] 7.2 A pedido do usuário, `adb shell pm clear com.triasoftware.repor` — reset completo dos dados do app no emulador, eliminando toda a sujeira acumulada de várias sessões de QA (múltiplas compras de teste, exclusões soltas, produtos de teste).
+- [x] 7.3 Verificação limpa pós-reset via `mobile-ux-tester`: cadastrar produto novo → "Usei" até faltar → aparece na Lista imediatamente, sem trocar de aba nem reiniciar. Confirma que o mecanismo funciona corretamente do zero, sem qualquer interferência de dado de teste antigo.
+
+**Não vira tarefa de código** — não há bug de produto aqui, só a ausência de affordance visual pra "item removido antes continua removido até a compra fechar" (já registrado como sugestão de UX pro achado incidental acima, mesma família de problema).
