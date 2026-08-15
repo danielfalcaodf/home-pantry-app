@@ -71,4 +71,68 @@ describe('useRemoverItemDaLista', () => {
     expect(compras.compras).toHaveLength(1);
     expect(compras.itens).toHaveLength(2);
   });
+
+  // ACHADO (correcao-lista-de-compras, task 2.4-2.5): reprodução do bug
+  // relatado — "Queijo mussarela" nunca aparecia na Lista, mesmo depois de
+  // reiniciar o app. Causa raiz encontrada inspecionando o banco do
+  // dispositivo de QA: existiam DUAS linhas de compra_item pro mesmo
+  // produtoId na mesma compra aberta (uma de `iniciarCompra`, sem
+  // excluido; outra de `remover`, com excluido=true) — `compuserLista`
+  // exclui pelo produtoId de QUALQUER linha marcada, então a existência da
+  // segunda linha escondia o produto pra sempre, mesmo com a primeira
+  // ainda válida. Não era timing/reatividade, como a suspeita inicial.
+  it('produto já materializado por iniciarCompra reaproveita a linha existente, sem criar uma segunda', async () => {
+    const compras = new CompraRepositorioFalso();
+    const aberta = await compras.abrir('casa-teste', 'usuario-teste', 1000);
+    if (!aberta.ok) {
+      throw new Error('setup do teste falhou');
+    }
+    // Simula o que `iniciarCompra` já teria feito: uma linha materializada,
+    // sem exclusão, pro mesmo produtoId que será removido a seguir.
+    const materializado = await compras.adicionarItem(aberta.valor.id, {
+      produtoId: 'p1',
+      unidade: 'un',
+      quantidadePlanejada: milesimos(300),
+    });
+
+    const { result } = await renderHook(() => useRemoverItemDaLista(compras));
+    await act(async () => {
+      await result.current.remover(ITEM);
+    });
+
+    // Continua havendo só UMA linha pro produto — reaproveitada, não duplicada.
+    const linhasDoProduto = compras.itens.filter((item) => item.produtoId === 'p1');
+    expect(linhasDoProduto).toHaveLength(1);
+    expect(linhasDoProduto[0].id).toBe(materializado.id);
+    expect(linhasDoProduto[0].excluido).toBe(true);
+  });
+
+  it('desfazer, quando reaproveitou uma linha já materializada, reverte a exclusão em vez de apagar a linha', async () => {
+    const compras = new CompraRepositorioFalso();
+    const aberta = await compras.abrir('casa-teste', 'usuario-teste', 1000);
+    if (!aberta.ok) {
+      throw new Error('setup do teste falhou');
+    }
+    const materializado = await compras.adicionarItem(aberta.valor.id, {
+      produtoId: 'p1',
+      unidade: 'un',
+      quantidadePlanejada: milesimos(300),
+      valorEstimadoUnit: centavos(500),
+    });
+
+    const { result } = await renderHook(() => useRemoverItemDaLista(compras));
+    await act(async () => {
+      await result.current.remover(ITEM);
+    });
+    await act(async () => {
+      await result.current.desfazer();
+    });
+
+    // A linha original continua existindo (não foi apagada) e voltou a não
+    // estar excluída — preserva os dados já materializados por iniciarCompra.
+    expect(compras.itens).toHaveLength(1);
+    expect(compras.itens[0].id).toBe(materializado.id);
+    expect(compras.itens[0].excluido).toBe(false);
+    expect(compras.itens[0].valorEstimadoUnit).toBe(500);
+  });
 });

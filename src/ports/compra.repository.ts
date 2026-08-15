@@ -31,6 +31,7 @@ export type EdicaoItemCompra = Partial<
     | 'comprado'
     | 'ordem'
     | 'atualizarPreco'
+    | 'excluido'
   >
 >;
 

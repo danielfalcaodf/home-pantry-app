@@ -7,13 +7,13 @@
 
 ## 2. Item faltante não aparece na Lista de compras (investigação + correção)
 
-- [ ] 2.1 Reproduzir no emulador via `mobile-ux-tester`: cadastrar um produto com quantidade atual 1kg e necessária 1,5kg como único item faltante da casa (todos os outros produtos com estoque completo); verificar se aparece na Lista de compras, trocar de aba e voltar, reiniciar o app — registrar em qual desses passos o item aparece ou não.
-- [ ] 2.2 Repetir a reprodução com 2+ produtos faltantes simultaneamente, comparando com o resultado de 2.1 — confirmar ou descartar a suspeita do usuário de que a contagem de itens faltantes influencia.
-- [ ] 2.3 Repetir a reprodução 4-5 vezes (como na investigação do `SheetAjusteEstoque` na change anterior), já que o usuário reportou comportamento intermitente — registrar taxa de falha observada.
-- [ ] 2.4 A partir do que 2.1-2.3 revelarem, implementar a correção (candidatos a investigar primeiro: forçar releitura ao montar `useListaDeCompras`/`useProdutos` além de confiar só no listener nativo; verificar se há corrida de timing na primeira montagem da assinatura do `observadorDoBanco`).
-- [ ] 2.5 Escrever teste automatizado do cenário exato reproduzido em 2.1 (infra ou application, conforme onde a causa raiz for encontrada), provando que o item aparece de forma confiável.
-- [ ] 2.6 Rodar o teste criado em 2.5 e confirmar que passa.
-- [ ] 2.7 Cobrir casos de borda do mesmo contexto: item que estava faltante e é reposto (deve sair da lista, comportamento já esperado — confirmar que a correção não regride isso), transição de 0 para 1 item faltante, transição de 1 para 0.
+- [x] 2.1-2.3 Reproduzido no emulador via `mobile-ux-tester` (fallback por `adb`, Maestro indisponível na sessão). **A causa raiz é diferente da suspeita original do usuário e da hipótese de design.md** — não é timing/reatividade, é um bug de dado determinístico: um produto específico ("Queijo mussarela") nunca aparecia, 100% reprodutível (5/5), independente de contagem de outros itens faltantes, troca de aba ou restart frio. Outros produtos que ficaram faltantes na mesma sessão apareciam corretamente e imediatamente.
+- [x] 2.4 Causa raiz confirmada inspecionando o `.db` puxado do emulador (`adb exec-out run-as ... cat files/SQLite/estoque.db`): existiam **duas linhas `compra_item`** pro mesmo `produtoId` na mesma compra aberta — uma materializada por `iniciarCompra` (sem exclusão) e outra criada por `remover()` (`excluido=true`). `compuserLista`/`use-lista-compras.ts` exclui pelo `produtoId` de **qualquer** linha marcada como excluída, então a segunda linha escondia o produto pra sempre, mesmo com a primeira ainda válida — nada a ver com o listener nativo do SQLite. Corrigido em `use-remover-item-lista.ts`: `remover()` agora busca uma linha existente (não excluída) pro mesmo produto antes de inserir — se achar, reaproveita com `editarItem(id, { excluido: true })`; só insere uma linha nova se não havia nenhuma. `desfazer()` espelha a distinção (`criouNovaLinha`): apaga a linha se foi criada agora, só reverte `excluido` se reaproveitou uma já materializada (preserva dado real). `excluido` adicionado a `EdicaoItemCompra` (`ports/compra.repository.ts`) e ao `editarItem` do SQLite (`infrastructure/repositories/sqlite-compra.repository.ts`), que antes não aceitava esse campo.
+- [x] 2.5 Testes escritos: `use-remover-item-lista.test.ts` (reprodução exata do bug — produto já materializado por `iniciarCompra`, `remover()` reaproveita a linha em vez de duplicar; `desfazer()` reverte sem apagar dado real) e `sqlite-compra.repository.test.ts` (prova que `editarItem` grava `excluido` no SQLite real, nos dois sentidos).
+- [x] 2.6 Testes rodados e passando (5/5 em `use-remover-item-lista.test.ts`, incluindo os 3 já existentes sem regressão; 35/35 em `sqlite-compra.repository.test.ts`).
+- [x] 2.7 Casos de borda: remover um item nunca materializado continua funcionando como antes (insere linha nova, testado); `desfazer` de uma linha recém-criada continua apagando a linha (testado, comportamento original preservado); reutilização ao remover um segundo produto diferente continua funcionando (teste já existente, sem regressão).
+
+**Nota para o usuário:** o produto real "Queijo mussarela" no dispositivo de QA continua com a linha duplicada de antes da correção (o fix impede *novas* duplicatas, não reescreve dado já corrompido). Cancelar ou fechar a compra aberta que contém essas duas linhas (`Modo Compra` → "Cancelar compra") libera o produto imediatamente — depois disso ele volta a aparecer normalmente na Lista, sem precisar de nenhuma migração.
 
 ## 3. Affordance do ajuste no Modo Compra
 
@@ -32,6 +32,6 @@
 
 ## 5. Regressão
 
-- [ ] 5.1 Rodar `npm run verificar` (fronteiras + lint + typecheck) e `npm test` completos, confirmando que nada além do escopo desta change foi afetado.
-- [ ] 5.2 Rodar a suíte de testes já existente de `lista.tsx`, `item-lista.tsx`, `item-compra.tsx`, `use-lista-compras.ts`, `use-modo-compra.ts` (arquivos `*.test.tsx`/`*.test.ts` já existentes) confirmando que todos continuam verdes.
+- [x] 5.1 `npm run verificar` limpo (fronteiras + lint; typecheck só com o achado de infraestrutura pré-existente do `router.d.ts`, não relacionado a este código — confirmado sem nenhum outro erro). `npm test` completo: 878 testes, 103 suites, todos passando.
+- [x] 5.2 Suíte específica (`lista.test.tsx`, `item-compra.test.tsx`, `use-lista-compras`, `use-modo-compra`, `use-remover-item-lista`, `sqlite-compra.repository`) — 42 testes, 6 suites, todos passando.
 - [ ] 5.3 QA visual final no emulador (`mobile-ux-tester`) cobrindo os 4 pontos corrigidos/adicionados (scroll, item faltante único após reprodução, ícone de ajuste no Modo Compra, edição de preço na Lista), nos dois temas.

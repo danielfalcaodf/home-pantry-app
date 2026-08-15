@@ -154,6 +154,7 @@ export class SQLiteCompraRepository implements CompraRepository {
         ...(dados.comprado !== undefined && { comprado: dados.comprado }),
         ...(dados.ordem !== undefined && { ordem: dados.ordem }),
         ...(dados.atualizarPreco !== undefined && { atualizarPreco: dados.atualizarPreco }),
+        ...(dados.excluido !== undefined && { excluido: dados.excluido }),
       })
       .where(eq(tabelaCompraItem.id, itemId))
       .run();
