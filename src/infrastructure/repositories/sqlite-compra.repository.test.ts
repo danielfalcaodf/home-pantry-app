@@ -436,6 +436,34 @@ describe('exclusão de faltante da lista', () => {
     );
     expect(await movimentos.historicoPorCasa(casaId, 10)).toHaveLength(0);
   });
+
+  // ACHADO (correcao-lista-de-compras): editarItem agora aceita `excluido`
+  // — usado por useRemoverItemDaLista pra reaproveitar uma linha já
+  // materializada por iniciarCompra em vez de inserir uma segunda linha
+  // pro mesmo produto (o que escondia o produto da lista pra sempre).
+  it('editarItem grava excluido no banco real, nos dois sentidos', async () => {
+    const { compras, casaId, usuarioId, criarProduto } = await montar();
+    const arroz = await criarProduto('Arroz', 0);
+
+    const compra = await compras.abrir(casaId, usuarioId, clock.agora());
+    if (!compra.ok) {
+      throw new Error('setup');
+    }
+    const item = await compras.adicionarItem(compra.valor.id, {
+      produtoId: arroz.id,
+      unidade: 'un',
+      quantidadePlanejada: milesimos(1000),
+    });
+    expect(item.excluido).toBe(false);
+
+    await compras.editarItem(item.id, { excluido: true });
+    let itens = await compras.listarItens(compra.valor.id);
+    expect(itens.find((i) => i.item.id === item.id)?.item.excluido).toBe(true);
+
+    await compras.editarItem(item.id, { excluido: false });
+    itens = await compras.listarItens(compra.valor.id);
+    expect(itens.find((i) => i.item.id === item.id)?.item.excluido).toBe(false);
+  });
 });
 
 describe('itens planejados sobrevivem a consumo posterior', () => {

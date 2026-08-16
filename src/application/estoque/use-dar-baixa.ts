@@ -1,9 +1,39 @@
 import { useCallback, useRef } from 'react';
 
-import { obterIdentidadeLocal, produtoRepository, relogio } from '../../composicao/repositorios';
+import {
+  compraRepository,
+  obterIdentidadeLocal,
+  produtoRepository,
+  relogio,
+} from '../../composicao/repositorios';
 import { Milesimos } from '../../domain/shared/quantidade';
 import { Clock } from '../../ports/clock';
+import { CompraRepository } from '../../ports/compra.repository';
 import { ProdutoRepository } from '../../ports/produto.repository';
+
+// Reativa a exclusão de um faltante da lista quando a pessoa usa mais dele:
+// "removi da lista esta compra" não deveria significar "nunca mais avisa",
+// e um novo "Usei" é o sinal mais direto de que a necessidade voltou (ACHADO
+// pós-arquivamento de correcao-lista-de-compras — usuário esperava que
+// apertar "Usei" de novo trouxesse o item de volta, mesmo tendo removido
+// pelo X antes). Sem compra aberta, não há nada a reativar.
+async function reativarSeExcluidoDaLista(
+  compras: CompraRepository,
+  casaId: string,
+  produtoId: string,
+) {
+  const compraAberta = await compras.obterAberta(casaId);
+  if (!compraAberta) {
+    return;
+  }
+  const itens = await compras.listarItens(compraAberta.id);
+  const excluido = itens.find(
+    ({ item }) => item.produtoId === produtoId && item.excluido,
+  );
+  if (excluido) {
+    await compras.editarItem(excluido.item.id, { excluido: false });
+  }
+}
 
 export type RegistroDeConsumo =
   | { gravou: true; movimentoId: string; saldoResultante: Milesimos; zerou: boolean }
@@ -25,6 +55,7 @@ export function ehFalha(resultado: ResultadoConsumo): resultado is FalhaDeGravac
 export function useDarBaixa(
   repositorio: ProdutoRepository = produtoRepository,
   clock: Clock = relogio,
+  compras: CompraRepository = compraRepository,
 ) {
   // Toques rápidos sucessivos no MESMO item viram um registro cada, em fila:
   // sem isso, duas transações concorrentes leriam o mesmo saldo e a segunda
@@ -36,7 +67,7 @@ export function useDarBaixa(
       const anterior = filaPorProduto.current.get(produtoId) ?? Promise.resolve();
       const atual = anterior.then(async (): Promise<ResultadoConsumo> => {
         try {
-          const { usuarioId } = obterIdentidadeLocal();
+          const { casaId, usuarioId } = obterIdentidadeLocal();
           const resultado = await repositorio.darBaixa({
             produtoId,
             quantidade,
@@ -49,6 +80,7 @@ export function useDarBaixa(
           if (!resultado.valor.gravou) {
             return { gravou: false, motivo: 'estoque_zerado' };
           }
+          await reativarSeExcluidoDaLista(compras, casaId, produtoId);
           return {
             gravou: true,
             movimentoId: resultado.valor.movimentoId,
@@ -62,7 +94,7 @@ export function useDarBaixa(
       filaPorProduto.current.set(produtoId, atual);
       return atual;
     },
-    [repositorio, clock],
+    [repositorio, clock, compras],
   );
 
   return { registrar };

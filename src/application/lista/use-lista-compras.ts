@@ -8,8 +8,20 @@ import { CompraRepository } from '../../ports/compra.repository';
 import { ObservadorDeMudancas } from '../../ports/observador-de-mudancas';
 import { ProdutoRepository } from '../../ports/produto.repository';
 
+// Item excluído da compra aberta, ainda visível numa seção separada —
+// exclusão é temporária por design (ACHADO de usabilidade), não some pra
+// sempre: a pessoa pode trazer de volta manualmente, ou ele volta sozinho
+// no próximo "Usei" desse produto (useDarBaixa).
+export type ItemDesativado = {
+  itemId: string;
+  produtoId: string;
+  nome: string;
+  categoria: string | null;
+};
+
 export type EstadoDaLista = {
   itens: ItemDaLista[];
+  desativados: ItemDesativado[];
   carregando: boolean;
 };
 
@@ -19,6 +31,7 @@ export function useListaDeCompras(
   observador: ObservadorDeMudancas = observadorDoBanco,
 ): EstadoDaLista {
   const [itens, setItens] = useState<ItemDaLista[]>([]);
+  const [desativados, setDesativados] = useState<ItemDesativado[]>([]);
   const [carregando, setCarregando] = useState(true);
 
   const recarregar = useCallback(
@@ -35,16 +48,23 @@ export function useListaDeCompras(
       const avulsos = itensDaCompraAberta
         .filter(({ item }) => item.produtoId === null)
         .map(({ item }) => item);
+      const excluidos = itensDaCompraAberta.filter(({ item }) => item.excluido);
       const idsExcluidos = new Set(
-        itensDaCompraAberta
-          .filter(({ item }) => item.excluido)
-          .map(({ item }) => item.produtoId as string),
+        excluidos.map(({ item }) => item.produtoId as string),
       );
 
       if (!montado()) {
         return;
       }
       setItens(compuserLista(faltantes, avulsos, idsExcluidos));
+      setDesativados(
+        excluidos.map(({ item, produto }) => ({
+          itemId: item.id,
+          produtoId: item.produtoId as string,
+          nome: produto?.nome ?? '',
+          categoria: produto?.categoria ?? null,
+        })),
+      );
       setCarregando(false);
     },
     [produtos, compras],
@@ -64,5 +84,5 @@ export function useListaDeCompras(
     };
   }, [recarregar, observador]);
 
-  return { itens, carregando };
+  return { itens, desativados, carregando };
 }

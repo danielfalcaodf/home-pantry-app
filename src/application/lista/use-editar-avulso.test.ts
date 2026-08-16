@@ -32,23 +32,4 @@ describe('useEditarAvulso', () => {
       valorEstimadoUnit: 2000,
     });
   });
-
-  it('remove o avulso e mantém a compra aberta', async () => {
-    const compras = new CompraRepositorioFalso();
-    await compras.abrir('casa-1', 'usuario-1', 1);
-    const aberta = await compras.obterAberta('casa-1');
-    const criado = await compras.adicionarItem(aberta!.id, {
-      nomeAvulso: 'Carvão',
-      unidade: 'un',
-      quantidadePlanejada: milesimos(1000),
-    });
-
-    const { result } = await renderHook(() => useEditarAvulso(compras));
-    await act(async () => {
-      await result.current.remover(criado.id);
-    });
-
-    expect(compras.itens).toHaveLength(0);
-    expect(await compras.obterAberta('casa-1')).not.toBeNull();
-  });
 });

@@ -1,3 +1,4 @@
+import { FlashList } from '@shopify/flash-list';
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Pressable, Share, View } from 'react-native';
@@ -8,14 +9,17 @@ import { useListaDeCompras } from '@/application/lista/use-lista-compras';
 import { usePreferenciaDeAgrupamento } from '@/application/lista/use-preferencia-agrupamento';
 import { useRemoverItemDaLista } from '@/application/lista/use-remover-item-lista';
 import { useIniciarCompra } from '@/application/compra/use-iniciar-compra';
+import { useEditarProduto } from '@/application/estoque/use-editar-produto';
 import { DadosDoAvulso, ItemDaLista } from '@/domain/lista/lista';
 import { totalDaListaDeCompras } from '@/domain/lista/lista.rules';
+import { centavos } from '@/domain/shared/dinheiro';
 import { paraDecimal } from '@/domain/shared/quantidade';
 import { Botao } from '@/presentation/components/botao';
 import { EstadoVazio } from '@/presentation/components/estado-vazio';
 import { ItemLista } from '@/presentation/components/item-lista';
 import { RodapeTotal } from '@/presentation/components/rodape-total';
 import { SheetAvulso } from '@/presentation/components/sheet-avulso';
+import { SheetPrecoProduto } from '@/presentation/components/sheet-preco-produto';
 import { Texto } from '@/presentation/components/texto';
 import { Toast } from '@/presentation/components/toast';
 import { agruparListaPorCategoria, listaContinua } from '@/presentation/format/agrupar-lista';
@@ -25,17 +29,22 @@ import { useTheme } from '@/presentation/theme/provider';
 
 export default function Lista() {
   const tema = useTheme();
-  const { itens, carregando } = useListaDeCompras();
+  const { itens, desativados, carregando } = useListaDeCompras();
   const { agrupado, alternar } = usePreferenciaDeAgrupamento();
   const { adicionar } = useAdicionarAvulso();
-  const { editar, remover: removerAvulso } = useEditarAvulso();
-  const { ultimaRemocao, remover, desfazer, limpar } = useRemoverItemDaLista();
+  const { editar } = useEditarAvulso();
+  const { ultimaRemocao, remover, removerAvulso, desfazer, limpar, reativar } =
+    useRemoverItemDaLista();
   const { iniciando, iniciar } = useIniciarCompra();
+  const { editar: editarProduto } = useEditarProduto();
 
   const [sheetAberta, setSheetAberta] = useState(false);
   const [avulsoEmEdicao, setAvulsoEmEdicao] = useState<Extract<ItemDaLista, { tipo: 'avulso' }> | null>(
     null,
   );
+  const [produtoEmEdicaoDePreco, setProdutoEmEdicaoDePreco] = useState<
+    Extract<ItemDaLista, { tipo: 'produto' }> | null
+  >(null);
 
   const total = useMemo(() => totalDaListaDeCompras(itens), [itens]);
   const linhas = useMemo(
@@ -53,6 +62,19 @@ export default function Lista() {
     setSheetAberta(true);
   }
 
+  function abrirEdicaoDePreco(item: Extract<ItemDaLista, { tipo: 'produto' }>) {
+    setProdutoEmEdicaoDePreco(item);
+  }
+
+  async function salvarPrecoDoProduto(preco: number) {
+    if (!produtoEmEdicaoDePreco) {
+      return;
+    }
+    await editarProduto(produtoEmEdicaoDePreco.produtoId, {
+      valorUnitario: centavos(Math.round(preco * 100)),
+    });
+  }
+
   async function salvarAvulso(dados: DadosDoAvulso) {
     if (avulsoEmEdicao) {
       await editar(avulsoEmEdicao.itemId, dados);
@@ -63,7 +85,7 @@ export default function Lista() {
 
   async function removerItem(item: ItemDaLista) {
     if (item.tipo === 'avulso') {
-      await removerAvulso(item.itemId);
+      await removerAvulso(item);
       return;
     }
     await remover(item);
@@ -82,111 +104,167 @@ export default function Lista() {
     router.push(`/compra/${compraId}`);
   }
 
-  if (!carregando && itens.length === 0) {
-    return (
-      <View style={{ flex: 1, backgroundColor: tema.bg.base }}>
+  const listaVazia = !carregando && itens.length === 0;
+
+  return (
+    <View style={{ flex: 1, backgroundColor: tema.bg.base }}>
+      {listaVazia ? (
         <EstadoVazio
           convite="Nada faltando por aqui. Se quiser levar algo pontual para a próxima compra, adicione um item avulso."
           acao={{ titulo: 'Adicionar item avulso', onPress: abrirNovoAvulso }}
         />
-        <SheetAvulso
-          visivel={sheetAberta}
-          onFechar={() => setSheetAberta(false)}
-          onSalvar={(dados) => void salvarAvulso(dados)}
-        />
-      </View>
-    );
-  }
-
-  return (
-    <View style={{ flex: 1, backgroundColor: tema.bg.base }}>
-      <View
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          paddingHorizontal: espaco.lg,
-          paddingTop: espaco.lg,
-          paddingBottom: espaco.sm,
-        }}
-      >
-        <Texto papel="display.sm">Lista</Texto>
-        <View style={{ flexDirection: 'row', gap: espaco.lg }}>
-          <Pressable
-            onPress={() => void exportar()}
-            accessibilityRole="button"
-            accessibilityLabel="Compartilhar lista"
-            hitSlop={8}
-            style={{ minHeight: ALVO_TOQUE_MINIMO, justifyContent: 'center' }}
-          >
-            <Texto papel="body.md" cor={tema.action.azulejo}>
-              Compartilhar
-            </Texto>
-          </Pressable>
-          <Pressable
-            onPress={() => void alternar()}
-            accessibilityRole="button"
-            accessibilityLabel="Agrupar por categoria"
-            accessibilityState={{ selected: agrupado }}
-            hitSlop={8}
-            style={{ minHeight: ALVO_TOQUE_MINIMO, justifyContent: 'center' }}
-          >
-            <Texto papel="body.md" cor={tema.action.azulejo}>
-              Agrupar
-            </Texto>
-          </Pressable>
-        </View>
-      </View>
-
-      <RodapeTotal
-        contagemItens={total.contagemItens}
-        total={total.total}
-        contagemSemPreco={total.contagemSemPreco}
-      />
-
-      <View style={{ paddingHorizontal: espaco.lg, paddingBottom: espaco.md }}>
-        <Botao
-          titulo={`Iniciar compra (${total.contagemItens})`}
-          onPress={() => void iniciarCompra()}
-          disabled={iniciando}
-        />
-      </View>
-
-      {linhas.map((linha) =>
-        linha.tipo === 'cabecalho' ? (
+      ) : (
+        <>
           <View
-            key={linha.chave}
             style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
               paddingHorizontal: espaco.lg,
               paddingTop: espaco.lg,
               paddingBottom: espaco.sm,
-              backgroundColor: tema.bg.base,
             }}
           >
-            <Texto papel="caption" tom="secondary">
-              {linha.categoria}
-            </Texto>
+            <Texto papel="display.sm">Lista</Texto>
+            <View style={{ flexDirection: 'row', gap: espaco.lg }}>
+              <Pressable
+                onPress={() => void exportar()}
+                accessibilityRole="button"
+                accessibilityLabel="Compartilhar lista"
+                hitSlop={8}
+                style={{ minHeight: ALVO_TOQUE_MINIMO, justifyContent: 'center' }}
+              >
+                <Texto papel="body.md" cor={tema.action.azulejo}>
+                  Compartilhar
+                </Texto>
+              </Pressable>
+              <Pressable
+                onPress={() => void alternar()}
+                accessibilityRole="button"
+                accessibilityLabel="Agrupar por categoria"
+                accessibilityState={{ selected: agrupado }}
+                hitSlop={8}
+                style={{ minHeight: ALVO_TOQUE_MINIMO, justifyContent: 'center' }}
+              >
+                <Texto papel="body.md" cor={tema.action.azulejo}>
+                  Agrupar
+                </Texto>
+              </Pressable>
+            </View>
           </View>
-        ) : (
-          <Pressable
-            key={linha.chave}
-            onPress={() => (linha.item.tipo === 'avulso' ? abrirEdicaoDeAvulso(linha.item) : undefined)}
-            disabled={linha.item.tipo !== 'avulso'}
-          >
-            <ItemLista
-              item={linha.item}
-              categoria={agrupado ? null : linha.item.categoria}
-              onRemover={() => void removerItem(linha.item)}
+
+          <RodapeTotal
+            contagemItens={total.contagemItens}
+            total={total.total}
+            contagemSemPreco={total.contagemSemPreco}
+          />
+
+          <View style={{ paddingHorizontal: espaco.lg, paddingBottom: espaco.md }}>
+            <Botao
+              titulo={`Iniciar compra (${total.contagemItens})`}
+              onPress={() => void iniciarCompra()}
+              disabled={iniciando}
             />
-          </Pressable>
-        ),
+          </View>
+
+          <FlashList
+            testID="lista-de-compras"
+            data={linhas}
+            keyExtractor={(linha) => linha.chave}
+            renderItem={({ item: linha }) =>
+              linha.tipo === 'cabecalho' ? (
+                <View
+                  style={{
+                    paddingHorizontal: espaco.lg,
+                    paddingTop: espaco.lg,
+                    paddingBottom: espaco.sm,
+                    backgroundColor: tema.bg.base,
+                  }}
+                >
+                  <Texto papel="caption" tom="secondary">
+                    {linha.categoria}
+                  </Texto>
+                </View>
+              ) : (
+                <Pressable
+                  onPress={() =>
+                    linha.item.tipo === 'avulso'
+                      ? abrirEdicaoDeAvulso(linha.item)
+                      : abrirEdicaoDePreco(linha.item)
+                  }
+                >
+                  <ItemLista
+                    item={linha.item}
+                    categoria={agrupado ? null : linha.item.categoria}
+                    onRemover={() => void removerItem(linha.item)}
+                  />
+                </Pressable>
+              )
+            }
+            ListFooterComponent={
+              <View style={{ padding: espaco.lg, alignItems: 'center' }}>
+                <Texto papel="body.md" cor={tema.action.azulejo} onPress={abrirNovoAvulso}>
+                  Adicionar item avulso
+                </Texto>
+              </View>
+            }
+          />
+        </>
       )}
 
-      <View style={{ padding: espaco.lg, alignItems: 'center' }}>
-        <Texto papel="body.md" cor={tema.action.azulejo} onPress={abrirNovoAvulso}>
-          Adicionar item avulso
-        </Texto>
-      </View>
+      {desativados.length > 0 ? (
+        <View
+          testID="secao-desativados"
+          style={{
+            paddingHorizontal: espaco.lg,
+            paddingTop: espaco.md,
+            paddingBottom: espaco.lg,
+            gap: espaco.sm,
+          }}
+        >
+          <Texto papel="caption" tom="secondary">
+            Fora da lista por agora
+          </Texto>
+          {desativados.map((item) => (
+            <View
+              key={item.itemId}
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                minHeight: ALVO_TOQUE_MINIMO,
+              }}
+            >
+              <Texto papel="body.md" tom="secondary">
+                {item.nome}
+              </Texto>
+              <Pressable
+                onPress={() => void reativar(item.itemId)}
+                accessibilityRole="button"
+                accessibilityLabel={`Voltar ${item.nome} pra lista`}
+                hitSlop={8}
+                style={{ minHeight: ALVO_TOQUE_MINIMO, justifyContent: 'center' }}
+              >
+                <Texto papel="body.md" cor={tema.action.azulejo}>
+                  Voltar pra lista
+                </Texto>
+              </Pressable>
+            </View>
+          ))}
+        </View>
+      ) : null}
+
+      <SheetPrecoProduto
+        visivel={produtoEmEdicaoDePreco !== null}
+        nome={produtoEmEdicaoDePreco?.nome ?? ''}
+        precoInicial={
+          produtoEmEdicaoDePreco && !produtoEmEdicaoDePreco.semPreco
+            ? produtoEmEdicaoDePreco.valorUnitario / 100
+            : null
+        }
+        onFechar={() => setProdutoEmEdicaoDePreco(null)}
+        onSalvar={(preco) => void salvarPrecoDoProduto(preco)}
+      />
 
       <SheetAvulso
         visivel={sheetAberta}
@@ -206,7 +284,7 @@ export default function Lista() {
 
       {ultimaRemocao ? (
         <Toast
-          key={ultimaRemocao.itemExclusaoId}
+          key={ultimaRemocao.tipo === 'produto' ? ultimaRemocao.itemExclusaoId : `avulso-${ultimaRemocao.nome}`}
           mensagem={`${ultimaRemocao.nome} removido da lista`}
           acao={{ titulo: 'Desfazer', onPress: () => void desfazer() }}
           onFim={limpar}

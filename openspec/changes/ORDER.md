@@ -26,3 +26,4 @@ Regras:
 | Ordem | Change | Depende de | Motivo |
 |---|---|---|---|
 | 1 | correcao-usabilidade-campos-e-botoes | — | Corrige Keyboard Overlap, Error Prevention (correção silenciosa) e Affordance na base compartilhada (CampoTexto, Botao, padrão de Modal dos sheets) — sem dependência de outra change ativa. |
+| 2 | correcao-lista-de-compras | 1 | Reaproveita CampoTexto/EvitaTeclado/ícones de affordance entregues pela change 1 (já mergeada em develop) para corrigir scroll ausente, reatividade da Lista de compras, affordance do ajuste de preço no Modo Compra, e adicionar edição de preço direto na Lista. Sem sobreposição de arquivos com a change 1. |

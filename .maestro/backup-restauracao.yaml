@@ -1,4 +1,4 @@
-appId: com.triasoftware.repor
+appId: com.danielfalcaodf.repor
 ---
 # Backup/restauração (F5, capability `backup-restore-json`, PR-09
 # `feature/backup-restore-json`): cobre o único trecho da jornada de

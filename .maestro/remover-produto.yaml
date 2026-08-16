@@ -1,4 +1,4 @@
-appId: com.triasoftware.repor
+appId: com.danielfalcaodf.repor
 ---
 # Remoção lógica de produto (F5, capability `cadastro-de-produto`, delta de
 # remoção PR-05, `app/produto/[id].tsx`): cobre o caminho que só tinha teste

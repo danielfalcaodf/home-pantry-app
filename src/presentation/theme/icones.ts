@@ -18,6 +18,10 @@ export const icones = {
   voltar: 'M15 18l-6-6 6-6',
   cheveron: 'M6 9l6 6 6-6',
   fechar: 'M6 6l12 12M18 6L6 18',
+  // Lápis simples (linha reta + ponta), mesmo estilo dos demais — sinaliza
+  // affordance de ajuste por toque longo (ACHADO affordance, modo compra
+  // e lista de compras).
+  ajustar: 'M4 20h4l10-10-4-4L4 16v4zM14 6l4 4',
 } as const;
 
 export type NomeDoIcone = keyof typeof icones;

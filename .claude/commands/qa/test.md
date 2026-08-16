@@ -21,4 +21,6 @@ Passe ao subagent, no prompt de invocação:
 - Se é caso de teste Jest (unidade/componente) ou flow Maestro (roteiro de usuário ponta a ponta) — se não estiver claro, deixe o subagent decidir com base no que está sendo testado (lógica pura → Jest; fluxo de tela real → Maestro).
 - Lembre o subagent de rodar `npm run verificar` e o teste isolado antes de reportar concluído.
 
+**Custo do modelo**: `test-automator` roda em `sonnet` por padrão porque normalmente precisa decidir sozinho a camada e os casos de borda relevantes — isso é julgamento, não transcrição (ver `Superpowers` — "Model Selection by Role": só vale baratear quando o pedido já traz o caso completo especificado). Se o pedido for realmente mecânico — um único caso de borda pontual, com o fixture/padrão já mostrado no prompt, tocando 1 arquivo — pode passar `model: "haiku"` nesta invocação específica do `Task`/`Agent` (não mude o `model:` do arquivo do agente, isso afetaria todo pedido, inclusive os que precisam de julgamento).
+
 Depois que o subagent retornar, resuma pro usuário: quais arquivos de teste foram criados/alterados, se passaram, e se algo ficou pendente (ex.: precisa de emulador pra confirmar visualmente).

@@ -9,11 +9,13 @@ import { CompraRepository } from '../../ports/compra.repository';
 export type EstadoEdicaoDeAvulso = {
   editando: boolean;
   editar: (itemId: string, dados: DadosDoAvulso) => Promise<boolean>;
-  remover: (itemId: string) => Promise<boolean>;
 };
 
 // Avulso não referencia produto (D1 é só para exclusão de faltante): editar
-// e remover aqui é edição/exclusão direta da linha em compra_item.
+// aqui é edição direta da linha em compra_item. Remover avulso mora em
+// `useRemoverItemDaLista` (não aqui), porque precisa alimentar o mesmo
+// toast de desfazer que a remoção de produto usa — antes disso ser
+// unificado, remover um avulso nunca oferecia desfazer (ACHADO de QA).
 export function useEditarAvulso(compras: CompraRepository = compraRepository): EstadoEdicaoDeAvulso {
   const [editando, setEditando] = useState(false);
 
@@ -37,17 +39,5 @@ export function useEditarAvulso(compras: CompraRepository = compraRepository): E
     [compras],
   );
 
-  const remover = useCallback(
-    async (itemId: string) => {
-      try {
-        await compras.removerItem(itemId);
-        return true;
-      } catch {
-        return false;
-      }
-    },
-    [compras],
-  );
-
-  return { editando, editar, remover };
+  return { editando, editar };
 }
