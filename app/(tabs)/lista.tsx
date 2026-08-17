@@ -21,6 +21,7 @@ import { RodapeTotal } from '@/presentation/components/rodape-total';
 import { SheetAvulso } from '@/presentation/components/sheet-avulso';
 import { SheetPrecoProduto } from '@/presentation/components/sheet-preco-produto';
 import { Texto } from '@/presentation/components/texto';
+import { TelaBase } from '@/presentation/components/tela-base';
 import { Toast } from '@/presentation/components/toast';
 import { agruparListaPorCategoria, listaContinua } from '@/presentation/format/agrupar-lista';
 import { gerarTextoDaLista } from '@/presentation/format/lista-texto';
@@ -107,7 +108,7 @@ export default function Lista() {
   const listaVazia = !carregando && itens.length === 0;
 
   return (
-    <View style={{ flex: 1, backgroundColor: tema.bg.base }}>
+    <TelaBase>
       {listaVazia ? (
         <EstadoVazio
           convite="Nada faltando por aqui. Se quiser levar algo pontual para a próxima compra, adicione um item avulso."
@@ -290,6 +291,6 @@ export default function Lista() {
           onFim={limpar}
         />
       ) : null}
-    </View>
+    </TelaBase>
   );
 }

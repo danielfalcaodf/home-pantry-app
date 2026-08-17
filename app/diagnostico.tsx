@@ -4,6 +4,7 @@ import { useDiagnostico } from '@/application/backup/use-diagnostico';
 import { formatarNumero } from '@/domain/shared/quantidade';
 import { Botao } from '@/presentation/components/botao';
 import { BotaoVoltar } from '@/presentation/components/botao-voltar';
+import { TelaBase } from '@/presentation/components/tela-base';
 import { Texto } from '@/presentation/components/texto';
 import { espaco } from '@/presentation/theme/espaco';
 import { useTheme } from '@/presentation/theme/provider';
@@ -18,7 +19,7 @@ export default function Diagnostico() {
   const diagnostico = useDiagnostico();
 
   return (
-    <View style={{ flex: 1, backgroundColor: tema.bg.base, padding: espaco.lg, gap: espaco.lg }}>
+    <TelaBase style={{ padding: espaco.lg, gap: espaco.lg }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: espaco.sm }}>
         <BotaoVoltar />
         <Texto papel="display.sm">Diagnóstico</Texto>
@@ -79,6 +80,6 @@ export default function Diagnostico() {
           />
         </View>
       ) : null}
-    </View>
+    </TelaBase>
   );
 }

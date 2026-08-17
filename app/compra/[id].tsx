@@ -14,10 +14,10 @@ import { BotaoVoltar } from '@/presentation/components/botao-voltar';
 import { ItemCompra } from '@/presentation/components/item-compra';
 import { RodapeCompra } from '@/presentation/components/rodape-compra';
 import { SheetAjusteCompra } from '@/presentation/components/sheet-ajuste-compra';
+import { TelaBase } from '@/presentation/components/tela-base';
 import { Texto } from '@/presentation/components/texto';
 import { Toast } from '@/presentation/components/toast';
 import { espaco } from '@/presentation/theme/espaco';
-import { useTheme } from '@/presentation/theme/provider';
 
 /**
  * Tela única, sem navegação interna (FRONTEND §8.3): quem está com o
@@ -27,7 +27,6 @@ import { useTheme } from '@/presentation/theme/provider';
 export default function ModoCompra() {
   useKeepAwake();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const tema = useTheme();
   const { itens, carregando, marcar, desmarcar, ajustarQuantidade, ajustarPreco, responderAtualizarPreco } =
     useModoCompra(id);
   const { finalizando, finalizar } = useFinalizarCompra();
@@ -87,7 +86,7 @@ export default function ModoCompra() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: tema.bg.base }}>
+    <TelaBase edges={['top', 'bottom']}>
       <View style={{ padding: espaco.lg, paddingBottom: espaco.sm, gap: espaco.xs }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: espaco.sm }}>
           <BotaoVoltar
@@ -163,6 +162,6 @@ export default function ModoCompra() {
           }}
         />
       ) : null}
-    </View>
+    </TelaBase>
   );
 }

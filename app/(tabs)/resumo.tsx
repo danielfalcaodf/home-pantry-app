@@ -7,6 +7,7 @@ import { useResumoDeValores } from '@/application/resumo/use-resumo-valores';
 import { formatarBRL } from '@/domain/shared/dinheiro';
 import { ChipEstado } from '@/presentation/components/chip-estado';
 import { GraficoBarras } from '@/presentation/components/grafico-barras';
+import { TelaBase } from '@/presentation/components/tela-base';
 import { Texto } from '@/presentation/components/texto';
 import { contarPorEstado, FiltroEstado } from '@/presentation/format/agrupar-despensa';
 import { corDoEstado } from '@/presentation/theme/cor-do-estado';
@@ -50,7 +51,8 @@ export default function Resumo() {
   const nenhumaCompraFechada = gastoMensal.meses.every((mes) => mes.qtdCompras === 0);
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: tema.bg.base }}>
+    <TelaBase>
+      <ScrollView style={{ flex: 1 }}>
       <View
         style={{
           flexDirection: 'row',
@@ -184,6 +186,7 @@ export default function Resumo() {
           )}
         </View>
       </View>
-    </ScrollView>
+      </ScrollView>
+    </TelaBase>
   );
 }

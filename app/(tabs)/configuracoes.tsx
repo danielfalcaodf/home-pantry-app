@@ -7,6 +7,7 @@ import { useRestaurarBackup } from '@/application/backup/use-restaurar-backup';
 import { useUltimoBackup } from '@/application/backup/use-ultimo-backup';
 import { Botao } from '@/presentation/components/botao';
 import { BotaoVoltar } from '@/presentation/components/botao-voltar';
+import { TelaBase } from '@/presentation/components/tela-base';
 import { Texto } from '@/presentation/components/texto';
 import { Toast } from '@/presentation/components/toast';
 import { formatarDataDoUltimoBackup } from '@/presentation/format/data-do-backup';
@@ -48,7 +49,7 @@ export default function Configuracoes() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: tema.bg.base }}>
+    <TelaBase>
       <View
         style={{
           flexDirection: 'row',
@@ -205,6 +206,6 @@ export default function Configuracoes() {
           onFim={restauracao.cancelar}
         />
       ) : null}
-    </View>
+    </TelaBase>
   );
 }

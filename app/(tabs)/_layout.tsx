@@ -1,17 +1,26 @@
 import { Tabs } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { IconeSvg } from '@/presentation/components/icone-svg';
 import { icones } from '@/presentation/theme/icones';
 import { useTheme } from '@/presentation/theme/provider';
 
+const ALTURA_TAB_BAR = 56;
+
 export default function TabsLayout() {
   const tema = useTheme();
+  const insets = useSafeAreaInsets();
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
         sceneStyle: { backgroundColor: tema.bg.base },
-        tabBarStyle: { backgroundColor: tema.bg.surface, borderTopColor: tema.line.hairline },
+        tabBarStyle: {
+          backgroundColor: tema.bg.surface,
+          borderTopColor: tema.line.hairline,
+          height: ALTURA_TAB_BAR + insets.bottom,
+          paddingBottom: insets.bottom,
+        },
         tabBarActiveTintColor: tema.action.azulejo,
         tabBarInactiveTintColor: tema.text.secondary,
       }}
