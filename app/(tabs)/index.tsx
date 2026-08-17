@@ -290,6 +290,7 @@ export default function Despensa() {
               </View>
             ) : (
               <ItemDespensa
+                idDoItem={linha.item.produto.id}
                 nome={linha.item.produto.nome}
                 categoria={agrupar ? null : linha.item.produto.categoria}
                 leitura={leituraDeEstoque(
