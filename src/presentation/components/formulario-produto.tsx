@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { UNIDADES, Unidade } from '../../domain/shared/unidade';
 import { ALVO_TOQUE_MINIMO, espaco } from '../theme/espaco';
@@ -77,6 +78,7 @@ export function FormularioProduto({
   autofocarNome = false,
 }: FormularioProdutoProps) {
   const tema = useTheme();
+  const insets = useSafeAreaInsets();
   const [maisOpcoes, setMaisOpcoes] = useState(false);
   const [categoriaFocada, setCategoriaFocada] = useState(false);
 
@@ -98,8 +100,9 @@ export function FormularioProduto({
 
   return (
     <EvitaTeclado testID="evita-teclado-formulario">
+    <View style={{ flex: 1, backgroundColor: tema.bg.base }}>
     <ScrollView
-      style={{ backgroundColor: tema.bg.base }}
+      style={{ flex: 1 }}
       contentContainerStyle={{ padding: espaco.lg, gap: espaco.lg }}
       keyboardShouldPersistTaps="handled"
     >
@@ -233,9 +236,18 @@ export function FormularioProduto({
           />
         </View>
       ) : null}
-
-      <Botao titulo={tituloAcao} onPress={aoSalvar} disabled={salvando} />
     </ScrollView>
+    <View
+      style={{
+        padding: espaco.lg,
+        paddingBottom: espaco.lg + insets.bottom,
+        borderTopWidth: 1,
+        borderTopColor: tema.line.hairline,
+      }}
+    >
+      <Botao titulo={tituloAcao} onPress={aoSalvar} disabled={salvando} />
+    </View>
+    </View>
     </EvitaTeclado>
   );
 }
