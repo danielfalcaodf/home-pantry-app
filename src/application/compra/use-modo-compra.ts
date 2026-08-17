@@ -53,7 +53,10 @@ export function useModoCompra(
       if (!montado()) {
         return;
       }
-      setItens(listaItens.map(comDivergencia));
+      // Item removido da lista ("Fora da lista por agora") antes de iniciar
+      // a compra não pode reaparecer aqui — mesmo filtro de
+      // use-lista-compras.ts e use-iniciar-compra.ts (A-16).
+      setItens(listaItens.filter(({ item }) => !item.excluido).map(comDivergencia));
       setCarregando(false);
     },
     [compras, compraId],
