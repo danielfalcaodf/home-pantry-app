@@ -49,6 +49,11 @@ export function ItemCompra({ linha, onMarcar, onDesmarcar, onAjustar, onResponde
       <Pressable
         onPress={() => (item.comprado ? onDesmarcar() : onMarcar())}
         onLongPress={onAjustar}
+        accessibilityRole="checkbox"
+        accessibilityState={{ checked: item.comprado }}
+        accessibilityLabel={`${nome}, ${formatarQuantidade(quantidade, item.unidade)}${
+          semPreco ? ', sem preço' : `, ${formatarBRL(precoPorUnidade)}`
+        }`}
         style={{
           minHeight: ALVO_TOQUE_MINIMO,
           flexDirection: 'row',
@@ -59,9 +64,6 @@ export function ItemCompra({ linha, onMarcar, onDesmarcar, onAjustar, onResponde
         }}
       >
         <View
-          accessibilityRole="checkbox"
-          accessibilityState={{ checked: item.comprado }}
-          accessibilityLabel={`${item.comprado ? 'Desmarcar' : 'Marcar'} ${nome}`}
           style={{
             width: ALVO_TOQUE_MINIMO,
             height: ALVO_TOQUE_MINIMO,
@@ -83,7 +85,7 @@ export function ItemCompra({ linha, onMarcar, onDesmarcar, onAjustar, onResponde
             }}
           >
             {item.comprado ? (
-              <Texto papel="label" cor={tema.text.onAction}>
+              <Texto papel="label" cor={tema.text.onAction} importantForAccessibility="no">
                 ✓
               </Texto>
             ) : null}
