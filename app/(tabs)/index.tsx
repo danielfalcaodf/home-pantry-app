@@ -13,6 +13,7 @@ import { rotuloDaUnidade } from '@/domain/shared/unidade';
 import { CampoTexto } from '@/presentation/components/campo-texto';
 import { ChipEstado } from '@/presentation/components/chip-estado';
 import { EstadoVazio } from '@/presentation/components/estado-vazio';
+import { EvitaTeclado } from '@/presentation/components/evita-teclado';
 import { IconeSvg } from '@/presentation/components/icone-svg';
 import { AcaoSecundaria } from '@/presentation/components/acao-secundaria';
 import { ItemDespensa } from '@/presentation/components/item-despensa';
@@ -43,6 +44,27 @@ const FILTROS: { valor: FiltroEstado; rotulo: string }[] = [
 ];
 
 const FILTROS_VALIDOS = new Set<FiltroEstado>(['tudo', 'critico', 'emFalta', 'ok', 'faltando']);
+
+const ROTULO_DO_FILTRO: Record<Exclude<FiltroEstado, 'tudo'>, string> = {
+  critico: 'Acabou',
+  emFalta: 'Faltando',
+  faltando: 'Faltando',
+  ok: 'Cheio',
+};
+
+/** Estado vazio causado só por chip/categoria (A-19) — nunca as aspas vazias
+ *  nem o "Cadastrar" do estado vazio de busca, que são para quando há termo
+ *  digitado. */
+function convitePorFiltroVazio(filtro: FiltroEstado, categoria: string | null): string {
+  const partes = [
+    filtro === 'tudo' ? null : ROTULO_DO_FILTRO[filtro],
+    categoria,
+  ].filter((parte): parte is string => parte !== null);
+  if (partes.length === 0) {
+    return 'Nada por aqui.';
+  }
+  return `Nada em "${partes.join(' · ')}" agora.`;
+}
 
 export default function Despensa() {
   const tema = useTheme();
@@ -86,17 +108,23 @@ export default function Despensa() {
     confirmacao.anunciar(resultado, item.produto, emMilesimos, 'reposicao');
   }
 
-  const contagens = useMemo(() => contarPorEstado(itens), [itens]);
-
-  const visiveis = useMemo(
+  // Universo dos chips: busca e categoria já aplicadas, mas não o próprio
+  // filtro de estado — senão o chip ativo sempre contaria a si mesmo contra
+  // um total que já o exclui (correcao-affordance-busca-e-lista, A-03).
+  const itensDaBusca = useMemo(
     () =>
       itens.filter(
         (item) =>
-          casaComFiltro(item.estado, filtro) &&
           (categoria === null || item.produto.categoria === categoria) &&
           casaComBusca(item.produto.nome, busca),
       ),
-    [itens, filtro, categoria, busca],
+    [itens, categoria, busca],
+  );
+  const contagens = useMemo(() => contarPorEstado(itensDaBusca), [itensDaBusca]);
+
+  const visiveis = useMemo(
+    () => itensDaBusca.filter((item) => casaComFiltro(item.estado, filtro)),
+    [itensDaBusca, filtro],
   );
 
   // Agrupa só no filtro amplo: com um estado selecionado, o cabeçalho de
@@ -188,6 +216,8 @@ export default function Despensa() {
             onChangeText={setBusca}
             placeholder="Nome do item"
             autoFocus
+            spellCheck={false}
+            autoCorrect={false}
           />
         ) : null}
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -226,13 +256,19 @@ export default function Despensa() {
       </View>
 
       {visiveis.length === 0 ? (
-        <EstadoVazio
-          convite={`Nenhum item chamado "${busca}" por aqui.`}
-          acao={{
-            titulo: `Cadastrar ${busca}`,
-            onPress: () => router.push(`/produto/novo?nome=${encodeURIComponent(busca)}`),
-          }}
-        />
+        <EvitaTeclado>
+          {busca !== '' ? (
+            <EstadoVazio
+              convite={`Nenhum item chamado "${busca}" por aqui.`}
+              acao={{
+                titulo: `Cadastrar ${busca}`,
+                onPress: () => router.push(`/produto/novo?nome=${encodeURIComponent(busca)}`),
+              }}
+            />
+          ) : (
+            <EstadoVazio convite={convitePorFiltroVazio(filtro, categoria)} />
+          )}
+        </EvitaTeclado>
       ) : (
         <FlashList
           data={linhas}
