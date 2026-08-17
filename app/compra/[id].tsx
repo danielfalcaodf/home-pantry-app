@@ -6,6 +6,7 @@ import { Alert, ScrollView, View } from 'react-native';
 import { useCancelarCompra } from '@/application/compra/use-cancelar-compra';
 import { useFinalizarCompra } from '@/application/compra/use-finalizar-compra';
 import { ItemDaCompra, useModoCompra } from '@/application/compra/use-modo-compra';
+import { usePreferenciaDeAgrupamento } from '@/application/lista/use-preferencia-agrupamento';
 import { totalPago } from '@/domain/compra/compra.rules';
 import { centavos } from '@/domain/shared/dinheiro';
 import { deDecimal, paraDecimal } from '@/domain/shared/quantidade';
@@ -16,8 +17,24 @@ import { RodapeCompra } from '@/presentation/components/rodape-compra';
 import { SheetAjusteCompra } from '@/presentation/components/sheet-ajuste-compra';
 import { Texto } from '@/presentation/components/texto';
 import { Toast } from '@/presentation/components/toast';
+import {
+  agruparPorCategoriaGenerico,
+  listaContinuaGenerico,
+} from '@/presentation/format/agrupar-lista';
 import { espaco } from '@/presentation/theme/espaco';
 import { useTheme } from '@/presentation/theme/provider';
+
+function nomeDoItemDaCompra(linha: ItemDaCompra): string {
+  return linha.item.nomeAvulso ?? linha.produto?.nome ?? '';
+}
+
+function categoriaDoItemDaCompra(linha: ItemDaCompra): string | null {
+  return linha.produto?.categoria ?? null;
+}
+
+function chaveDoItemDaCompra(linha: ItemDaCompra): string {
+  return linha.item.id;
+}
 
 /**
  * Tela única, sem navegação interna (FRONTEND §8.3): quem está com o
@@ -33,11 +50,28 @@ export default function ModoCompra() {
   const { finalizando, finalizar } = useFinalizarCompra();
   const { cancelando, cancelar } = useCancelarCompra();
 
+  const { agrupado } = usePreferenciaDeAgrupamento();
+
   const [itemEmAjuste, setItemEmAjuste] = useState<ItemDaCompra | null>(null);
   const [aviso, setAviso] = useState<{ mensagem: string; sucesso: boolean } | null>(null);
 
   const marcados = useMemo(() => itens.filter((linha) => linha.item.comprado).length, [itens]);
   const total = useMemo(() => totalPago(itens.map((linha) => linha.item)), [itens]);
+
+  // Mesmas funções de agrupamento da aba Lista, mesma preferência
+  // compartilhada — as duas telas não podem divergir (A-08).
+  const linhas = useMemo(
+    () =>
+      agrupado
+        ? agruparPorCategoriaGenerico(
+            itens,
+            categoriaDoItemDaCompra,
+            nomeDoItemDaCompra,
+            chaveDoItemDaCompra,
+          )
+        : listaContinuaGenerico(itens, nomeDoItemDaCompra, chaveDoItemDaCompra),
+    [agrupado, itens],
+  );
 
   async function fecharCompra() {
     const resultado = await finalizar(id);
@@ -108,16 +142,32 @@ export default function ModoCompra() {
       </View>
 
       <ScrollView style={{ flex: 1 }}>
-        {itens.map((linha) => (
-          <ItemCompra
-            key={linha.item.id}
-            linha={linha}
-            onMarcar={() => void marcar(linha.item)}
-            onDesmarcar={() => void desmarcar(linha.item.id)}
-            onAjustar={() => setItemEmAjuste(linha)}
-            onResponderPreco={(resposta) => void responderAtualizarPreco(linha.item.id, resposta)}
-          />
-        ))}
+        {linhas.map((linha) =>
+          linha.tipo === 'cabecalho' ? (
+            <View
+              key={linha.chave}
+              style={{
+                paddingHorizontal: espaco.lg,
+                paddingTop: espaco.lg,
+                paddingBottom: espaco.sm,
+                backgroundColor: tema.bg.base,
+              }}
+            >
+              <Texto papel="caption" tom="secondary">
+                {linha.categoria}
+              </Texto>
+            </View>
+          ) : (
+            <ItemCompra
+              key={linha.chave}
+              linha={linha.item}
+              onMarcar={() => void marcar(linha.item.item)}
+              onDesmarcar={() => void desmarcar(linha.item.item.id)}
+              onAjustar={() => setItemEmAjuste(linha.item)}
+              onResponderPreco={(resposta) => void responderAtualizarPreco(linha.item.item.id, resposta)}
+            />
+          ),
+        )}
       </ScrollView>
 
       {aviso?.sucesso ? null : (
