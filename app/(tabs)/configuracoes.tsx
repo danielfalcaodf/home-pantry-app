@@ -102,7 +102,7 @@ export default function Configuracoes() {
               onPress={() => void fazerBackupAgora()}
               disabled={backup.exportando}
             />
-            <Texto papel="caption" tom="secondary">
+            <Texto papel="body.md" tom="secondary">
               {formatarDataDoUltimoBackup(ultimoBackup.ultimoBackupEm)}
             </Texto>
           </View>
@@ -114,7 +114,7 @@ export default function Configuracoes() {
               onPress={() => void restauracao.selecionar()}
             />
             {/* Ação destrutiva sinalizada pela descrição do efeito, não só pela cor (task 6.4). */}
-            <Texto papel="caption" tom="secondary">
+            <Texto papel="body.md" tom="secondary">
               Substitui os dados existentes pelos deste backup. Não pode ser desfeito.
             </Texto>
           </View>
@@ -127,7 +127,7 @@ export default function Configuracoes() {
               disabled={dados.exportando}
             />
             {/* Rótulo distinto de backup (task 5.3/design D7): planilha legível, não restaurável. */}
-            <Texto papel="caption" tom="secondary">
+            <Texto papel="body.md" tom="secondary">
               Uma planilha com o que está na despensa hoje — não é uma cópia de segurança.
             </Texto>
           </View>
@@ -141,10 +141,12 @@ export default function Configuracoes() {
           />
         </Secao>
 
-        <Secao titulo="Despensa">
+        <Secao titulo="Conferência">
           {/* Recalibração semanal (ARQUITETURA §1.1) — saiu do cabeçalho da
             Despensa (que agora só tem os ícones de buscar/adicionar) e
-            passou a ficar aqui, junto das outras ações de baixa frequência. */}
+            passou a ficar aqui, junto das outras ações de baixa frequência.
+            Título da seção não repete "Despensa" (nome da aba, destino fixo
+            do app) — evita o nó acessível ambíguo do A-12. */}
           <Botao
             titulo="Conferência da despensa"
             variante="secundario"
