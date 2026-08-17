@@ -1,15 +1,15 @@
 import { useState } from 'react';
-import { Modal, Pressable, TextInput, View } from 'react-native';
+import { Pressable, TextInput, View } from 'react-native';
 
 import { ehIndivisivel, rotuloDaUnidade, Unidade } from '../../domain/shared/unidade';
-import { espaco, raio, ALVO_TOQUE_MINIMO } from '../theme/espaco';
+import { espaco, ALVO_TOQUE_MINIMO } from '../theme/espaco';
 import { icones } from '../theme/icones';
 import { useTheme } from '../theme/provider';
 import { tipografia } from '../theme/tipografia';
 import { aplicarMascaraQuantidade } from './campo-texto';
 import { Botao } from './botao';
-import { EvitaTeclado } from './evita-teclado';
 import { IconeSvg } from './icone-svg';
+import { PainelInferior } from './painel-inferior';
 import { Texto } from './texto';
 
 export type TecladoQuantidadeProps = {
@@ -56,79 +56,65 @@ export function TecladoQuantidade({
   }
 
   return (
-    <Modal visible={visivel} transparent animationType="slide" onRequestClose={fechar}>
-      <Pressable
-        onPress={fechar}
-        accessibilityLabel="Fechar"
-        style={{ flex: 1, justifyContent: 'flex-end' }}
-      >
-        <EvitaTeclado style={{ flex: undefined }} testID="evita-teclado-quantidade">
+    <PainelInferior
+      visivel={visivel}
+      onFechar={fechar}
+      testID="evita-teclado-quantidade"
+      style={{ padding: espaco.xl, gap: espaco.lg }}
+    >
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+        <Texto papel="body.lg">{nomeDoItem}</Texto>
         <Pressable
-          onPress={() => {}}
+          onPress={fechar}
+          accessibilityRole="button"
+          accessibilityLabel="Fechar"
+          hitSlop={8}
           style={{
-            backgroundColor: tema.bg.raised,
-            borderTopLeftRadius: raio.sheet,
-            borderTopRightRadius: raio.sheet,
-            padding: espaco.xl,
-            gap: espaco.lg,
+            minWidth: ALVO_TOQUE_MINIMO,
+            minHeight: ALVO_TOQUE_MINIMO,
+            alignItems: 'center',
+            justifyContent: 'center',
           }}
         >
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-            <Texto papel="body.lg">{nomeDoItem}</Texto>
-            <Pressable
-              onPress={fechar}
-              accessibilityRole="button"
-              accessibilityLabel="Fechar"
-              hitSlop={8}
-              style={{
-                minWidth: ALVO_TOQUE_MINIMO,
-                minHeight: ALVO_TOQUE_MINIMO,
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <IconeSvg path={icones.fechar} cor={tema.text.secondary} tamanho={20} />
-            </Pressable>
-          </View>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: espaco.md }}>
-            <TextInput
-              // Abre com o campo em foco e o teclado numérico do sistema.
-              autoFocus
-              value={texto}
-              onChangeText={(valor) => setTexto(aplicarMascaraQuantidade(valor))}
-              accessibilityLabel="Quantidade"
-              keyboardType={divisivel ? 'decimal-pad' : 'number-pad'}
-              placeholder="0"
-              placeholderTextColor={tema.text.secondary}
-              style={{
-                flex: 1,
-                color: tema.text.primary,
-                fontFamily: tipografia['display.lg'].fontFamily,
-                fontSize: tipografia['display.lg'].fontSize,
-                borderBottomWidth: 2,
-                borderBottomColor: tema.action.azulejo,
-              }}
-            />
-            <Texto papel="body.lg" tom="secondary">
-              {rotuloDaUnidade(unidade, quantidade !== 1)}
-            </Texto>
-          </View>
-          <View style={{ flexDirection: 'row', gap: espaco.md }}>
-            <View style={{ flex: 1 }}>
-              <Botao titulo="Usei" onPress={() => confirmar(onUsei)} disabled={!valida} />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Botao
-                titulo="Repus"
-                variante="secundario"
-                onPress={() => confirmar(onRepus)}
-                disabled={!valida}
-              />
-            </View>
-          </View>
+          <IconeSvg path={icones.fechar} cor={tema.text.secondary} tamanho={20} />
         </Pressable>
-        </EvitaTeclado>
-      </Pressable>
-    </Modal>
+      </View>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: espaco.md }}>
+        <TextInput
+          // Abre com o campo em foco e o teclado numérico do sistema.
+          autoFocus
+          value={texto}
+          onChangeText={(valor) => setTexto(aplicarMascaraQuantidade(valor))}
+          accessibilityLabel="Quantidade"
+          keyboardType={divisivel ? 'decimal-pad' : 'number-pad'}
+          placeholder="0"
+          placeholderTextColor={tema.text.secondary}
+          style={{
+            flex: 1,
+            color: tema.text.primary,
+            fontFamily: tipografia['display.lg'].fontFamily,
+            fontSize: tipografia['display.lg'].fontSize,
+            borderBottomWidth: 2,
+            borderBottomColor: tema.action.azulejo,
+          }}
+        />
+        <Texto papel="body.lg" tom="secondary">
+          {rotuloDaUnidade(unidade, quantidade !== 1)}
+        </Texto>
+      </View>
+      <View style={{ flexDirection: 'row', gap: espaco.md }}>
+        <View style={{ flex: 1 }}>
+          <Botao titulo="Usei" onPress={() => confirmar(onUsei)} disabled={!valida} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Botao
+            titulo="Repus"
+            variante="secundario"
+            onPress={() => confirmar(onRepus)}
+            disabled={!valida}
+          />
+        </View>
+      </View>
+    </PainelInferior>
   );
 }

@@ -64,7 +64,7 @@ export default function RootLayout() {
   // A tela de erro também usa o tema resolvido — nunca um fundo padrão.
   if (banco.erro) {
     return (
-      <KeyboardProvider>
+      <KeyboardProvider statusBarTranslucent navigationBarTranslucent>
         <ThemeProvider preferencia={tema.preferencia} escolher={tema.escolher}>
           <EstiloDaBarraDeStatus />
           <TelaErro
@@ -82,7 +82,7 @@ export default function RootLayout() {
   }
 
   return (
-    <KeyboardProvider>
+    <KeyboardProvider statusBarTranslucent navigationBarTranslucent>
       <ThemeProvider preferencia={tema.preferencia} escolher={tema.escolher}>
         <Rotas />
       </ThemeProvider>

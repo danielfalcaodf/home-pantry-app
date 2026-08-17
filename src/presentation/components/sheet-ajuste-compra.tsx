@@ -1,14 +1,14 @@
 import { useState } from 'react';
-import { Modal, Pressable, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 
 import { rotuloDaUnidade, Unidade } from '../../domain/shared/unidade';
-import { ALVO_TOQUE_MINIMO, espaco, raio } from '../theme/espaco';
+import { ALVO_TOQUE_MINIMO, espaco } from '../theme/espaco';
 import { icones } from '../theme/icones';
 import { useTheme } from '../theme/provider';
 import { Botao } from './botao';
 import { CampoTexto } from './campo-texto';
-import { EvitaTeclado } from './evita-teclado';
 import { IconeSvg } from './icone-svg';
+import { PainelInferior } from './painel-inferior';
 import { Texto } from './texto';
 
 export type SheetAjusteCompraProps = {
@@ -66,61 +66,51 @@ export function SheetAjusteCompra({
   }
 
   return (
-    <Modal visible={visivel} transparent animationType="slide" onRequestClose={fechar}>
-      <Pressable onPress={fechar} accessibilityLabel="Fechar" style={{ flex: 1, justifyContent: 'flex-end' }}>
-        <EvitaTeclado style={{ flex: undefined }} testID="evita-teclado-ajuste-compra">
+    <PainelInferior
+      visivel={visivel}
+      onFechar={fechar}
+      testID="evita-teclado-ajuste-compra"
+      style={{ padding: espaco.xl, gap: espaco.lg }}
+    >
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+        <Texto papel="body.lg">{nome}</Texto>
         <Pressable
-          onPress={() => {}}
+          onPress={fechar}
+          accessibilityRole="button"
+          accessibilityLabel="Fechar"
+          hitSlop={8}
           style={{
-            backgroundColor: tema.bg.raised,
-            borderTopLeftRadius: raio.sheet,
-            borderTopRightRadius: raio.sheet,
-            padding: espaco.xl,
-            gap: espaco.lg,
+            minWidth: ALVO_TOQUE_MINIMO,
+            minHeight: ALVO_TOQUE_MINIMO,
+            alignItems: 'center',
+            justifyContent: 'center',
           }}
         >
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-            <Texto papel="body.lg">{nome}</Texto>
-            <Pressable
-              onPress={fechar}
-              accessibilityRole="button"
-              accessibilityLabel="Fechar"
-              hitSlop={8}
-              style={{
-                minWidth: ALVO_TOQUE_MINIMO,
-                minHeight: ALVO_TOQUE_MINIMO,
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <IconeSvg path={icones.fechar} cor={tema.text.secondary} tamanho={20} />
-            </Pressable>
-          </View>
-          <View style={{ flexDirection: 'row', gap: espaco.md }}>
-            <View style={{ flex: 1 }}>
-              <CampoTexto
-                rotulo={`Quantidade (${rotuloDaUnidade(unidade, true)})`}
-                value={quantidade}
-                onChangeText={setQuantidade}
-                keyboardType="decimal-pad"
-                erro={erroQuantidade}
-                tipo="quantidade"
-              />
-            </View>
-            <View style={{ flex: 1 }}>
-              <CampoTexto
-                rotulo="Preço pago (opcional)"
-                value={preco}
-                onChangeText={setPreco}
-                keyboardType="decimal-pad"
-                tipo="dinheiro"
-              />
-            </View>
-          </View>
-          <Botao titulo="Salvar" onPress={salvar} />
+          <IconeSvg path={icones.fechar} cor={tema.text.secondary} tamanho={20} />
         </Pressable>
-        </EvitaTeclado>
-      </Pressable>
-    </Modal>
+      </View>
+      <View style={{ flexDirection: 'row', gap: espaco.md }}>
+        <View style={{ flex: 1 }}>
+          <CampoTexto
+            rotulo={`Quantidade (${rotuloDaUnidade(unidade, true)})`}
+            value={quantidade}
+            onChangeText={setQuantidade}
+            keyboardType="decimal-pad"
+            erro={erroQuantidade}
+            tipo="quantidade"
+          />
+        </View>
+        <View style={{ flex: 1 }}>
+          <CampoTexto
+            rotulo="Preço pago (opcional)"
+            value={preco}
+            onChangeText={setPreco}
+            keyboardType="decimal-pad"
+            tipo="dinheiro"
+          />
+        </View>
+      </View>
+      <Botao titulo="Salvar" onPress={salvar} />
+    </PainelInferior>
   );
 }
