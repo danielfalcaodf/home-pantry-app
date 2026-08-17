@@ -14,6 +14,7 @@ import { CampoTexto } from '@/presentation/components/campo-texto';
 import { ChipEstado } from '@/presentation/components/chip-estado';
 import { EstadoVazio } from '@/presentation/components/estado-vazio';
 import { IconeSvg } from '@/presentation/components/icone-svg';
+import { AcaoSecundaria } from '@/presentation/components/acao-secundaria';
 import { ItemDespensa } from '@/presentation/components/item-despensa';
 import { TecladoQuantidade } from '@/presentation/components/teclado-quantidade';
 import { TelaBase } from '@/presentation/components/tela-base';
@@ -124,13 +125,11 @@ export default function Despensa() {
           }}
         />
         <View style={{ padding: espaco.xl, alignItems: 'center' }}>
-          <Texto
-            papel="body.md"
+          <AcaoSecundaria
+            titulo="Cadastrar do zero"
             cor={tema.action.azulejo}
             onPress={() => router.push('/produto/novo')}
-          >
-            Cadastrar do zero
-          </Texto>
+          />
         </View>
       </TelaBase>
     );

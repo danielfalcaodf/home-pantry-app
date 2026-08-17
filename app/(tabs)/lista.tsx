@@ -14,6 +14,7 @@ import { DadosDoAvulso, ItemDaLista } from '@/domain/lista/lista';
 import { totalDaListaDeCompras } from '@/domain/lista/lista.rules';
 import { centavos } from '@/domain/shared/dinheiro';
 import { paraDecimal } from '@/domain/shared/quantidade';
+import { AcaoSecundaria } from '@/presentation/components/acao-secundaria';
 import { Botao } from '@/presentation/components/botao';
 import { EstadoVazio } from '@/presentation/components/estado-vazio';
 import { ItemLista } from '@/presentation/components/item-lista';
@@ -128,6 +129,12 @@ export default function Lista() {
           >
             <Texto papel="display.sm">Lista</Texto>
             <View style={{ flexDirection: 'row', gap: espaco.lg }}>
+              <AcaoSecundaria
+                titulo="Adicionar item avulso"
+                cor={tema.action.azulejo}
+                onPress={abrirNovoAvulso}
+                style={{ paddingHorizontal: 0 }}
+              />
               <Pressable
                 onPress={() => void exportar()}
                 accessibilityRole="button"
@@ -201,13 +208,6 @@ export default function Lista() {
                   />
                 </Pressable>
               )
-            }
-            ListFooterComponent={
-              <View style={{ padding: espaco.lg, alignItems: 'center' }}>
-                <Texto papel="body.md" cor={tema.action.azulejo} onPress={abrirNovoAvulso}>
-                  Adicionar item avulso
-                </Texto>
-              </View>
             }
           />
         </>

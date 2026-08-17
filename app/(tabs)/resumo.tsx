@@ -5,6 +5,7 @@ import { Pressable, ScrollView, View } from 'react-native';
 import { useGastoMensal } from '@/application/resumo/use-gasto-mensal';
 import { useResumoDeValores } from '@/application/resumo/use-resumo-valores';
 import { formatarBRL } from '@/domain/shared/dinheiro';
+import { AcaoSecundaria } from '@/presentation/components/acao-secundaria';
 import { ChipEstado } from '@/presentation/components/chip-estado';
 import { GraficoBarras } from '@/presentation/components/grafico-barras';
 import { TelaBase } from '@/presentation/components/tela-base';
@@ -137,13 +138,13 @@ export default function Resumo() {
             <Texto papel="label" tom="secondary">
               Gasto por mês
             </Texto>
-            <Texto
+            <AcaoSecundaria
+              titulo="Ver histórico"
               papel="body.md"
               cor={tema.action.azulejo}
               onPress={() => router.push('/compra/historico')}
-            >
-              Ver histórico
-            </Texto>
+              style={{ paddingHorizontal: 0 }}
+            />
           </View>
           {nenhumaCompraFechada ? (
             <Texto papel="body.md" tom="secondary">

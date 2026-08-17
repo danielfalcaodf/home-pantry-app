@@ -19,6 +19,7 @@ import { centavos, formatarBRL } from '@/domain/shared/dinheiro';
 import { deDecimal, formatarNumero, milesimos, paraDecimal } from '@/domain/shared/quantidade';
 import { MotivoAjuste } from '@/domain/movimento/movimento';
 import { rotuloDaUnidade } from '@/domain/shared/unidade';
+import { AcaoSecundaria } from '@/presentation/components/acao-secundaria';
 import { Botao } from '@/presentation/components/botao';
 import { BotaoVoltar } from '@/presentation/components/botao-voltar';
 import {
@@ -250,26 +251,16 @@ function Detalhe({ id, item }: { id: string; item: ProdutoNaDespensa }) {
       {/* Resumo do histórico (task 5.10): a mesma confiança de que o app
           registra o que deveria, com acesso ao histórico completo. */}
       {!resumoHistorico.carregando ? (
-        <Pressable
+        <AcaoSecundaria
           onPress={() => router.push(`/produto/${id}/historico`)}
-          accessibilityRole="button"
-          accessibilityLabel="Ver histórico completo"
-          hitSlop={8}
-          style={{
-            minHeight: ALVO_TOQUE_MINIMO,
-            justifyContent: 'center',
-            paddingHorizontal: espaco.lg,
-            paddingVertical: espaco.sm,
-          }}
-        >
-          <Texto papel="label" tom="secondary">
-            {resumoHistorico.quantidadeDeUsos === 0
+          titulo={
+            resumoHistorico.quantidadeDeUsos === 0
               ? 'Sem uso registrado nos últimos 30 dias'
               : resumoHistorico.quantidadeDeUsos === 1
                 ? 'Você anotou 1 uso nos últimos 30 dias'
-                : `Você anotou ${resumoHistorico.quantidadeDeUsos} usos nos últimos 30 dias`}
-          </Texto>
-        </Pressable>
+                : `Você anotou ${resumoHistorico.quantidadeDeUsos} usos nos últimos 30 dias`
+          }
+        />
       ) : null}
 
       <View style={{ padding: espaco.lg }}>
