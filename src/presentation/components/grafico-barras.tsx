@@ -27,6 +27,10 @@ export function GraficoBarras({ dados, altura = 96 }: GraficoBarrasProps) {
   const tema = useTheme();
   const maior = Math.max(...dados.map((dado) => dado.valor), 0);
   const ultimoIndice = dados.length - 1;
+  // Clearance fixa (correcao-grafico-cobre-ver-historico, A-23): na fração
+  // máxima a barra nunca ocupa a altura inteira do container, senão cobre o
+  // que estiver logo acima dele (hoje, "Ver histórico" no cabeçalho).
+  const alturaUtil = altura - espaco.sm;
 
   return (
     <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: espaco.sm, height: altura }}>
@@ -37,7 +41,7 @@ export function GraficoBarras({ dados, altura = 96 }: GraficoBarrasProps) {
             <View
               style={{
                 width: '100%',
-                height: dado.valor > 0 ? Math.max(altura * fracao, 2) : 0,
+                height: dado.valor > 0 ? Math.max(alturaUtil * fracao, 2) : 0,
                 backgroundColor: tema.action.azulejo,
                 opacity: indice === ultimoIndice ? 1 : 0.4,
               }}
