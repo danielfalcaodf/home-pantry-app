@@ -29,6 +29,7 @@ import {
 } from '@/presentation/components/formulario-produto';
 import { SheetAjusteEstoque } from '@/presentation/components/sheet-ajuste-estoque';
 import { TecladoQuantidade } from '@/presentation/components/teclado-quantidade';
+import { TelaBase } from '@/presentation/components/tela-base';
 import { TelaErro } from '@/presentation/components/tela-erro';
 import { Texto } from '@/presentation/components/texto';
 import { Toast } from '@/presentation/components/toast';
@@ -41,7 +42,6 @@ import {
 import { useRegistroDeConsumo } from '@/presentation/components/use-registro-de-consumo';
 import { useVoltarFechaTeclado } from '@/presentation/components/use-voltar-fecha-teclado';
 import { ALVO_TOQUE_MINIMO, espaco } from '@/presentation/theme/espaco';
-import { useTheme } from '@/presentation/theme/provider';
 
 function valoresDoItem(item: ProdutoNaDespensa): ValoresDoProduto {
   const { produto } = item;
@@ -81,7 +81,6 @@ export default function DetalheProduto() {
 }
 
 function Detalhe({ id, item }: { id: string; item: ProdutoNaDespensa }) {
-  const tema = useTheme();
   const categorias = useCategorias();
   const { editar } = useEditarProduto();
   const { remover } = useRemoverProduto();
@@ -187,7 +186,7 @@ function Detalhe({ id, item }: { id: string; item: ProdutoNaDespensa }) {
   const { produto } = item;
 
   return (
-    <View style={{ flex: 1, backgroundColor: tema.bg.base }}>
+    <TelaBase>
       <View style={{ paddingHorizontal: espaco.lg, paddingTop: espaco.xs, alignItems: 'flex-start' }}>
         <BotaoVoltar />
       </View>
@@ -311,6 +310,6 @@ function Detalhe({ id, item }: { id: string; item: ProdutoNaDespensa }) {
         onFechar={() => setAjusteAberto(false)}
         onSalvar={(dados) => void corrigirQuantidade(dados)}
       />
-    </View>
+    </TelaBase>
   );
 }

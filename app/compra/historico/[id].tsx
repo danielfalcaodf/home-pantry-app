@@ -7,6 +7,7 @@ import { centavos, formatarBRL } from '@/domain/shared/dinheiro';
 import { formatarQuantidade } from '@/domain/shared/quantidade';
 import { BotaoVoltar } from '@/presentation/components/botao-voltar';
 import { EstadoVazio } from '@/presentation/components/estado-vazio';
+import { TelaBase } from '@/presentation/components/tela-base';
 import { Texto } from '@/presentation/components/texto';
 import { formatarDataDaCompra } from '@/presentation/format/historico-de-compras';
 import { espaco } from '@/presentation/theme/espaco';
@@ -29,9 +30,9 @@ export default function DetalheDaCompra() {
   }
   if (!compra) {
     return (
-      <View style={{ flex: 1, backgroundColor: tema.bg.base }}>
+      <TelaBase>
         <EstadoVazio convite="Esta compra não foi encontrada." />
-      </View>
+      </TelaBase>
     );
   }
 
@@ -71,7 +72,7 @@ export default function DetalheDaCompra() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: tema.bg.base }}>
+    <TelaBase>
       <View style={{ padding: espaco.lg, gap: espaco.xs }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: espaco.sm }}>
           <BotaoVoltar />
@@ -92,6 +93,6 @@ export default function DetalheDaCompra() {
       ) : (
         <FlatList data={itens} keyExtractor={({ item }) => item.id} renderItem={({ item }) => <Linha {...item} />} />
       )}
-    </View>
+    </TelaBase>
   );
 }

@@ -16,6 +16,7 @@ import { EstadoVazio } from '@/presentation/components/estado-vazio';
 import { IconeSvg } from '@/presentation/components/icone-svg';
 import { ItemDespensa } from '@/presentation/components/item-despensa';
 import { TecladoQuantidade } from '@/presentation/components/teclado-quantidade';
+import { TelaBase } from '@/presentation/components/tela-base';
 import { Texto } from '@/presentation/components/texto';
 import { Toast } from '@/presentation/components/toast';
 import { ToastDesfazer } from '@/presentation/components/toast-desfazer';
@@ -114,7 +115,7 @@ export default function Despensa() {
 
   if (!carregando && itens.length === 0) {
     return (
-      <View style={{ flex: 1, backgroundColor: tema.bg.base }}>
+      <TelaBase>
         <EstadoVazio
           convite="Nada cadastrado ainda. Comece pelos 40 itens que quase toda casa tem — depois é só ajustar."
           acao={{
@@ -131,12 +132,12 @@ export default function Despensa() {
             Cadastrar do zero
           </Texto>
         </View>
-      </View>
+      </TelaBase>
     );
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: tema.bg.base }}>
+    <TelaBase>
       <View style={{ paddingHorizontal: espaco.lg, paddingTop: espaco.lg, gap: espaco.md }}>
         <View
           style={{
@@ -314,6 +315,6 @@ export default function Despensa() {
           onRepus={(quantidade) => void repor(itemDoTeclado, quantidade)}
         />
       ) : null}
-    </View>
+    </TelaBase>
   );
 }

@@ -11,6 +11,7 @@ import {
   ValoresDoProduto,
   VALORES_INICIAIS,
 } from '@/presentation/components/formulario-produto';
+import { TelaBase } from '@/presentation/components/tela-base';
 import { normalizarParaBusca } from '@/presentation/format/normalizar-busca';
 
 const ATRASO_CHECAGEM_NOME = 400;
@@ -80,6 +81,7 @@ export default function NovoProduto() {
   }
 
   return (
+    <TelaBase>
     <FormularioProduto
       valores={valores}
       aoMudar={setValores}
@@ -108,5 +110,6 @@ export default function NovoProduto() {
           : undefined
       }
     />
+    </TelaBase>
   );
 }
