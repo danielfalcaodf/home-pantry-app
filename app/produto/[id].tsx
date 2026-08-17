@@ -187,7 +187,7 @@ function Detalhe({ id, item }: { id: string; item: ProdutoNaDespensa }) {
 
   return (
     <TelaBase>
-      <View style={{ paddingHorizontal: espaco.lg, paddingTop: espaco.xs, alignItems: 'flex-start' }}>
+      <View style={{ paddingHorizontal: espaco.lg, paddingTop: espaco.lg, alignItems: 'flex-start' }}>
         <BotaoVoltar />
       </View>
       <View style={{ padding: espaco.lg, gap: espaco.xs, alignItems: 'center' }}>
@@ -232,6 +232,7 @@ function Detalhe({ id, item }: { id: string; item: ProdutoNaDespensa }) {
           <Botao
             titulo="Outra quantidade"
             variante="secundario"
+            numberOfLines={1}
             onPress={() => setTecladoAberto(true)}
           />
         </View>

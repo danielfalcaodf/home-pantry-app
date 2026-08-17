@@ -118,13 +118,26 @@ export function ItemCompra({ linha, onMarcar, onDesmarcar, onAjustar, onResponde
               </Texto>
             )}
           </View>
-          {/* Sinaliza que a linha aceita ajuste por toque longo (ACHADO
-              affordance) — o próprio ícone não é tocável, só indica que o
-              gesto existe; o alvo continua sendo a linha inteira via
-              onLongPress do Pressable pai. */}
-          <View testID="icone-ajustar">
+          {/* Caminho visível para o mesmo ajuste do toque longo (mesmo
+              padrão já resolvido em produto/[id].tsx) — gesto invisível não
+              pode ser o único acesso (correcao-acabamento-header-stepper-e-affordance,
+              achado 4). Pressable aninhado: o toque aqui não propaga para o
+              onPress/onLongPress do Pressable pai. */}
+          <Pressable
+            testID="icone-ajustar"
+            onPress={onAjustar}
+            accessibilityRole="button"
+            accessibilityLabel={`Ajustar quantidade e preço de ${nome}`}
+            hitSlop={8}
+            style={{
+              minWidth: ALVO_TOQUE_MINIMO,
+              minHeight: ALVO_TOQUE_MINIMO,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
             <IconeSvg path={icones.ajustar} cor={tema.text.secondary} tamanho={16} />
-          </View>
+          </Pressable>
         </View>
       </Pressable>
 
