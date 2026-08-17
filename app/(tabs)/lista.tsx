@@ -16,6 +16,7 @@ import { centavos } from '@/domain/shared/dinheiro';
 import { paraDecimal } from '@/domain/shared/quantidade';
 import { AcaoSecundaria } from '@/presentation/components/acao-secundaria';
 import { Botao } from '@/presentation/components/botao';
+import { ChipEstado } from '@/presentation/components/chip-estado';
 import { EstadoVazio } from '@/presentation/components/estado-vazio';
 import { ItemLista } from '@/presentation/components/item-lista';
 import { RodapeTotal } from '@/presentation/components/rodape-total';
@@ -146,18 +147,12 @@ export default function Lista() {
                   Compartilhar
                 </Texto>
               </Pressable>
-              <Pressable
+              <ChipEstado
+                rotulo={agrupado ? 'Agrupado' : 'Agrupar'}
+                cor={tema.action.azulejo}
+                ativo={agrupado}
                 onPress={() => void alternar()}
-                accessibilityRole="button"
-                accessibilityLabel="Agrupar por categoria"
-                accessibilityState={{ selected: agrupado }}
-                hitSlop={8}
-                style={{ minHeight: ALVO_TOQUE_MINIMO, justifyContent: 'center' }}
-              >
-                <Texto papel="body.md" cor={tema.action.azulejo}>
-                  Agrupar
-                </Texto>
-              </Pressable>
+              />
             </View>
           </View>
 
