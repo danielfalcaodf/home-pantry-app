@@ -1,0 +1,162 @@
+appId: com.danielfalcaodf.repor
+---
+# Jornada ponta a ponta em caminho feliz: um produto nasce, passa pelo CRUD
+# completo (criar, abrir/editar, remover), pela reposição rápida e pelo
+# consumo (o gesto crítico do KPI K4), atravessa as 4 abas (Despensa, Lista,
+# Resumo, Configurações só de passagem) e fecha uma compra real — cobrindo
+# num único roteiro tudo que os flows individuais desta pasta cobrem em
+# isolamento (cadastro-de-produto, editar-produto, reposicao-manual,
+# dar-baixa-caminho-critico, lista-derivada-gatilho, ciclo-de-compra,
+# remover-produto). Serve como smoke E2E de release: se este flow quebra,
+# alguma capability central do MVP quebrou.
+#
+# Usa "Item Roteiro Feliz QA" — nome próprio deste flow, diferente de "Item
+# Teste QA F5" (reservado para cadastro-de-produto.yaml/editar-produto.yaml/
+# remover-produto.yaml) para não colidir se ambos os roteiros rodarem na
+# mesma massa de dados compartilhada. Se esse nome já existir no seu
+# dispositivo, troque antes de rodar.
+#
+# O rótulo acessível do botão de consumo vem direto do código-fonte
+# (`app/(tabs)/index.tsx`, `rotuloAcaoConsumo`): "Usei 1 <unidade> de
+# <nome>" — não "Registrar consumo de...", que é o texto usado em
+# dar-baixa-caminho-critico.yaml. Se este passo falhar, é sinal de que
+# dar-baixa-caminho-critico.yaml está com o seletor desatualizado.
+#
+# Atenção ao escrever seletores novos aqui: o matcher `text:` do Maestro é
+# regex de string INTEIRA. Uma linha da lista não casa por pedaço — ou é o
+# accessibilityLabel completo, ou é o texto exato de um nó. Componentes
+# diferentes expõem rótulos diferentes para o MESMO item: `ItemDespensa`
+# usa "<nome>, <leitura>, <estado>", `ItemLista` não tem rótulo composto
+# (só nós de texto soltos, use "Remover <nome> da lista") e `ItemCompra`
+# usa "Marcar <nome>" / "Desmarcar <nome>".
+#
+# Efeitos colaterais reais no dispositivo de teste:
+# - Cria e depois remove (logicamente) "Item Roteiro Feliz QA" — o produto
+#   não sobra na Despensa ao final, mas o histórico de movimentos dele
+#   continua no banco (remoção é lógica, nunca DELETE).
+# - Fecha uma compra real com esse item marcado: fica permanentemente no
+#   histórico de compras e no "Gasto por mês" do Resumo (mesmo sem preço,
+#   conta como compra fechada, `qtdCompras` incrementa).
+# - Se houver outros itens já na lista derivada no momento de "Iniciar
+#   compra", eles entram na mesma compra sem marcação e continuam
+#   pendentes — mesmo comportamento documentado em ciclo-de-compra.yaml.
+- launchApp
+- assertVisible: "Despensa"
+
+# 1) CRUD — criar produto (formulário mínimo: nome, medida, quanto quero ter)
+- tapOn: "Adicionar produto"
+- assertVisible: "Novo produto"
+- tapOn: "O que é"
+- inputText: "Item Roteiro Feliz QA"
+- hideKeyboard
+- tapOn: "un"
+- tapOn: "Quanto quero ter em casa"
+- inputText: "5"
+- hideKeyboard
+- tapOn: "Adicionar à despensa"
+- assertVisible: "Despensa"
+- scrollUntilVisible:
+    element: "Item Roteiro Feliz QA, 0 de 5 un, Acabou"
+    direction: DOWN
+    speed: 60
+    timeout: 30000
+- assertVisible: "Item Roteiro Feliz QA, 0 de 5 un, Acabou"
+
+# 2) Reposição rápida ("+", fora do modo compra) — sai do zerado
+- tapOn: "Repor 1 un de Item Roteiro Feliz QA"
+- assertVisible: "Item Roteiro Feliz QA, 1 de 5 un, Falta 4"
+
+# 3) CRUD — abrir detalhe e editar (corrige "quanto quero ter" para 2, o
+# suficiente pra fechar o ciclo de compra num único item mais adiante)
+- tapOn: "Item Roteiro Feliz QA, 1 de 5 un, Falta 4"
+- tapOn: "Quanto quero ter em casa"
+- eraseText: 1
+- inputText: "2"
+- hideKeyboard
+- scrollUntilVisible:
+    element: "Salvar"
+    direction: DOWN
+    speed: 40
+    timeout: 15000
+- tapOn: "Salvar"
+- assertVisible: "Despensa"
+- assertVisible: "Item Roteiro Feliz QA, 1 de 2 un, Falta 1"
+
+# 4) Aba Lista — a lista é derivada (sem tabela própria): o item aparece
+# sozinho, sem nenhuma ação manual de "adicionar à lista". `ItemLista` não
+# monta rótulo composto: o único seletor estável da linha é o botão de
+# remover (`item-lista.tsx`, `Remover <nome> da lista`).
+- tapOn: "Lista"
+# Numa despensa com dezenas de itens a linha nasce abaixo da dobra: a lista é
+# derivada e ordenada por categoria, não pela ordem de cadastro. Rolar até ela
+# faz parte da asserção — sem isso o flow falha por posição, não por ausência.
+- scrollUntilVisible:
+    element: "Remover Item Roteiro Feliz QA da lista"
+    direction: DOWN
+    speed: 60
+    timeout: 30000
+- takeScreenshot: "qa/feliz-04-lista-derivada"
+
+# 5) Ciclo de compra: inicia (ou resume) a compra aberta, marca o item e fecha.
+# CUIDADO ao mexer nestes seletores. `item-compra.tsx:64` declara
+# `accessibilityLabel="Marcar <nome>"` num View interno, mas esse rótulo NUNCA
+# chega na árvore de acessibilidade do Android: o `Pressable` externo não tem
+# rótulo próprio, então o RN colapsa a subárvore e sintetiza o content-desc a
+# partir dos textos filhos. Verificado por inspect_screen — a linha se anuncia
+# como "<nome>, <quantidade>, <preço>", e o checkbox não aparece.
+# O visto marcado entra nessa mesma síntese como o caractere "✓" na frente.
+- tapOn:
+    text: "Iniciar compra \\(\\d+\\)"
+- assertVisible: "Compra"
+- scrollUntilVisible:
+    element: "Item Roteiro Feliz QA, 1 un, sem preço"
+    direction: DOWN
+    speed: 60
+    timeout: 30000
+- tapOn: "Item Roteiro Feliz QA, 1 un, sem preço"
+- assertVisible: "✓, Item Roteiro Feliz QA, 1 un, sem preço"
+- takeScreenshot: "qa/feliz-05-modo-compra-marcado"
+- tapOn: "Fechar compra"
+- assertVisible: "Despensa"
+- scrollUntilVisible:
+    element: "Item Roteiro Feliz QA, 2 de 2 un, Cheio"
+    direction: DOWN
+    speed: 60
+    timeout: 30000
+
+# 6) Aba Resumo — reflete o estoque e a compra recém-fechada
+- tapOn: "Resumo"
+- assertVisible: "Resumo"
+- assertVisible: "Em casa"
+- assertVisible: "Falta comprar"
+- assertVisible: "Sua despensa"
+- assertVisible: "Cheio"
+- assertVisible: "Faltando"
+- assertVisible: "Acabou"
+- assertVisible: "Gasto este mês"
+- assertVisible: "Gasto por mês"
+
+# 7) Volta pra Despensa e exercita o caminho crítico (KPI K4): consumo em
+# toque único, sem confirmação
+- tapOn: "Despensa"
+- tapOn: "Usei 1 un de Item Roteiro Feliz QA"
+- assertVisible: "Item Roteiro Feliz QA, 1 de 2 un, Falta 1"
+
+# 8) CRUD — remover (remoção lógica): fecha o ciclo de vida do produto de
+# teste, devolvendo a Despensa ao estado em que este flow a encontrou
+- tapOn: "Item Roteiro Feliz QA, 1 de 2 un, Falta 1"
+- tapOn: "Tirar da despensa"
+- assertVisible: "Tirar Item Roteiro Feliz QA da despensa?"
+- assertVisible: "O histórico de uso continua guardado."
+# Dois elementos carregam o texto "Tirar da despensa" ao mesmo tempo: o
+# botão da tela e o do Alert. Ancorar no corpo do Alert é o que garante
+# tocar no do diálogo.
+- tapOn:
+    text: "Tirar da despensa"
+    below:
+      text: "O histórico de uso continua guardado."
+- assertVisible: "Despensa"
+- tapOn: "Buscar"
+- inputText: "Item Roteiro Feliz QA"
+- hideKeyboard
+- assertNotVisible: "Item Roteiro Feliz QA, 1 de 2 un, Falta 1"
