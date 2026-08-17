@@ -23,6 +23,7 @@ import {
   listaContinuaGenerico,
 } from '@/presentation/format/agrupar-lista';
 import { espaco } from '@/presentation/theme/espaco';
+import { useTheme } from '@/presentation/theme/provider';
 
 function nomeDoItemDaCompra(linha: ItemDaCompra): string {
   return linha.item.nomeAvulso ?? linha.produto?.nome ?? '';
@@ -44,6 +45,7 @@ function chaveDoItemDaCompra(linha: ItemDaCompra): string {
 export default function ModoCompra() {
   useKeepAwake();
   const { id } = useLocalSearchParams<{ id: string }>();
+  const tema = useTheme();
   const { itens, carregando, marcar, desmarcar, ajustarQuantidade, ajustarPreco, responderAtualizarPreco } =
     useModoCompra(id);
   const { finalizando, finalizar } = useFinalizarCompra();
