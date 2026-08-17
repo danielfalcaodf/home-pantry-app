@@ -30,6 +30,9 @@ export type ItemDespensaProps = {
   onRepor?: () => void;
   /** Falso na primeira pintura: nenhuma entrada em cascata na lista. */
   animar?: boolean;
+  /** Repassado ao `MedidorNivel` — identidade da linha por trás da célula
+   *  reciclada pela `FlashList` (correcao-reciclagem-de-lista-anima-item-errado). */
+  idDoItem?: string;
 };
 
 /**
@@ -51,6 +54,7 @@ export function ItemDespensa({
   onAbrirTeclado,
   onRepor,
   animar = true,
+  idDoItem,
 }: ItemDespensaProps) {
   const tema = useTheme();
   const zerado = estado === 'critico';
@@ -65,7 +69,13 @@ export function ItemDespensa({
         backgroundColor: tema.bg.base,
       }}
     >
-      <MedidorNivel fracao={fracao} estado={estado} temSobra={temSobra} animar={animar} />
+      <MedidorNivel
+        fracao={fracao}
+        estado={estado}
+        temSobra={temSobra}
+        animar={animar}
+        idDoItem={idDoItem}
+      />
       <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
         <Pressable
           onPress={onAbrir}
