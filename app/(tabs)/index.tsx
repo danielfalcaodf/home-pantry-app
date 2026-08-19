@@ -8,7 +8,8 @@ import { useCategorias } from '@/application/estoque/use-categorias';
 import { useDarBaixa } from '@/application/estoque/use-dar-baixa';
 import { useDesfazerMovimento } from '@/application/estoque/use-desfazer-movimento';
 import { useReporPontual } from '@/application/estoque/use-repor-pontual';
-import { deDecimal, milesimos } from '@/domain/shared/quantidade';
+import { deDecimal, paraDecimal } from '@/domain/shared/quantidade';
+import { passoDoStepper } from '@/domain/produto/estoque.rules';
 import { rotuloDaUnidade } from '@/domain/shared/unidade';
 import { CampoTexto } from '@/presentation/components/campo-texto';
 import { ChipEstado } from '@/presentation/components/chip-estado';
@@ -95,7 +96,7 @@ export default function Despensa() {
   const { desfazer } = useDesfazerMovimento();
   const confirmacao = useRegistroDeConsumo();
 
-  async function usar(item: ProdutoNaDespensa, quantidade = milesimos(1000)) {
+  async function usar(item: ProdutoNaDespensa, quantidade = passoDoStepper(item.produto)) {
     const resultado = await registrarConsumo(item.produto.id, quantidade);
     confirmacao.anunciar(resultado, item.produto, quantidade, 'consumo', () =>
       void usar(item, quantidade),
@@ -312,7 +313,9 @@ export default function Despensa() {
                 )} de ${linha.item.produto.nome}`}
                 onAbrir={() => router.push(`/produto/${linha.item.produto.id}`)}
                 onConsumir={() => void usar(linha.item)}
-                onRepor={() => void repor(linha.item, 1)}
+                onRepor={() =>
+                  void repor(linha.item, paraDecimal(passoDoStepper(linha.item.produto)))
+                }
                 onAbrirTeclado={() => setItemDoTeclado(linha.item)}
               />
             )

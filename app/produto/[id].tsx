@@ -15,8 +15,9 @@ import {
 import { useReporPontual } from '@/application/estoque/use-repor-pontual';
 import { useResumoHistoricoRecente } from '@/application/estoque/use-resumo-historico';
 import { normalizarCategoria } from '@/domain/produto/categoria';
+import { passoDoStepper } from '@/domain/produto/estoque.rules';
 import { centavos, formatarBRL } from '@/domain/shared/dinheiro';
-import { deDecimal, formatarNumero, milesimos, paraDecimal } from '@/domain/shared/quantidade';
+import { deDecimal, formatarNumero, paraDecimal } from '@/domain/shared/quantidade';
 import { MotivoAjuste } from '@/domain/movimento/movimento';
 import { rotuloDaUnidade } from '@/domain/shared/unidade';
 import { AcaoSecundaria } from '@/presentation/components/acao-secundaria';
@@ -102,12 +103,12 @@ function Detalhe({ id, item }: { id: string; item: ProdutoNaDespensa }) {
 
   useVoltarFechaTeclado();
 
-  async function usar(quantidade = milesimos(1000)) {
+  async function usar(quantidade = passoDoStepper(item.produto)) {
     const resultado = await registrarConsumo(id, quantidade);
     confirmacao.anunciar(resultado, item.produto, quantidade, 'consumo');
   }
 
-  async function repor(quantidade = milesimos(1000)) {
+  async function repor(quantidade = passoDoStepper(item.produto)) {
     const resultado = await registrarReposicao(id, quantidade);
     confirmacao.anunciar(resultado, item.produto, quantidade, 'reposicao');
   }

@@ -181,6 +181,7 @@ export function ItemDespensa({
             <BotaoReporRapido
               rotuloAcessivel={rotuloAcaoReposicao ?? `Repor ${nome}`}
               onRegistrar={onRepor}
+              onAbrirTeclado={onAbrirTeclado}
             />
           ) : null}
         </View>
