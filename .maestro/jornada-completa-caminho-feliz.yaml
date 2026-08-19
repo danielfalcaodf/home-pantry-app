@@ -42,6 +42,15 @@ appId: com.danielfalcaodf.repor
 #   pendentes — mesmo comportamento documentado em ciclo-de-compra.yaml.
 - launchApp
 - assertVisible: "Despensa"
+# O balão flutuante "Tools" do expo-dev-client volta pro canto superior
+# direito a cada launchApp, cobrindo "Buscar"/"Adicionar produto" — arrasta
+# pra fora do caminho antes de qualquer seletor por coordenada/texto nessa
+# região (achado da rodada de testes 2026-08-19, sem isso o flow falha no
+# primeiro tapOn).
+- swipe:
+    start: "95%,8%"
+    end: "10%,60%"
+    duration: 300
 
 # 1) CRUD — criar produto (formulário mínimo: nome, medida, quanto quero ter)
 - tapOn: "Adicionar produto"
@@ -102,9 +111,10 @@ appId: com.danielfalcaodf.repor
 # `accessibilityLabel="Marcar <nome>"` num View interno, mas esse rótulo NUNCA
 # chega na árvore de acessibilidade do Android: o `Pressable` externo não tem
 # rótulo próprio, então o RN colapsa a subárvore e sintetiza o content-desc a
-# partir dos textos filhos. Verificado por inspect_screen — a linha se anuncia
-# como "<nome>, <quantidade>, <preço>", e o checkbox não aparece.
-# O visto marcado entra nessa mesma síntese como o caractere "✓" na frente.
+# item-compra.tsx agora expõe accessibilityRole="checkbox" +
+# accessibilityLabel="<nome>, <quantidade>, <preço>" explícitos (mudança da
+# change 8, correcao-nomes-e-estados-acessiveis) — o estado marcado/desmarcado
+# vem de accessibilityState.checked, não mais de um prefixo "✓," sintetizado.
 - tapOn:
     text: "Iniciar compra \\(\\d+\\)"
 - assertVisible: "Compra"
@@ -114,7 +124,9 @@ appId: com.danielfalcaodf.repor
     speed: 60
     timeout: 30000
 - tapOn: "Item Roteiro Feliz QA, 1 un, sem preço"
-- assertVisible: "✓, Item Roteiro Feliz QA, 1 un, sem preço"
+- assertVisible:
+    text: "Item Roteiro Feliz QA, 1 un, sem preço"
+    checked: true
 - takeScreenshot: "qa/feliz-05-modo-compra-marcado"
 - tapOn: "Fechar compra"
 - assertVisible: "Despensa"

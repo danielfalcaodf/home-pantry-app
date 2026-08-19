@@ -1,11 +1,8 @@
-import { ReactNode, useEffect } from 'react';
-import { BackHandler, Pressable, StyleProp, View, ViewStyle } from 'react-native';
-import { OverKeyboardView } from 'react-native-keyboard-controller';
-import Animated, { SlideInDown, SlideOutDown } from 'react-native-reanimated';
+import { ReactNode } from 'react';
+import { KeyboardAvoidingView, Modal, Pressable, StyleProp, View, ViewStyle } from 'react-native';
 
 import { raio } from '../theme/espaco';
 import { useTheme } from '../theme/provider';
-import { EvitaTeclado } from './evita-teclado';
 
 export type PainelInferiorProps = {
   visivel: boolean;
@@ -16,37 +13,46 @@ export type PainelInferiorProps = {
 };
 
 /**
- * Painel deslizante compartilhado pelos sheets do app. Usa `OverKeyboardView`
- * em vez de `<Modal>`: o `Modal` do RN abre janela nativa separada, fora do
- * alcance do `KeyboardProvider` montado na raiz — o teclado do sistema
- * cobria o painel por inteiro (A-06). `OverKeyboardView` renderiza na mesma
- * janela e funciona independente do provider (correcao-teclado-em-sheets).
+ * Painel deslizante compartilhado pelos sheets do app, sobre `<Modal>`
+ * nativo. `OverKeyboardView` (react-native-keyboard-controller) foi tentado
+ * antes (correcao-teclado-em-sheets) mas expôs um bug de toque nunca
+ * resolvido — toques no card caíam no backdrop em vez do próprio card,
+ * confirmado tanto no emulador quanto em Android real
+ * (correcao-painel-inferior-invisivel). `<Modal>` é a implementação
+ * conhecida-estável: por dentro usa o `KeyboardAvoidingView` NATIVO do React
+ * Native (não o de react-native-keyboard-controller) — o `Modal` abre janela
+ * nativa própria, fora do alcance do `KeyboardProvider` da raiz, mas o
+ * `KeyboardAvoidingView` nativo não depende desse provider (escuta os
+ * eventos de teclado do SO direto), então evita o teclado corretamente
+ * mesmo dentro da janela separada do Modal.
+ *
+ * `behavior="padding"` nos dois SOs (não só no iOS, como sugere o exemplo
+ * padrão da doc): o card fica ancorado embaixo pelo `justifyContent:
+ * 'flex-end'` do backdrop, sem `flex:1` próprio — "padding" adiciona espaço
+ * abaixo do card do tamanho do teclado, empurrando o card inteiro pra cima
+ * intacto. "height" (usado só pra formulário de tela cheia, com `flex:1`)
+ * encolheria a altura do card em vez de deslocá-lo, cortando o conteúdo de
+ * baixo — não é isso que o sheet precisa: ele deve ficar inteiro visível
+ * acima do teclado, sem scroll (achado relatado em Android real).
  */
 export function PainelInferior({ visivel, onFechar, children, style, testID }: PainelInferiorProps) {
   const tema = useTheme();
 
-  useEffect(() => {
-    if (!visivel) {
-      return;
-    }
-    // Substitui o onRequestClose do <Modal>: OverKeyboardView não fecha
-    // sozinho no Voltar do Android.
-    const assinatura = BackHandler.addEventListener('hardwareBackPress', () => {
-      onFechar();
-      return true;
-    });
-    return () => assinatura.remove();
-  }, [visivel, onFechar]);
-
   return (
-    <OverKeyboardView visible={visivel}>
+    <Modal
+      visible={visivel}
+      transparent
+      animationType="slide"
+      onRequestClose={onFechar}
+      statusBarTranslucent
+    >
       <Pressable
         onPress={onFechar}
         accessibilityLabel="Fechar"
         style={{ flex: 1, justifyContent: 'flex-end' }}
       >
-        <EvitaTeclado style={{ flex: undefined }} testID={testID}>
-          <Animated.View entering={SlideInDown} exiting={SlideOutDown}>
+        <KeyboardAvoidingView behavior="padding">
+          <View testID={testID}>
             <Pressable onPress={() => {}}>
               <View
                 style={[
@@ -61,9 +67,9 @@ export function PainelInferior({ visivel, onFechar, children, style, testID }: P
                 {children}
               </View>
             </Pressable>
-          </Animated.View>
-        </EvitaTeclado>
+          </View>
+        </KeyboardAvoidingView>
       </Pressable>
-    </OverKeyboardView>
+    </Modal>
   );
 }

@@ -23,6 +23,10 @@ jest.mock('expo-keep-awake', () => ({
   useKeepAwake: () => mockUseKeepAwake(),
 }));
 
+jest.mock('@/application/lista/use-preferencia-agrupamento', () => ({
+  usePreferenciaDeAgrupamento: () => ({ agrupado: true, alternar: jest.fn() }),
+}));
+
 let mockItensIniciais: {
   item: {
     id: string;
@@ -137,8 +141,8 @@ describe('ModoCompra (app/compra/[id].tsx)', () => {
   it('marcar um item não dispara nenhuma navegação', async () => {
     mockItensIniciais = [itemFake('i1', 'Arroz'), itemFake('i2', 'Feijão')];
     await comTema(<ModoCompra />);
-    fireEvent.press(screen.getByLabelText('Marcar Arroz'));
-    await waitFor(() => expect(screen.getByLabelText('Desmarcar Arroz')).toBeTruthy());
+    fireEvent.press(screen.getByRole('checkbox', { name: /Arroz/ }));
+    await waitFor(() => expect(screen.getByRole('checkbox', { name: /Arroz/ }).props.accessibilityState.checked).toBe(true));
     expect(mockPush).not.toHaveBeenCalled();
     expect(mockBack).not.toHaveBeenCalled();
     expect(mockReplace).not.toHaveBeenCalled();
@@ -150,7 +154,7 @@ describe('ModoCompra (app/compra/[id].tsx)', () => {
     await comTema(<ModoCompra />);
     expect(screen.getByText('0 de 2')).toBeTruthy();
 
-    fireEvent.press(screen.getByLabelText('Marcar Arroz'));
+    fireEvent.press(screen.getByRole('checkbox', { name: /Arroz/ }));
     await waitFor(() => expect(screen.getByText('1 de 2')).toBeTruthy());
     // Total do rodapé (500) bate com o preço do próprio Arroz marcado —
     // por isso duas ocorrências do mesmo texto (linha do item + rodapé).
@@ -161,8 +165,8 @@ describe('ModoCompra (app/compra/[id].tsx)', () => {
   it('cancelar o aviso de saída ("Manter") preserva as marcações e não navega', async () => {
     mockItensIniciais = [itemFake('i1', 'Arroz')];
     await comTema(<ModoCompra />);
-    fireEvent.press(screen.getByLabelText('Marcar Arroz'));
-    await waitFor(() => expect(screen.getByLabelText('Desmarcar Arroz')).toBeTruthy());
+    fireEvent.press(screen.getByRole('checkbox', { name: /Arroz/ }));
+    await waitFor(() => expect(screen.getByRole('checkbox', { name: /Arroz/ }).props.accessibilityState.checked).toBe(true));
 
     fireEvent.press(screen.getByLabelText('Voltar'));
     expect(Alert.alert).toHaveBeenCalledWith(
@@ -174,18 +178,18 @@ describe('ModoCompra (app/compra/[id].tsx)', () => {
     botoes.find((botao) => botao.text === 'Manter')?.onPress?.();
 
     expect(mockBack).not.toHaveBeenCalled();
-    expect(screen.getByLabelText('Desmarcar Arroz')).toBeTruthy();
+    expect(screen.getByRole('checkbox', { name: /Arroz/ }).props.accessibilityState.checked).toBe(true);
   });
 
   // ACHADO-034 (task 3.2): desmarcar tudo volta a "sem confirmação".
   it('desmarcar todos os itens volta o Voltar a sair direto, sem aviso', async () => {
     mockItensIniciais = [itemFake('i1', 'Arroz')];
     await comTema(<ModoCompra />);
-    fireEvent.press(screen.getByLabelText('Marcar Arroz'));
-    await waitFor(() => expect(screen.getByLabelText('Desmarcar Arroz')).toBeTruthy());
+    fireEvent.press(screen.getByRole('checkbox', { name: /Arroz/ }));
+    await waitFor(() => expect(screen.getByRole('checkbox', { name: /Arroz/ }).props.accessibilityState.checked).toBe(true));
 
-    fireEvent.press(screen.getByLabelText('Desmarcar Arroz'));
-    await waitFor(() => expect(screen.getByLabelText('Marcar Arroz')).toBeTruthy());
+    fireEvent.press(screen.getByRole('checkbox', { name: /Arroz/ }));
+    await waitFor(() => expect(screen.getByRole('checkbox', { name: /Arroz/ }).props.accessibilityState.checked).toBe(false));
 
     fireEvent.press(screen.getByLabelText('Voltar'));
     expect(Alert.alert).not.toHaveBeenCalled();

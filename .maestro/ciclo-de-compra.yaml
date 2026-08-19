@@ -32,8 +32,13 @@ appId: com.danielfalcaodf.repor
     text: "Iniciar compra \\(\\d+\\)"
 - tapOn: "Arroz, 2 pacotes, sem preço"
 # confirma que o toque marcou o item certo antes de prosseguir — ver
-# ACHADO-054 sobre por que essa confirmação intermediária importa aqui
-- assertVisible: "✓, Arroz, 2 pacotes, sem preço"
+# ACHADO-054 sobre por que essa confirmação intermediária importa aqui.
+# item-compra.tsx usa accessibilityRole="checkbox" + accessibilityState.checked
+# (change 8) — o estado marcado se confirma por essa propriedade, não por um
+# prefixo "✓," no texto.
+- assertVisible:
+    text: "Arroz, 2 pacotes, sem preço"
+    checked: true
 - tapOn: "Fechar compra"
 - assertVisible: "Despensa"
 # reposição aplicada: Arroz sai do estado "Acabou"

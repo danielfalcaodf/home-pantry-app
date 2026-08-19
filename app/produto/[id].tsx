@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Pressable, View } from 'react-native';
+import { Alert, Pressable, ScrollView, View } from 'react-native';
 
 import { ProdutoNaDespensa } from '@/application/estoque/use-produtos';
 import { useAjustarEstoque } from '@/application/estoque/use-ajustar-estoque';
@@ -188,6 +188,11 @@ function Detalhe({ id, item }: { id: string; item: ProdutoNaDespensa }) {
 
   return (
     <TelaBase>
+      {/* Tela inteira rolável: com o formulário embutido (`telaCheia={false}`)
+          sem altura forçada, "Mais opções" expandido pode superar a altura
+          visível — sem scroll aqui, os campos do fim ficavam inacessíveis
+          atrás do rodapé fixo (correcao-layout-formulario-produto). */}
+      <ScrollView keyboardShouldPersistTaps="handled">
       <View style={{ paddingHorizontal: espaco.lg, paddingTop: espaco.lg, alignItems: 'flex-start' }}>
         <BotaoVoltar />
       </View>
@@ -229,7 +234,7 @@ function Detalhe({ id, item }: { id: string; item: ProdutoNaDespensa }) {
         <View style={{ flex: 1 }}>
           <Botao titulo="Repus" variante="secundario" onPress={() => void repor()} />
         </View>
-        <View style={{ flex: 1 }}>
+        <View style={{ flex: 1.5 }}>
           <Botao
             titulo="Outra quantidade"
             variante="secundario"
@@ -247,6 +252,7 @@ function Detalhe({ id, item }: { id: string; item: ProdutoNaDespensa }) {
         tituloAcao="Salvar"
         aoSalvar={salvar}
         quantidadeAtualEditavel={false}
+        telaCheia={false}
       />
 
       {/* Resumo do histórico (task 5.10): a mesma confiança de que o app
@@ -267,6 +273,7 @@ function Detalhe({ id, item }: { id: string; item: ProdutoNaDespensa }) {
       <View style={{ padding: espaco.lg }}>
         <Botao titulo="Tirar da despensa" variante="secundario" onPress={confirmarRemocao} />
       </View>
+      </ScrollView>
 
       <ToastDesfazer
         registro={confirmacao.registro}

@@ -5,6 +5,7 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 
 import { usePreferenciaDeTemaPersistida } from '@/application/tema/use-preferencia-de-tema';
@@ -64,16 +65,18 @@ export default function RootLayout() {
   // A tela de erro também usa o tema resolvido — nunca um fundo padrão.
   if (banco.erro) {
     return (
-      <KeyboardProvider statusBarTranslucent navigationBarTranslucent>
-        <ThemeProvider preferencia={tema.preferencia} escolher={tema.escolher}>
-          <EstiloDaBarraDeStatus />
-          <TelaErro
-            titulo="Não foi possível preparar seus dados"
-            descricao="Feche e abra o app de novo. Seus dados têm uma cópia de segurança automática."
-            detalhe={banco.erro.message}
-          />
-        </ThemeProvider>
-      </KeyboardProvider>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <KeyboardProvider statusBarTranslucent navigationBarTranslucent>
+          <ThemeProvider preferencia={tema.preferencia} escolher={tema.escolher}>
+            <EstiloDaBarraDeStatus />
+            <TelaErro
+              titulo="Não foi possível preparar seus dados"
+              descricao="Feche e abra o app de novo. Seus dados têm uma cópia de segurança automática."
+              detalhe={banco.erro.message}
+            />
+          </ThemeProvider>
+        </KeyboardProvider>
+      </GestureHandlerRootView>
     );
   }
 
@@ -82,10 +85,16 @@ export default function RootLayout() {
   }
 
   return (
-    <KeyboardProvider statusBarTranslucent navigationBarTranslucent>
-      <ThemeProvider preferencia={tema.preferencia} escolher={tema.escolher}>
-        <Rotas />
-      </ThemeProvider>
-    </KeyboardProvider>
+    // GestureHandlerRootView precisa envolver o KeyboardProvider (ordem
+    // canônica da própria lib): sem ele, Surfaces secundárias como o
+    // OverKeyboardView (PainelInferior) pintam numa posição mas despacham
+    // toque em outra — achado correcao-painel-inferior-invisivel.
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <KeyboardProvider statusBarTranslucent navigationBarTranslucent>
+        <ThemeProvider preferencia={tema.preferencia} escolher={tema.escolher}>
+          <Rotas />
+        </ThemeProvider>
+      </KeyboardProvider>
+    </GestureHandlerRootView>
   );
 }

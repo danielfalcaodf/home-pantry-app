@@ -1,13 +1,19 @@
-import { fireEvent, render, screen } from '@testing-library/react-native';
+import { render, fireEvent, screen } from '@testing-library/react-native';
+import { View } from 'react-native';
 import { ReactNode } from 'react';
 
 import { sobrepor } from '../theme/contraste';
-import { despensa } from '../theme/tokens';
+import { despensa, porcelana } from '../theme/tokens';
 import { ThemeProvider } from '../theme/provider';
 import { ChipEstado } from './chip-estado';
 
 async function comTema(no: ReactNode) {
   await render(<ThemeProvider preferencia="escuro">{no}</ThemeProvider>);
+}
+
+function estiloDoChip(elemento: { props: { style?: unknown } }) {
+  const bruto = elemento.props.style;
+  return Array.isArray(bruto) ? Object.assign({}, ...bruto) : bruto;
 }
 
 describe('ChipEstado', () => {
@@ -22,6 +28,67 @@ describe('ChipEstado', () => {
 
     expect(estilo.backgroundColor).toBe(sobrepor(cor, despensa.bg.base, despensa.fillOpacity));
     expect(estilo.backgroundColor).not.toBe(despensa.bg.raised);
+  });
+
+  // Prova do cenário do bug (correcao-chip-invisivel-em-sheet, task 2.1):
+  // sem `cor`, o fundo do chip ativo não pode ser igual ao fundo de um sheet
+  // (`tema.bg.raised`) — senão o chip fica visualmente invisível dentro dele.
+  it('ativo sem cor, dentro de um sheet (bg.raised): fundo do chip é diferente do fundo do container', async () => {
+    await render(
+      <ThemeProvider preferencia="escuro">
+        <View style={{ backgroundColor: despensa.bg.raised }}>
+          <ChipEstado rotulo="Un" ativo onPress={() => {}} />
+        </View>
+      </ThemeProvider>,
+    );
+    const chip = screen.getByRole('button', { name: 'Un' });
+    const estilo = estiloDoChip(chip);
+    expect(estilo.backgroundColor).not.toBe(despensa.bg.raised);
+    expect(estilo.backgroundColor).toBe(
+      sobrepor(despensa.action.azulejo, despensa.bg.base, despensa.fillOpacity),
+    );
+  });
+
+  // Task 3.1: mesmo cenário em tela cheia (bg.base) — já era correto antes,
+  // a correção não pode regredir esse caso.
+  it('ativo sem cor, em tela cheia (bg.base): continua distinguível do container', async () => {
+    await render(
+      <ThemeProvider preferencia="escuro">
+        <View style={{ backgroundColor: despensa.bg.base }}>
+          <ChipEstado rotulo="Un" ativo onPress={() => {}} />
+        </View>
+      </ThemeProvider>,
+    );
+    const chip = screen.getByRole('button', { name: 'Un' });
+    const estilo = estiloDoChip(chip);
+    expect(estilo.backgroundColor).not.toBe(despensa.bg.base);
+  });
+
+  // Task 3.2: os 5 call sites reais de ChipEstado sem `cor`, nos dois temas —
+  // nenhum perde contraste entre o fundo ativo e o fundo do sheet/tela.
+  describe.each([
+    ['despensa (escuro)', despensa],
+    ['porcelana (claro)', porcelana],
+  ])('%s — call sites sem cor', (_nome, tema) => {
+    it.each([
+      ['sheet-avulso: Medida'],
+      ['sheet-ajuste-estoque: Motivo'],
+      ['item-compra: Sim/Não'],
+      ['formulario-produto: Medida'],
+      ['formulario-produto: sugestão de categoria'],
+    ])('%s — fundo ativo contrasta com bg.raised e com bg.base', async (rotulo) => {
+      await render(
+        <ThemeProvider preferencia={tema.nome === 'despensa' ? 'escuro' : 'claro'}>
+          <View style={{ backgroundColor: tema.bg.raised }}>
+            <ChipEstado rotulo={rotulo} ativo onPress={() => {}} />
+          </View>
+        </ThemeProvider>,
+      );
+      const chip = screen.getByRole('button', { name: rotulo });
+      const estilo = estiloDoChip(chip);
+      expect(estilo.backgroundColor).not.toBe(tema.bg.raised);
+      expect(estilo.backgroundColor).not.toBe(tema.bg.base);
+    });
   });
 
   // Sem regressão do estado não-ativo (task 3.4).

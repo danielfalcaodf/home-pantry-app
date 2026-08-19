@@ -2,6 +2,7 @@ import { Pressable, View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 
 import { corDoEstado } from '../theme/cor-do-estado';
+import { sobrepor } from '../theme/contraste';
 import { ALTURA_ITEM, espaco, raio } from '../theme/espaco';
 import { DURACAO_FADE } from '../theme/movimento';
 import { useTheme } from '../theme/provider';
@@ -58,6 +59,7 @@ export function ItemDespensa({
 }: ItemDespensaProps) {
   const tema = useTheme();
   const zerado = estado === 'critico';
+  const full = estado === 'ok';
 
   return (
     <View
@@ -86,32 +88,84 @@ export function ItemDespensa({
             height: '100%',
             justifyContent: 'center',
             paddingHorizontal: espaco.lg,
-            gap: espaco.xs,
           }}
         >
-          <Texto papel="body.lg" numberOfLines={1}>
-            {nome}
-          </Texto>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: espaco.sm }}>
-            {/* Cross-fade curto: o número troca sem deslizar e sem contagem
-                progressiva, que adicionariam latência percebida ao gesto. */}
-            <Animated.View
-              key={leitura}
-              entering={FadeIn.duration(DURACAO_FADE)}
-              exiting={FadeOut.duration(DURACAO_FADE)}
-            >
-              <Texto papel="data.md" tom="secondary">
-                {leitura}
+          {/* Zerado ("Acabou") não tem tinta atrás (design: "zerado = sem
+              tinta, só a régua na base") — nada pra colidir, nome e leitura
+              ficam em texto simples. Nos demais estados a tinta preenche
+              atrás e pode colidir com o texto — nome e leitura ganham um
+              chip semitransparente (45%, cor do estado) igual ao do rótulo,
+              que é a única peça que SEMPRE tem chip, mesmo zerado
+              (correcao-regua-risca-texto-medidor). */}
+          <View style={{ gap: espaco.xs }}>
+            {(zerado || full)? (
+              <Texto papel="body.lg" numberOfLines={1}>
+                {nome}
               </Texto>
-            </Animated.View>
-            <Texto papel="label" cor={corDoEstado(tema, estado)}>
-              {rotuloEstado}
-            </Texto>
-            {categoria ? (
-              <Texto papel="label" tom="secondary" numberOfLines={1}>
-                {categoria}
-              </Texto>
-            ) : null}
+            ) : (
+              <View
+                style={{
+                  alignSelf: 'flex-start',
+                  maxWidth: '100%',
+                  backgroundColor: sobrepor(corDoEstado(tema, estado), tema.bg.base, 0.15),
+                  borderRadius: raio.pilula,
+                  paddingHorizontal: espaco.sm,
+                  paddingVertical: espaco.xs,
+                }}
+              >
+                <Texto papel="body.lg" numberOfLines={1}>
+                  {nome}
+                </Texto>
+              </View>
+            )}
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: espaco.sm }}>
+              {/* Cross-fade curto: o número troca sem deslizar e sem contagem
+                  progressiva, que adicionariam latência percebida ao gesto. */}
+              <Animated.View
+                key={leitura}
+                entering={FadeIn.duration(DURACAO_FADE)}
+                exiting={FadeOut.duration(DURACAO_FADE)}
+              >
+                {(zerado || full) ? (
+                  <Texto papel="data.md" tom="secondary">
+                    {leitura}
+                  </Texto>
+                ) : (
+                  <View
+                    style={{
+                      backgroundColor: sobrepor(corDoEstado(tema, estado), tema.bg.base, 0.15),
+                      borderRadius: raio.pilula,
+                      paddingHorizontal: espaco.sm,
+                      paddingVertical: espaco.xs,
+                    }}
+                  >
+                    <Texto papel="data.md" tom="secondary">
+                      {leitura}
+                    </Texto>
+                  </View>
+                )}
+              </Animated.View>
+              {/* O chip do rótulo de estado nunca some, nem zerado — é o
+                  único texto que precisa continuar lendo "Acabou" claramente
+                  mesmo sem tinta nenhuma atrás dele. */}
+              <View
+                style={{
+                  backgroundColor: sobrepor(corDoEstado(tema, estado), tema.bg.base, 0.45),
+                  borderRadius: raio.pilula,
+                  paddingHorizontal: espaco.sm,
+                  paddingVertical: espaco.xs,
+                }}
+              >
+                <Texto papel="caption" cor={corDoEstado(tema, estado)}>
+                  {rotuloEstado}
+                </Texto>
+              </View>
+              {categoria ? (
+                <Texto papel="label" tom="secondary" numberOfLines={1}>
+                  {categoria}
+                </Texto>
+              ) : null}
+            </View>
           </View>
         </Pressable>
         {/* O botão permanece mesmo zerado, só esmaecido: removê-lo mudaria o

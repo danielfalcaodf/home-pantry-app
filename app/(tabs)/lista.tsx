@@ -1,7 +1,7 @@
 import { FlashList } from '@shopify/flash-list';
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { Pressable, Share, View } from 'react-native';
+import { Pressable, ScrollView, Share, View } from 'react-native';
 
 import { useAdicionarAvulso } from '@/application/lista/use-adicionar-avulso';
 import { useEditarAvulso } from '@/application/lista/use-editar-avulso';
@@ -14,10 +14,10 @@ import { DadosDoAvulso, ItemDaLista } from '@/domain/lista/lista';
 import { totalDaListaDeCompras } from '@/domain/lista/lista.rules';
 import { centavos } from '@/domain/shared/dinheiro';
 import { paraDecimal } from '@/domain/shared/quantidade';
-import { AcaoSecundaria } from '@/presentation/components/acao-secundaria';
 import { Botao } from '@/presentation/components/botao';
 import { ChipEstado } from '@/presentation/components/chip-estado';
 import { EstadoVazio } from '@/presentation/components/estado-vazio';
+import { IconeSvg } from '@/presentation/components/icone-svg';
 import { ItemLista } from '@/presentation/components/item-lista';
 import { RodapeTotal } from '@/presentation/components/rodape-total';
 import { SheetAvulso } from '@/presentation/components/sheet-avulso';
@@ -28,6 +28,7 @@ import { Toast } from '@/presentation/components/toast';
 import { agruparListaPorCategoria, listaContinua } from '@/presentation/format/agrupar-lista';
 import { gerarTextoDaLista } from '@/presentation/format/lista-texto';
 import { ALVO_TOQUE_MINIMO, espaco } from '@/presentation/theme/espaco';
+import { icones } from '@/presentation/theme/icones';
 import { useTheme } from '@/presentation/theme/provider';
 
 export default function Lista() {
@@ -42,6 +43,7 @@ export default function Lista() {
   const { editar: editarProduto } = useEditarProduto();
 
   const [sheetAberta, setSheetAberta] = useState(false);
+  const [desativadosExpandido, setDesativadosExpandido] = useState(false);
   const [avulsoEmEdicao, setAvulsoEmEdicao] = useState<Extract<ItemDaLista, { tipo: 'avulso' }> | null>(
     null,
   );
@@ -129,23 +131,34 @@ export default function Lista() {
             }}
           >
             <Texto papel="display.sm">Lista</Texto>
-            <View style={{ flexDirection: 'row', gap: espaco.lg }}>
-              <AcaoSecundaria
-                titulo="Adicionar item avulso"
-                cor={tema.action.azulejo}
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: espaco.md }}>
+              <Pressable
                 onPress={abrirNovoAvulso}
-                style={{ paddingHorizontal: 0 }}
-              />
+                accessibilityRole="button"
+                accessibilityLabel="Adicionar item avulso"
+                hitSlop={8}
+                style={{
+                  minWidth: ALVO_TOQUE_MINIMO,
+                  minHeight: ALVO_TOQUE_MINIMO,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <IconeSvg path={icones.adicionar} cor={tema.action.azulejo} tamanho={20} />
+              </Pressable>
               <Pressable
                 onPress={() => void exportar()}
                 accessibilityRole="button"
                 accessibilityLabel="Compartilhar lista"
                 hitSlop={8}
-                style={{ minHeight: ALVO_TOQUE_MINIMO, justifyContent: 'center' }}
+                style={{
+                  minWidth: ALVO_TOQUE_MINIMO,
+                  minHeight: ALVO_TOQUE_MINIMO,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
               >
-                <Texto papel="body.md" cor={tema.action.azulejo}>
-                  Compartilhar
-                </Texto>
+                <IconeSvg path={icones.compartilhar} cor={tema.action.azulejo} tamanho={20} />
               </Pressable>
               <ChipEstado
                 rotulo={agrupado ? 'Agrupado' : 'Agrupar'}
@@ -172,6 +185,7 @@ export default function Lista() {
 
           <FlashList
             testID="lista-de-compras"
+            style={{ flex: 1 }}
             data={linhas}
             keyExtractor={(linha) => linha.chave}
             renderItem={({ item: linha }) =>
@@ -209,44 +223,61 @@ export default function Lista() {
       )}
 
       {desativados.length > 0 ? (
-        <View
-          testID="secao-desativados"
-          style={{
-            paddingHorizontal: espaco.lg,
-            paddingTop: espaco.md,
-            paddingBottom: espaco.lg,
-            gap: espaco.sm,
-          }}
-        >
-          <Texto papel="caption" tom="secondary">
-            Fora da lista por agora
-          </Texto>
-          {desativados.map((item) => (
-            <View
-              key={item.itemId}
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                minHeight: ALVO_TOQUE_MINIMO,
-              }}
-            >
-              <Texto papel="body.md" tom="secondary">
-                {item.nome}
-              </Texto>
-              <Pressable
-                onPress={() => void reativar(item.itemId)}
-                accessibilityRole="button"
-                accessibilityLabel={`Voltar ${item.nome} pra lista`}
-                hitSlop={8}
-                style={{ minHeight: ALVO_TOQUE_MINIMO, justifyContent: 'center' }}
-              >
-                <Texto papel="body.md" cor={tema.action.azulejo}>
-                  Voltar pra lista
-                </Texto>
-              </Pressable>
+        <View testID="secao-desativados" style={{ paddingHorizontal: espaco.lg, paddingBottom: espaco.lg }}>
+          <Pressable
+            onPress={() => setDesativadosExpandido(!desativadosExpandido)}
+            accessibilityRole="button"
+            accessibilityState={{ expanded: desativadosExpandido }}
+            hitSlop={8}
+            style={{
+              minHeight: ALVO_TOQUE_MINIMO,
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: espaco.xs,
+            }}
+          >
+            <Texto papel="caption" tom="secondary">
+              {`Fora da lista por agora (${desativados.length})`}
+            </Texto>
+            <View style={{ transform: [{ rotate: desativadosExpandido ? '180deg' : '0deg' }] }}>
+              <IconeSvg path={icones.cheveron} cor={tema.text.secondary} tamanho={16} />
             </View>
-          ))}
+          </Pressable>
+          {desativadosExpandido ? (
+            // Altura limitada mesmo expandida: nunca compete pela altura da
+            // lista ativa (que já tem `flex: 1` acima) — rola dentro do
+            // próprio espaço com muitos itens (correcao-colapso-fora-da-lista).
+            <ScrollView style={{ maxHeight: 240 }} nestedScrollEnabled>
+              <View style={{ gap: espaco.sm, paddingTop: espaco.sm }}>
+                {desativados.map((item) => (
+                  <View
+                    key={item.itemId}
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      minHeight: ALVO_TOQUE_MINIMO,
+                    }}
+                  >
+                    <Texto papel="body.md" tom="secondary">
+                      {item.nome}
+                    </Texto>
+                    <Pressable
+                      onPress={() => void reativar(item.itemId)}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Voltar ${item.nome} pra lista`}
+                      hitSlop={8}
+                      style={{ minHeight: ALVO_TOQUE_MINIMO, justifyContent: 'center' }}
+                    >
+                      <Texto papel="body.md" cor={tema.action.azulejo}>
+                        Voltar pra lista
+                      </Texto>
+                    </Pressable>
+                  </View>
+                ))}
+              </View>
+            </ScrollView>
+          ) : null}
         </View>
       ) : null}
 

@@ -64,6 +64,7 @@ export function ItemCompra({ linha, onMarcar, onDesmarcar, onAjustar, onResponde
         }}
       >
         <View
+          testID="area-marcacao"
           style={{
             width: ALVO_TOQUE_MINIMO,
             height: ALVO_TOQUE_MINIMO,

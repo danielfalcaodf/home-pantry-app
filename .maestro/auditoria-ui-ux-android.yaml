@@ -29,6 +29,11 @@ tags:
 # itens já estiverem na lista derivada, entram na mesma compra cancelada e
 # continuam pendentes.
 - launchApp
+- runFlow:
+    when:
+      visible: "Continue"
+    commands:
+      - tapOn: "Continue"
 - assertVisible: "Despensa"
 
 # ─────────────────────────────────────────────────────────────────────
@@ -142,6 +147,10 @@ tags:
 - assertNotVisible: "Quanto costuma custar"
 - tapOn: "Mais opções"
 - assertVisible: "Menos opções"
+- scrollUntilVisible:
+    element: "Onde guardo"
+    direction: DOWN
+    speed: 40
 - assertVisible: "Quanto costuma custar"
 - assertVisible: "Onde guardo"
 - scrollUntilVisible:
@@ -238,22 +247,23 @@ tags:
     direction: DOWN
     speed: 60
     timeout: 30000
-# Mesma armadilha dos chips: quem carrega `selected` é o Pressable, cujo
-# rótulo é "Agrupar por categoria" (lista.tsx:144). O texto "Agrupar" sozinho
-# casa com o TextView filho, que não tem estado. A lista nasce agrupada.
+# O rótulo do chip (chip-estado.tsx) É o próprio texto de estado: "Agrupado"
+# quando ativo, "Agrupar" quando não — não um texto fixo com `selected`
+# separado (correcao-cabecalho-lista-icones mudou isso). A lista nasce
+# agrupada.
 - assertVisible:
-    text: "Agrupar por categoria"
+    text: "Agrupado"
     selected: true
 - takeScreenshot: "qa/audit-05-lista-agrupada"
 - assertNoDefectsWithAI
-- tapOn: "Agrupar por categoria"
+- tapOn: "Agrupado"
 - assertVisible:
-    text: "Agrupar por categoria"
+    text: "Agrupar"
     selected: false
-# MEDIR: os dois estados renderizam idênticos — comparar os dois screenshots
-# é justamente a evidência de que falta canal visual de estado.
+# MEDIR: os dois estados renderizam idênticos além do texto — comparar os
+# dois screenshots é justamente a evidência de que falta canal visual extra.
 - takeScreenshot: "qa/audit-05-lista-sem-agrupar"
-- tapOn: "Agrupar por categoria"
+- tapOn: "Agrupar"
 
 # 5a) Sheet de preço: teclado dentro de Modal, o caso que o
 #     KeyboardAvoidingView nativo do React Native não resolve no Android
@@ -272,18 +282,18 @@ tags:
 - tapOn:
     text: "Iniciar compra \\(\\d+\\)"
 - assertVisible: "Compra"
-# O accessibilityLabel "Marcar <nome>" de item-compra.tsx:64 NÃO existe na
-# árvore de acessibilidade: o Pressable externo não tem rótulo próprio, o RN
-# colapsa a subárvore e sintetiza o content-desc pelos textos filhos. A linha
-# se anuncia "<nome>, <quantidade>, <preço>" e ganha "✓, " na frente quando
-# marcada. Isso é o achado A-15 — aqui o roteiro só usa o que de fato existe.
+# item-compra.tsx expõe accessibilityRole="checkbox" + accessibilityState.
+# checked explícitos (mudou desde correcao-nomes-e-estados-acessiveis,
+# achado A-15) — não mais o prefixo "✓, " sintetizado pelo RN.
 - scrollUntilVisible:
     element: "Item Auditoria QA, 1 un, sem preço"
     direction: DOWN
     speed: 60
     timeout: 30000
 - tapOn: "Item Auditoria QA, 1 un, sem preço"
-- assertVisible: "✓, Item Auditoria QA, 1 un, sem preço"
+- assertVisible:
+    text: "Item Auditoria QA, 1 un, sem preço"
+    checked: true
 - takeScreenshot: "qa/audit-05b-item-marcado-risco"
 - assertNoDefectsWithAI
 - tapOn: "Cancelar compra"
@@ -319,6 +329,11 @@ tags:
 # 6b) Morte de processo iniciada pelo sistema
 - killApp
 - launchApp
+- runFlow:
+    when:
+      visible: "Continue"
+    commands:
+      - tapOn: "Continue"
 - assertVisible: "Despensa"
 - scrollUntilVisible:
     element: "Item Auditoria QA, 2 de 4 un, Falta 2"
@@ -341,21 +356,17 @@ tags:
 - tapOn: "Configurações"
 - assertVisible: "Tema"
 # Os chips de tema são "Automático" / "Claro" / "Escuro" — sem o prefixo "Tema".
-# E CUIDADO: a tela Configurações tem um rótulo de seção "Despensa" além da aba
-# "Despensa" da tab bar. Dois nós com o mesmo nome acessível na mesma tela;
-# `tapOn: "Despensa"` acerta o rótulo, não a aba. `index: 1` pega a aba.
+# A-12 (correcao-nomes-e-estados-acessiveis) confirmado corrigido: a tela
+# Configurações não tem mais o rótulo de seção "Despensa" duplicado — só o nó
+# da aba existe agora, então `tapOn: "Despensa"` resolve sem ambiguidade.
 - tapOn: "Claro"
-- tapOn:
-    text: "Despensa"
-    index: 1
+- tapOn: "Despensa"
 - assertVisible: "Adicionar produto"
 - takeScreenshot: "qa/audit-07a-tema-claro-despensa"
 - assertNoDefectsWithAI
 - tapOn: "Configurações"
 - tapOn: "Escuro"
-- tapOn:
-    text: "Despensa"
-    index: 1
+- tapOn: "Despensa"
 - assertVisible: "Adicionar produto"
 - takeScreenshot: "qa/audit-07b-tema-escuro-despensa"
 - assertNoDefectsWithAI
@@ -364,6 +375,11 @@ tags:
 #     logo após o relaunch é o que denuncia uma piscada de tela branca.
 - killApp
 - launchApp
+- runFlow:
+    when:
+      visible: "Continue"
+    commands:
+      - tapOn: "Continue"
 - takeScreenshot: "qa/audit-07c-abertura-tema-persistido"
 - assertVisible: "Despensa"
 - tapOn: "Configurações"
@@ -373,9 +389,7 @@ tags:
 # 8) LIMPEZA — devolve a despensa ao estado em que o flow a encontrou
 #    (remoção lógica: o histórico de movimentos continua no banco)
 # ─────────────────────────────────────────────────────────────────────
-- tapOn:
-    text: "Despensa"
-    index: 1
+- tapOn: "Despensa"
 - scrollUntilVisible:
     element: "Item Auditoria QA, 2 de 4 un, Falta 2"
     direction: DOWN

@@ -3,6 +3,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { ReactNode } from 'react';
 
+import { corDoEstado } from '../theme/cor-do-estado';
+import { sobrepor } from '../theme/contraste';
 import { molar } from '../theme/movimento';
 import { ThemeProvider } from '../theme/provider';
 import { despensa } from '../theme/tokens';
@@ -90,6 +92,40 @@ describe('MedidorNivel', () => {
       expect(molar).toHaveBeenCalledTimes(1);
       expect(molar).toHaveBeenCalledWith(0.7);
     });
+
+    // correcao-reciclagem-de-lista-anima-item-errado: a FlashList recicla a
+    // mesma instância do componente pra itens diferentes ao rolar — sem
+    // reset por idDoItem, trocar de item pareceria "mudança de quantidade"
+    // e animaria por engano (o achado "duas barras verdes").
+    it('idDoItem muda (célula reciclada pra outro item): corta direto, sem molar()', async () => {
+      const { rerender } = await render(
+        <ThemeProvider preferencia="escuro">
+          <MedidorNivel fracao={0.3} estado="ok" temSobra={false} idDoItem="produto-A" />
+        </ThemeProvider>,
+      );
+      jest.clearAllMocks();
+      await rerender(
+        <ThemeProvider preferencia="escuro">
+          <MedidorNivel fracao={0.8} estado="ok" temSobra={false} idDoItem="produto-B" />
+        </ThemeProvider>,
+      );
+      expect(molar).not.toHaveBeenCalled();
+    });
+
+    it('idDoItem igual (mesmo item, quantidade mudou de verdade): passa por molar()', async () => {
+      const { rerender } = await render(
+        <ThemeProvider preferencia="escuro">
+          <MedidorNivel fracao={0.3} estado="ok" temSobra={false} idDoItem="produto-A" />
+        </ThemeProvider>,
+      );
+      jest.clearAllMocks();
+      await rerender(
+        <ThemeProvider preferencia="escuro">
+          <MedidorNivel fracao={0.6} estado="ok" temSobra={false} idDoItem="produto-A" />
+        </ThemeProvider>,
+      );
+      expect(molar).toHaveBeenCalledWith(0.6);
+    });
   });
 });
 
@@ -137,6 +173,37 @@ describe('ItemDespensa', () => {
     expect(botao.props.accessibilityState).toEqual(expect.objectContaining({ disabled: true }));
   });
 
+  // Achado correcao-regua-risca-texto-medidor: a régua/tinta do MedidorNivel
+  // não pode aparecer riscando o texto em nenhuma fração intermediária —
+  // provado indiretamente confirmando que o bloco do nome tem um chip com
+  // fundo tintado (cor do estado a 15% sobre bg.base), que garante contraste
+  // sobre qualquer camada atrás dele, independente da fração (33%, 50%, 70%
+  // — as três reproduzidas na sessão).
+  it.each([0.33, 0.5, 0.7])(
+    'fração %s (emFalta): bloco do nome tem chip tintado cobrindo a régua atrás dele',
+    async (fracao) => {
+      await comTema(<ItemDespensa {...base} fracao={fracao} />);
+      const nome = screen.getByText(base.nome);
+      // O pai direto do nome é o container que recebe o chip.
+      const container = nome.parent!;
+      expect(estilos(container).backgroundColor).toBe(
+        sobrepor(corDoEstado(despensa, base.estado), despensa.bg.base, 0.15),
+      );
+    },
+  );
+
+  it('estado "ok" (Cheio): nome fica em texto simples, sem chip de fundo', async () => {
+    await comTema(<ItemDespensa {...base} estado="ok" rotuloEstado="Cheio" fracao={1} />);
+    const nome = screen.getByText(base.nome);
+    expect(estilos(nome.parent!).backgroundColor).toBeUndefined();
+  });
+
+  it('estado "critico" (Acabou): nome fica em texto simples, sem chip de fundo', async () => {
+    await comTema(<ItemDespensa {...base} estado="critico" rotuloEstado="Acabou" fracao={0} />);
+    const nome = screen.getByText(base.nome);
+    expect(estilos(nome.parent!).backgroundColor).toBeUndefined();
+  });
+
   it('sem onRepor, o botão de repor rápido não aparece', async () => {
     await comTema(<ItemDespensa {...base} onConsumir={jest.fn()} />);
     expect(screen.queryByLabelText(/^Repor /)).toBeNull();
@@ -164,7 +231,11 @@ describe('conformidade do medidor e da linha', () => {
     (nome) => {
       const fonte = fs.readFileSync(path.join(__dirname, nome), 'utf8');
       // A única aritmética permitida é converter fração para porcentagem.
-      const suspeitas = fonte.match(/quantidade\w*\s*[-+*/]/g);
+      // Comentários de bloco (JSDoc) são removidos antes do match: um `*` de
+      // continuação de linha logo após "quantidade" no texto do comentário
+      // não é aritmética sobre a variável, só pontuação de prosa.
+      const semComentarios = fonte.replace(/\/\*[\s\S]*?\*\//g, '');
+      const suspeitas = semComentarios.match(/quantidade\w*\s*[-+*/]/g);
       expect(suspeitas).toBeNull();
       expect(fonte).not.toMatch(/quantidadeNecessaria/);
     },
@@ -182,12 +253,14 @@ describe('conformidade do medidor e da linha', () => {
     expect(fonte).not.toMatch(/shadowColor|shadowOpacity|shadowRadius|shadowOffset|elevation\s*:/);
   });
 
-  it('item-despensa.tsx só usa raio.linha (0) — nenhum borderRadius divergente', () => {
+  it('item-despensa.tsx: a linha em si só usa raio.linha (0) — nenhum card reintroduzido', () => {
     const fonte = fs.readFileSync(path.join(__dirname, 'item-despensa.tsx'), 'utf8');
     const usos = fonte.match(/borderRadius\s*:\s*([^,\n]+)/g) ?? [];
     expect(usos.length).toBeGreaterThan(0);
+    // raio.pilula é permitido só pra tag de estado (rótulo compacto arredondado,
+    // mesmo padrão de ChipEstado/raio.pilula) — nunca pra linha/container.
     for (const uso of usos) {
-      expect(uso).toMatch(/raio\.linha/);
+      expect(uso).toMatch(/raio\.linha|raio\.pilula/);
     }
   });
 });

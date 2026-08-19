@@ -105,7 +105,7 @@ describe('Lista — alvos de toque do cabeçalho', () => {
   it('"Compartilhar lista" e "Agrupar por categoria" medem ao menos 48dp de altura', async () => {
     await comTema(<Lista />);
     const compartilhar = screen.getByLabelText('Compartilhar lista');
-    const agrupar = screen.getByLabelText('Agrupar por categoria');
+    const agrupar = screen.getByLabelText('Agrupar');
     expect(estiloResolvido(compartilhar).minHeight).toBeGreaterThanOrEqual(ALVO_TOQUE_MINIMO);
     expect(estiloResolvido(agrupar).minHeight).toBeGreaterThanOrEqual(ALVO_TOQUE_MINIMO);
   });
@@ -114,7 +114,7 @@ describe('Lista — alvos de toque do cabeçalho', () => {
   it('os dois botões lado a lado não têm hitSlop que sobreponha a área tocável um do outro', async () => {
     await comTema(<Lista />);
     const compartilhar = screen.getByLabelText('Compartilhar lista');
-    const agrupar = screen.getByLabelText('Agrupar por categoria');
+    const agrupar = screen.getByLabelText('Agrupar');
     const hitSlopCompartilhar = compartilhar.props.hitSlop;
     const hitSlopAgrupar = agrupar.props.hitSlop;
     const GAP_ENTRE_BOTOES = 16; // espaco.lg, gap do container pai
@@ -142,7 +142,7 @@ describe('Lista — rolagem (ACHADO scroll ausente)', () => {
 
   it('"Adicionar item avulso" continua acessível como rodapé da lista rolável', async () => {
     await comTema(<Lista />);
-    expect(screen.getByText('Adicionar item avulso')).toBeTruthy();
+    expect(screen.getByLabelText('Adicionar item avulso')).toBeTruthy();
   });
 });
 
@@ -274,8 +274,11 @@ describe('Lista — seção de desativados (exclusão é temporária, não some 
 
     await comTema(<Lista />);
 
-    expect(screen.getByText('Fora da lista por agora')).toBeTruthy();
-    expect(screen.getByText('Manteiga')).toBeTruthy();
+    expect(screen.getByText('Fora da lista por agora (1)')).toBeTruthy();
+    expect(screen.queryByText('Manteiga')).toBeNull();
+
+    fireEvent.press(screen.getByRole('button', { name: 'Fora da lista por agora (1)' }));
+    await waitFor(() => expect(screen.getByText('Manteiga')).toBeTruthy());
     fireEvent.press(screen.getByLabelText('Voltar Manteiga pra lista'));
     expect(mockReativar).toHaveBeenCalledWith('x1');
   });
@@ -285,7 +288,7 @@ describe('Lista — seção de desativados (exclusão é temporária, não some 
 
     await comTema(<Lista />);
 
-    expect(screen.queryByText('Fora da lista por agora')).toBeNull();
+    expect(screen.queryByText(/^Fora da lista por agora/)).toBeNull();
   });
 
   it('aparece mesmo com a lista de faltantes vazia', async () => {
@@ -298,7 +301,9 @@ describe('Lista — seção de desativados (exclusão é temporária, não some 
     await comTema(<Lista />);
 
     expect(screen.getByText('Nada faltando por aqui.', { exact: false })).toBeTruthy();
-    expect(screen.getByText('Fora da lista por agora')).toBeTruthy();
-    expect(screen.getByText('Manteiga')).toBeTruthy();
+    const cabecalho = screen.getByText('Fora da lista por agora (1)');
+    expect(cabecalho).toBeTruthy();
+    fireEvent.press(cabecalho);
+    await waitFor(() => expect(screen.getByText('Manteiga')).toBeTruthy());
   });
 });

@@ -62,6 +62,14 @@ export type FormularioProdutoProps = {
    * (ACHADO-056, KPI K4) — por isso o default é não focar.
    */
   autofocarNome?: boolean;
+  /**
+   * `true` (default) quando o formulário é a tela inteira (`produto/novo.tsx`):
+   * container `flex:1` de ponta a ponta. `false` quando embutido no meio de
+   * outra tela com irmãos antes/depois (`produto/[id].tsx`) — o container
+   * some para altura de conteúdo, sem vão vazio forçado nem corte visual
+   * (correcao-layout-formulario-produto).
+   */
+  telaCheia?: boolean;
 };
 
 export function FormularioProduto({
@@ -76,6 +84,7 @@ export function FormularioProduto({
   avisoDeNome,
   tituloCabecalho,
   autofocarNome = false,
+  telaCheia = true,
 }: FormularioProdutoProps) {
   const tema = useTheme();
   const insets = useSafeAreaInsets();
@@ -100,9 +109,10 @@ export function FormularioProduto({
 
   return (
     <EvitaTeclado testID="evita-teclado-formulario">
-    <View style={{ flex: 1, backgroundColor: tema.bg.base }}>
+    <View style={[{ backgroundColor: tema.bg.base }, telaCheia && { flex: 1 }]}>
     <ScrollView
-      style={{ flex: 1 }}
+      style={telaCheia ? { flex: 1 } : undefined}
+      scrollEnabled={telaCheia}
       contentContainerStyle={{ padding: espaco.lg, gap: espaco.lg }}
       keyboardShouldPersistTaps="handled"
     >

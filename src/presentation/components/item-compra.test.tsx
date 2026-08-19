@@ -61,7 +61,7 @@ describe('ItemCompra', () => {
     await comTema(
       <ItemCompra linha={linhaBase()} onMarcar={onMarcar} onDesmarcar={jest.fn()} onAjustar={jest.fn()} onResponderPreco={jest.fn()} />,
     );
-    fireEvent.press(screen.getByLabelText('Marcar Arroz'));
+    fireEvent.press(screen.getByRole('checkbox', { name: /Arroz/ }));
     expect(onMarcar).toHaveBeenCalledTimes(1);
   });
 
@@ -76,7 +76,7 @@ describe('ItemCompra', () => {
         onResponderPreco={jest.fn()}
       />,
     );
-    fireEvent.press(screen.getByLabelText('Desmarcar Arroz'));
+    fireEvent.press(screen.getByRole('checkbox', { name: /Arroz/ }));
     expect(onDesmarcar).toHaveBeenCalledTimes(1);
   });
 
@@ -148,7 +148,7 @@ describe('ItemCompra', () => {
     await comTema(
       <ItemCompra linha={linhaBase()} onMarcar={jest.fn()} onDesmarcar={jest.fn()} onAjustar={jest.fn()} onResponderPreco={jest.fn()} />,
     );
-    const areaTocavel = screen.getByLabelText('Marcar Arroz');
+    const areaTocavel = screen.getByTestId('area-marcacao');
     const estiloArea = estiloResolvido(areaTocavel);
     expect(estiloArea.width).toBeGreaterThanOrEqual(ALVO_TOQUE_MINIMO);
     expect(estiloArea.height).toBeGreaterThanOrEqual(ALVO_TOQUE_MINIMO);
@@ -171,7 +171,7 @@ describe('ItemCompra', () => {
     await comTema(
       <ItemCompra linha={linhaBase()} onMarcar={jest.fn()} onDesmarcar={jest.fn()} onAjustar={onAjustar} onResponderPreco={jest.fn()} />,
     );
-    fireEvent(screen.getByLabelText('Marcar Arroz'), 'longPress');
+    fireEvent(screen.getByRole('checkbox', { name: /Arroz/ }), 'longPress');
     expect(onAjustar).toHaveBeenCalledTimes(1);
   });
 });
