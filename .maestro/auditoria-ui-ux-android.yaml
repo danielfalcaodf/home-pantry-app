@@ -1,0 +1,411 @@
+appId: com.danielfalcaodf.repor
+name: "Auditoria de UI/UX e recursos nativos (Android)"
+tags:
+  - auditoria
+  - android
+---
+# Roteiro de CAÇA A DEFEITOS — não é caminho feliz. Cada seção existe para
+# expor uma classe de falha que os flows funcionais desta pasta não veem:
+# estado de botão, comportamento de chip, sobreposição de teclado, back
+# nativo, rotação e morte de processo. Espera-se que ele encontre problemas;
+# uma falha aqui é um achado, não necessariamente um roteiro quebrado.
+#
+# Métricas de geometria (linha de 68dp, alvo de 48dp, espaçamentos) NÃO são
+# verificadas aqui — YAML não mede bounds. Os pontos marcados "# MEDIR" são
+# onde a conferência numérica acontece por fora, via inspect_screen do MCP
+# do Maestro, comparando com src/presentation/theme/espaco.ts. Num emulador
+# 420dpi (density 2.625): ALTURA_ITEM 68dp = 178,5px, ALVO_TOQUE_MINIMO
+# 48dp = 126px, espaco.lg 16dp = 42px, espaco.sm 8dp = 21px.
+#
+# `assertNoDefectsWithAI` é optional por padrão no Maestro: ele avisa, não
+# derruba o flow. É de propósito — a varredura precisa chegar até o fim.
+#
+# Sem `clearState`: audita o app como a pessoa o encontra, com a massa de
+# dados que já existe no aparelho.
+#
+# Efeitos colaterais: cria e depois remove (logicamente) "Item Auditoria
+# QA". A compra iniciada em §5 é CANCELADA, não fechada — nada entra no
+# histórico de gastos. O tema volta para "Automático" no fim. Se outros
+# itens já estiverem na lista derivada, entram na mesma compra cancelada e
+# continuam pendentes.
+- launchApp
+- runFlow:
+    when:
+      visible: "Continue"
+    commands:
+      - tapOn: "Continue"
+- assertVisible: "Despensa"
+
+# ─────────────────────────────────────────────────────────────────────
+# 1) CHIPS DE FILTRO — estado selecionado, contagem e scroll horizontal.
+#    ChipEstado expõe accessibilityState.selected e rótulo "<texto>, <n>"
+#    quando recebe contagem. Se o chip ativo não vier marcado como
+#    selected, o estado dele só existe como cor — quebra a regra dos três
+#    canais redundantes.
+# ─────────────────────────────────────────────────────────────────────
+#    ATENÇÃO ao seletor: quem carrega `selected` é o Button, cujo rótulo
+#    acessível é "<texto>, <contagem>" — "Tudo" sozinho casa só com o
+#    TextView filho, que não tem estado nenhum, e a asserção falha. Como a
+#    contagem muda conforme o roteiro mexe no estoque, o seletor é regex.
+- assertVisible:
+    text: "Tudo, \\d+"
+    selected: true
+    label: "Chip Tudo nasce selecionado"
+- tapOn:
+    text: "Acabou, \\d+"
+- assertVisible:
+    text: "Acabou, \\d+"
+    selected: true
+- assertVisible:
+    text: "Tudo, \\d+"
+    selected: false
+- takeScreenshot: "qa/audit-01-chip-acabou" # MEDIR: minHeight >= 126px, gap 21px
+- assertNoDefectsWithAI
+- tapOn:
+    text: "Faltando, \\d+"
+- assertVisible:
+    text: "Faltando, \\d+"
+    selected: true
+- tapOn:
+    text: "Tudo, \\d+"
+
+# 1b) Segunda régua de chips: filtro por categoria, alimentada pelas
+#     categorias que já existem. Sem contagem, então o rótulo acessível é
+#     o texto puro. Verifica que as duas réguas são independentes — mexer
+#     na categoria não pode desmarcar o chip de estado.
+- assertVisible:
+    text: "Todas"
+    selected: true
+- tapOn: "Grãos e massas"
+- assertVisible:
+    text: "Grãos e massas"
+    selected: true
+- assertVisible:
+    text: "Todas"
+    selected: false
+- assertVisible:
+    text: "Tudo, \\d+"
+    selected: true
+- takeScreenshot: "qa/audit-01b-filtro-categoria"
+- assertNoDefectsWithAI
+- tapOn: "Todas"
+
+# ─────────────────────────────────────────────────────────────────────
+# 2) BUSCA — toggle com accessibilityState e estado vazio como convite.
+#    O Pressable "Buscar" e o CampoTexto que ele abre têm o MESMO
+#    accessibilityLabel. Colisão deliberada de seletor: se o inputText
+#    não chegar no campo, o autoFocus quebrou.
+# ─────────────────────────────────────────────────────────────────────
+- tapOn:
+    text: "Buscar"
+    selected: false
+- assertVisible:
+    text: "Buscar"
+    selected: true
+- inputText: "zzz-nao-existe-zzz"
+- assertVisible: 'Nenhum item chamado "zzz-nao-existe-zzz" por aqui.'
+- assertVisible: "Cadastrar zzz-nao-existe-zzz"
+- takeScreenshot: "qa/audit-02-estado-vazio-busca"
+- assertNoDefectsWithAI
+- eraseText
+- hideKeyboard
+- tapOn:
+    text: "Buscar"
+    selected: true
+
+# ─────────────────────────────────────────────────────────────────────
+# 3) FORMULÁRIO — chips de unidade, seção expansível e SOBREPOSIÇÃO DE
+#    TECLADO. O formulário inteiro vive dentro de EvitaTeclado. O teste
+#    de verdade: com o ÚLTIMO campo em foco, o botão de ação continua
+#    visível? Se não, o KeyboardAvoidingView não está compensando.
+# ─────────────────────────────────────────────────────────────────────
+- tapOn: "Adicionar produto"
+- assertVisible: "Novo produto"
+
+# 3a) Chips de unidade: 7 opções, wrap, seleção exclusiva
+- assertVisible:
+    text: "un"
+    selected: true
+    label: "Unidade default é 'un'"
+- tapOn: "pacote"
+- assertVisible:
+    text: "pacote"
+    selected: true
+- assertVisible:
+    text: "un"
+    selected: false
+- assertVisible: "kg"
+- assertVisible: "caixa"
+- takeScreenshot: "qa/audit-03a-chips-unidade" # MEDIR: wrap sem corte na borda direita
+- assertNoDefectsWithAI
+- tapOn: "un"
+
+# 3b) Seção expansível — accessibilityState.expanded e rótulo que inverte.
+#     Com o teclado aberto, "Onde guardo" já é o último campo acima da
+#     dobra: os dois de baixo só existem depois de rolar. Não é defeito,
+#     é ScrollView — mas assertVisible sem rolar falha, então rola.
+- assertNotVisible: "Quanto costuma custar"
+- tapOn: "Mais opções"
+- assertVisible: "Menos opções"
+- scrollUntilVisible:
+    element: "Onde guardo"
+    direction: DOWN
+    speed: 40
+- assertVisible: "Quanto costuma custar"
+- assertVisible: "Onde guardo"
+- scrollUntilVisible:
+    element: "Anotação"
+    direction: DOWN
+    speed: 40
+    timeout: 15000
+- assertVisible: "Marca que prefiro"
+- assertVisible: "Anotação"
+
+# 3c) KEYBOARD OVERLAY — o cenário que derruba formulário no Android
+- tapOn: "Anotação"
+- assertVisible:
+    text: "Adicionar à despensa"
+    label: "Botão de ação sobrevive ao teclado aberto no último campo"
+- takeScreenshot: "qa/audit-03c-teclado-sobre-formulario"
+- assertNoDefectsWithAI
+
+# 3d) BACK NATIVO com teclado aberto fecha SÓ o teclado, sem expulsar a
+#     pessoa da tela no meio da digitação
+#     Não dá pra ancorar em "Novo produto": nesse ponto o formulário está
+#     rolado até o fim e o cabeçalho já saiu de cena (rola junto, não é fixo).
+- back
+- assertVisible: "Anotação"
+- assertVisible: "Adicionar à despensa"
+- back
+- assertVisible: "Despensa"
+
+# ─────────────────────────────────────────────────────────────────────
+# 4) TECLADO DE QUANTIDADE (Modal + EvitaTeclado) — estado desabilitado
+#    de botão. "Usei"/"Repus" ficam desabilitados com o campo vazio, e o
+#    Botao anuncia isso em accessibilityState.disabled, não só em opacidade.
+#    O painel abre por TOQUE LONGO no stepper: gesto sem affordance visual,
+#    justamente o tipo de coisa que regride sem ninguém notar.
+# ─────────────────────────────────────────────────────────────────────
+- tapOn: "Adicionar produto"
+- tapOn: "O que é"
+- inputText: "Item Auditoria QA"
+- hideKeyboard
+- tapOn: "Quanto quero ter em casa"
+- inputText: "4"
+- hideKeyboard
+- tapOn: "Adicionar à despensa"
+- assertVisible: "Despensa"
+- scrollUntilVisible:
+    element: "Item Auditoria QA, 0 de 4 un, Acabou"
+    direction: DOWN
+    speed: 60
+    timeout: 30000
+
+# 4a) Stepper de item zerado fica DESABILITADO, não some — removê-lo
+#     mudaria o layout da linha e quebraria o alinhamento da lista
+- assertVisible:
+    text: "Usei 1 un de Item Auditoria QA"
+    enabled: false
+    label: "Stepper de item Acabou fica esmaecido, não desaparece"
+- takeScreenshot: "qa/audit-04a-stepper-zerado" # MEDIR: alvo 126x126px mesmo desabilitado
+
+# 4b) Repõe e abre o teclado de quantidade por toque longo
+- tapOn: "Repor 1 un de Item Auditoria QA"
+- assertVisible: "Item Auditoria QA, 1 de 4 un, Falta 3"
+- longPressOn: "Usei 1 un de Item Auditoria QA"
+- assertVisible: "Quantidade"
+- assertVisible:
+    text: "Usei"
+    enabled: false
+    label: "Usei desabilitado com quantidade vazia"
+- assertVisible:
+    text: "Repus"
+    enabled: false
+- takeScreenshot: "qa/audit-04b-teclado-quantidade-vazio"
+- assertNoDefectsWithAI
+- inputText: "2"
+- assertVisible:
+    text: "Usei"
+    enabled: true
+- assertVisible:
+    text: "Repus"
+    enabled: true
+- tapOn: "Repus"
+- assertVisible: "Item Auditoria QA, 3 de 4 un, Falta 1"
+
+# 4c) Toast de desfazer — ação nomeada, janela de 10s
+- assertVisible: "Desfazer"
+- takeScreenshot: "qa/audit-04c-toast-desfazer"
+
+# ─────────────────────────────────────────────────────────────────────
+# 5) ABA LISTA E MODO COMPRA — toggle de agrupamento, sheet de preço
+#    (outro EvitaTeclado dentro de Modal) e Alert nativo de cancelamento.
+# ─────────────────────────────────────────────────────────────────────
+- tapOn: "Lista"
+- scrollUntilVisible:
+    element: "Remover Item Auditoria QA da lista"
+    direction: DOWN
+    speed: 60
+    timeout: 30000
+# O rótulo do chip (chip-estado.tsx) É o próprio texto de estado: "Agrupado"
+# quando ativo, "Agrupar" quando não — não um texto fixo com `selected`
+# separado (correcao-cabecalho-lista-icones mudou isso). A lista nasce
+# agrupada.
+- assertVisible:
+    text: "Agrupado"
+    selected: true
+- takeScreenshot: "qa/audit-05-lista-agrupada"
+- assertNoDefectsWithAI
+- tapOn: "Agrupado"
+- assertVisible:
+    text: "Agrupar"
+    selected: false
+# MEDIR: os dois estados renderizam idênticos além do texto — comparar os
+# dois screenshots é justamente a evidência de que falta canal visual extra.
+- takeScreenshot: "qa/audit-05-lista-sem-agrupar"
+- tapOn: "Agrupar"
+
+# 5a) Sheet de preço: teclado dentro de Modal, o caso que o
+#     KeyboardAvoidingView nativo do React Native não resolve no Android
+- scrollUntilVisible:
+    element: "Remover Item Auditoria QA da lista"
+    direction: DOWN
+    speed: 60
+    timeout: 30000
+- tapOn: "Item Auditoria QA"
+- takeScreenshot: "qa/audit-05a-sheet-preco-com-teclado"
+- assertNoDefectsWithAI
+- tapOn: "Fechar"
+
+# 5b) Modo compra + Alert nativo. A compra é cancelada, não fechada:
+#     não queremos poluir o histórico de gastos com dados de auditoria.
+- tapOn:
+    text: "Iniciar compra \\(\\d+\\)"
+- assertVisible: "Compra"
+# item-compra.tsx expõe accessibilityRole="checkbox" + accessibilityState.
+# checked explícitos (mudou desde correcao-nomes-e-estados-acessiveis,
+# achado A-15) — não mais o prefixo "✓, " sintetizado pelo RN.
+- scrollUntilVisible:
+    element: "Item Auditoria QA, 1 un, sem preço"
+    direction: DOWN
+    speed: 60
+    timeout: 30000
+- tapOn: "Item Auditoria QA, 1 un, sem preço"
+- assertVisible:
+    text: "Item Auditoria QA, 1 un, sem preço"
+    checked: true
+- takeScreenshot: "qa/audit-05b-item-marcado-risco"
+- assertNoDefectsWithAI
+- tapOn: "Cancelar compra"
+- assertVisible: "Cancelar esta compra?"
+- assertVisible: "O que você já marcou fica só no histórico. Nada é reposto."
+- takeScreenshot: "qa/audit-05b-alert-nativo"
+- tapOn:
+    text: "Cancelar compra"
+    below:
+      text: "O que você já marcou fica só no histórico. Nada é reposto."
+
+# ─────────────────────────────────────────────────────────────────────
+# 6) FALHAS SISTÊMICAS DO ANDROID — rotação, modo avião e morte de
+#    processo. O MVP roda 100% local: perder a rede não pode mudar nada,
+#    e o SQLite tem que sobreviver ao processo ser morto pelo sistema.
+# ─────────────────────────────────────────────────────────────────────
+- tapOn: "Despensa"
+- setOrientation: LANDSCAPE_LEFT
+- assertVisible: "Despensa"
+- assertVisible: "Item Auditoria QA, 3 de 4 un, Falta 1"
+- takeScreenshot: "qa/audit-06a-paisagem"
+- assertNoDefectsWithAI
+- setOrientation: PORTRAIT
+- assertVisible: "Item Auditoria QA, 3 de 4 un, Falta 1"
+
+- setAirplaneMode: enabled
+- tapOn: "Usei 1 un de Item Auditoria QA"
+- assertVisible:
+    text: "Item Auditoria QA, 2 de 4 un, Falta 2"
+    label: "App 100% local continua funcionando sem rede"
+- setAirplaneMode: disabled
+
+# 6b) Morte de processo iniciada pelo sistema
+- killApp
+- launchApp
+- runFlow:
+    when:
+      visible: "Continue"
+    commands:
+      - tapOn: "Continue"
+- assertVisible: "Despensa"
+- scrollUntilVisible:
+    element: "Item Auditoria QA, 2 de 4 un, Falta 2"
+    direction: DOWN
+    speed: 60
+    timeout: 30000
+
+# ─────────────────────────────────────────────────────────────────────
+# 7) TEMAS — Porcelana (claro) e Despensa (escuro). Contraste e ausência
+#    de piscada branca na abertura são o alvo; os screenshots são a prova.
+# ─────────────────────────────────────────────────────────────────────
+- tapOn: "Resumo"
+- assertVisible: "Em casa"
+- assertVisible: "Falta comprar"
+- assertVisible: "Sua despensa"
+- assertVisible: "Gasto este mês"
+- assertVisible: "Gasto por mês"
+- takeScreenshot: "qa/audit-07-resumo"
+- assertNoDefectsWithAI
+- tapOn: "Configurações"
+- assertVisible: "Tema"
+# Os chips de tema são "Automático" / "Claro" / "Escuro" — sem o prefixo "Tema".
+# A-12 (correcao-nomes-e-estados-acessiveis) confirmado corrigido: a tela
+# Configurações não tem mais o rótulo de seção "Despensa" duplicado — só o nó
+# da aba existe agora, então `tapOn: "Despensa"` resolve sem ambiguidade.
+- tapOn: "Claro"
+- tapOn: "Despensa"
+- assertVisible: "Adicionar produto"
+- takeScreenshot: "qa/audit-07a-tema-claro-despensa"
+- assertNoDefectsWithAI
+- tapOn: "Configurações"
+- tapOn: "Escuro"
+- tapOn: "Despensa"
+- assertVisible: "Adicionar produto"
+- takeScreenshot: "qa/audit-07b-tema-escuro-despensa"
+- assertNoDefectsWithAI
+
+# 7a) O tema fica no SQLite e é lido ANTES de esconder a splash: a captura
+#     logo após o relaunch é o que denuncia uma piscada de tela branca.
+- killApp
+- launchApp
+- runFlow:
+    when:
+      visible: "Continue"
+    commands:
+      - tapOn: "Continue"
+- takeScreenshot: "qa/audit-07c-abertura-tema-persistido"
+- assertVisible: "Despensa"
+- tapOn: "Configurações"
+- tapOn: "Automático"
+
+# ─────────────────────────────────────────────────────────────────────
+# 8) LIMPEZA — devolve a despensa ao estado em que o flow a encontrou
+#    (remoção lógica: o histórico de movimentos continua no banco)
+# ─────────────────────────────────────────────────────────────────────
+- tapOn: "Despensa"
+- scrollUntilVisible:
+    element: "Item Auditoria QA, 2 de 4 un, Falta 2"
+    direction: DOWN
+    speed: 60
+    timeout: 30000
+- tapOn: "Item Auditoria QA, 2 de 4 un, Falta 2"
+- scrollUntilVisible:
+    element: "Tirar da despensa"
+    direction: DOWN
+    speed: 40
+    timeout: 15000
+- tapOn: "Tirar da despensa"
+- assertVisible: "Tirar Item Auditoria QA da despensa?"
+- assertVisible: "O histórico de uso continua guardado."
+- tapOn:
+    text: "Tirar da despensa"
+    below:
+      text: "O histórico de uso continua guardado."
+- assertVisible: "Adicionar produto"

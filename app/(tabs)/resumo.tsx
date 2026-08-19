@@ -5,8 +5,10 @@ import { Pressable, ScrollView, View } from 'react-native';
 import { useGastoMensal } from '@/application/resumo/use-gasto-mensal';
 import { useResumoDeValores } from '@/application/resumo/use-resumo-valores';
 import { formatarBRL } from '@/domain/shared/dinheiro';
+import { AcaoSecundaria } from '@/presentation/components/acao-secundaria';
 import { ChipEstado } from '@/presentation/components/chip-estado';
 import { GraficoBarras } from '@/presentation/components/grafico-barras';
+import { TelaBase } from '@/presentation/components/tela-base';
 import { Texto } from '@/presentation/components/texto';
 import { contarPorEstado, FiltroEstado } from '@/presentation/format/agrupar-despensa';
 import { corDoEstado } from '@/presentation/theme/cor-do-estado';
@@ -50,7 +52,8 @@ export default function Resumo() {
   const nenhumaCompraFechada = gastoMensal.meses.every((mes) => mes.qtdCompras === 0);
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: tema.bg.base }}>
+    <TelaBase>
+      <ScrollView style={{ flex: 1 }}>
       <View
         style={{
           flexDirection: 'row',
@@ -135,13 +138,13 @@ export default function Resumo() {
             <Texto papel="label" tom="secondary">
               Gasto por mês
             </Texto>
-            <Texto
+            <AcaoSecundaria
+              titulo="Ver histórico"
               papel="body.md"
               cor={tema.action.azulejo}
               onPress={() => router.push('/compra/historico')}
-            >
-              Ver histórico
-            </Texto>
+              style={{ paddingHorizontal: 0 }}
+            />
           </View>
           {nenhumaCompraFechada ? (
             <Texto papel="body.md" tom="secondary">
@@ -184,6 +187,7 @@ export default function Resumo() {
           )}
         </View>
       </View>
-    </ScrollView>
+      </ScrollView>
+    </TelaBase>
   );
 }

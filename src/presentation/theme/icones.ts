@@ -22,6 +22,10 @@ export const icones = {
   // affordance de ajuste por toque longo (ACHADO affordance, modo compra
   // e lista de compras).
   ajustar: 'M4 20h4l10-10-4-4L4 16v4zM14 6l4 4',
+  // Caixa com seta saindo por cima — ícone de compartilhar (correcao-
+  // cabecalho-lista-icones), desenhado à mão no mesmo estilo dos demais
+  // (viewBox 24x24, stroke 1.5), sem dependência nova.
+  compartilhar: 'M4 12v7a1 1 0 001 1h14a1 1 0 001-1v-7M16 6l-4-4-4 4M12 2v13',
 } as const;
 
 export type NomeDoIcone = keyof typeof icones;

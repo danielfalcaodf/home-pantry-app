@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Pressable, View } from 'react-native';
+import { Alert, Pressable, ScrollView, View } from 'react-native';
 
 import { ProdutoNaDespensa } from '@/application/estoque/use-produtos';
 import { useAjustarEstoque } from '@/application/estoque/use-ajustar-estoque';
@@ -15,10 +15,12 @@ import {
 import { useReporPontual } from '@/application/estoque/use-repor-pontual';
 import { useResumoHistoricoRecente } from '@/application/estoque/use-resumo-historico';
 import { normalizarCategoria } from '@/domain/produto/categoria';
+import { passoDoStepper } from '@/domain/produto/estoque.rules';
 import { centavos, formatarBRL } from '@/domain/shared/dinheiro';
-import { deDecimal, formatarNumero, milesimos, paraDecimal } from '@/domain/shared/quantidade';
+import { deDecimal, formatarNumero, paraDecimal } from '@/domain/shared/quantidade';
 import { MotivoAjuste } from '@/domain/movimento/movimento';
 import { rotuloDaUnidade } from '@/domain/shared/unidade';
+import { AcaoSecundaria } from '@/presentation/components/acao-secundaria';
 import { Botao } from '@/presentation/components/botao';
 import { BotaoVoltar } from '@/presentation/components/botao-voltar';
 import {
@@ -29,6 +31,7 @@ import {
 } from '@/presentation/components/formulario-produto';
 import { SheetAjusteEstoque } from '@/presentation/components/sheet-ajuste-estoque';
 import { TecladoQuantidade } from '@/presentation/components/teclado-quantidade';
+import { TelaBase } from '@/presentation/components/tela-base';
 import { TelaErro } from '@/presentation/components/tela-erro';
 import { Texto } from '@/presentation/components/texto';
 import { Toast } from '@/presentation/components/toast';
@@ -41,7 +44,6 @@ import {
 import { useRegistroDeConsumo } from '@/presentation/components/use-registro-de-consumo';
 import { useVoltarFechaTeclado } from '@/presentation/components/use-voltar-fecha-teclado';
 import { ALVO_TOQUE_MINIMO, espaco } from '@/presentation/theme/espaco';
-import { useTheme } from '@/presentation/theme/provider';
 
 function valoresDoItem(item: ProdutoNaDespensa): ValoresDoProduto {
   const { produto } = item;
@@ -81,7 +83,6 @@ export default function DetalheProduto() {
 }
 
 function Detalhe({ id, item }: { id: string; item: ProdutoNaDespensa }) {
-  const tema = useTheme();
   const categorias = useCategorias();
   const { editar } = useEditarProduto();
   const { remover } = useRemoverProduto();
@@ -102,12 +103,12 @@ function Detalhe({ id, item }: { id: string; item: ProdutoNaDespensa }) {
 
   useVoltarFechaTeclado();
 
-  async function usar(quantidade = milesimos(1000)) {
+  async function usar(quantidade = passoDoStepper(item.produto)) {
     const resultado = await registrarConsumo(id, quantidade);
     confirmacao.anunciar(resultado, item.produto, quantidade, 'consumo');
   }
 
-  async function repor(quantidade = milesimos(1000)) {
+  async function repor(quantidade = passoDoStepper(item.produto)) {
     const resultado = await registrarReposicao(id, quantidade);
     confirmacao.anunciar(resultado, item.produto, quantidade, 'reposicao');
   }
@@ -187,8 +188,13 @@ function Detalhe({ id, item }: { id: string; item: ProdutoNaDespensa }) {
   const { produto } = item;
 
   return (
-    <View style={{ flex: 1, backgroundColor: tema.bg.base }}>
-      <View style={{ paddingHorizontal: espaco.lg, paddingTop: espaco.xs, alignItems: 'flex-start' }}>
+    <TelaBase>
+      {/* Tela inteira rolável: com o formulário embutido (`telaCheia={false}`)
+          sem altura forçada, "Mais opções" expandido pode superar a altura
+          visível — sem scroll aqui, os campos do fim ficavam inacessíveis
+          atrás do rodapé fixo (correcao-layout-formulario-produto). */}
+      <ScrollView keyboardShouldPersistTaps="handled">
+      <View style={{ paddingHorizontal: espaco.lg, paddingTop: espaco.lg, alignItems: 'flex-start' }}>
         <BotaoVoltar />
       </View>
       <View style={{ padding: espaco.lg, gap: espaco.xs, alignItems: 'center' }}>
@@ -229,10 +235,11 @@ function Detalhe({ id, item }: { id: string; item: ProdutoNaDespensa }) {
         <View style={{ flex: 1 }}>
           <Botao titulo="Repus" variante="secundario" onPress={() => void repor()} />
         </View>
-        <View style={{ flex: 1 }}>
+        <View style={{ flex: 1.5 }}>
           <Botao
             titulo="Outra quantidade"
             variante="secundario"
+            numberOfLines={1}
             onPress={() => setTecladoAberto(true)}
           />
         </View>
@@ -246,36 +253,28 @@ function Detalhe({ id, item }: { id: string; item: ProdutoNaDespensa }) {
         tituloAcao="Salvar"
         aoSalvar={salvar}
         quantidadeAtualEditavel={false}
+        telaCheia={false}
       />
 
       {/* Resumo do histórico (task 5.10): a mesma confiança de que o app
           registra o que deveria, com acesso ao histórico completo. */}
       {!resumoHistorico.carregando ? (
-        <Pressable
+        <AcaoSecundaria
           onPress={() => router.push(`/produto/${id}/historico`)}
-          accessibilityRole="button"
-          accessibilityLabel="Ver histórico completo"
-          hitSlop={8}
-          style={{
-            minHeight: ALVO_TOQUE_MINIMO,
-            justifyContent: 'center',
-            paddingHorizontal: espaco.lg,
-            paddingVertical: espaco.sm,
-          }}
-        >
-          <Texto papel="label" tom="secondary">
-            {resumoHistorico.quantidadeDeUsos === 0
+          titulo={
+            resumoHistorico.quantidadeDeUsos === 0
               ? 'Sem uso registrado nos últimos 30 dias'
               : resumoHistorico.quantidadeDeUsos === 1
                 ? 'Você anotou 1 uso nos últimos 30 dias'
-                : `Você anotou ${resumoHistorico.quantidadeDeUsos} usos nos últimos 30 dias`}
-          </Texto>
-        </Pressable>
+                : `Você anotou ${resumoHistorico.quantidadeDeUsos} usos nos últimos 30 dias`
+          }
+        />
       ) : null}
 
       <View style={{ padding: espaco.lg }}>
         <Botao titulo="Tirar da despensa" variante="secundario" onPress={confirmarRemocao} />
       </View>
+      </ScrollView>
 
       <ToastDesfazer
         registro={confirmacao.registro}
@@ -311,6 +310,6 @@ function Detalhe({ id, item }: { id: string; item: ProdutoNaDespensa }) {
         onFechar={() => setAjusteAberto(false)}
         onSalvar={(dados) => void corrigirQuantidade(dados)}
       />
-    </View>
+    </TelaBase>
   );
 }

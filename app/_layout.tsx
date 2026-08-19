@@ -3,30 +3,45 @@ import 'react-native-get-random-values';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
+import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 
 import { usePreferenciaDeTemaPersistida } from '@/application/tema/use-preferencia-de-tema';
 import { usePrepararBanco } from '@/composicao/banco';
 import { TelaErro } from '@/presentation/components/tela-erro';
 import { fontesDoApp } from '@/presentation/theme/fontes';
-import { ThemeProvider, useTheme } from '@/presentation/theme/provider';
+import { ThemeProvider, useModoDeTema, useTheme } from '@/presentation/theme/provider';
 
 // A splash só sai quando banco, tema e fontes estiverem prontos — é o que
 // impede o quadro branco antes do tema escuro aparecer (FRONTEND §12.4).
 void SplashScreen.preventAutoHideAsync();
 
+/**
+ * Único `<StatusBar>` do app, montado aqui em vez de por tela — nunca
+ * `style="auto"` (segue a aparência do sistema, não a preferência do app;
+ * ver design correcao-bordas-do-sistema decisão 3).
+ */
+function EstiloDaBarraDeStatus() {
+  const modo = useModoDeTema();
+  return <StatusBar style={modo === 'despensa' ? 'light' : 'dark'} />;
+}
+
 function Rotas() {
   const tema = useTheme();
   return (
-    <Stack
-      screenOptions={{
-        headerShown: false,
-        contentStyle: { backgroundColor: tema.bg.base },
-        headerStyle: { backgroundColor: tema.bg.surface },
-        headerTintColor: tema.text.primary,
-      }}
-    />
+    <>
+      <EstiloDaBarraDeStatus />
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          contentStyle: { backgroundColor: tema.bg.base },
+          headerStyle: { backgroundColor: tema.bg.surface },
+          headerTintColor: tema.text.primary,
+        }}
+      />
+    </>
   );
 }
 
@@ -50,15 +65,18 @@ export default function RootLayout() {
   // A tela de erro também usa o tema resolvido — nunca um fundo padrão.
   if (banco.erro) {
     return (
-      <KeyboardProvider>
-        <ThemeProvider preferencia={tema.preferencia} escolher={tema.escolher}>
-          <TelaErro
-            titulo="Não foi possível preparar seus dados"
-            descricao="Feche e abra o app de novo. Seus dados têm uma cópia de segurança automática."
-            detalhe={banco.erro.message}
-          />
-        </ThemeProvider>
-      </KeyboardProvider>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <KeyboardProvider statusBarTranslucent navigationBarTranslucent>
+          <ThemeProvider preferencia={tema.preferencia} escolher={tema.escolher}>
+            <EstiloDaBarraDeStatus />
+            <TelaErro
+              titulo="Não foi possível preparar seus dados"
+              descricao="Feche e abra o app de novo. Seus dados têm uma cópia de segurança automática."
+              detalhe={banco.erro.message}
+            />
+          </ThemeProvider>
+        </KeyboardProvider>
+      </GestureHandlerRootView>
     );
   }
 
@@ -67,10 +85,16 @@ export default function RootLayout() {
   }
 
   return (
-    <KeyboardProvider>
-      <ThemeProvider preferencia={tema.preferencia} escolher={tema.escolher}>
-        <Rotas />
-      </ThemeProvider>
-    </KeyboardProvider>
+    // GestureHandlerRootView precisa envolver o KeyboardProvider (ordem
+    // canônica da própria lib): sem ele, Surfaces secundárias como o
+    // OverKeyboardView (PainelInferior) pintam numa posição mas despacham
+    // toque em outra — achado correcao-painel-inferior-invisivel.
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <KeyboardProvider statusBarTranslucent navigationBarTranslucent>
+        <ThemeProvider preferencia={tema.preferencia} escolher={tema.escolher}>
+          <Rotas />
+        </ThemeProvider>
+      </KeyboardProvider>
+    </GestureHandlerRootView>
   );
 }

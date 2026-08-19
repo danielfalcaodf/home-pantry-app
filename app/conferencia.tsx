@@ -9,16 +9,15 @@ import { Botao } from '@/presentation/components/botao';
 import { BotaoVoltar } from '@/presentation/components/botao-voltar';
 import { CampoTexto } from '@/presentation/components/campo-texto';
 import { EstadoVazio } from '@/presentation/components/estado-vazio';
+import { TelaBase } from '@/presentation/components/tela-base';
 import { Texto } from '@/presentation/components/texto';
 import { espaco } from '@/presentation/theme/espaco';
-import { useTheme } from '@/presentation/theme/provider';
 
 /**
  * Percurso guiado por categoria (task 3.1) — confirma por padrão, corrige
  * por exceção (design D4). Sem criar nem remover produto, sem diálogo extra.
  */
 export default function Conferencia() {
-  const tema = useTheme();
   const conferencia = useConferencia();
   const [valorCorrecao, setValorCorrecao] = useState('');
 
@@ -28,7 +27,7 @@ export default function Conferencia() {
 
   if (conferencia.categoriaEscolhida === null) {
     return (
-      <View style={{ flex: 1, backgroundColor: tema.bg.base, padding: espaco.lg, gap: espaco.md }}>
+      <TelaBase style={{ padding: espaco.lg, gap: espaco.md }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: espaco.sm }}>
           <BotaoVoltar />
           <Texto papel="display.sm">O que você quer conferir?</Texto>
@@ -45,13 +44,13 @@ export default function Conferencia() {
             onPress={() => void conferencia.escolherCategoria(categoria)}
           />
         ))}
-      </View>
+      </TelaBase>
     );
   }
 
   if (conferencia.concluida) {
     return (
-      <View style={{ flex: 1, backgroundColor: tema.bg.base, padding: espaco.lg, gap: espaco.md }}>
+      <TelaBase style={{ padding: espaco.lg, gap: espaco.md }}>
         <EstadoVazio
           convite={
             conferencia.resumo
@@ -60,19 +59,19 @@ export default function Conferencia() {
           }
           acao={{ titulo: 'Voltar para a despensa', onPress: () => router.back() }}
         />
-      </View>
+      </TelaBase>
     );
   }
 
   const item = conferencia.itemAtual;
   if (!item) {
     return (
-      <View style={{ flex: 1, backgroundColor: tema.bg.base, padding: espaco.lg }}>
+      <TelaBase style={{ padding: espaco.lg }}>
         <EstadoVazio
           convite="Nenhum item nessa categoria."
           acao={{ titulo: 'Voltar para a despensa', onPress: () => router.back() }}
         />
-      </View>
+      </TelaBase>
     );
   }
 
@@ -93,7 +92,7 @@ export default function Conferencia() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: tema.bg.base, padding: espaco.lg, gap: espaco.lg }}>
+    <TelaBase style={{ padding: espaco.lg, gap: espaco.lg }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: espaco.sm }}>
         <BotaoVoltar />
         <Texto papel="label" tom="secondary">
@@ -125,6 +124,6 @@ export default function Conferencia() {
           disabled={valorCorrecao.trim() === ''}
         />
       </View>
-    </View>
+    </TelaBase>
   );
 }

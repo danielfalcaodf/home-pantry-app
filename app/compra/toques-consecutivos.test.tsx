@@ -86,8 +86,8 @@ describe('useModoCompra + ItemCompra — ACHADO-054', () => {
     );
 
     // Sem `await`/`waitFor` entre os dois toques — condição exata do achado.
-    fireEvent.press(screen.getByLabelText('Marcar Arroz'));
-    fireEvent.press(screen.getByLabelText('Marcar Feijão'));
+    fireEvent.press(screen.getByRole('checkbox', { name: /Arroz/ }));
+    fireEvent.press(screen.getByRole('checkbox', { name: /Feijão/ }));
 
     await waitFor(() => {
       expect(compras.itens.find((i) => i.id === item1.id)?.comprado).toBe(true);

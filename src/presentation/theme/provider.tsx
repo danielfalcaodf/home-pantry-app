@@ -2,10 +2,14 @@ import { createContext, ReactNode, useContext, useMemo } from 'react';
 import { useColorScheme } from 'react-native';
 
 import { PreferenciaDeTema, resolverTema } from './resolver';
-import { Theme, temas } from './tokens';
+import { NomeDoTema, Theme, temas } from './tokens';
 
 type ContextoDeTema = {
   tema: Theme;
+  /** 'despensa' (escuro) | 'porcelana' (claro) — mesmo nome resolvido que
+   *  indexa `temas`, exposto para quem precisa do nome e não só dos
+   *  tokens (ex.: `<StatusBar>`). */
+  modo: NomeDoTema;
   preferencia: PreferenciaDeTema;
   escolher: (nova: PreferenciaDeTema) => Promise<void>;
 };
@@ -33,10 +37,10 @@ export function ThemeProvider({
   // useColorScheme já re-renderiza quando a aparência do sistema muda —
   // o modo automático acompanha sem reinício do app.
   const aparencia = useColorScheme();
-  const valor = useMemo<ContextoDeTema>(
-    () => ({ tema: temas[resolverTema(preferencia, aparencia)], preferencia, escolher }),
-    [preferencia, aparencia, escolher],
-  );
+  const valor = useMemo<ContextoDeTema>(() => {
+    const modo = resolverTema(preferencia, aparencia);
+    return { tema: temas[modo], modo, preferencia, escolher };
+  }, [preferencia, aparencia, escolher]);
   return <Contexto.Provider value={valor}>{children}</Contexto.Provider>;
 }
 
@@ -46,6 +50,14 @@ export function useTheme(): Theme {
     throw new Error('useTheme precisa estar dentro de ThemeProvider');
   }
   return contexto.tema;
+}
+
+export function useModoDeTema(): NomeDoTema {
+  const contexto = useContext(Contexto);
+  if (!contexto) {
+    throw new Error('useModoDeTema precisa estar dentro de ThemeProvider');
+  }
+  return contexto.modo;
 }
 
 export function usePreferenciaDeTema(): PreferenciaDeTema {

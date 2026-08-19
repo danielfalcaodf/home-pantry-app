@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { UNIDADES, Unidade } from '../../domain/shared/unidade';
 import { ALVO_TOQUE_MINIMO, espaco } from '../theme/espaco';
@@ -61,6 +62,14 @@ export type FormularioProdutoProps = {
    * (ACHADO-056, KPI K4) — por isso o default é não focar.
    */
   autofocarNome?: boolean;
+  /**
+   * `true` (default) quando o formulário é a tela inteira (`produto/novo.tsx`):
+   * container `flex:1` de ponta a ponta. `false` quando embutido no meio de
+   * outra tela com irmãos antes/depois (`produto/[id].tsx`) — o container
+   * some para altura de conteúdo, sem vão vazio forçado nem corte visual
+   * (correcao-layout-formulario-produto).
+   */
+  telaCheia?: boolean;
 };
 
 export function FormularioProduto({
@@ -75,8 +84,10 @@ export function FormularioProduto({
   avisoDeNome,
   tituloCabecalho,
   autofocarNome = false,
+  telaCheia = true,
 }: FormularioProdutoProps) {
   const tema = useTheme();
+  const insets = useSafeAreaInsets();
   const [maisOpcoes, setMaisOpcoes] = useState(false);
   const [categoriaFocada, setCategoriaFocada] = useState(false);
 
@@ -98,8 +109,10 @@ export function FormularioProduto({
 
   return (
     <EvitaTeclado testID="evita-teclado-formulario">
+    <View style={[{ backgroundColor: tema.bg.base }, telaCheia && { flex: 1 }]}>
     <ScrollView
-      style={{ backgroundColor: tema.bg.base }}
+      style={telaCheia ? { flex: 1 } : undefined}
+      scrollEnabled={telaCheia}
       contentContainerStyle={{ padding: espaco.lg, gap: espaco.lg }}
       keyboardShouldPersistTaps="handled"
     >
@@ -233,9 +246,18 @@ export function FormularioProduto({
           />
         </View>
       ) : null}
-
-      <Botao titulo={tituloAcao} onPress={aoSalvar} disabled={salvando} />
     </ScrollView>
+    <View
+      style={{
+        padding: espaco.lg,
+        paddingBottom: espaco.lg + insets.bottom,
+        borderTopWidth: 1,
+        borderTopColor: tema.line.hairline,
+      }}
+    >
+      <Botao titulo={tituloAcao} onPress={aoSalvar} disabled={salvando} />
+    </View>
+    </View>
     </EvitaTeclado>
   );
 }

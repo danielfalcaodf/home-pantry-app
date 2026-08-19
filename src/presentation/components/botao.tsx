@@ -8,6 +8,10 @@ export type BotaoProps = Omit<PressableProps, 'style' | 'children'> & {
   titulo: string;
   variante?: 'primario' | 'secundario';
   style?: ViewStyle;
+  /** Só para títulos longos em grupos de botões lado a lado (`flex: 1`) —
+   *  evita quebra de linha com a fonte do sistema ampliada, sem mudar o
+   *  padrão default de nenhum outro botão do app. */
+  numberOfLines?: number;
 };
 
 export function Botao({
@@ -15,6 +19,7 @@ export function Botao({
   variante = 'primario',
   disabled,
   style,
+  numberOfLines,
   ...props
 }: BotaoProps) {
   const tema = useTheme();
@@ -43,7 +48,7 @@ export function Botao({
         style,
       ]}
     >
-      <Texto papel="body.md" tom={primario ? 'onAction' : 'primary'}>
+      <Texto papel="body.md" tom={primario ? 'onAction' : 'primary'} numberOfLines={numberOfLines}>
         {titulo}
       </Texto>
     </Pressable>

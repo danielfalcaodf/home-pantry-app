@@ -9,17 +9,16 @@ export type EvitaTecladoProps = {
 
 /**
  * Compensa a abertura do teclado do sistema para que o campo em foco e o
- * botão de ação nunca fiquem cobertos (ACHADO Keyboard Overlap) — um único
- * ponto usado por `FormularioProduto` e pelos 4 sheets, em vez de repetir
- * `KeyboardAvoidingView` e seu `behavior` por tela.
+ * botão de ação nunca fiquem cobertos (ACHADO Keyboard Overlap) — usado por
+ * `FormularioProduto` (tela cheia, dentro do `KeyboardProvider` da raiz).
  *
  * Usa o `KeyboardAvoidingView` de `react-native-keyboard-controller`, não o
- * nativo do React Native: o nativo não funciona de forma confiável dentro
- * de `Modal` no Android (o cenário dos 4 sheets desta base) — a lib
- * resolveu isso a partir da 1.13 e é um substituto direto da mesma API.
- * `automaticOffset` calcula sozinho o deslocamento a partir da posição real
- * do componente na tela, sem precisar medir `keyboardVerticalOffset` na mão
- * por causa do cabeçalho/moldura do sheet.
+ * nativo do React Native — `automaticOffset` calcula sozinho o deslocamento
+ * a partir da posição real do componente na tela. `PainelInferior` (os 5
+ * sheets) NÃO usa este componente: roda dentro de um `<Modal>`, janela
+ * nativa separada fora do alcance do `KeyboardProvider`, e usa o
+ * `KeyboardAvoidingView` nativo do React Native diretamente por isso
+ * (correcao-painel-inferior-invisivel).
  */
 export function EvitaTeclado({ children, style, testID }: EvitaTecladoProps) {
   return (

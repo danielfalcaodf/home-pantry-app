@@ -79,15 +79,15 @@ describe('Detalhe do produto — alvos de toque (ACHADO-063)', () => {
     await waitFor(() => expect(screen.getByText('Corrigir Arroz')).toBeTruthy());
   });
 
-  it('"Ver histórico completo" mede ao menos 48dp de altura', async () => {
+  it('resumo do histórico (AcaoSecundaria) mede ao menos 48dp de altura', async () => {
     await comTema(<DetalheProduto />);
-    const botao = screen.getByLabelText('Ver histórico completo');
+    const botao = screen.getByLabelText('Você anotou 3 usos nos últimos 30 dias');
     expect(estiloResolvido(botao).minHeight).toBeGreaterThanOrEqual(ALVO_TOQUE_MINIMO);
   });
 
-  it('tocar em "Ver histórico completo" ainda navega para /produto/[id]/historico', async () => {
+  it('tocar no resumo do histórico ainda navega para /produto/[id]/historico', async () => {
     await comTema(<DetalheProduto />);
-    fireEvent.press(screen.getByLabelText('Ver histórico completo'));
+    fireEvent.press(screen.getByLabelText('Você anotou 3 usos nos últimos 30 dias'));
     expect(mockPush).toHaveBeenCalledWith('/produto/p1/historico');
   });
 });

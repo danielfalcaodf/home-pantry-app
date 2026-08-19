@@ -17,14 +17,21 @@ export type BotaoReporRapidoProps = {
   /** Rótulo do leitor de tela com a ação completa, nunca só "mais". */
   rotuloAcessivel: string;
   onRegistrar: () => void;
+  onAbrirTeclado?: () => void;
 };
 
 /**
  * Par do StepperConsumo (design system: um botão de repor sempre visível ao
- * lado do de usar) — sempre 1 unidade. Ajuste de quantidade exata continua
- * só pelo toque longo do stepper de consumo ou pelo Detalhe do produto.
+ * lado do de usar). Toque simples soma o passo padrão; toque longo abre o
+ * mesmo teclado de quantidade exata do stepper de consumo — sem isso, quem
+ * quer repor um valor específico (ex. completar um estoque cheio pra uma
+ * quantidade redonda) não tinha como, só editando o produto.
  */
-export function BotaoReporRapido({ rotuloAcessivel, onRegistrar }: BotaoReporRapidoProps) {
+export function BotaoReporRapido({
+  rotuloAcessivel,
+  onRegistrar,
+  onAbrirTeclado,
+}: BotaoReporRapidoProps) {
   const tema = useTheme();
   const escala = useSharedValue(1);
 
@@ -45,6 +52,7 @@ export function BotaoReporRapido({ rotuloAcessivel, onRegistrar }: BotaoReporRap
   return (
     <Pressable
       onPress={tocar}
+      onLongPress={onAbrirTeclado}
       accessibilityRole="button"
       accessibilityLabel={rotuloAcessivel}
       style={{

@@ -6,6 +6,7 @@ import { dataDeReferencia } from '@/domain/compra/compra.rules';
 import { centavos, formatarBRL } from '@/domain/shared/dinheiro';
 import { BotaoVoltar } from '@/presentation/components/botao-voltar';
 import { EstadoVazio } from '@/presentation/components/estado-vazio';
+import { TelaBase } from '@/presentation/components/tela-base';
 import { Texto } from '@/presentation/components/texto';
 import { formatarDataDaCompra } from '@/presentation/format/historico-de-compras';
 import { espaco } from '@/presentation/theme/espaco';
@@ -56,7 +57,7 @@ export default function HistoricoDeCompras() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: tema.bg.base }}>
+    <TelaBase>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: espaco.sm, padding: espaco.lg }}>
         <BotaoVoltar />
         <Texto papel="display.sm">Histórico de compras</Texto>
@@ -72,6 +73,6 @@ export default function HistoricoDeCompras() {
           onEndReachedThreshold={0.5}
         />
       )}
-    </View>
+    </TelaBase>
   );
 }

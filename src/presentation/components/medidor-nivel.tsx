@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 
@@ -16,6 +16,11 @@ export type MedidorNivelProps = {
   temSobra: boolean;
   /** Sem animação na primeira pintura: a lista não entra em cascata. */
   animar?: boolean;
+  /** Identidade da linha por trás da célula — necessário porque a
+   *  `FlashList` recicla a mesma instância do componente para itens
+   *  diferentes ao rolar. Sem isso, mudar de item pareceria "a quantidade
+   *  mudou" e animaria por engano (correcao-reciclagem-de-lista-anima-item-errado). */
+  idDoItem?: string;
 };
 
 const ESPESSURA_SOBRA = 1;
@@ -30,15 +35,21 @@ const FOLGA_SOBRA = 3;
  * das duas. Reatribuir o valor **redireciona** a mola em curso para o novo
  * alvo em vez de reiniciar, que é o que faz toques rápidos parecerem fluidos.
  */
-export function MedidorNivel({ fracao, estado, temSobra, animar = true }: MedidorNivelProps) {
+export function MedidorNivel({ fracao, estado, temSobra, animar = true, idDoItem }: MedidorNivelProps) {
   const tema = useTheme();
   const cor = corDoEstado(tema, estado);
   const vazio = fracao <= 0;
   const nivel = useSharedValue(fracao);
+  const idAnterior = useRef(idDoItem);
 
   useEffect(() => {
-    nivel.set(animar ? molar(fracao) : fracao);
-  }, [fracao, animar, nivel]);
+    // Célula reciclada para outro item (id mudou): corta a mola direto no
+    // valor novo, sem animar — só mudança real de quantidade do MESMO item
+    // passa por `molar()`.
+    const reciclada = idDoItem !== undefined && idDoItem !== idAnterior.current;
+    idAnterior.current = idDoItem;
+    nivel.set(animar && !reciclada ? molar(fracao) : fracao);
+  }, [fracao, animar, idDoItem, nivel]);
 
   const estiloDaTinta = useAnimatedStyle(() => ({
     height: `${Math.max(nivel.get(), 0) * 100}%`,

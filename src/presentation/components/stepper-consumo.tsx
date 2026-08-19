@@ -79,6 +79,10 @@ export function StepperConsumo({
             borderRadius: raio.pilula,
             borderWidth: 1,
             borderColor: tema.line.hairline,
+            // Preenchido, espelhando o "+" — contorno sozinho competia por
+            // invisibilidade ao lado do círculo cheio do repor rápido
+            // (correcao-acabamento-header-stepper-e-affordance, achado 2).
+            backgroundColor: tema.bg.raised,
             alignItems: 'center',
             justifyContent: 'center',
           },

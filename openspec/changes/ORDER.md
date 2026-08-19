@@ -23,7 +23,12 @@ Regras:
 - Uma change só pode ser arquivada (e virar PR) quando 100% do fluxo de testes de `/opsx:test`
   passa (TDD, QA e testes de contexto do bug, conforme o tipo).
 
-| Ordem | Change | Depende de | Motivo |
-|---|---|---|---|
-| 1 | correcao-usabilidade-campos-e-botoes | — | Corrige Keyboard Overlap, Error Prevention (correção silenciosa) e Affordance na base compartilhada (CampoTexto, Botao, padrão de Modal dos sheets) — sem dependência de outra change ativa. |
-| 2 | correcao-lista-de-compras | 1 | Reaproveita CampoTexto/EvitaTeclado/ícones de affordance entregues pela change 1 (já mergeada em develop) para corrigir scroll ausente, reatividade da Lista de compras, affordance do ajuste de preço no Modo Compra, e adicionar edição de preço direto na Lista. Sem sobreposição de arquivos com a change 1. |
+Changes 3 a 13 foram implementadas (`/opsx:apply`) em sessão dedicada só a código, sem rodar o
+fluxo de testes (`/opsx:test`) — testes ficam para sessão separada, por change, antes de cada
+`/opsx:archive`. Cada change tem sua própria branch curta (`fix/NN-<nome>`), criada a partir de
+`develop`, respeitando a coluna "Depende de" desta tabela.
+
+| Ordem | Change | Depende de | Motivo | Testes |
+|---|---|---|---|---|
+| 1 | correcao-usabilidade-campos-e-botoes | — | Corrige Keyboard Overlap, Error Prevention (correção silenciosa) e Affordance na base compartilhada (CampoTexto, Botao, padrão de Modal dos sheets) — sem dependência de outra change ativa. | Já em `develop` (mergeada antes desta sessão). |
+| 2 | correcao-lista-de-compras | 1 | Reaproveita CampoTexto/EvitaTeclado/ícones de affordance entregues pela change 1 (já mergeada em develop) para corrigir scroll ausente, reatividade da Lista de compras, affordance do ajuste de preço no Modo Compra, e adicionar edição de preço direto na Lista. Sem sobreposição de arquivos com a change 1. | Já em `develop` (mergeada antes desta sessão). |

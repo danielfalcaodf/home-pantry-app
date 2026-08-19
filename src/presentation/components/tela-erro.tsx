@@ -1,8 +1,6 @@
-import { View } from 'react-native';
-
 import { espaco } from '../theme/espaco';
-import { useTheme } from '../theme/provider';
 import { Botao } from './botao';
+import { TelaBase } from './tela-base';
 import { Texto } from './texto';
 
 export type TelaErroProps = {
@@ -15,16 +13,14 @@ export type TelaErroProps = {
 };
 
 export function TelaErro({ titulo, descricao, detalhe, acao }: TelaErroProps) {
-  const tema = useTheme();
   return (
-    <View
+    <TelaBase
+      edges={['top', 'bottom']}
       style={{
-        flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
         padding: espaco.xl,
         gap: espaco.lg,
-        backgroundColor: tema.bg.base,
       }}
     >
       <Texto papel="display.sm" style={{ textAlign: 'center' }}>
@@ -39,6 +35,6 @@ export function TelaErro({ titulo, descricao, detalhe, acao }: TelaErroProps) {
           {detalhe}
         </Texto>
       ) : null}
-    </View>
+    </TelaBase>
   );
 }

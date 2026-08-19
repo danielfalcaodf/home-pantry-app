@@ -6,6 +6,7 @@ import { useProduto } from '@/application/estoque/use-editar-produto';
 import { MovimentoEstoque } from '@/domain/movimento/movimento';
 import { BotaoVoltar } from '@/presentation/components/botao-voltar';
 import { EstadoVazio } from '@/presentation/components/estado-vazio';
+import { TelaBase } from '@/presentation/components/tela-base';
 import { Texto } from '@/presentation/components/texto';
 import {
   descreverMovimento,
@@ -80,7 +81,7 @@ export default function HistoricoDoProduto() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: tema.bg.base }}>
+    <TelaBase>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: espaco.sm, padding: espaco.lg }}>
         <BotaoVoltar />
         <Texto papel="display.sm">Histórico de {nome}</Texto>
@@ -96,6 +97,6 @@ export default function HistoricoDoProduto() {
           onEndReachedThreshold={0.5}
         />
       )}
-    </View>
+    </TelaBase>
   );
 }
