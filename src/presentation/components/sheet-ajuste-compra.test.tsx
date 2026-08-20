@@ -136,4 +136,20 @@ describe('SheetAjusteCompra', () => {
     expect(within(avoidingView).getByLabelText(/Quantidade/)).toBeTruthy();
     expect(within(avoidingView).getByRole('button', { name: 'Salvar' })).toBeTruthy();
   });
+
+  it('abre com o campo Quantidade em foco automático (ACHADO-3-8)', async () => {
+    await comTema(
+      <SheetAjusteCompra
+        visivel
+        nome="Arroz"
+        unidade="un"
+        quantidadeInicial={2}
+        precoInicial={null}
+        onFechar={jest.fn()}
+        onSalvar={jest.fn()}
+      />,
+    );
+
+    expect(screen.getByLabelText(/Quantidade/).props.autoFocus).toBe(true);
+  });
 });

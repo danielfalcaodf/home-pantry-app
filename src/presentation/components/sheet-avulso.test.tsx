@@ -121,4 +121,10 @@ describe('SheetAvulso', () => {
     expect(screen.getByText('Editar item')).toBeTruthy();
     expect(screen.getByText('Salvar')).toBeTruthy();
   });
+
+  it('abre com o campo "O que é" em foco automático (não regredir — ACHADO-3-8)', async () => {
+    await comTema(<SheetAvulso visivel inicial={undefined} onFechar={jest.fn()} onSalvar={jest.fn()} />);
+
+    expect(screen.getByLabelText('O que é').props.autoFocus).toBe(true);
+  });
 });

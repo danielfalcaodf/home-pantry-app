@@ -125,4 +125,19 @@ describe('SheetAjusteEstoque', () => {
     expect(within(avoidingView).getByLabelText(/Quanto você tem agora/)).toBeTruthy();
     expect(within(avoidingView).getByRole('button', { name: 'Corrigir' })).toBeTruthy();
   });
+
+  it('abre com o campo "Quanto você tem agora" em foco automático (ACHADO-3-8)', async () => {
+    await comTema(
+      <SheetAjusteEstoque
+        visivel
+        nome="Arroz"
+        unidade="pacote"
+        quantidadeAtual={2}
+        onFechar={jest.fn()}
+        onSalvar={jest.fn()}
+      />,
+    );
+
+    expect(screen.getByLabelText(/Quanto você tem agora/).props.autoFocus).toBe(true);
+  });
 });

@@ -81,4 +81,19 @@ describe('TecladoQuantidade', () => {
     expect(within(avoidingView).getByLabelText('Quantidade')).toBeTruthy();
     expect(within(avoidingView).getByRole('button', { name: 'Usei' })).toBeTruthy();
   });
+
+  it('abre com o campo Quantidade em foco automático (não regredir — ACHADO-3-8)', async () => {
+    await comTema(
+      <TecladoQuantidade
+        visivel
+        nomeDoItem="Arroz"
+        unidade="kg"
+        onFechar={jest.fn()}
+        onUsei={jest.fn()}
+        onRepus={jest.fn()}
+      />,
+    );
+
+    expect(screen.getByLabelText('Quantidade').props.autoFocus).toBe(true);
+  });
 });
