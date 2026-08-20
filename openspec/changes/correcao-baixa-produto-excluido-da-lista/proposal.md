@@ -11,10 +11,10 @@ o mesmo nome (novo `id`, sem relação com o registro órfão).
 ## What Changes
 
 - `removerLogicamente` (produto) passa a apagar, na mesma transação do soft-delete, as linhas
-  de `compra_item` ligadas ao produto que ainda não foram compradas (`comprado = false`) —
-  cobre tanto os itens marcados `excluido = true` ("fora da lista por agora") quanto qualquer
-  item ainda pendente na compra aberta. Itens já comprados (`comprado = true`) não são tocados
-  — continuam sendo histórico de compra fechada, tratado pelo FK existente.
+  de `compra_item` marcadas `excluido = true` ("fora da lista por agora") ligadas ao produto.
+  Item pendente comum (`excluido = false`) e itens já comprados (`comprado = true`) não são
+  tocados — o primeiro por um requisito pré-existente (item pendente precisa continuar visível
+  no detalhe da própria compra aberta), o segundo por ser histórico de compra fechada.
 
 ## Capabilities
 

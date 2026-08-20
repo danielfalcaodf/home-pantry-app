@@ -12,13 +12,17 @@ segue preenchido, mas o produto não existe mais para fins de negócio).
 ## Goals / Non-Goals
 
 **Goals:**
-- Ao excluir um produto, nenhuma linha de `compra_item` pendente (`comprado = false`) continua
-  referenciando esse produto depois da operação.
+- Ao excluir um produto, nenhuma linha de `compra_item` marcada "fora da lista por agora"
+  (`excluido = true`) continua referenciando esse produto depois da operação.
 - A limpeza acontece na mesma transação do soft-delete — sem estado intermediário inconsistente.
 
 **Non-Goals:**
 - Não mexer no fluxo de reativação existente em `use-dar-baixa.ts`.
 - Não alterar itens já comprados (`comprado = true`) — são histórico de compra fechada.
+- Não alterar item pendente comum (`excluido = false`) — existe um requisito anterior (task
+  5.4/5.7 de `correcao-lista-de-compras`, coberto em
+  `sqlite-compra.repository.test.ts`) de que um item pendente numa compra aberta continua
+  aparecendo mesmo com o produto removido, para não derrubar o detalhe da própria compra.
 - Não mudar schema/migration — a constraint e o FK atuais já suportam a limpeza via DELETE
   explícito.
 
@@ -27,13 +31,13 @@ segue preenchido, mas o produto não existe mais para fins de negócio).
 - **DELETE explícito em vez de depender do FK `onDelete: 'set null'`**: o FK só dispara em
   DELETE físico da linha de produto, mas `removerLogicamente` é soft-delete por design (histórico
   auditável, `deletadoEm`). Decisão: `removerLogicamente` executa
-  `DELETE FROM compra_item WHERE produto_id = :id AND comprado = false` como parte da mesma
-  transação Drizzle do `UPDATE produto`.
-- **Escopo do DELETE**: cobre tanto `excluido = true` quanto `excluido = false` (item ainda
-  pendente na compra aberta) — ambos deixam de fazer sentido quando o produto não existe mais.
-  Alternativa descartada: só limpar `excluido = true` e deixar pendente com `produto_id` órfão
-  — rejeitada porque criaria o mesmo bug de exibição para item pendente (não só o "fora da
-  lista").
+  `DELETE FROM compra_item WHERE produto_id = :id AND comprado = false AND excluido = true`
+  como parte da mesma transação Drizzle do `UPDATE produto`.
+- **Escopo do DELETE restrito a `excluido = true`**: tentativa inicial de cobrir também item
+  pendente comum (`excluido = false`) foi revertida — quebrava o requisito existente citado
+  acima (item pendente precisa continuar visível no detalhe da compra aberta). O bug relatado
+  pelo usuário é especificamente sobre "fora da lista por agora"; ampliar o escopo além disso
+  não tinha pedido nem necessidade.
 
 ## Risks / Trade-offs
 
