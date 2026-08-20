@@ -32,3 +32,18 @@ fluxo de testes (`/opsx:test`) — testes ficam para sessão separada, por chang
 |---|---|---|---|---|
 | 1 | correcao-usabilidade-campos-e-botoes | — | Corrige Keyboard Overlap, Error Prevention (correção silenciosa) e Affordance na base compartilhada (CampoTexto, Botao, padrão de Modal dos sheets) — sem dependência de outra change ativa. | Já em `develop` (mergeada antes desta sessão). |
 | 2 | correcao-lista-de-compras | 1 | Reaproveita CampoTexto/EvitaTeclado/ícones de affordance entregues pela change 1 (já mergeada em develop) para corrigir scroll ausente, reatividade da Lista de compras, affordance do ajuste de preço no Modo Compra, e adicionar edição de preço direto na Lista. Sem sobreposição de arquivos com a change 1. | Já em `develop` (mergeada antes desta sessão). |
+
+Changes 3 a 8 (rodada de bugs de teste manual + melhorias de usabilidade, 2026-08-20):
+implementadas numa **única branch** (`fix/3-8-correcao-bugs-ux-consolidado`, a partir de
+`develop`) com **1 commit de código por change** na Fase 1, testadas todas juntas na Fase 2, e
+arquivadas para **1 único PR consolidado** (não 1 PR por change, exceção combinada com o
+usuário para esta rodada) — desvio pontual da regra de "branch/PR por change" de baixo, só
+para 3-8. Nenhuma das 6 changes sobrepõe arquivo com outra (confirmado na proposta), então a
+ordem abaixo é por severidade/risco, não por dependência real de arquivo.
+
+| 3 | correcao-baixa-produto-excluido-da-lista | — | Bug de integridade de dados: excluir um produto não limpa `compra_item` pendente/"fora da lista por agora" ligado a ele — soft-delete não dispara o FK `onDelete:'set null'`. Maior severidade do lote (estado inconsistente persistente no banco). | Pendente (Fase 2 desta rodada). |
+| 4 | correcao-total-compra-preco-heranca | — | Bug financeiro: total da compra fica errado (soma zero) quando o item usa o preço herdado do produto em vez de preço pago digitado manualmente. Sem sobreposição de arquivo com a change 3 (domínio/application de compra vs. infra de produto). | Pendente (Fase 2 desta rodada). |
+| 5 | correcao-sheets-ajuste-sem-autofoco | — | Lacuna de affordance: os 2 únicos sheets do padrão `PainelInferior` ainda sem `autoFocus` no primeiro campo (os outros 3 já foram corrigidos numa change anterior arquivada). Correção pontual de 1 prop por arquivo, risco mínimo. | Pendente (Fase 2 desta rodada). |
+| 6 | correcao-tela-editar-produto | — | Agrupa 3 bugs (rodapé "Salvar" não fixo, "Mais opções" sem auto-scroll, botão "Tirar da despensa" sem ícone/cor de perigo) com a mesma causa raiz estrutural (`telaCheia={false}` dentro de `ScrollView` externo sem `flex:1` em `app/produto/[id].tsx`) e os mesmos arquivos — separá-los forçaria changes concorrentes tocando o mesmo par de arquivos. Maior escopo do lote (estende `Botao`, usado amplamente), por isso vem depois das correções pontuais. | Pendente (Fase 2 desta rodada). |
+| 7 | correcao-busca-despensa-persiste-entre-tabs | — | Bug de estado: campo de busca da despensa continua ativo/focado ao trocar de aba porque a tela nunca desmonta (Tabs sem `unmountOnBlur`) e não há nenhum `useFocusEffect` no repo. Isolado a 1 arquivo, sem relação com as changes anteriores. | Pendente (Fase 2 desta rodada). |
+| 8 | feature-apagar-todos-os-dados | — | Única Nova Feature do lote (capability que não existe hoje: nenhuma função de wipe do banco). Fica por último por ser a mais arriscada (ação irreversível) e a menos urgente (pedido de conveniência, não bug reportado em teste manual). | Pendente (Fase 2 desta rodada). |
