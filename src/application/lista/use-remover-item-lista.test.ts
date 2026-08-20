@@ -53,6 +53,22 @@ describe('useRemoverItemDaLista', () => {
     expect(result.current.ultimaRemocao?.nome).toBe('Arroz');
   });
 
+  // Bug relatado (mesma classe do fix de use-iniciar-compra.test.ts): sem
+  // gravar valorEstimadoUnit aqui, a linha de exclusão nascia com o default
+  // 0 do schema — reativar depois (task "reativar") nunca recalcula esse
+  // campo, então o item reativado ficava com preço zerado pra sempre, mesmo
+  // o produto já tendo preço na hora da remoção.
+  it('a linha criada ao remover grava valorEstimadoUnit do preço atual do produto, não zero', async () => {
+    const compras = new CompraRepositorioFalso();
+    const { result } = await renderHook(() => useRemoverItemDaLista(compras));
+
+    await act(async () => {
+      await result.current.remover(ITEM);
+    });
+
+    expect(compras.itens[0].valorEstimadoUnit).toBe(890);
+  });
+
   it('desfazer remove a marcação de exclusão na mesma sessão', async () => {
     const compras = new CompraRepositorioFalso();
     const { result } = await renderHook(() => useRemoverItemDaLista(compras));

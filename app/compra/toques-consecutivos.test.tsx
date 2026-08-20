@@ -14,14 +14,14 @@ import { ThemeProvider } from '@/presentation/theme/provider';
 jest.mock('../../src/composicao/repositorios', () => ({ compraRepository: undefined }));
 jest.mock('../../src/composicao/observador', () => ({ observadorDoBanco: undefined }));
 
-function ListaDeTeste({ itens, marcar }: { itens: ItemDaCompra[]; marcar: (item: ItemDaCompra['item']) => void }) {
+function ListaDeTeste({ itens, marcar }: { itens: ItemDaCompra[]; marcar: (item: ItemDaCompra) => void }) {
   return (
     <>
       {itens.map((linha) => (
         <ItemCompra
           key={linha.item.id}
           linha={linha}
-          onMarcar={() => marcar(linha.item)}
+          onMarcar={() => marcar(linha)}
           onDesmarcar={() => {}}
           onAjustar={() => {}}
           onResponderPreco={() => {}}
