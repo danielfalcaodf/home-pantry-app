@@ -4,12 +4,10 @@
 
 Definir o formulário de cadastro e edição de produto — campos essenciais em primeiro plano,
 opcionais recolhidos, detalhe/edição do produto existente e remoção lógica.
-
 ## Requirements
-
 ### Requirement: Cadastro com campos essenciais em primeiro plano
 
-A tela de cadastro SHALL exigir nome, unidade e quantidade necessária, e SHALL apresentar no máximo quatro campos em primeiro plano. Os campos opcionais — quantidade atual, valor unitário, categoria, marca preferida e observação — SHALL ficar em uma seção recolhida, colapsada por padrão na renderização inicial de `FormularioProduto`. O controle que expande/recolhe essa seção ("Mais opções"/"Menos opções") SHALL ter alvo de toque mínimo de 48×48dp.
+A tela de cadastro SHALL exigir nome, unidade e quantidade necessária, e SHALL apresentar no máximo quatro campos em primeiro plano. Os campos opcionais — quantidade atual, valor unitário, categoria, marca preferida e observação — SHALL ficar em uma seção recolhida, colapsada por padrão na renderização inicial de `FormularioProduto`. O controle que expande/recolhe essa seção ("Mais opções"/"Menos opções") SHALL ter alvo de toque mínimo de 48×48dp. Ao expandir a seção, a tela SHALL rolar automaticamente até o primeiro campo revelado, sem atribuir foco automático a ele.
 
 #### Scenario: Cadastro mínimo
 
@@ -45,6 +43,11 @@ A tela de cadastro SHALL exigir nome, unidade e quantidade necessária, e SHALL 
 
 - **WHEN** o controle "Mais opções"/"Menos opções" é medido, em qualquer tela que use `FormularioProduto` (Cadastrar produto ou Detalhe do produto)
 - **THEN** sua área tocável mede no mínimo 48 por 48 pontos independentes, sem alterar seu tamanho visual
+
+#### Scenario: Auto-scroll ao expandir "Mais opções" sem foco automático
+
+- **WHEN** o usuário toca em "Mais opções" com o teclado aberto, em qualquer tela que use `FormularioProduto`
+- **THEN** a tela rola automaticamente até o primeiro campo revelado, e nenhum campo recebe foco automático
 
 ### Requirement: Autocomplete de categoria a partir do existente
 
@@ -101,7 +104,7 @@ O sistema SHALL impedir dois produtos ativos com o mesmo nome na mesma casa, ign
 
 ### Requirement: Detalhe e edição do produto
 
-A tela de detalhe SHALL exibir a quantidade atual em destaque, permitir corrigi-la pelo caminho de ajuste, permitir editar todos os campos de cadastro do produto, e exibir no rodapé um resumo do histórico recente de registros com acesso ao histórico completo. A abertura da tela NÃO SHALL atribuir foco automático a nenhum campo de texto nem invocar o teclado, e Voltar com o teclado aberto SHALL fechar o teclado sem sair da tela. O controle que abre o caminho de ajuste (a quantidade em destaque) e o controle que abre o histórico completo SHALL ter, cada um, alvo de toque mínimo de 48×48dp.
+A tela de detalhe SHALL exibir a quantidade atual em destaque, permitir corrigi-la pelo caminho de ajuste, permitir editar todos os campos de cadastro do produto, e exibir no rodapé um resumo do histórico recente de registros com acesso ao histórico completo. A abertura da tela NÃO SHALL atribuir foco automático a nenhum campo de texto nem invocar o teclado, e Voltar com o teclado aberto SHALL fechar o teclado sem sair da tela. O controle que abre o caminho de ajuste (a quantidade em destaque) e o controle que abre o histórico completo SHALL ter, cada um, alvo de toque mínimo de 48×48dp. O botão "Salvar" SHALL permanecer fixo, visível independente da posição de rolagem, do mesmo jeito que o botão "Adicionar" da tela de cadastro de produto novo. Quando um campo focado ficar coberto pelo teclado, a tela SHALL rolar automaticamente até ele ficar visível.
 
 #### Scenario: Quantidade em destaque
 
@@ -163,9 +166,19 @@ A tela de detalhe SHALL exibir a quantidade atual em destaque, permitir corrigi-
 - **WHEN** o controle "Ver histórico completo" é medido
 - **THEN** sua área tocável mede no mínimo 48 por 48 pontos independentes, sem alterar seu tamanho visual
 
+#### Scenario: Botão Salvar permanece fixo
+
+- **WHEN** o usuário rola o conteúdo da tela de detalhe/edição de produto
+- **THEN** o botão "Salvar" continua visível na mesma posição, sem rolar junto com o conteúdo
+
+#### Scenario: Auto-scroll até campo coberto pelo teclado
+
+- **WHEN** um campo do formulário de edição abre coberto pelo teclado (fora da área visível)
+- **THEN** a tela rola automaticamente até o campo ficar visível acima do teclado
+
 ### Requirement: Remoção lógica de produto
 
-A remoção de um produto SHALL ser lógica. O registro e seu histórico de movimentos NÃO devem ser apagados do banco.
+A remoção de um produto SHALL ser lógica. O registro e seu histórico de movimentos NÃO devem ser apagados do banco. O controle de remoção SHALL ser exibido com ícone de lixeira e cor de estado crítico do tema, posicionado abaixo dos demais campos, com rótulo acessível explícito para leitor de tela.
 
 #### Scenario: Item removido some da despensa
 
@@ -181,3 +194,9 @@ A remoção de um produto SHALL ser lógica. O registro e seu histórico de movi
 
 - **WHEN** o usuário aciona a remoção
 - **THEN** uma confirmação explícita é exigida antes de concluir
+
+#### Scenario: Botão de remoção com sinal visual de ação destrutiva
+
+- **WHEN** o botão "Tirar da despensa" é exibido na tela de detalhe/edição de produto
+- **THEN** ele usa ícone de lixeira, cor de estado crítico do tema (nunca hex literal) e tem `accessibilityLabel` explícito descrevendo a ação
+
