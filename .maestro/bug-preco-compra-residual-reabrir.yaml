@@ -1,0 +1,54 @@
+appId: com.danielfalcaodf.repor
+---
+# Cenário 3 — REPRODUÇÃO DIRETA DA CAUSA RAIZ (não só do sintoma): a
+# investigação de código encontrou que compra_item.valorEstimadoUnit fica
+# congelado no preço de quando a linha foi materializada. Este cenário força
+# exatamente essa sequência: materializa o item SEM preço (valorEstimadoUnit
+# grava 0), volta pra Lista, edita o preço, e reabre a mesma compra aberta
+# residual — é o caminho que `use-iniciar-compra.ts` tinha que sincronizar
+# e não sincronizava antes do fix.
+#
+# Este é o cenário mais importante dos 8 pra provar o fix de verdade —
+# os outros podem passar "por acidente" se a app materializar de novo do
+# zero; este não deixa margem.
+#
+# NÃO EXECUTAR AINDA — task de correcao-total-compra-preco-heranca.
+# Seletores não confirmados no app rodando, revisar com inspect_screen.
+#
+# Pré-condição: "Arroz" sem preço cadastrado, sem compra aberta residual.
+
+- launchApp
+- assertVisible: "Despensa"
+- tapOn: "Lista"
+
+# 1. Materializa o item SEM preço — valorEstimadoUnit nasce 0.
+- tapOn:
+    text: "Iniciar compra \\(\\d+\\)"
+- assertVisible: "Arroz, 2 pacotes, sem preço"
+
+# 2. Volta pra Lista SEM fechar/cancelar a compra — ela continua "aberta".
+- tapOn: "Voltar"
+- assertVisible: "Despensa"
+- tapOn: "Lista"
+
+# 3. Edita o preço agora, com a compra aberta já existindo.
+- tapOn: "Arroz"
+- assertVisible: "Preço de Arroz"
+- tapOn: "Quanto costuma custar"
+- inputText: "10,00"
+- tapOn: "Salvar"
+- assertVisible: "R$ 20,00"
+
+# 4. Reabre a MESMA compra aberta residual — é aqui que o bug vivia.
+- tapOn:
+    text: "Iniciar compra \\(\\d+\\)"
+- assertVisible: "Arroz, 2 pacotes, R\\$ 10,00"
+- assertNotVisible: "Arroz, 2 pacotes, sem preço"
+
+- tapOn:
+    text: "Arroz, 2 pacotes, R\\$ 10,00"
+- assertVisible:
+    text: "Arroz, 2 pacotes, R\\$ 10,00"
+    checked: true
+- assertVisible: "R$ 20,00"
+- assertNotVisible: "0,00"

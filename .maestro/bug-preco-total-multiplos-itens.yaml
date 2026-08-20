@@ -1,0 +1,53 @@
+appId: com.danielfalcaodf.repor
+---
+# Cenário 6 — total do rodapé do Modo Compra com vários itens: alguns com
+# preço editado na Lista, um deixado propositalmente sem preço. Garante que
+# (a) o total soma só os itens com preço real, marcados, (b) um item sem
+# preço não trava "Fechar compra" nem quebra o cálculo dos outros, e (c) o
+# total NÃO conta itens ainda não marcados.
+#
+# NÃO EXECUTAR AINDA — task de correcao-total-compra-preco-heranca.
+# Seletores não confirmados no app rodando, revisar com inspect_screen.
+#
+# Pré-condição: pelo menos 3 itens faltantes na lista básica de seed —
+# "Arroz" e "Feijão" sem preço, "Açúcar" com preço R$ 8,90 já cadastrado
+# — sem compra aberta residual.
+
+- launchApp
+- assertVisible: "Despensa"
+- tapOn: "Lista"
+
+# Dá preço só em "Arroz" (R$10,00). "Feijão" fica sem preço de propósito.
+- tapOn: "Arroz"
+- tapOn: "Quanto costuma custar"
+- inputText: "10,00"
+- tapOn: "Salvar"
+
+- tapOn:
+    text: "Iniciar compra \\(\\d+\\)"
+
+# Ainda nada marcado — total começa zerado.
+- assertVisible: "R$ 0,00"
+
+# Marca Arroz (R$10 x 2 pacotes = R$20) — total deve refletir só esse.
+- tapOn:
+    text: "Arroz, 2 pacotes, R\\$ 10,00"
+- assertVisible: "R$ 20,00"
+
+# Marca Açúcar (preço pré-existente R$8,90 x 1 = R$8,90) — total acumula.
+- tapOn:
+    text: "Açúcar, 1 un, R\\$ 8,90"
+- assertVisible: "R$ 28,90"
+
+# Marca Feijão SEM preço — não deve travar, não deve mudar o total, e o
+# rótulo do próprio item continua "sem preço" mesmo marcado.
+- tapOn:
+    text: "Feijão, 2 pacotes, sem preço"
+- assertVisible:
+    text: "Feijão, 2 pacotes, sem preço"
+    checked: true
+- assertVisible: "R$ 28,90"
+
+# Fechar compra funciona normalmente mesmo com item sem preço no meio.
+- tapOn: "Fechar compra"
+- assertVisible: "Despensa"

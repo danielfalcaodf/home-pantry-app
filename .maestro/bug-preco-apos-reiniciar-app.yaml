@@ -1,0 +1,41 @@
+appId: com.danielfalcaodf.repor
+---
+# Cenário 8 — cruza sessão do app: edita o preço, MATA e reabre o app
+# (stopApp/launchApp, não só navegar entre telas) antes de iniciar a
+# compra. Descarta qualquer hipótese de cache em memória (ex.: estado do
+# `observadorDoBanco` sobrevivendo só enquanto o processo roda) mascarando
+# ou coincidentemente escondendo o bug — o preço precisa estar de fato no
+# SQLite, não só no estado React da sessão em que foi editado.
+#
+# NÃO EXECUTAR AINDA — task de correcao-total-compra-preco-heranca.
+# Seletores não confirmados no app rodando, revisar com inspect_screen.
+#
+# Pré-condição: "Arroz" sem preço cadastrado, sem compra aberta residual.
+
+- launchApp
+- assertVisible: "Despensa"
+- tapOn: "Lista"
+- tapOn: "Arroz"
+- tapOn: "Quanto costuma custar"
+- inputText: "10,00"
+- tapOn: "Salvar"
+- assertVisible: "R$ 20,00"
+
+# Mata o processo de verdade — não é o mesmo que sair da tela.
+- stopApp
+- launchApp
+- assertVisible: "Despensa"
+- tapOn: "Lista"
+- assertVisible: "R$ 20,00"
+
+- tapOn:
+    text: "Iniciar compra \\(\\d+\\)"
+- assertVisible: "Arroz, 2 pacotes, R\\$ 10,00"
+- assertNotVisible: "Arroz, 2 pacotes, sem preço"
+
+- tapOn:
+    text: "Arroz, 2 pacotes, R\\$ 10,00"
+- assertVisible:
+    text: "Arroz, 2 pacotes, R\\$ 10,00"
+    checked: true
+- assertVisible: "R$ 20,00"

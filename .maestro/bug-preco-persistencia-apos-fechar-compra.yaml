@@ -1,0 +1,35 @@
+appId: com.danielfalcaodf.repor
+---
+# Cenário 7 — persistência de verdade, não só UI: o preço editado precisa
+# estar correto no histórico de compras (compra.valorTotalPago), não só
+# aparecer certo na tela do Modo Compra antes de fechar. Cobre a gravação
+# feita em use-finalizar-compra.ts (compra.rules.ts totalPago()) a partir
+# do valorPagoUnitario que o fix de marcar() grava.
+#
+# NÃO EXECUTAR AINDA — task de correcao-total-compra-preco-heranca.
+# Seletores não confirmados no app rodando, revisar com inspect_screen.
+#
+# Pré-condição: "Arroz" sem preço cadastrado, sem compra aberta residual.
+
+- launchApp
+- assertVisible: "Despensa"
+- tapOn: "Lista"
+- tapOn: "Arroz"
+- tapOn: "Quanto costuma custar"
+- inputText: "10,00"
+- tapOn: "Salvar"
+
+- tapOn:
+    text: "Iniciar compra \\(\\d+\\)"
+- tapOn:
+    text: "Arroz, 2 pacotes, R\\$ 10,00"
+- assertVisible: "R$ 20,00"
+- tapOn: "Fechar compra"
+- assertVisible: "Despensa"
+
+# Histórico de compras (Resumo > Compras, ou rota equivalente) precisa
+# mostrar o mesmo total R$ 20,00 — não 0,00.
+- tapOn: "Resumo"
+- tapOn: "Compras"
+- assertVisible: "R$ 20,00"
+- assertNotVisible: "R$ 0,00"

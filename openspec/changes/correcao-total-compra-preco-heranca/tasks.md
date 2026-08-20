@@ -25,3 +25,61 @@
 
 - [x] 4.1 `npm run test:domain` e suíte de application completa passando.
 - [x] 4.2 `npm run verificar` sem violação.
+
+## 5. Reabertura — causa raiz nova (2026-08-20, bug ainda reproduzido pelo usuário)
+
+O fix das seções 1-4 corrigiu o caso em que `compra_item.valorEstimadoUnit` já estava correto
+no momento de marcar, mas `marcar()` não caía nele. O bug que persistia era **anterior**:
+`valorEstimadoUnit` fica **obsoleto** quando a linha de `compra_item` já existia (compra aberta
+residual, ou linha de exclusão criada sem preço) ANTES de o preço do produto ter sido editado —
+"Iniciar compra" reaproveita a linha (dedup por `produtoId`) sem nunca atualizar esse campo. Ver
+`design.md` para a cadeia completa de causa raiz.
+
+- [x] 5.1 Em `src/application/compra/use-iniciar-compra.ts` (`iniciar`), ao encontrar um item já
+      materializado e não comprado, sincronizar `valorEstimadoUnit` com o preço atual do produto
+      quando divergir.
+- [x] 5.2 Em `src/application/lista/use-remover-item-lista.ts` (`remover`), gravar
+      `valorEstimadoUnit` a partir do preço atual do produto ao criar a linha de exclusão, em vez
+      de deixar cair no default 0 do schema.
+- [x] 5.3 Rede de segurança em `src/application/compra/use-modo-compra.ts` (`marcar`): usar o
+      preço vivo do produto (`ItemComProduto.produto.valorUnitario`, já trazido na mesma
+      consulta) como último fallback quando `valorEstimadoUnit` está zerado. Precisou mudar a
+      assinatura de `marcar` de `CompraItem` para `ItemComProduto` — ajustado o site de uso em
+      `app/compra/[id].tsx` e os mocks em `app/compra/[id].test.tsx`/
+      `app/compra/toques-consecutivos.test.tsx`.
+- [x] 5.4 Testes Jest cobrindo 5.1-5.3: `use-iniciar-compra.test.ts` (sincronização ao reabrir
+      compra, e não-regressão de item já comprado), `use-remover-item-lista.test.ts` (linha de
+      exclusão nasce com preço correto), `use-modo-compra.test.ts` (rede de segurança do
+      fallback pro preço vivo do produto).
+- [x] 5.5 `npm test` completo (977/977) e `npm run verificar` sem violação nova.
+
+## 6. QA E2E (Maestro) — MÚLTIPLOS CENÁRIOS, PENDENTE DE EXECUÇÃO REAL
+
+Escritos como parte desta rodada (não executados — sessão dedicada de Maestro com
+device/emulador fica para depois). Cobrem o bug por ângulos diferentes (repro exata do relato,
+entrada alternativa pela Despensa, a causa raiz real de compra residual, reativação de item
+excluído, edição de preço já existente, agregação de total com múltiplos itens, persistência
+real no histórico, e persistência entre sessões do app) — pensados como QA (o que quebra?) e
+Dev (por que quebraria, dado o que sei do código?) ao mesmo tempo, não um script único.
+
+- [ ] 6.1 Rodar `.maestro/bug-preco-editado-lista-modo-compra.yaml` — repro exata do relato:
+      editar preço de item "sem preço" na Lista, iniciar compra, marcar, conferir preço e total.
+- [ ] 6.2 Rodar `.maestro/bug-preco-editado-despensa-modo-compra.yaml` — mesmo bug, editando o
+      preço pelo Detalhe do Produto (Despensa → "Mais opções") em vez da Lista.
+- [ ] 6.3 Rodar `.maestro/bug-preco-compra-residual-reabrir.yaml` — reprodução direta da causa
+      raiz: materializa sem preço, edita o preço, reabre a MESMA compra aberta residual (é o
+      cenário que mais garante que o fix 5.1 está ativo, não só coincidência de fluxo).
+- [ ] 6.4 Rodar `.maestro/bug-preco-item-reativado-fora-da-lista.yaml` — remove item da lista,
+      dá preço ao produto, reativa o item, confirma preço no Modo Compra (cobre o fix 5.2).
+- [ ] 6.5 Rodar `.maestro/bug-preco-editar-existente-antes-compra.yaml` — item que já tinha
+      preço, troca de valor antes de iniciar a compra, confirma que mostra o preço NOVO.
+- [ ] 6.6 Rodar `.maestro/bug-preco-total-multiplos-itens.yaml` — vários itens (com e sem
+      preço), confirma soma correta do rodapé e que item sem preço não trava o fechamento.
+- [ ] 6.7 Rodar `.maestro/bug-preco-persistencia-apos-fechar-compra.yaml` — fecha a compra,
+      confirma que o histórico de compras grava o total correto (não só a tela antes de fechar).
+- [ ] 6.8 Rodar `.maestro/bug-preco-apos-reiniciar-app.yaml` — mata e reabre o app
+      (`stopApp`/`launchApp`) entre a edição do preço e o início da compra, descartando qualquer
+      hipótese de cache em memória mascarar o bug.
+- [ ] 6.9 Se algum dos 6.1-6.8 falhar na execução real, registrar o achado em `design.md` desta
+      change antes de arquivar — a change **permanece aberta** até a execução real confirmar
+      todos os 8 cenários.
