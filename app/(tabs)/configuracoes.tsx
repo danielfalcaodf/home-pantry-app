@@ -1,6 +1,7 @@
 import { router } from 'expo-router';
-import { Pressable, ScrollView, View } from 'react-native';
+import { Alert, Pressable, ScrollView, View } from 'react-native';
 
+import { useApagarTodosOsDados } from '@/application/backup/use-apagar-todos-os-dados';
 import { useExportarBackup } from '@/application/backup/use-exportar-backup';
 import { useExportarDados } from '@/application/backup/use-exportar-dados';
 import { useRestaurarBackup } from '@/application/backup/use-restaurar-backup';
@@ -41,11 +42,27 @@ export default function Configuracoes() {
   const dados = useExportarDados();
   const restauracao = useRestaurarBackup();
   const ultimoBackup = useUltimoBackup();
+  const apagarTudo = useApagarTodosOsDados();
 
   async function fazerBackupAgora() {
     // Sem confirmação (task 6.5): exportar nunca altera dados existentes.
     await backup.exportar();
     await ultimoBackup.recarregar();
+  }
+
+  // Dupla confirmação (design da change 8): a inline abaixo, depois um
+  // alerta nativo destrutivo — reservado a ações raras e irreversíveis
+  // (Apple HIG, "Alerts > Best practices"), diferente da restauração, que
+  // é reversível (upsert, nunca apaga o que já existe).
+  function confirmarApagarTudo() {
+    Alert.alert(
+      'Apagar todos os dados?',
+      'Produtos, compras e histórico são apagados. Essa ação não pode ser desfeita.',
+      [
+        { text: 'Manter meus dados', style: 'cancel', onPress: apagarTudo.cancelar },
+        { text: 'Apagar tudo', style: 'destructive', onPress: () => void apagarTudo.confirmar() },
+      ],
+    );
   }
 
   return (
@@ -131,6 +148,19 @@ export default function Configuracoes() {
               Uma planilha com o que está na despensa hoje — não é uma cópia de segurança.
             </Texto>
           </View>
+
+          <View style={{ gap: espaco.xs }}>
+            <Botao
+              titulo="Apagar todos os dados"
+              variante="secundario"
+              icone="lixeira"
+              corDestrutiva={tema.state.critico}
+              onPress={apagarTudo.pedirConfirmacao}
+            />
+            <Texto papel="body.md" tom="secondary">
+              Apaga produtos, compras e histórico. Não pode ser desfeito.
+            </Texto>
+          </View>
         </Secao>
 
         <Secao titulo="Diagnóstico">
@@ -207,6 +237,48 @@ export default function Configuracoes() {
           }
           onFim={restauracao.cancelar}
         />
+      ) : null}
+
+      {apagarTudo.estado.fase === 'confirmando' ? (
+        <View
+          style={{
+            position: 'absolute',
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: tema.bg.raised,
+            padding: espaco.lg,
+            gap: espaco.sm,
+            borderTopWidth: 1,
+            borderTopColor: tema.line.hairline,
+          }}
+        >
+          <Texto papel="body.md">
+            Apagar todos os produtos, compras e histórico de movimentos? Essa ação não pode ser
+            desfeita.
+          </Texto>
+          <View style={{ flexDirection: 'row', gap: espaco.sm }}>
+            <Botao
+              titulo="Cancelar"
+              variante="secundario"
+              onPress={apagarTudo.cancelar}
+              style={{ flex: 1 }}
+            />
+            <Botao
+              titulo="Apagar tudo"
+              corDestrutiva={tema.state.critico}
+              onPress={confirmarApagarTudo}
+              style={{ flex: 1 }}
+            />
+          </View>
+        </View>
+      ) : null}
+
+      {apagarTudo.estado.fase === 'erro' ? (
+        <Toast mensagem={apagarTudo.estado.mensagem} onFim={apagarTudo.cancelar} />
+      ) : null}
+      {apagarTudo.estado.fase === 'concluido' ? (
+        <Toast mensagem="Todos os dados foram apagados." onFim={apagarTudo.cancelar} />
       ) : null}
     </TelaBase>
   );
