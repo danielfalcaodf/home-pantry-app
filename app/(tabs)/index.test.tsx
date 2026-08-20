@@ -9,6 +9,13 @@ import Despensa from './index';
 jest.mock('expo-router', () => ({
   router: { push: jest.fn() },
   useLocalSearchParams: () => ({}),
+  // useFocusEffect roda o efeito uma vez ao montar, sem simular blur de
+  // rota — suficiente pros testes deste arquivo, que não exercitam troca
+  // de aba (correcao-busca-despensa-persiste-entre-tabs).
+  useFocusEffect: (efeito: () => void | (() => void)) => {
+    const { useEffect } = jest.requireActual('react');
+    useEffect(efeito, []);
+  },
 }));
 
 // FlashList precisa de layout real para virtualizar (indisponível sob
