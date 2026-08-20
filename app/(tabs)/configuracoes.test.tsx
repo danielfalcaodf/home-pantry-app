@@ -38,6 +38,19 @@ let mockUltimoBackupEm = '';
 jest.mock('@/application/backup/use-ultimo-backup', () => ({
   useUltimoBackup: () => ({ ultimoBackupEm: mockUltimoBackupEm, recarregar: jest.fn() }),
 }));
+const mockPedirConfirmacaoApagarTudo = jest.fn();
+const mockConfirmarApagarTudo = jest.fn();
+const mockCancelarApagarTudo = jest.fn();
+let mockEstadoApagarTudo: unknown = { fase: 'ocioso' };
+
+jest.mock('@/application/backup/use-apagar-todos-os-dados', () => ({
+  useApagarTodosOsDados: () => ({
+    estado: mockEstadoApagarTudo,
+    pedirConfirmacao: mockPedirConfirmacaoApagarTudo,
+    confirmar: mockConfirmarApagarTudo,
+    cancelar: mockCancelarApagarTudo,
+  }),
+}));
 
 function estiloResolvido(elemento: { props: { style?: unknown } }) {
   const { style } = elemento.props;
