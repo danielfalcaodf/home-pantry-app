@@ -81,6 +81,9 @@ export function useModoCompra(
       await compras.editarItem(item.id, {
         comprado: true,
         quantidadeComprada: item.quantidadeComprada ?? item.quantidadePlanejada,
+        // Sem preço pago digitado, assume o preço estimado do produto — mesmo padrão já
+        // usado acima para a quantidade planejada (3.1).
+        valorPagoUnitario: item.valorPagoUnitario ?? item.valorEstimadoUnit,
       });
     },
     [compras],
