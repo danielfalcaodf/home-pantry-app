@@ -41,5 +41,4 @@ usuário para esta rodada) — desvio pontual da regra de "branch/PR por change"
 para 3-8. Nenhuma das 6 changes sobrepõe arquivo com outra (confirmado na proposta), então a
 ordem abaixo é por severidade/risco, não por dependência real de arquivo.
 
-| 7 | correcao-busca-despensa-persiste-entre-tabs | — | Bug de estado: campo de busca da despensa continua ativo/focado ao trocar de aba porque a tela nunca desmonta (Tabs sem `unmountOnBlur`) e não há nenhum `useFocusEffect` no repo. Isolado a 1 arquivo, sem relação com as changes anteriores. | Pendente (Fase 2 desta rodada). |
 | 8 | feature-apagar-todos-os-dados | — | Única Nova Feature do lote (capability que não existe hoje: nenhuma função de wipe do banco). Fica por último por ser a mais arriscada (ação irreversível) e a menos urgente (pedido de conveniência, não bug reportado em teste manual). | Pendente (Fase 2 desta rodada). |
