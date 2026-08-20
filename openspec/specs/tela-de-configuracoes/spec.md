@@ -1,5 +1,10 @@
 # tela-de-configuracoes
 
+## Purpose
+
+Definir a tela de Configurações: preferência de tema, ações sobre os dados locais (backup,
+restauração, exportação, reset) e sinalização de ações destrutivas.
+
 ## Requirements
 
 ### Requirement: Tela de configurações acessível

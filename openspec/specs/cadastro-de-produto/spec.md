@@ -1,5 +1,10 @@
 # cadastro-de-produto
 
+## Purpose
+
+Definir o formulário de cadastro e edição de produto — campos essenciais em primeiro plano,
+opcionais recolhidos, detalhe/edição do produto existente e remoção lógica.
+
 ## Requirements
 
 ### Requirement: Cadastro com campos essenciais em primeiro plano

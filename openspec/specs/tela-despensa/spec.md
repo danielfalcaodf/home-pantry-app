@@ -1,5 +1,10 @@
 # tela-despensa
 
+## Purpose
+
+Definir a tela principal da despensa: ordenação por estado, agrupamento por categoria, filtros,
+busca por nome e reatividade da lista aos registros de consumo/reposição.
+
 ## Requirements
 
 ### Requirement: Ordenação por estado

@@ -1,5 +1,11 @@
 # repositorios
 
+## Purpose
+
+Definir o padrão Ports & Adapters de persistência: interfaces por agregado (produto,
+movimento, compra) em `ports/`, implementações SQLite isoladas em `infrastructure/`, e a regra
+de que nenhum código fora da infraestrutura acessa o banco diretamente.
+
 ## Requirements
 
 ### Requirement: Contratos de persistência por agregado

@@ -1,5 +1,10 @@
 # ajuste-de-estoque
 
+## Purpose
+
+Definir o caminho de correção da quantidade atual de um produto (recalibração), distinto de
+consumo e reposição — sempre grava movimento de estoque, nunca altera a quantidade solta.
+
 ## Requirements
 
 ### Requirement: Ajuste grava movimento, nunca alteração solta
