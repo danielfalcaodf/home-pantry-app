@@ -19,7 +19,7 @@ import {
 } from '../../ports/produto.repository';
 import { gerarId } from '../../shared/id';
 import { falha, Result, sucesso } from '../../shared/result';
-import { produto as tabelaProduto, movimentoEstoque } from '../db/schema';
+import { produto as tabelaProduto, movimentoEstoque, compraItem as tabelaCompraItem } from '../db/schema';
 import { Db } from '../db/tipos';
 
 type LinhaProduto = typeof tabelaProduto.$inferSelect;
@@ -146,13 +146,21 @@ export class SQLiteProdutoRepository implements ProdutoRepository {
     return sucesso(editado as Produto);
   }
 
+  // Item de compra ainda não comprado (pendente ou "fora da lista por agora") não faz mais
+  // sentido depois que o produto some — sem isso, o FK onDelete:'set null' nunca dispara (é
+  // soft-delete, não DELETE físico) e o item fica preso apontando pro produto morto.
   async removerLogicamente(id: string): Promise<void> {
     const agora = this.clock.agora();
-    this.db
-      .update(tabelaProduto)
-      .set({ deletadoEm: agora, atualizadoEm: agora, syncStatus: 'pendente' })
-      .where(and(eq(tabelaProduto.id, id), naoRemovido))
-      .run();
+    this.db.transaction((tx) => {
+      tx.update(tabelaProduto)
+        .set({ deletadoEm: agora, atualizadoEm: agora, syncStatus: 'pendente' })
+        .where(and(eq(tabelaProduto.id, id), naoRemovido))
+        .run();
+
+      tx.delete(tabelaCompraItem)
+        .where(and(eq(tabelaCompraItem.produtoId, id), eq(tabelaCompraItem.comprado, false)))
+        .run();
+    });
   }
 
   async listarDespensa(casaId: string): Promise<Produto[]> {
