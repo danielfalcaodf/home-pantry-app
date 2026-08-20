@@ -1,20 +1,39 @@
-import { render, screen } from '@testing-library/react-native';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import { ReactNode } from 'react';
-import { View as MockView } from 'react-native';
+import { Keyboard, View as MockView } from 'react-native';
 
 import { milesimos } from '@/domain/shared/quantidade';
 import { ThemeProvider } from '@/presentation/theme/provider';
 import Despensa from './index';
 
+// `mockUltimoEfeito` guarda o `efeito` mais recente passado a
+// `useFocusEffect` — em produção é um `useCallback` com dep `[busca]`, uma
+// closure nova a cada tecla digitada. Capturar direto no corpo do mock (sem
+// passar por `useEffect`) evita depender do timing de passive effects do
+// React/RNTL, que se mostrou instável (act() sobreposto) com o `autoFocus`
+// do campo de busca. `dispararBlur()` chama esse efeito e o cleanup que ele
+// devolve manualmente, simulando a troca de aba sem uma implementação real
+// de navegação. Prefixo `mock` é o que o babel-plugin-jest-hoist exige pra
+// permitir referenciar a variável de dentro da factory de `jest.mock`, que
+// é hoisted acima deste import.
+let mockUltimoEfeito: (() => void | (() => void)) | null = null;
+
+// Chama direto, sem embrulhar num `act()` síncrono: o `autoFocus` do campo
+// de busca deixa um `act()` assíncrono pendente sob RNTL, e sincronizar
+// manualmente com ele se mostrou instável (a atualização de estado do
+// cleanup corria risco de nunca comitar a tempo). As asserções depois de
+// `dispararBlur()` usam `waitFor`, que já resolve o commit real assim que
+// ele acontece.
+function dispararBlur() {
+  const cleanup = mockUltimoEfeito?.();
+  cleanup?.();
+}
+
 jest.mock('expo-router', () => ({
   router: { push: jest.fn() },
   useLocalSearchParams: () => ({}),
-  // useFocusEffect roda o efeito uma vez ao montar, sem simular blur de
-  // rota — suficiente pros testes deste arquivo, que não exercitam troca
-  // de aba (correcao-busca-despensa-persiste-entre-tabs).
   useFocusEffect: (efeito: () => void | (() => void)) => {
-    const { useEffect } = jest.requireActual('react');
-    useEffect(efeito, []);
+    mockUltimoEfeito = efeito;
   },
 }));
 
@@ -65,5 +84,63 @@ describe('Despensa — rótulo acessível do stepper de consumo', () => {
     await comTema(<Despensa />);
     expect(screen.getByLabelText('Usei 1 kg de Arroz')).toBeTruthy();
     expect(screen.queryByLabelText(/Registrar consumo/)).toBeNull();
+  });
+});
+
+describe('Despensa — busca não persiste teclado/foco entre abas', () => {
+  beforeEach(() => {
+    mockUltimoEfeito = null;
+    jest.spyOn(Keyboard, 'dismiss').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  it('busca vazia e aberta fecha o campo e dispensa o teclado ao trocar de aba', async () => {
+    await comTema(<Despensa />);
+    fireEvent.press(screen.getByLabelText('Buscar'));
+    await waitFor(() => expect(screen.getByPlaceholderText('Nome do item')).toBeTruthy());
+
+    dispararBlur();
+
+    await waitFor(() => expect(screen.queryByPlaceholderText('Nome do item')).toBeNull());
+    expect(Keyboard.dismiss).toHaveBeenCalled();
+  });
+
+  it('busca com texto permanece aberta e filtrada ao trocar de aba, só dispensando o teclado', async () => {
+    await comTema(<Despensa />);
+    fireEvent.press(screen.getByLabelText('Buscar'));
+    await waitFor(() => expect(screen.getByPlaceholderText('Nome do item')).toBeTruthy());
+    fireEvent.changeText(screen.getByPlaceholderText('Nome do item'), 'roz');
+    await waitFor(() => expect(screen.getByPlaceholderText('Nome do item')).toHaveDisplayValue('roz'));
+
+    dispararBlur();
+
+    await waitFor(() => expect(Keyboard.dismiss).toHaveBeenCalled());
+    expect(screen.getByPlaceholderText('Nome do item')).toHaveDisplayValue('roz');
+    expect(screen.getByLabelText('Usei 1 kg de Arroz')).toBeTruthy();
+  });
+
+  it('montagem inicial da tela não fecha uma busca recém-aberta sem uma troca de aba real', async () => {
+    await comTema(<Despensa />);
+    fireEvent.press(screen.getByLabelText('Buscar'));
+
+    await waitFor(() => expect(screen.getByPlaceholderText('Nome do item')).toBeTruthy());
+    expect(Keyboard.dismiss).not.toHaveBeenCalled();
+  });
+
+  it('volta pra despensa depois de um blur com busca preenchida já mostra a lista filtrada, sem redigitar', async () => {
+    await comTema(<Despensa />);
+    fireEvent.press(screen.getByLabelText('Buscar'));
+    await waitFor(() => expect(screen.getByPlaceholderText('Nome do item')).toBeTruthy());
+    fireEvent.changeText(screen.getByPlaceholderText('Nome do item'), 'roz');
+    await waitFor(() => expect(screen.getByPlaceholderText('Nome do item')).toHaveDisplayValue('roz'));
+
+    dispararBlur();
+
+    await waitFor(() => expect(Keyboard.dismiss).toHaveBeenCalled());
+    expect(screen.getByPlaceholderText('Nome do item')).toHaveDisplayValue('roz');
+    expect(screen.getByLabelText('Usei 1 kg de Arroz')).toBeTruthy();
   });
 });
