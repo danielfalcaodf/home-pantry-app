@@ -1,7 +1,7 @@
 import { FlashList } from '@shopify/flash-list';
-import { router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
-import { Pressable, ScrollView, View } from 'react-native';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Keyboard, Pressable, ScrollView, View } from 'react-native';
 
 import { ProdutoNaDespensa, useProdutos } from '@/application/estoque/use-produtos';
 import { useCategorias } from '@/application/estoque/use-categorias';
@@ -90,6 +90,22 @@ export default function Despensa() {
       setFiltro(filtroDaRota as FiltroEstado);
     }
   }, [filtroDaRota]);
+
+  // Ao trocar de aba a tela continua montada (Tabs do Expo Router só
+  // esconde via display:none) — sem isso, o campo de busca ficava com
+  // foco/teclado abertos mesmo fora da tela. Busca vazia fecha o campo;
+  // com termo digitado, mantém o filtro ativo, só sem foco/teclado.
+  useFocusEffect(
+    useCallback(
+      () => () => {
+        Keyboard.dismiss();
+        if (busca === '') {
+          setBuscaAberta(false);
+        }
+      },
+      [busca],
+    ),
+  );
 
   const { registrar: registrarConsumo } = useDarBaixa();
   const { registrar: registrarReposicao } = useReporPontual();
