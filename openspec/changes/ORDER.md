@@ -38,7 +38,8 @@ implementadas numa **única branch** (`fix/3-8-correcao-bugs-ux-consolidado`, a 
 `develop`) com **1 commit de código por change** na Fase 1, testadas todas juntas na Fase 2, e
 arquivadas para **1 único PR consolidado** (não 1 PR por change, exceção combinada com o
 usuário para esta rodada) — desvio pontual da regra de "branch/PR por change" de baixo, só
-para 3-8. Nenhuma das 6 changes sobrepõe arquivo com outra (confirmado na proposta), então a
-ordem abaixo é por severidade/risco, não por dependência real de arquivo.
-
-| 8 | feature-apagar-todos-os-dados | — | Única Nova Feature do lote (capability que não existe hoje: nenhuma função de wipe do banco). Fica por último por ser a mais arriscada (ação irreversível) e a menos urgente (pedido de conveniência, não bug reportado em teste manual). | Pendente (Fase 2 desta rodada). |
+para 3-8. Nenhuma das 6 changes sobrepôs arquivo de código com outra; um overlap real de
+**spec** (não de código) apareceu entre as changes 4 e 5 no mesmo requisito de `modo-compra` e
+foi resolvido no arquivamento (delta da change 5 atualizado para incorporar a contribuição já
+mesclada da change 4, sem perdê-la). Todas as 6 arquivadas em 2026-08-20 — tabela vazia agora,
+nenhuma change ativa no momento.
