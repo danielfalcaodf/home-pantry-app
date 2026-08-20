@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { ReactNode, useRef, useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -70,6 +70,13 @@ export type FormularioProdutoProps = {
    * (correcao-layout-formulario-produto).
    */
   telaCheia?: boolean;
+  /** Conteúdo extra renderizado no mesmo scroll, antes dos campos (ex.: cabeçalho e
+   *  botões de ação da tela de detalhe do produto) — evita duplicar scroll/rodapé. */
+  conteudoAntes?: ReactNode;
+  /** Conteúdo extra renderizado no mesmo scroll, depois dos campos. */
+  conteudoDepois?: ReactNode;
+  /** Botão extra no mesmo rodapé fixo do botão principal (ex.: "Tirar da despensa"). */
+  botaoExtra?: ReactNode;
 };
 
 export function FormularioProduto({
@@ -85,11 +92,34 @@ export function FormularioProduto({
   tituloCabecalho,
   autofocarNome = false,
   telaCheia = true,
+  conteudoAntes,
+  conteudoDepois,
+  botaoExtra,
 }: FormularioProdutoProps) {
   const tema = useTheme();
   const insets = useSafeAreaInsets();
   const [maisOpcoes, setMaisOpcoes] = useState(false);
   const [categoriaFocada, setCategoriaFocada] = useState(false);
+  const scrollRef = useRef<ScrollView>(null);
+  const marcadorMaisOpcoesRef = useRef<View>(null);
+
+  // Ao expandir "Mais opções" com o teclado já aberto, o usuário não vê o
+  // campo revelado sem rolar manualmente — aqui o scroll acontece sozinho,
+  // sem dar foco automático em nenhum campo (só posição, não teclado).
+  function alternarMaisOpcoes() {
+    const vaiAbrir = !maisOpcoes;
+    setMaisOpcoes(vaiAbrir);
+    if (vaiAbrir) {
+      requestAnimationFrame(() => {
+        marcadorMaisOpcoesRef.current?.measureLayout(
+          // @ts-expect-error -- measureLayout aceita o nó nativo do ScrollView em runtime.
+          scrollRef.current,
+          (_x: number, y: number) => scrollRef.current?.scrollTo({ y, animated: true }),
+          () => {},
+        );
+      });
+    }
+  }
 
   const definir = (campo: keyof ValoresDoProduto) => (texto: string) =>
     aoMudar({ ...valores, [campo]: texto });
@@ -111,11 +141,14 @@ export function FormularioProduto({
     <EvitaTeclado testID="evita-teclado-formulario">
     <View style={[{ backgroundColor: tema.bg.base }, telaCheia && { flex: 1 }]}>
     <ScrollView
+      ref={scrollRef}
       style={telaCheia ? { flex: 1 } : undefined}
       scrollEnabled={telaCheia}
       contentContainerStyle={{ padding: espaco.lg, gap: espaco.lg }}
       keyboardShouldPersistTaps="handled"
     >
+      {conteudoAntes}
+
       {tituloCabecalho ? (
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: espaco.sm }}>
           <BotaoVoltar />
@@ -174,7 +207,7 @@ export function FormularioProduto({
       />
 
       <Pressable
-        onPress={() => setMaisOpcoes(!maisOpcoes)}
+        onPress={alternarMaisOpcoes}
         accessibilityRole="button"
         accessibilityState={{ expanded: maisOpcoes }}
         hitSlop={8}
@@ -192,6 +225,7 @@ export function FormularioProduto({
           <IconeSvg path={icones.cheveron} cor={tema.action.azulejo} tamanho={16} />
         </View>
       </Pressable>
+      <View ref={marcadorMaisOpcoesRef} />
 
       {maisOpcoes ? (
         <View style={{ gap: espaco.lg }}>
@@ -246,16 +280,20 @@ export function FormularioProduto({
           />
         </View>
       ) : null}
+
+      {conteudoDepois}
     </ScrollView>
     <View
       style={{
         padding: espaco.lg,
         paddingBottom: espaco.lg + insets.bottom,
+        gap: espaco.sm,
         borderTopWidth: 1,
         borderTopColor: tema.line.hairline,
       }}
     >
       <Botao titulo={tituloAcao} onPress={aoSalvar} disabled={salvando} />
+      {botaoExtra}
     </View>
     </View>
     </EvitaTeclado>
