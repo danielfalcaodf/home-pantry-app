@@ -30,7 +30,7 @@ preço estimado do produto (quando existir) SHALL ser assumido como preço pago.
   (`valorEstimadoUnit`)
 - **THEN** o preço estimado é gravado como preço pago e contribui para o total corrente
 
-#### Scenario: Preço pago ausente sem preço estimado
+#### Scenario: Preço pago ausente
 
 - **WHEN** o item é marcado sem informar preço pago e o produto não tem preço estimado
 - **THEN** ele contribui com zero para o total corrente e não impede o fechamento
