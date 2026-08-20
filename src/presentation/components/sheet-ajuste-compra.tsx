@@ -98,6 +98,7 @@ export function SheetAjusteCompra({
             keyboardType="decimal-pad"
             erro={erroQuantidade}
             tipo="quantidade"
+            autoFocus
           />
         </View>
         <View style={{ flex: 1 }}>
