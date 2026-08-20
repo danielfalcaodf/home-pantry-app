@@ -146,9 +146,11 @@ export class SQLiteProdutoRepository implements ProdutoRepository {
     return sucesso(editado as Produto);
   }
 
-  // Item de compra ainda não comprado (pendente ou "fora da lista por agora") não faz mais
-  // sentido depois que o produto some — sem isso, o FK onDelete:'set null' nunca dispara (é
-  // soft-delete, não DELETE físico) e o item fica preso apontando pro produto morto.
+  // Item "fora da lista por agora" (excluido=true) não faz mais sentido depois que o produto
+  // some — sem isso, o FK onDelete:'set null' nunca dispara (é soft-delete, não DELETE físico)
+  // e o item fica preso apontando pro produto morto. Item pendente comum (excluido=false)
+  // continua intocado: a compra aberta precisa dele pra não derrubar o próprio detalhe da
+  // compra (task 5.4/5.7 de correcao-lista-de-compras) — só o registro órfão do bug é apagado.
   async removerLogicamente(id: string): Promise<void> {
     const agora = this.clock.agora();
     this.db.transaction((tx) => {
@@ -158,7 +160,13 @@ export class SQLiteProdutoRepository implements ProdutoRepository {
         .run();
 
       tx.delete(tabelaCompraItem)
-        .where(and(eq(tabelaCompraItem.produtoId, id), eq(tabelaCompraItem.comprado, false)))
+        .where(
+          and(
+            eq(tabelaCompraItem.produtoId, id),
+            eq(tabelaCompraItem.comprado, false),
+            eq(tabelaCompraItem.excluido, true),
+          ),
+        )
         .run();
     });
   }

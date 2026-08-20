@@ -562,7 +562,11 @@ describe('removerLogicamente — limpeza de compra_item pendente', () => {
     expect(linha).toBeUndefined();
   });
 
-  it('item pendente (comprado = false, excluido = false) na compra aberta some quando o produto é removido', async () => {
+  // Item pendente comum (excluido=false) NÃO é apagado — só o registro
+  // "fora da lista por agora" é o bug. A compra aberta continua precisando
+  // dele pra não derrubar o próprio detalhe da compra (task 5.4/5.7 de
+  // correcao-lista-de-compras, ver sqlite-compra.repository.test.ts).
+  it('item pendente comum (comprado = false, excluido = false) permanece quando o produto é removido', async () => {
     const { repo, compras, casaId, usuarioId, sqlite } = montarComCompra();
     const produto = await repo.criar(casaId, usuarioId, dadosValidos('Arroz'));
     if (!produto.ok) throw new Error('setup');
@@ -576,14 +580,17 @@ describe('removerLogicamente — limpeza de compra_item pendente', () => {
 
     await repo.removerLogicamente(produto.valor.id);
 
-    const linha = sqlite.prepare('SELECT id FROM compra_item WHERE id = ?').get(item.id);
-    expect(linha).toBeUndefined();
+    const linha = sqlite
+      .prepare('SELECT produto_id AS produtoId FROM compra_item WHERE id = ?')
+      .get(item.id) as { produtoId: string | null } | undefined;
+    expect(linha).not.toBeUndefined();
+    expect(linha?.produtoId).toBe(produto.valor.id);
   });
 
   // A remoção de produto é soft-delete (UPDATE deletado_em), nunca DELETE
   // físico — o FK onDelete:'set null' de compra_item.produto_id só dispara
   // em DELETE físico, que este fluxo nunca faz. Por isso o DELETE explícito
-  // do compra_item cobre só comprado = false (design.md); item já comprado
+  // do compra_item cobre só excluido = true (design.md); item já comprado
   // não é tocado e continua apontando pro produto (agora soft-deletado).
   it('item já comprado em compra fechada permanece intacto, sem regredir o vínculo com o produto', async () => {
     const { repo, compras, casaId, usuarioId, sqlite } = montarComCompra();
