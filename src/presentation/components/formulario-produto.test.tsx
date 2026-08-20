@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react-native';
 import { ReactNode, useState } from 'react';
+import { ScrollView, View } from 'react-native';
 
 import { ALVO_TOQUE_MINIMO } from '../theme/espaco';
 import { ThemeProvider } from '../theme/provider';
@@ -196,5 +197,51 @@ describe('FormularioProduto — categoria sugere antes de digitar (affordance)',
 
     fireEvent(screen.getByLabelText('Onde guardo'), 'blur');
     await waitFor(() => expect(screen.queryByText('Mercearia')).toBeNull());
+  });
+});
+
+describe('FormularioProduto — scroll ao expandir "Mais opções" (correcao-tela-editar-produto)', () => {
+  /** O `measureLayout` real do RN não roda sob Jest (mock no-op) — aqui ele
+   *  simula a posição do marcador que fica logo após "Mais opções", como a
+   *  implementação faria de verdade via bridge nativa. */
+  function mockPosicaoDoMarcador(y: number) {
+    const alvo = View.prototype as unknown as {
+      measureLayout: (...args: unknown[]) => void;
+    };
+    return jest.spyOn(alvo, 'measureLayout').mockImplementation((...args: unknown[]) => {
+      const aoMedir = args[1] as (x: number, y: number, largura: number, altura: number) => void;
+      aoMedir(0, y, 100, 20);
+    });
+  }
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  it('ao ABRIR "Mais opções", rola até o marcador — sem focar nenhum campo revelado', async () => {
+    mockPosicaoDoMarcador(240);
+    const scrollTo = jest.spyOn(ScrollView.prototype, 'scrollTo').mockImplementation(() => {});
+    await montarFormulario();
+
+    fireEvent.press(screen.getByRole('button', { name: 'Mais opções' }));
+
+    await waitFor(() => expect(scrollTo).toHaveBeenCalledWith({ y: 240, animated: true }));
+    // Sem foco automático (ACHADO-056): o campo revelado aparece, mas ninguém pediu foco nele.
+    expect(screen.getByLabelText('Quanto costuma custar').props.autoFocus).toBeFalsy();
+  });
+
+  it('ao RECOLHER "Menos opções", não dispara scroll — só ao abrir', async () => {
+    mockPosicaoDoMarcador(240);
+    const scrollTo = jest.spyOn(ScrollView.prototype, 'scrollTo').mockImplementation(() => {});
+    await montarFormulario();
+
+    fireEvent.press(screen.getByRole('button', { name: 'Mais opções' }));
+    await waitFor(() => expect(scrollTo).toHaveBeenCalledTimes(1));
+    scrollTo.mockClear();
+
+    fireEvent.press(screen.getByRole('button', { name: 'Menos opções' }));
+    await waitFor(() => expect(screen.getByText('Mais opções')).toBeTruthy());
+
+    expect(scrollTo).not.toHaveBeenCalled();
   });
 });

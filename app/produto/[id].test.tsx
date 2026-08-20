@@ -1,12 +1,21 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import { ReactNode } from 'react';
+import { Alert } from 'react-native';
 
 import { milesimos } from '@/domain/shared/quantidade';
 import { LIMITE_SANIDADE_QUANTIDADE } from '@/presentation/components/formulario-produto';
+import { IconeSvg } from '@/presentation/components/icone-svg';
+import { icones } from '@/presentation/theme/icones';
 import { ALVO_TOQUE_MINIMO } from '@/presentation/theme/espaco';
+import { despensa } from '@/presentation/theme/tokens';
 import { ThemeProvider } from '@/presentation/theme/provider';
 import { tipografia } from '@/presentation/theme/tipografia';
 import DetalheProduto from './[id]';
+
+// Testa o contrato do botão "Tirar da despensa" com IconeSvg (path/cor
+// recebidos) em vez de inspecionar o SVG nativo já processado.
+jest.mock('@/presentation/components/icone-svg', () => ({ IconeSvg: jest.fn(() => null) }));
+const iconeMock = IconeSvg as jest.Mock;
 
 const mockBack = jest.fn();
 const mockPush = jest.fn();
@@ -57,6 +66,18 @@ function estiloResolvido(elemento: { props: { style?: unknown } }) {
 
 async function comTema(no: ReactNode) {
   await render(<ThemeProvider preferencia="escuro">{no}</ThemeProvider>);
+}
+
+type NoJSON = { type: string; props?: Record<string, unknown>; children?: (NoJSON | string)[] | null };
+
+/** Achata a árvore de `toJSON()` num array — usado para provar posição
+ *  estrutural (ex.: "Salvar" nunca é descendente do ScrollView). */
+function todosOsNos(no: NoJSON | NoJSON[] | null): NoJSON[] {
+  const raiz = Array.isArray(no) ? no : no ? [no] : [];
+  return raiz.flatMap((n) => [
+    n,
+    ...todosOsNos((n.children ?? []).filter((c): c is NoJSON => typeof c !== 'string')),
+  ]);
 }
 
 describe('Detalhe do produto — alvos de toque (ACHADO-063)', () => {
@@ -157,5 +178,58 @@ describe('Detalhe do produto — teto de sanidade em "Quanto quero ter em casa" 
     fireEvent.press(screen.getByRole('button', { name: 'Salvar' }));
 
     await waitFor(() => expect(mockEditar).toHaveBeenCalled());
+  });
+});
+
+describe('Detalhe do produto — botão "Salvar" fora do fluxo de scroll (correcao-tela-editar-produto)', () => {
+  it('"Salvar" não é descendente do ScrollView do formulário — mesma estrutura de rodapé fixo de "Novo produto"', async () => {
+    // Reprodução estrutural do bug: com `telaCheia={false}` (antes desta
+    // change) o formulário embutido não tinha container `flex:1` próprio, e
+    // o rodapé "fixo" caía dentro do ScrollView externo da tela, rolando
+    // junto com o conteúdo. Agora `telaCheia` (default) garante que "Salvar"
+    // vive num `View` de rodapé, irmão do `ScrollView`, nunca dentro dele.
+    await comTema(<DetalheProduto />);
+
+    const arvore = todosOsNos(screen.toJSON() as unknown as NoJSON);
+    const scrollViews = arvore.filter((no) => no.type === 'RCTScrollView');
+    expect(scrollViews.length).toBeGreaterThan(0);
+    for (const scroll of scrollViews) {
+      const dentroDoScroll = todosOsNos(scroll).some((no) => no.props?.accessibilityLabel === 'Salvar');
+      expect(dentroDoScroll).toBe(false);
+    }
+    expect(screen.getByRole('button', { name: 'Salvar' })).toBeTruthy();
+  });
+});
+
+describe('Detalhe do produto — "Tirar da despensa" com ícone e cor de perigo (correcao-tela-editar-produto)', () => {
+  beforeEach(() => {
+    iconeMock.mockClear();
+  });
+
+  it('renderiza o ícone de lixeira na cor state.critico do tema', async () => {
+    await comTema(<DetalheProduto />);
+    expect(iconeMock).toHaveBeenCalledWith(
+      expect.objectContaining({ path: icones.lixeira, cor: despensa.state.critico }),
+      undefined,
+    );
+  });
+
+  it('expõe accessibilityLabel "Tirar da despensa" — não depende só do ícone visual', async () => {
+    await comTema(<DetalheProduto />);
+    expect(screen.getByRole('button', { name: 'Tirar da despensa' })).toBeTruthy();
+  });
+
+  it('continua abrindo a confirmação de remoção ao ser tocado', async () => {
+    const alertSpy = jest.spyOn(Alert, 'alert').mockImplementation(() => {});
+    await comTema(<DetalheProduto />);
+
+    fireEvent.press(screen.getByRole('button', { name: 'Tirar da despensa' }));
+
+    expect(alertSpy).toHaveBeenCalledWith(
+      'Tirar Arroz da despensa?',
+      expect.any(String),
+      expect.any(Array),
+    );
+    alertSpy.mockRestore();
   });
 });

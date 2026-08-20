@@ -34,6 +34,18 @@ async function comTema(no: ReactNode) {
   await render(<ThemeProvider preferencia="escuro">{no}</ThemeProvider>);
 }
 
+type NoJSON = { type: string; props?: Record<string, unknown>; children?: (NoJSON | string)[] | null };
+
+/** Achata a árvore de `toJSON()` num array — usado para provar posição
+ *  estrutural (ex.: um botão nunca é descendente do ScrollView). */
+function todosOsNos(no: NoJSON | NoJSON[] | null): NoJSON[] {
+  const raiz = Array.isArray(no) ? no : no ? [no] : [];
+  return raiz.flatMap((n) => [
+    n,
+    ...todosOsNos((n.children ?? []).filter((c): c is NoJSON => typeof c !== 'string')),
+  ]);
+}
+
 describe('Novo produto — navegação "ver item existente" na duplicidade (ACHADO-024)', () => {
   beforeEach(() => {
     jest.useFakeTimers();
@@ -111,5 +123,33 @@ describe('Novo produto — teto de sanidade em "Quanto quero ter em casa" (Error
       expect(screen.getByText(`Valor muito alto — no máximo ${LIMITE_SANIDADE_QUANTIDADE}`)).toBeTruthy(),
     );
     expect(mockCadastrar).not.toHaveBeenCalled();
+  });
+});
+
+describe('Novo produto — não-regressão de rodapé fixo e "Mais opções" (correcao-tela-editar-produto)', () => {
+  // Esta tela não foi tocada pela change — prova que o rodapé fixo e o
+  // comportamento de "Mais opções" continuam idênticos ao que já existia.
+  it('"Adicionar à despensa" não é descendente do ScrollView do formulário', async () => {
+    await comTema(<NovoProduto />);
+
+    const arvore = todosOsNos(screen.toJSON() as unknown as NoJSON);
+    const scrollViews = arvore.filter((no) => no.type === 'RCTScrollView');
+    expect(scrollViews.length).toBeGreaterThan(0);
+    for (const scroll of scrollViews) {
+      const dentroDoScroll = todosOsNos(scroll).some(
+        (no) => no.props?.accessibilityLabel === 'Adicionar à despensa',
+      );
+      expect(dentroDoScroll).toBe(false);
+    }
+    expect(screen.getByRole('button', { name: 'Adicionar à despensa' })).toBeTruthy();
+  });
+
+  it('"Mais opções" continua expandindo e revelando os campos extras', async () => {
+    await comTema(<NovoProduto />);
+
+    expect(screen.queryByLabelText('Quanto costuma custar')).toBeNull();
+    fireEvent.press(screen.getByRole('button', { name: 'Mais opções' }));
+
+    await waitFor(() => expect(screen.getByLabelText('Quanto costuma custar')).toBeTruthy());
   });
 });
