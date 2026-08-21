@@ -9,11 +9,14 @@ async function comTema(no: ReactNode) {
 }
 
 describe('SheetPrecoProduto', () => {
-  it('abre com o campo "Quanto costuma custar" em foco automático (não regredir — ACHADO-3-8)', async () => {
+  it('não usa autoFocus na montagem — foco vem do onAberto do PainelInferior (correcao-sheets-ajuste-sem-autofoco)', async () => {
     await comTema(
       <SheetPrecoProduto visivel nome="Arroz" precoInicial={null} onFechar={jest.fn()} onSalvar={jest.fn()} />,
     );
 
-    expect(screen.getByLabelText('Quanto costuma custar').props.autoFocus).toBe(true);
+    // `autoFocus` na montagem é a causa raiz do bug de teclado em sheets
+    // sobre `Modal` no Android real — ver painel-inferior.test.tsx para a
+    // prova de que o foco correto (via `onAberto`) funciona.
+    expect(screen.getByLabelText('Quanto costuma custar').props.autoFocus).toBeFalsy();
   });
 });

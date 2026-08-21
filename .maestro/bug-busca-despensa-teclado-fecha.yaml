@@ -1,0 +1,78 @@
+appId: com.danielfalcaodf.repor
+---
+# Change `correcao-busca-despensa-persiste-entre-tabs` (ordem 7) — cenário 3/5.
+#
+# SINTOMA RELATADO: o teclado ficava levantado sobre a OUTRA aba — a pessoa
+# saía da Despensa e a Lista abria com metade da tela coberta. É o efeito
+# mais visível do bug e o único que atinge telas que não são a da busca.
+#
+# O QUE ESTE FLOW PROVA: com o teclado aberto na busca, trocar de aba deixa
+# a aba de destino usável de imediato — o rodapé da Lista ("Iniciar compra")
+# está visível e tocável, o que não acontece com o IME ocupando a metade
+# inferior — e nenhum campo fica focado ao voltar.
+#
+# NÃO EXECUTADO AINDA — seletores lidos do código-fonte, não confirmados com
+# `inspect_screen`.
+#
+# Efeito colateral real: cria "QA Teclado Aba" (necessário para a lista
+# derivada não ficar vazia e o botão "Iniciar compra" existir). NENHUMA
+# compra é iniciada — o flow só verifica que o botão está visível.
+
+- launchApp
+- assertVisible: "Despensa"
+# ambiente: bolha flutuante "Tools" do Expo dev-client sobrepoe os icones do topo
+- swipe:
+    start: "970, 173"
+    end: "540, 700"
+    duration: 600
+
+# --- Preparo -----------------------------------------------------------
+- runFlow:
+    when:
+      visible: "Cadastrar do zero"
+    commands:
+      - tapOn: "Cadastrar do zero"
+- runFlow:
+    when:
+      notVisible: "Novo produto"
+    commands:
+      - tapOn: "Adicionar produto"
+- assertVisible: "Novo produto"
+- tapOn: "O que é"
+- setClipboard: "QA Teclado Aba"
+- pasteText
+- tapOn: "un"
+- tapOn: "Quanto quero ter em casa"
+- inputText: "2"
+- tapOn: "Adicionar à despensa"
+- assertVisible: "Despensa"
+
+# --- Abre a busca e digita (teclado levantado) -------------------------
+- tapOn: "Buscar"
+- setClipboard: "QA Teclado Aba"
+- pasteText
+- assertVisible:
+    text: "Buscar"
+    focused: true
+
+# --- Troca de aba com o teclado aberto ---------------------------------
+# ambiente: teclado do AVD cobre a barra de abas; back so fecha o IME
+- pressKey: "back"
+- tapOn: "Lista"
+- assertVisible: "Lista"
+- takeScreenshot: lista-sem-teclado-apos-trocar-de-aba
+- assertVisible:
+    text: "Iniciar compra \\(\\d+\\)"
+# Nenhum campo da Despensa pode continuar focado enquanto ela está fora de
+# vista.
+- assertNotVisible:
+    text: "Buscar"
+    focused: true
+
+# --- Volta: o campo segue aberto, mas sem foco -------------------------
+- tapOn: "Despensa"
+- assertVisible: "Despensa"
+- assertVisible: "QA Teclado Aba, 0 de 2 un, Acabou"
+- assertNotVisible:
+    text: "Buscar"
+    focused: true

@@ -1,0 +1,80 @@
+appId: com.danielfalcaodf.repor
+---
+# Change `correcao-tela-editar-produto` (ordem 6) — cenário 2/5.
+#
+# BUG ORIGINAL: ao tocar "Mais opções" na tela de edição, os campos
+# revelados nasciam abaixo da dobra (ou atrás do teclado, quando ele já
+# estava aberto) e nada rolava — a pessoa tocava e "não acontecia nada"
+# visualmente. A correção dá `ref` ao `ScrollView` e rola até o primeiro
+# campo revelado, deliberadamente SEM dar foco a ele.
+#
+# O QUE ESTE FLOW PROVA: com o teclado já aberto (campo "Quanto quero ter em
+# casa" focado), tocar "Mais opções" traz "Quanto costuma custar" para a
+# área visível — sem tocar nesse campo.
+#
+# A ausência de foco automático é afirmada pelo matcher `focused` do
+# Maestro sobre o campo revelado, mais um screenshot para conferência
+# humana da rolagem. Recolher e reexpandir também é verificado aqui (task
+# 3.5 da change: recolher não pode disparar scroll indesejado).
+#
+# NÃO EXECUTADO AINDA — seletores lidos do código-fonte, não confirmados com
+# `inspect_screen`.
+#
+# Efeito colateral real: cria "QA Mais Opcoes". Nenhuma edição é salva.
+
+- launchApp
+- assertVisible: "Despensa"
+# ambiente: bolha flutuante "Tools" do Expo dev-client sobrepoe os icones do topo
+- swipe:
+    start: "970, 173"
+    end: "540, 700"
+    duration: 600
+
+# --- Preparo -----------------------------------------------------------
+- runFlow:
+    when:
+      visible: "Cadastrar do zero"
+    commands:
+      - tapOn: "Cadastrar do zero"
+- runFlow:
+    when:
+      notVisible: "Novo produto"
+    commands:
+      - tapOn: "Adicionar produto"
+- assertVisible: "Novo produto"
+- tapOn: "O que é"
+- setClipboard: "QA Mais Opcoes"
+- pasteText
+- tapOn: "un"
+- tapOn: "Quanto quero ter em casa"
+- inputText: "3"
+- tapOn: "Adicionar à despensa"
+- assertVisible: "Despensa"
+
+# --- Abre o detalhe e deixa o teclado ABERTO ---------------------------
+# ambiente: busca por texto multi-palavra e instavel no teclado do AVD; toca direto
+- tapOn: "QA Mais Opcoes, 0 de 3 un, Acabou"
+- assertVisible: "Mais opções"
+- assertNotVisible: "Quanto costuma custar"
+# Foca um campo do formulário para o teclado subir antes do toque em
+# "Mais opções" — é essa a condição em que o bug aparecia.
+- tapOn: "Quanto quero ter em casa"
+
+# --- Ação: expandir ----------------------------------------------------
+- tapOn: "Mais opções"
+- assertVisible: "Quanto costuma custar"
+# Rola até o campo revelado, mas NÃO dá foco a ele (decisão da change).
+- assertNotVisible:
+    text: "Quanto costuma custar"
+    focused: true
+- takeScreenshot: mais-opcoes-sem-foco
+
+# --- Recolher não pode bagunçar a rolagem ------------------------------
+- assertVisible: "Menos opções"
+- tapOn: "Menos opções"
+- assertNotVisible: "Quanto costuma custar"
+- assertVisible: "Mais opções"
+
+# --- Reexpandir continua rolando até o campo revelado ------------------
+- tapOn: "Mais opções"
+- assertVisible: "Quanto costuma custar"

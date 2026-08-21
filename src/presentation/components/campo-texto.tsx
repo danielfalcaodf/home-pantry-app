@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { forwardRef, useState } from 'react';
 import { TextInput, TextInputProps, View } from 'react-native';
 import { createNumberMask, useMaskedInputProps } from 'react-native-mask-input';
 
@@ -56,7 +56,10 @@ export function aplicarMascaraQuantidade(texto: string): string {
  * Rótulo sempre visível acima do campo — placeholder como rótulo desaparece
  * quando o usuário digita, justo quando ele mais precisa saber o que é.
  */
-export function CampoTexto({ rotulo, erro, tipo, ...props }: CampoTextoProps) {
+export const CampoTexto = forwardRef<TextInput, CampoTextoProps>(function CampoTexto(
+  { rotulo, erro, tipo, ...props },
+  ref,
+) {
   const tema = useTheme();
   const [focado, setFocado] = useState(false);
   const corDoDivisor = erro
@@ -95,6 +98,7 @@ export function CampoTexto({ rotulo, erro, tipo, ...props }: CampoTextoProps) {
         {rotulo}
       </Texto>
       <TextInput
+        ref={ref}
         {...props}
         {...valorEOnChange}
         accessibilityLabel={rotulo}
@@ -125,4 +129,4 @@ export function CampoTexto({ rotulo, erro, tipo, ...props }: CampoTextoProps) {
       ) : null}
     </View>
   );
-}
+});

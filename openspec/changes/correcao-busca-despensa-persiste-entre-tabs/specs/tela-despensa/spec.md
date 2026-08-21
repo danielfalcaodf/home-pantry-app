@@ -30,3 +30,8 @@ A despensa SHALL permitir buscar itens por nome, ignorando diferença de caixa e
 
 - **WHEN** o usuário digita um termo de busca e troca de aba
 - **THEN** o teclado é fechado, mas o campo permanece aberto com o termo e o filtro continuam ativos ao voltar para a aba
+
+#### Scenario: Digitar no campo de busca não fecha o teclado
+
+- **WHEN** o usuário digita ou apaga caracteres no campo de busca, sem trocar de aba
+- **THEN** o teclado permanece aberto durante toda a digitação, caractere a caractere

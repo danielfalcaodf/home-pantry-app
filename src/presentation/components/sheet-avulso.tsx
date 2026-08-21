@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { useRef, useState } from 'react';
+import { Pressable, TextInput, View } from 'react-native';
 
 import { DadosDoAvulso } from '../../domain/lista/lista';
 import { UNIDADES, Unidade } from '../../domain/shared/unidade';
@@ -29,6 +29,7 @@ const QUANTIDADE_PADRAO = 1;
  */
 export function SheetAvulso({ visivel, inicial, onFechar, onSalvar }: SheetAvulsoProps) {
   const tema = useTheme();
+  const campoNomeRef = useRef<TextInput>(null);
   const [nome, setNome] = useState(inicial?.nome ?? '');
   const [unidade, setUnidade] = useState<Unidade>(inicial?.unidade ?? 'un');
   const [quantidade, setQuantidade] = useState(String(inicial?.quantidade ?? QUANTIDADE_PADRAO));
@@ -74,6 +75,7 @@ export function SheetAvulso({ visivel, inicial, onFechar, onSalvar }: SheetAvuls
     <PainelInferior
       visivel={visivel}
       onFechar={fechar}
+      onAberto={() => campoNomeRef.current?.focus()}
       testID="evita-teclado-avulso"
       style={{ padding: espaco.xl, gap: espaco.lg }}
     >
@@ -94,7 +96,7 @@ export function SheetAvulso({ visivel, inicial, onFechar, onSalvar }: SheetAvuls
           <IconeSvg path={icones.fechar} cor={tema.text.secondary} tamanho={20} />
         </Pressable>
       </View>
-      <CampoTexto rotulo="O que é" value={nome} onChangeText={setNome} erro={erroNome} autoFocus />
+      <CampoTexto ref={campoNomeRef} rotulo="O que é" value={nome} onChangeText={setNome} erro={erroNome} />
       <View style={{ gap: espaco.sm }}>
         <Texto papel="label" tom="secondary">
           Medida

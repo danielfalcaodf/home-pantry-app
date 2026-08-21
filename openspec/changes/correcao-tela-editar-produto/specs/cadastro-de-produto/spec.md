@@ -46,6 +46,11 @@ A tela de cadastro SHALL exigir nome, unidade e quantidade necessária, e SHALL 
 - **WHEN** o usuário toca em "Mais opções" com o teclado aberto, em qualquer tela que use `FormularioProduto`
 - **THEN** a tela rola automaticamente até o primeiro campo revelado, e nenhum campo recebe foco automático
 
+#### Scenario: Controle "Mais opções" continua tocável com o teclado aberto
+
+- **WHEN** um campo do formulário está focado (teclado do sistema aberto) na tela de detalhe/edição de produto
+- **THEN** o controle "Mais opções"/"Menos opções" continua visível e tocável, não fica oculto atrás do rodapé fixo nem some da árvore de acessibilidade
+
 ### Requirement: Detalhe e edição do produto
 
 A tela de detalhe SHALL exibir a quantidade atual em destaque, permitir corrigi-la pelo caminho de ajuste, permitir editar todos os campos de cadastro do produto, e exibir no rodapé um resumo do histórico recente de registros com acesso ao histórico completo. A abertura da tela NÃO SHALL atribuir foco automático a nenhum campo de texto nem invocar o teclado, e Voltar com o teclado aberto SHALL fechar o teclado sem sair da tela. O controle que abre o caminho de ajuste (a quantidade em destaque) e o controle que abre o histórico completo SHALL ter, cada um, alvo de toque mínimo de 48×48dp. O botão "Salvar" SHALL permanecer fixo, visível independente da posição de rolagem, do mesmo jeito que o botão "Adicionar" da tela de cadastro de produto novo. Quando um campo focado ficar coberto pelo teclado, a tela SHALL rolar automaticamente até ele ficar visível.

@@ -1,0 +1,82 @@
+appId: com.danielfalcaodf.repor
+---
+# Change `correcao-tela-editar-produto` (ordem 6) — cenário 3/5.
+#
+# BUG ORIGINAL: sem `flex:1` no container, o `EvitaTeclado` interno do
+# formulário ficava sem efeito e o "scroll to focused input" nativo do RN
+# não funcionava — focar um campo do fim do formulário (ex.: "Anotação")
+# deixava o campo atrás do teclado, digitando às cegas.
+#
+# O QUE ESTE FLOW PROVA: focar o último campo do formulário expandido e
+# digitar mantém o campo visível, e o texto digitado é salvo de fato (a
+# edição persiste ao reabrir a tela). Cobre "Auto-scroll até campo coberto
+# pelo teclado".
+#
+# NÃO EXECUTADO AINDA — seletores lidos do código-fonte, não confirmados com
+# `inspect_screen`.
+#
+# Efeito colateral real e permanente: cria "QA Teclado Campo" e salva uma
+# anotação nele.
+
+- launchApp
+- assertVisible: "Despensa"
+# ambiente: bolha flutuante "Tools" do Expo dev-client sobrepoe os icones do topo
+- swipe:
+    start: "970, 173"
+    end: "540, 700"
+    duration: 600
+
+# --- Preparo -----------------------------------------------------------
+- runFlow:
+    when:
+      visible: "Cadastrar do zero"
+    commands:
+      - tapOn: "Cadastrar do zero"
+- runFlow:
+    when:
+      notVisible: "Novo produto"
+    commands:
+      - tapOn: "Adicionar produto"
+- assertVisible: "Novo produto"
+- tapOn: "O que é"
+- setClipboard: "QA Teclado Campo"
+- pasteText
+- tapOn: "un"
+- tapOn: "Quanto quero ter em casa"
+- inputText: "3"
+- tapOn: "Adicionar à despensa"
+- assertVisible: "Despensa"
+
+# --- Edita a anotação (último campo, o que ficava atrás do teclado) ----
+# ambiente: busca por texto multi-palavra e instavel no teclado do AVD; toca direto
+- tapOn: "QA Teclado Campo, 0 de 3 un, Acabou"
+- tapOn: "Mais opções"
+- scrollUntilVisible:
+    element: "Anotação"
+    direction: DOWN
+    speed: 40
+    timeout: 15000
+# "Anotação" rotula tanto o texto quanto o EditText (mesmo a11y) — toque por
+# ponto fixo (confirmado com inspect_screen) evita a ambiguidade do seletor.
+- tapOn:
+    point: "540, 1705"
+# Com o teclado aberto, o campo focado precisa continuar visível.
+- assertVisible: "Anotação"
+- setClipboard: "marca do mercado"
+- pasteText
+- takeScreenshot: editar-produto-campo-acima-do-teclado
+- assertVisible: "marca do mercado"
+- assertVisible: "Salvar"
+- tapOn: "Salvar"
+- assertVisible: "Despensa"
+
+# --- Verificação: a edição persistiu -----------------------------------
+# ambiente: busca por texto multi-palavra e instavel no teclado do AVD; toca direto
+- tapOn: "QA Teclado Campo, 0 de 3 un, Acabou"
+- tapOn: "Mais opções"
+- scrollUntilVisible:
+    element: "marca do mercado"
+    direction: DOWN
+    speed: 40
+    timeout: 15000
+- assertVisible: "marca do mercado"

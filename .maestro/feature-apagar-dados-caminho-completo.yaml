@@ -1,0 +1,85 @@
+appId: com.danielfalcaodf.repor
+---
+# Change `feature-apagar-todos-os-dados` (ordem 8) — cenário 1/5.
+#
+# FEATURE: botão "Apagar todos os dados" em Configurações → "Seus dados",
+# com confirmação em DUAS camadas (painel inline + `Alert.alert` nativo com
+# botão destrutivo), porque a ação é irreversível.
+#
+# O QUE ESTE FLOW PROVA: o caminho completo até o fim — produto criado,
+# confirmação inline, alerta nativo, toast de conclusão, e a Despensa
+# voltando ao estado vazio de app novo.
+#
+# ⚠️ FLOW DESTRUTIVO — APAGA TODOS OS DADOS DO DISPOSITIVO DE TESTE.
+# Produtos, compras e histórico do aparelho são perdidos. Rode por último na
+# bateria, e só em dispositivo de QA. Se houver dado que importa, exporte um
+# backup JSON pela própria tela de Configurações antes.
+#
+# NÃO EXECUTADO AINDA — seletores lidos do código-fonte
+# (`app/(tabs)/configuracoes.tsx`), não confirmados com `inspect_screen`.
+# Botões de Alert nativo do Android renderizam em caixa alta; o `tapOn` do
+# Maestro casa por texto sem diferenciar caixa.
+
+- launchApp
+- assertVisible: "Despensa"
+# ambiente: bolha flutuante "Tools" do Expo dev-client sobrepoe os icones do topo
+- swipe:
+    start: "970, 173"
+    end: "540, 700"
+    duration: 600
+
+# --- Preparo: garante que existe dado para ser apagado -----------------
+- runFlow:
+    when:
+      visible: "Cadastrar do zero"
+    commands:
+      - tapOn: "Cadastrar do zero"
+- runFlow:
+    when:
+      notVisible: "Novo produto"
+    commands:
+      - tapOn: "Adicionar produto"
+- assertVisible: "Novo produto"
+- tapOn: "O que é"
+- setClipboard: "QA Apagar Tudo"
+- pasteText
+- tapOn: "un"
+- tapOn: "Quanto quero ter em casa"
+- inputText: "2"
+- tapOn: "Adicionar à despensa"
+- assertVisible: "Despensa"
+- assertVisible: "QA Apagar Tudo, 0 de 2 un, Acabou"
+
+# --- Camada 1: confirmação inline --------------------------------------
+- tapOn: "Configurações"
+- assertVisible: "Seus dados"
+- scrollUntilVisible:
+    element: "Apagar todos os dados"
+    direction: DOWN
+    speed: 40
+    timeout: 15000
+- assertVisible: "Apaga produtos, compras e histórico. Não pode ser desfeito."
+- tapOn: "Apagar todos os dados"
+- assertVisible: "Apagar todos os produtos, compras e histórico de movimentos? Essa ação não pode ser desfeita."
+- assertVisible: "Cancelar"
+- assertVisible: "Apagar tudo"
+
+# --- Camada 2: alerta nativo destrutivo --------------------------------
+- tapOn: "Apagar tudo"
+- assertVisible: "Apagar todos os dados?"
+- assertVisible: "Produtos, compras e histórico são apagados. Essa ação não pode ser desfeita."
+- assertVisible: "Manter meus dados"
+# "Apagar tudo" existe duas vezes na tela agora: o botão do painel inline
+# (atrás do alerta) e o do alerta nativo. O `rightOf` desempata pelo layout
+# do Alert do Android (cancelar à esquerda, destrutivo à direita) — se a
+# ordem for outra no dispositivo, ajustar após `inspect_screen`.
+- tapOn:
+    text: "Apagar tudo"
+    rightOf:
+      text: "Manter meus dados"
+
+# --- Verificação: reset concluído --------------------------------------
+- assertVisible: "Todos os dados foram apagados."
+- tapOn: "Despensa"
+- assertVisible: "Nada cadastrado ainda. Comece pelos 40 itens que quase toda casa tem — depois é só ajustar."
+- assertNotVisible: "QA Apagar Tudo, 0 de 2 un, Acabou"

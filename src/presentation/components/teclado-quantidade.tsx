@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Pressable, TextInput, View } from 'react-native';
 
 import { ehIndivisivel, rotuloDaUnidade, Unidade } from '../../domain/shared/unidade';
@@ -35,6 +35,7 @@ export function TecladoQuantidade({
   onRepus,
 }: TecladoQuantidadeProps) {
   const tema = useTheme();
+  const campoQuantidadeRef = useRef<TextInput>(null);
   const [texto, setTexto] = useState('');
 
   const divisivel = !ehIndivisivel(unidade);
@@ -59,6 +60,7 @@ export function TecladoQuantidade({
     <PainelInferior
       visivel={visivel}
       onFechar={fechar}
+      onAberto={() => campoQuantidadeRef.current?.focus()}
       testID="evita-teclado-quantidade"
       style={{ padding: espaco.xl, gap: espaco.lg }}
     >
@@ -81,8 +83,7 @@ export function TecladoQuantidade({
       </View>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: espaco.md }}>
         <TextInput
-          // Abre com o campo em foco e o teclado numérico do sistema.
-          autoFocus
+          ref={campoQuantidadeRef}
           value={texto}
           onChangeText={(valor) => setTexto(aplicarMascaraQuantidade(valor))}
           accessibilityLabel="Quantidade"

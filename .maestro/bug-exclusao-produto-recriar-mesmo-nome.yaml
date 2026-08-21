@@ -1,0 +1,100 @@
+appId: com.danielfalcaodf.repor
+---
+# Change `correcao-baixa-produto-excluido-da-lista` (ordem 3) — cenário 3/5.
+#
+# REPRO EXATA DO RELATO DO USUÁRIO: o item fantasma sobrevivia até a
+# recriação de um produto com o MESMO nome — o novo produto nasce com `id`
+# novo, sem nenhuma relação com a linha órfã de `compra_item`, então a
+# pessoa via o nome duas vezes: uma na lista ativa (produto novo) e outra
+# presa em "Fora da lista por agora" (registro morto).
+#
+# O QUE ESTE FLOW PROVA: excluir → recriar com o mesmo nome deixa exatamente
+# UMA ocorrência do nome na Lista (a do produto novo, na lista ativa), e a
+# seção "Fora da lista por agora" não ressuscita o registro antigo.
+#
+# NÃO EXECUTADO AINDA — seletores lidos do código-fonte, não confirmados com
+# `inspect_screen`.
+#
+# Efeito colateral real e permanente: cria "QA Excluir Renasce", remove
+# logicamente, e cria de novo um produto com o mesmo nome (dois registros no
+# banco, um soft-deletado — que é justamente o estado que o bug explorava).
+
+- launchApp
+- assertVisible: "Despensa"
+
+# --- Preparo: cadastrar o produto de teste -----------------------------
+- runFlow:
+    when:
+      visible: "Cadastrar do zero"
+    commands:
+      - tapOn: "Cadastrar do zero"
+- runFlow:
+    when:
+      notVisible: "Novo produto"
+    commands:
+      - tapOn: "Adicionar produto"
+- assertVisible: "Novo produto"
+- tapOn: "O que é"
+- inputText: "QA Excluir Renasce"
+- tapOn: "un"
+- tapOn: "Quanto quero ter em casa"
+- inputText: "1"
+- tapOn: "Adicionar à despensa"
+- assertVisible: "Despensa"
+
+# --- Tira da lista e exclui o produto ----------------------------------
+- tapOn: "Lista"
+- scrollUntilVisible:
+    element: "Remover QA Excluir Renasce da lista"
+    direction: DOWN
+    speed: 40
+    timeout: 20000
+- tapOn: "Remover QA Excluir Renasce da lista"
+- assertVisible: "QA Excluir Renasce removido da lista"
+
+- tapOn: "Despensa"
+- tapOn: "Buscar"
+- inputText: "QA Excluir Renasce"
+- tapOn: "QA Excluir Renasce, 0 de 1 un, Acabou"
+- tapOn: "Tirar da despensa"
+- assertVisible: "Tirar QA Excluir Renasce da despensa?"
+- tapOn: "Tirar da despensa"
+- assertVisible: "Despensa"
+
+# --- Recria um produto com o MESMO nome --------------------------------
+- runFlow:
+    when:
+      visible: "Cadastrar do zero"
+    commands:
+      - tapOn: "Cadastrar do zero"
+- runFlow:
+    when:
+      notVisible: "Novo produto"
+    commands:
+      - tapOn: "Adicionar produto"
+- assertVisible: "Novo produto"
+- tapOn: "O que é"
+- inputText: "QA Excluir Renasce"
+- tapOn: "un"
+- tapOn: "Quanto quero ter em casa"
+- inputText: "1"
+- tapOn: "Adicionar à despensa"
+- assertVisible: "Despensa"
+
+# --- Verificação: o nome só aparece na lista ativa ---------------------
+- tapOn: "Lista"
+- scrollUntilVisible:
+    element: "Remover QA Excluir Renasce da lista"
+    direction: DOWN
+    speed: 40
+    timeout: 20000
+- assertVisible: "Remover QA Excluir Renasce da lista"
+- runFlow:
+    when:
+      visible:
+        text: "Fora da lista por agora \\(\\d+\\)"
+    commands:
+      - tapOn:
+          text: "Fora da lista por agora \\(\\d+\\)"
+      # O registro órfão do produto excluído não pode reaparecer aqui.
+      - assertNotVisible: "Voltar QA Excluir Renasce pra lista"

@@ -1,0 +1,83 @@
+appId: com.danielfalcaodf.repor
+---
+# Change `correcao-sheets-ajuste-sem-autofoco` (ordem 5) — cenário 2/5.
+#
+# BUG ORIGINAL: `sheet-ajuste-compra.tsx` (ajuste de quantidade/preço no
+# Modo Compra) abria sem `autoFocus`. É o sheet mais sensível do app: a
+# pessoa está de pé no corredor do mercado, com uma mão livre — um toque
+# extra ali custa mais que em qualquer outra tela.
+#
+# O QUE ESTE FLOW PROVA: ao abrir o ajuste, o primeiro campo está focado **e
+# o teclado já está levantado**, e digitar sem tocar no campo altera a
+# QUANTIDADE do item. Cobre o cenário "Sheet de ajuste abre com foco
+# automático" da capability `modo-compra`.
+#
+# SELETOR DO TECLADO: id `<pacote-do-IME>:id/keyboard_view`, casado por
+# regex porque o pacote varia (Gboard/AOSP). Confirmar com
+# `maestro hierarchy` na primeira execução.
+#
+# NÃO EXECUTADO AINDA — seletores lidos do código-fonte
+# (`sheet-ajuste-compra.tsx`, `item-compra.tsx`, `app/compra/[id].tsx`), não
+# confirmados com `inspect_screen`.
+#
+# Efeito colateral real: cria "QA Foco Compra" e abre (ou reusa) uma compra,
+# deixando-a ABERTA com o item ajustado para 3 un e NÃO marcado. Nenhuma
+# compra é fechada, nenhuma reposição acontece.
+
+- launchApp
+- assertVisible: "Despensa"
+# ambiente: bolha flutuante "Tools" do Expo dev-client sobrepoe os icones do topo
+- swipe:
+    start: "970, 173"
+    end: "540, 700"
+    duration: 600
+
+# --- Preparo: produto de teste (planejado = 2 un) ----------------------
+- runFlow:
+    when:
+      visible: "Cadastrar do zero"
+    commands:
+      - tapOn: "Cadastrar do zero"
+- runFlow:
+    when:
+      notVisible: "Novo produto"
+    commands:
+      - tapOn: "Adicionar produto"
+- assertVisible: "Novo produto"
+- tapOn: "O que é"
+- setClipboard: "QA Foco Compra"
+- pasteText
+- tapOn: "un"
+- tapOn: "Quanto quero ter em casa"
+- inputText: "2"
+- tapOn: "Adicionar à despensa"
+- assertVisible: "Despensa"
+
+# --- Entra no Modo Compra ----------------------------------------------
+- tapOn: "Lista"
+- tapOn:
+    text: "Iniciar compra \\(\\d+\\)"
+- assertVisible: "Compra"
+- scrollUntilVisible:
+    element: "Ajustar quantidade e preço de QA Foco Compra"
+    direction: DOWN
+    speed: 40
+    timeout: 20000
+
+# --- Abre o ajuste e digita SEM tocar no campo -------------------------
+- tapOn: "Ajustar quantidade e preço de QA Foco Compra"
+- assertVisible: "QA Foco Compra"
+- assertVisible: "Quantidade (un)"
+- assertVisible:
+    text: "Quantidade \\(un\\)"
+    focused: true
+- assertVisible:
+    id: ".*inputmethod.*:id/keyboard_view"
+- takeScreenshot: autofoco-ajuste-compra-teclado
+- eraseText: 5
+- inputText: "3"
+- tapOn: "Salvar"
+
+# --- Verificação: a quantidade do item mudou para 3 un -----------------
+- assertVisible:
+    text: "QA Foco Compra, 3 un.*"

@@ -1,0 +1,106 @@
+appId: com.danielfalcaodf.repor
+---
+# Change `correcao-baixa-produto-excluido-da-lista` (ordem 3) — cenário 4/5.
+#
+# BORDA DE ISOLAMENTO: o DELETE novo é filtrado por `produto_id`. Se o
+# filtro estiver errado (ou faltando), excluir um produto limparia a seção
+# "Fora da lista por agora" INTEIRA — apagando escolhas do usuário sobre
+# outros produtos, sem nenhum aviso.
+#
+# O QUE ESTE FLOW PROVA: com DOIS produtos fora da lista, excluir apenas um
+# deles preserva o outro na seção. Cobre pela UI o cenário "produto sem item
+# associado não é afetado" (task 3.3 da change), pelo lado mais perigoso
+# dele — o do dano colateral.
+#
+# NÃO EXECUTADO AINDA — seletores lidos do código-fonte, não confirmados com
+# `inspect_screen`.
+#
+# Efeito colateral real e permanente: cria "QA Isola Vitima" e
+# "QA Isola Sobrevive", coloca os dois fora da lista, e remove logicamente
+# só o primeiro. "QA Isola Sobrevive" fica na despensa, fora da lista.
+
+- launchApp
+- assertVisible: "Despensa"
+
+# --- Preparo: dois produtos de teste -----------------------------------
+- runFlow:
+    when:
+      visible: "Cadastrar do zero"
+    commands:
+      - tapOn: "Cadastrar do zero"
+- runFlow:
+    when:
+      notVisible: "Novo produto"
+    commands:
+      - tapOn: "Adicionar produto"
+- assertVisible: "Novo produto"
+- tapOn: "O que é"
+- inputText: "QA Isola Vitima"
+- tapOn: "un"
+- tapOn: "Quanto quero ter em casa"
+- inputText: "1"
+- tapOn: "Adicionar à despensa"
+- assertVisible: "Despensa"
+
+- tapOn: "Adicionar produto"
+- assertVisible: "Novo produto"
+- tapOn: "O que é"
+- inputText: "QA Isola Sobrevive"
+- tapOn: "un"
+- tapOn: "Quanto quero ter em casa"
+- inputText: "1"
+- tapOn: "Adicionar à despensa"
+- assertVisible: "Despensa"
+
+# --- Os dois saem da lista ---------------------------------------------
+- tapOn: "Lista"
+- scrollUntilVisible:
+    element: "Remover QA Isola Vitima da lista"
+    direction: DOWN
+    speed: 40
+    timeout: 20000
+- tapOn: "Remover QA Isola Vitima da lista"
+- assertVisible: "QA Isola Vitima removido da lista"
+- scrollUntilVisible:
+    element: "Remover QA Isola Sobrevive da lista"
+    direction: DOWN
+    speed: 40
+    timeout: 20000
+- tapOn: "Remover QA Isola Sobrevive da lista"
+- assertVisible: "QA Isola Sobrevive removido da lista"
+# O cabeçalho da seção é um toggle que persiste expandido/colapsado
+# entre navegações de aba (estado não reseta ao trocar pra Despensa e
+# voltar) — tocar de novo quando já está aberto FECHA a seção. Só toca
+# se "Voltar ... pra lista" ainda não estiver visível.
+- runFlow:
+    when:
+      notVisible: "Voltar QA Isola Vitima pra lista"
+    commands:
+      - tapOn:
+          text: "Fora da lista por agora \\(\\d+\\)"
+- assertVisible: "Voltar QA Isola Vitima pra lista"
+- assertVisible: "Voltar QA Isola Sobrevive pra lista"
+
+# --- Exclui APENAS um dos dois -----------------------------------------
+# NOTA: busca por texto ("Buscar" + inputText multi-palavra) se mostrou
+# instável neste ambiente (AVD + teclado simplekeyboard) durante a sessão
+# de validação em 2026-08-21 — caracteres eram descartados/embaralhados
+# em nomes de produto com 3 palavras. Como a despensa de teste tem só 2
+# itens, toca-se direto no item pelo rótulo acessível, sem busca.
+- tapOn: "Despensa"
+- tapOn: "QA Isola Vitima, 0 de 1 un, Acabou"
+- tapOn: "Tirar da despensa"
+- assertVisible: "Tirar QA Isola Vitima da despensa?"
+- tapOn: "Tirar da despensa"
+- assertVisible: "Despensa"
+
+# --- Verificação: só a vítima sumiu ------------------------------------
+- tapOn: "Lista"
+- runFlow:
+    when:
+      notVisible: "Voltar QA Isola Sobrevive pra lista"
+    commands:
+      - tapOn:
+          text: "Fora da lista por agora \\(\\d+\\)"
+- assertNotVisible: "Voltar QA Isola Vitima pra lista"
+- assertVisible: "Voltar QA Isola Sobrevive pra lista"

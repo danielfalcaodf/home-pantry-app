@@ -1,0 +1,86 @@
+appId: com.danielfalcaodf.repor
+---
+# Change `correcao-sheets-ajuste-sem-autofoco` (ordem 5) — cenário 4/5.
+#
+# BORDA DE ESCOPO DO FOCO: o sheet de ajuste da compra tem DOIS campos lado
+# a lado — "Quantidade" e "Preço pago (opcional)". O `autoFocus` só pode
+# estar no PRIMEIRO. Se por engano ficar no preço, a pessoa digita a
+# quantidade e grava um valor pago errado, sem perceber — o tipo de defeito
+# silencioso que custa dinheiro (a máscara de dinheiro aceita qualquer
+# sequência de dígitos sem reclamar).
+#
+# O QUE ESTE FLOW PROVA: ao abrir, o teclado está levantado e o foco está na
+# quantidade (nunca no preço); digitando sem tocar em campo nenhum, muda a
+# quantidade e o item continua "sem preço".
+#
+# SELETOR DO TECLADO: id `<pacote-do-IME>:id/keyboard_view`, casado por
+# regex porque o pacote varia (Gboard/AOSP). Confirmar com
+# `maestro hierarchy` na primeira execução.
+#
+# NÃO EXECUTADO AINDA — seletores lidos do código-fonte, não confirmados com
+# `inspect_screen`.
+#
+# Efeito colateral real: cria "QA Foco Campo" (sem preço cadastrado) e deixa
+# uma compra ABERTA com esse item ajustado e não marcado.
+
+- launchApp
+- assertVisible: "Despensa"
+# ambiente: bolha flutuante "Tools" do Expo dev-client sobrepoe os icones do topo
+- swipe:
+    start: "970, 173"
+    end: "540, 700"
+    duration: 600
+
+# --- Preparo: produto SEM preço ----------------------------------------
+- runFlow:
+    when:
+      visible: "Cadastrar do zero"
+    commands:
+      - tapOn: "Cadastrar do zero"
+- runFlow:
+    when:
+      notVisible: "Novo produto"
+    commands:
+      - tapOn: "Adicionar produto"
+- assertVisible: "Novo produto"
+- tapOn: "O que é"
+- setClipboard: "QA Foco Campo"
+- pasteText
+- tapOn: "un"
+- tapOn: "Quanto quero ter em casa"
+- inputText: "2"
+- tapOn: "Adicionar à despensa"
+- assertVisible: "Despensa"
+
+- tapOn: "Lista"
+- tapOn:
+    text: "Iniciar compra \\(\\d+\\)"
+- assertVisible: "Compra"
+- scrollUntilVisible:
+    element: "QA Foco Campo, 2 un, sem preço"
+    direction: DOWN
+    speed: 40
+    timeout: 20000
+- assertVisible: "QA Foco Campo, 2 un, sem preço"
+
+# --- Ajuste digitando às cegas -----------------------------------------
+- tapOn: "Ajustar quantidade e preço de QA Foco Campo"
+- assertVisible: "Quantidade (un)"
+- assertVisible: "Preço pago (opcional)"
+# O foco tem de estar na quantidade, e NÃO no preço.
+- assertVisible:
+    text: "Quantidade \\(un\\)"
+    focused: true
+- assertNotVisible:
+    text: "Preço pago \\(opcional\\)"
+    focused: true
+- assertVisible:
+    id: ".*inputmethod.*:id/keyboard_view"
+- takeScreenshot: autofoco-so-primeiro-campo-teclado
+- eraseText: 5
+- inputText: "4"
+- tapOn: "Salvar"
+
+# --- Verificação: quantidade mudou, preço continua ausente -------------
+- assertVisible: "QA Foco Campo, 4 un, sem preço"
+- assertNotVisible: "QA Foco Campo, 2 un, sem preço"

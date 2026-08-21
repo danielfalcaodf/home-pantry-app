@@ -1,0 +1,74 @@
+appId: com.danielfalcaodf.repor
+---
+# Change `correcao-busca-despensa-persiste-entre-tabs` (ordem 7) — cenário 5/5.
+#
+# BORDA DE TRANSIÇÃO ENTRE OS DOIS COMPORTAMENTOS: a regra de fechar o campo
+# depende do valor do termo NO MOMENTO DO BLUR (`busca === ''` dentro do
+# cleanup do `useFocusEffect`, com `busca` na lista de dependências). Se o
+# efeito capturar um valor obsoleto, apagar o termo e trocar de aba deixaria
+# o campo aberto para sempre — bug de closure clássico, que só aparece nesta
+# ordem exata de passos.
+#
+# O QUE ESTE FLOW PROVA: digitar, apagar tudo e ENTÃO trocar de aba fecha o
+# campo — o comportamento tem de seguir o valor atual, não o de quando a
+# tela ganhou foco. Também cobre o caminho inverso na mesma sessão (com
+# termo → mantém; sem termo → fecha).
+#
+# NÃO EXECUTADO AINDA — seletores lidos do código-fonte, não confirmados com
+# `inspect_screen`.
+#
+# Sem efeito colateral em dados. Precisa de pelo menos 1 produto na
+# despensa — o flow cadastra um se ela estiver vazia.
+
+- launchApp
+- assertVisible: "Despensa"
+# ambiente: bolha flutuante "Tools" do Expo dev-client sobrepoe os icones do topo
+- swipe:
+    start: "970, 173"
+    end: "540, 700"
+    duration: 600
+
+- runFlow:
+    when:
+      visible: "Cadastrar do zero"
+    commands:
+      - tapOn: "Cadastrar do zero"
+      - assertVisible: "Novo produto"
+      - setClipboard: "QA Busca Semente"
+      - pasteText
+      - tapOn: "un"
+      - tapOn: "Quanto quero ter em casa"
+      - inputText: "1"
+      - tapOn: "Adicionar à despensa"
+      - assertVisible: "Despensa"
+
+# --- 1ª rodada: com termo, o campo tem de sobreviver à troca de aba ----
+- tapOn: "Buscar"
+- inputText: "zzqq"
+- assertVisible: "Cadastrar zzqq"
+# ambiente: teclado do AVD cobre a barra de abas; back so fecha o IME
+- pressKey: "back"
+- tapOn: "Lista"
+- tapOn: "Despensa"
+- assertVisible: "Cadastrar zzqq"
+
+# --- 2ª rodada: apaga o termo e SÓ ENTÃO troca de aba ------------------
+# Dois nós casam com "Buscar": o ícone do cabeçalho (índice 0) e o próprio
+# campo, que herda o rótulo como `accessibilityLabel` (índice 1). Tocar o
+# ícone aqui FECHARIA a busca — confirmar essa ordem com `inspect_screen`
+# antes da primeira execução.
+- tapOn:
+    text: "Buscar"
+    index: 1
+- eraseText
+- assertVisible: "Nome do item"
+# ambiente: teclado do AVD cobre a barra de abas; back so fecha o IME
+- pressKey: "back"
+- tapOn: "Lista"
+- tapOn: "Despensa"
+
+# --- Verificação: campo fechado ----------------------------------------
+- assertNotVisible: "Nome do item"
+- assertNotVisible:
+    text: "Buscar"
+    focused: true

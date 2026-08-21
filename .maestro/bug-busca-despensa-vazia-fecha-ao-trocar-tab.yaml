@@ -1,0 +1,68 @@
+appId: com.danielfalcaodf.repor
+---
+# Change `correcao-busca-despensa-persiste-entre-tabs` (ordem 7) — cenário 1/5.
+#
+# BUG ORIGINAL: as abas do Expo Router não desmontam a tela ao trocar (só
+# `display:none`), e a Despensa não tinha nenhum `useFocusEffect` — o campo
+# de busca continuava aberto e com o teclado levantado depois de a pessoa
+# sair da aba. A correção: no blur, sempre `Keyboard.dismiss()`; com a busca
+# VAZIA, fechar também o campo.
+#
+# O QUE ESTE FLOW PROVA: campo aberto e vazio → trocar de aba → voltar → o
+# campo está fechado. Cobre "Trocar de aba com busca vazia fecha o campo".
+#
+# COMO O CAMPO É IDENTIFICADO: o placeholder "Nome do item"
+# (`app/(tabs)/index.tsx`) só existe quando o campo está aberto e vazio — o
+# rótulo "Buscar" não serve de sinal, porque é o mesmo texto do ícone que
+# abre a busca.
+#
+# NÃO EXECUTADO AINDA — seletores lidos do código-fonte, não confirmados com
+# `inspect_screen`.
+#
+# Sem efeito colateral em dados: o flow só abre/fecha a busca. Precisa de
+# pelo menos 1 produto na despensa (senão a tela mostra o estado vazio, sem
+# ícone de busca) — o flow cadastra um se for o caso.
+
+- launchApp
+- assertVisible: "Despensa"
+# ambiente: bolha flutuante "Tools" do Expo dev-client sobrepoe os icones do topo
+- swipe:
+    start: "970, 173"
+    end: "540, 700"
+    duration: 600
+
+# --- Garante despensa não vazia ----------------------------------------
+- runFlow:
+    when:
+      visible: "Cadastrar do zero"
+    commands:
+      - tapOn: "Cadastrar do zero"
+      - assertVisible: "Novo produto"
+      - setClipboard: "QA Busca Semente"
+      - pasteText
+      - tapOn: "un"
+      - tapOn: "Quanto quero ter em casa"
+      - inputText: "1"
+      - tapOn: "Adicionar à despensa"
+      - assertVisible: "Despensa"
+
+# --- Abre a busca e não digita nada ------------------------------------
+- tapOn: "Buscar"
+- assertVisible: "Nome do item"
+- assertVisible:
+    text: "Buscar"
+    focused: true
+
+# --- Troca de aba e volta ----------------------------------------------
+# ambiente: teclado do AVD cobre a barra de abas; back so fecha o IME
+- pressKey: "back"
+- tapOn: "Lista"
+- assertVisible: "Lista"
+- tapOn: "Despensa"
+- assertVisible: "Despensa"
+
+# --- Verificação: campo fechado ----------------------------------------
+- assertNotVisible: "Nome do item"
+- assertNotVisible:
+    text: "Buscar"
+    focused: true

@@ -1,0 +1,97 @@
+appId: com.danielfalcaodf.repor
+---
+# Change `correcao-baixa-produto-excluido-da-lista` (ordem 3) — cenário 5/5.
+#
+# BORDA DE HISTÓRICO: itens já comprados (`comprado = true`, compra fechada)
+# NÃO podem ser tocados pela limpeza — são histórico financeiro. Se o DELETE
+# novo pegasse largo demais, excluir um produto apagaria retroativamente o
+# gasto de compras já fechadas: o "Gasto este mês" do Resumo mudaria sozinho.
+#
+# O QUE ESTE FLOW PROVA: fecha uma compra com o produto de teste, anota o
+# histórico de compras, exclui o produto e confirma que a compra fechada
+# continua no histórico. Cobre pela UI o cenário "Item já comprado não é
+# afetado".
+#
+# NÃO EXECUTADO AINDA — seletores lidos do código-fonte, não confirmados com
+# `inspect_screen`.
+#
+# EFEITO COLATERAL FORTE, IRREVERSÍVEL PELA UI: este flow FECHA uma compra
+# de verdade no dispositivo de teste. Se já houver uma compra aberta com
+# outros itens, eles entram nessa mesma compra e podem ser repostos ao
+# fechar. Rode só num dispositivo de QA, de preferência logo depois de um
+# reset de dados (ver `feature-apagar-dados-*.yaml`).
+
+- launchApp
+- assertVisible: "Despensa"
+
+# --- Preparo: produto com preço, para haver gasto no histórico ---------
+- runFlow:
+    when:
+      visible: "Cadastrar do zero"
+    commands:
+      - tapOn: "Cadastrar do zero"
+- runFlow:
+    when:
+      notVisible: "Novo produto"
+    commands:
+      - tapOn: "Adicionar produto"
+- assertVisible: "Novo produto"
+- tapOn: "O que é"
+- inputText: "QA Historico Compra"
+- tapOn: "un"
+- tapOn: "Quanto quero ter em casa"
+- inputText: "1"
+- tapOn: "Mais opções"
+- tapOn: "Quanto costuma custar"
+# Campo com máscara de caixa registradora: só dígitos viram centavos.
+- inputText: "700"
+- tapOn: "Adicionar à despensa"
+- assertVisible: "Despensa"
+
+# --- Compra o item e fecha a compra ------------------------------------
+- tapOn: "Lista"
+- tapOn:
+    text: "Iniciar compra \\(\\d+\\)"
+- assertVisible: "Compra"
+- scrollUntilVisible:
+    element:
+      text: "QA Historico Compra, 1 un.*"
+    direction: DOWN
+    speed: 40
+    timeout: 20000
+- tapOn:
+    text: "QA Historico Compra, 1 un.*"
+- assertVisible:
+    text: "QA Historico Compra, 1 un.*"
+    checked: true
+- tapOn: "Fechar compra"
+- assertVisible: "Despensa"
+# Reposição aplicada pelo fechamento.
+- tapOn: "Buscar"
+- inputText: "QA Historico Compra"
+- assertVisible: "QA Historico Compra, 1 de 1 un, Cheio"
+
+# --- Confirma o registro no histórico ANTES da exclusão ----------------
+- tapOn: "Resumo"
+- assertVisible: "Ver histórico"
+- tapOn: "Ver histórico"
+- assertVisible: "Histórico de compras"
+- assertVisible: "R\\$ 7,00"
+- tapOn: "Voltar"
+
+# --- Exclui o produto ---------------------------------------------------
+- tapOn: "Despensa"
+- tapOn: "Buscar"
+- inputText: "QA Historico Compra"
+- tapOn: "QA Historico Compra, 1 de 1 un, Cheio"
+- tapOn: "Tirar da despensa"
+- assertVisible: "Tirar QA Historico Compra da despensa?"
+- assertVisible: "O histórico de uso continua guardado."
+- tapOn: "Tirar da despensa"
+- assertVisible: "Despensa"
+
+# --- Verificação: a compra fechada continua no histórico ---------------
+- tapOn: "Resumo"
+- tapOn: "Ver histórico"
+- assertVisible: "Histórico de compras"
+- assertVisible: "R\\$ 7,00"

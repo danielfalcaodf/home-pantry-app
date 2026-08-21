@@ -1,0 +1,70 @@
+appId: com.danielfalcaodf.repor
+---
+# Change `correcao-tela-editar-produto` (ordem 6) — cenário 4/5.
+#
+# BUG ORIGINAL: "Tirar da despensa" usava a variante genérica `secundario`,
+# sem ícone nem cor de perigo — a ação destrutiva ficava indistinguível de
+# um botão comum, sinalizada só pela posição.
+#
+# O QUE ESTE FLOW PROVA: o botão existe com rótulo acessível explícito (não
+# depende do ícone visual), abre confirmação nativa, e o caminho de
+# CANCELAMENTO ("Manter") não remove nada — a confirmação é real, não
+# decorativa. A cor crítica e o ícone de lixeira ficam registrados por
+# screenshot para conferência humana (Maestro não afirma cor).
+#
+# NÃO EXECUTADO AINDA — seletores lidos do código-fonte
+# (`app/produto/[id].tsx`, `botao.tsx`), não confirmados com
+# `inspect_screen`. Botões de Alert nativo do Android renderizam em caixa
+# alta, mas o `tapOn` do Maestro casa por texto sem diferenciar caixa.
+#
+# Efeito colateral real: cria "QA Botao Destrutivo" e o DEIXA na despensa —
+# este flow cancela a remoção de propósito. Remova manualmente se quiser o
+# dispositivo limpo.
+
+- launchApp
+- assertVisible: "Despensa"
+# ambiente: bolha flutuante "Tools" do Expo dev-client sobrepoe os icones do topo
+- swipe:
+    start: "970, 173"
+    end: "540, 700"
+    duration: 600
+
+# --- Preparo -----------------------------------------------------------
+- runFlow:
+    when:
+      visible: "Cadastrar do zero"
+    commands:
+      - tapOn: "Cadastrar do zero"
+- runFlow:
+    when:
+      notVisible: "Novo produto"
+    commands:
+      - tapOn: "Adicionar produto"
+- assertVisible: "Novo produto"
+- tapOn: "O que é"
+- setClipboard: "QA Botao Destrutivo"
+- pasteText
+- tapOn: "un"
+- tapOn: "Quanto quero ter em casa"
+- inputText: "2"
+- tapOn: "Adicionar à despensa"
+- assertVisible: "Despensa"
+
+# --- Abre o detalhe ----------------------------------------------------
+# ambiente: busca por texto multi-palavra e instavel no teclado do AVD; toca direto
+- tapOn: "QA Botao Destrutivo, 0 de 2 un, Acabou"
+# Rótulo acessível explícito do botão (accessibilityLabel = título).
+- assertVisible: "Tirar da despensa"
+- takeScreenshot: editar-produto-botao-destrutivo
+
+# --- Confirmação obrigatória e cancelável ------------------------------
+- tapOn: "Tirar da despensa"
+- assertVisible: "Tirar QA Botao Destrutivo da despensa?"
+- assertVisible: "O histórico de uso continua guardado."
+- tapOn: "Manter"
+
+# --- Verificação: cancelar não removeu nada ----------------------------
+- assertVisible: "Tirar da despensa"
+- tapOn: "Voltar"
+- assertVisible: "Despensa"
+- assertVisible: "QA Botao Destrutivo, 0 de 2 un, Acabou"

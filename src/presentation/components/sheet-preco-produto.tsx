@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { useRef, useState } from 'react';
+import { Pressable, TextInput, View } from 'react-native';
 
 import { ALVO_TOQUE_MINIMO, espaco } from '../theme/espaco';
 import { icones } from '../theme/icones';
@@ -29,6 +29,7 @@ export type SheetPrecoProdutoProps = {
  */
 export function SheetPrecoProduto({ visivel, nome, precoInicial, onFechar, onSalvar }: SheetPrecoProdutoProps) {
   const tema = useTheme();
+  const campoPrecoRef = useRef<TextInput>(null);
   // Duas casas sempre — é o formato que a máscara de dinheiro espera pra
   // reconhecer o valor semeado (CampoTexto extrai dígitos do que está aqui).
   const [preco, setPreco] = useState(precoInicial !== null ? precoInicial.toFixed(2).replace('.', ',') : '');
@@ -48,6 +49,7 @@ export function SheetPrecoProduto({ visivel, nome, precoInicial, onFechar, onSal
     <PainelInferior
       visivel={visivel}
       onFechar={fechar}
+      onAberto={() => campoPrecoRef.current?.focus()}
       testID="evita-teclado-preco-produto"
       style={{ padding: espaco.xl, gap: espaco.lg }}
     >
@@ -69,12 +71,12 @@ export function SheetPrecoProduto({ visivel, nome, precoInicial, onFechar, onSal
         </Pressable>
       </View>
       <CampoTexto
+        ref={campoPrecoRef}
         rotulo="Quanto costuma custar"
         value={preco}
         onChangeText={setPreco}
         keyboardType="decimal-pad"
         tipo="dinheiro"
-        autoFocus
       />
       <Botao titulo="Salvar" onPress={salvar} />
     </PainelInferior>
