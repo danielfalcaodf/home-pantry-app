@@ -6,9 +6,11 @@
 
 Ao marcar um item, o usuário SHALL poder ajustar a quantidade realmente comprada e o valor
 pago por unidade. Sem ajuste, a quantidade planejada SHALL ser assumida como comprada, e o
-preço estimado do produto (quando existir) SHALL ser assumido como preço pago. Ao reabrir uma
-compra aberta com item já materializado e não comprado, o preço estimado desse item SHALL ser
-sincronizado com o preço atual do produto, caso tenha mudado desde a materialização.
+preço estimado do produto (quando existir) SHALL ser assumido como preço pago. Ao abrir o
+sheet de ajuste, o primeiro campo SHALL receber foco automático e o teclado SHALL ser
+levantado. Ao reabrir uma compra aberta com item já materializado e não comprado, o preço
+estimado desse item SHALL ser sincronizado com o preço atual do produto, caso tenha mudado
+desde a materialização.
 
 #### Scenario: Padrão assume o planejado
 
@@ -47,3 +49,8 @@ sincronizado com o preço atual do produto, caso tenha mudado desde a materializ
 
 - **WHEN** um item está marcado como comprado
 - **THEN** sua quantidade comprada está definida, e o banco rejeita o contrário
+
+#### Scenario: Sheet de ajuste abre com foco automático
+
+- **WHEN** o usuário abre o sheet de ajuste de quantidade comprada
+- **THEN** o primeiro campo já está em foco e o teclado já está visível, sem toque adicional

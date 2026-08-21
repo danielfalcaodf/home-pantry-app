@@ -43,4 +43,3 @@ para 3-8. Nenhuma das 6 changes sobrepôs arquivo de código com outra; um overl
 foi resolvido no arquivamento (delta da change 5 atualizado para incorporar a contribuição já
 mesclada da change 4, sem perdê-la).
 
-| — | correcao-total-compra-preco-heranca | — | **Reaberta** em 2026-08-20 depois de arquivada: usuário reproduziu manualmente o mesmo sintoma (Modo Compra mostra 0,00) por uma causa raiz diferente (`compra_item.valorEstimadoUnit` obsoleto quando a linha já existia numa compra aberta residual antes do preço do produto ser editado). Fix aplicado no código nesta sessão; 8 cenários de teste Maestro (`.maestro/bug-preco-*.yaml`) escritos mas **não executados** — change permanece aberta até a execução real confirmar todos. | Pendente — execução real do Maestro em sessão futura (tasks.md seção 6). |
