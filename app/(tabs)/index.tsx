@@ -1,6 +1,6 @@
 import { FlashList } from '@shopify/flash-list';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Keyboard, Pressable, ScrollView, View } from 'react-native';
 
 import { ProdutoNaDespensa, useProdutos } from '@/application/estoque/use-produtos';
@@ -91,6 +91,16 @@ export default function Despensa() {
     }
   }, [filtroDaRota]);
 
+  // `busca` lido por ref dentro do cleanup, nunca como dependência do
+  // `useCallback` abaixo: com `[busca]`, cada tecla digitada trocava a
+  // identidade do callback, e o `useFocusEffect` real (react-navigation)
+  // desmonta/remonta o efeito a cada troca de dependência — chamando o
+  // cleanup (Keyboard.dismiss) a cada tecla, não só na troca de aba real.
+  const buscaRef = useRef(busca);
+  useEffect(() => {
+    buscaRef.current = busca;
+  }, [busca]);
+
   // Ao trocar de aba a tela continua montada (Tabs do Expo Router só
   // esconde via display:none) — sem isso, o campo de busca ficava com
   // foco/teclado abertos mesmo fora da tela. Busca vazia fecha o campo;
@@ -99,11 +109,11 @@ export default function Despensa() {
     useCallback(
       () => () => {
         Keyboard.dismiss();
-        if (busca === '') {
+        if (buscaRef.current === '') {
           setBuscaAberta(false);
         }
       },
-      [busca],
+      [],
     ),
   );
 

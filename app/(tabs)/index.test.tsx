@@ -6,34 +6,42 @@ import { milesimos } from '@/domain/shared/quantidade';
 import { ThemeProvider } from '@/presentation/theme/provider';
 import Despensa from './index';
 
-// `mockUltimoEfeito` guarda o `efeito` mais recente passado a
-// `useFocusEffect` — em produção é um `useCallback` com dep `[busca]`, uma
-// closure nova a cada tecla digitada. Capturar direto no corpo do mock (sem
-// passar por `useEffect`) evita depender do timing de passive effects do
-// React/RNTL, que se mostrou instável (act() sobreposto) com o `autoFocus`
-// do campo de busca. `dispararBlur()` chama esse efeito e o cleanup que ele
-// devolve manualmente, simulando a troca de aba sem uma implementação real
-// de navegação. Prefixo `mock` é o que o babel-plugin-jest-hoist exige pra
-// permitir referenciar a variável de dentro da factory de `jest.mock`, que
-// é hoisted acima deste import.
-let mockUltimoEfeito: (() => void | (() => void)) | null = null;
+// `mockEfeitoAtual`/`mockCleanupAtual` replicam a semântica real do
+// `useFocusEffect` do react-navigation: ele é um `useEffect(fn, [navigation,
+// efeito])` por baixo — toda vez que a *identidade* do `efeito` muda (ex.:
+// um `useCallback` com dependência que muda a cada tecla), o React desmonta
+// o efeito anterior (chamando seu cleanup) e, como a tela continua focada,
+// remonta na hora. É esse desmonte/remonte por troca de dependência — não
+// só a troca de aba real — que caracteriza o bug ACHADO-062 (teclado fecha
+// a cada tecla). Sem essa simulação, o teste não pega a regressão. Prefixo
+// `mock` é o que o babel-plugin-jest-hoist exige pra permitir referenciar a
+// variável de dentro da factory de `jest.mock`, hoisted acima deste import.
+let mockEfeitoAtual: (() => void | (() => void)) | null = null;
+let mockCleanupAtual: (() => void) | undefined;
 
 // Chama direto, sem embrulhar num `act()` síncrono: o `autoFocus` do campo
 // de busca deixa um `act()` assíncrono pendente sob RNTL, e sincronizar
 // manualmente com ele se mostrou instável (a atualização de estado do
 // cleanup corria risco de nunca comitar a tempo). As asserções depois de
 // `dispararBlur()` usam `waitFor`, que já resolve o commit real assim que
-// ele acontece.
+// ele acontece. Simula um evento de blur real da navegação (troca de aba):
+// só chama o cleanup do efeito já registrado, sem trocar sua identidade —
+// diferente da troca de dependência, que o mock de `useFocusEffect` abaixo
+// já trata sozinho a cada render.
 function dispararBlur() {
-  const cleanup = mockUltimoEfeito?.();
-  cleanup?.();
+  mockCleanupAtual?.();
 }
 
 jest.mock('expo-router', () => ({
   router: { push: jest.fn() },
   useLocalSearchParams: () => ({}),
   useFocusEffect: (efeito: () => void | (() => void)) => {
-    mockUltimoEfeito = efeito;
+    if (efeito !== mockEfeitoAtual) {
+      mockCleanupAtual?.();
+      mockEfeitoAtual = efeito;
+      const destruir = efeito();
+      mockCleanupAtual = typeof destruir === 'function' ? destruir : undefined;
+    }
   },
 }));
 
@@ -89,7 +97,8 @@ describe('Despensa — rótulo acessível do stepper de consumo', () => {
 
 describe('Despensa — busca não persiste teclado/foco entre abas', () => {
   beforeEach(() => {
-    mockUltimoEfeito = null;
+    mockEfeitoAtual = null;
+    mockCleanupAtual = undefined;
     jest.spyOn(Keyboard, 'dismiss').mockImplementation(() => {});
   });
 
@@ -142,5 +151,59 @@ describe('Despensa — busca não persiste teclado/foco entre abas', () => {
     await waitFor(() => expect(Keyboard.dismiss).toHaveBeenCalled());
     expect(screen.getByPlaceholderText('Nome do item')).toHaveDisplayValue('roz');
     expect(screen.getByLabelText('Usei 1 kg de Arroz')).toBeTruthy();
+  });
+});
+
+describe('Despensa — ACHADO-062: digitar na busca não fecha o teclado sozinho', () => {
+  // Bug confirmado em aparelho físico (2026-08-21, tasks.md §6): a cada
+  // tecla, `busca` mudava e o `useCallback` do `useFocusEffect` ganhava
+  // nova identidade — o react-navigation trata isso como se a tela tivesse
+  // perdido o foco, disparando o cleanup (`Keyboard.dismiss`) a cada
+  // caractere. Correção: `busca` lido via ref dentro do cleanup, callback
+  // com deps `[]` (identidade estável entre teclas).
+  beforeEach(() => {
+    mockEfeitoAtual = null;
+    mockCleanupAtual = undefined;
+    jest.spyOn(Keyboard, 'dismiss').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  it('digitar um caractere no campo de busca não chama Keyboard.dismiss', async () => {
+    await comTema(<Despensa />);
+    fireEvent.press(screen.getByLabelText('Buscar'));
+    await waitFor(() => expect(screen.getByPlaceholderText('Nome do item')).toBeTruthy());
+
+    fireEvent.changeText(screen.getByPlaceholderText('Nome do item'), 'r');
+    await waitFor(() => expect(screen.getByPlaceholderText('Nome do item')).toHaveDisplayValue('r'));
+
+    expect(Keyboard.dismiss).not.toHaveBeenCalled();
+  });
+
+  it('digitar vários caracteres em sequência não fecha o teclado em nenhum momento', async () => {
+    await comTema(<Despensa />);
+    fireEvent.press(screen.getByLabelText('Buscar'));
+    const campo = await screen.findByPlaceholderText('Nome do item');
+
+    for (const parcial of ['r', 'ro', 'roz']) {
+      fireEvent.changeText(campo, parcial);
+      await waitFor(() => expect(campo).toHaveDisplayValue(parcial));
+      expect(Keyboard.dismiss).not.toHaveBeenCalled();
+    }
+  });
+
+  it('apagar caracteres (backspace) também não fecha o teclado', async () => {
+    await comTema(<Despensa />);
+    fireEvent.press(screen.getByLabelText('Buscar'));
+    const campo = await screen.findByPlaceholderText('Nome do item');
+    fireEvent.changeText(campo, 'roz');
+    await waitFor(() => expect(campo).toHaveDisplayValue('roz'));
+
+    fireEvent.changeText(campo, 'ro');
+    await waitFor(() => expect(campo).toHaveDisplayValue('ro'));
+
+    expect(Keyboard.dismiss).not.toHaveBeenCalled();
   });
 });

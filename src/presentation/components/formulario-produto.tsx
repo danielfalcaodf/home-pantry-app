@@ -1,5 +1,5 @@
 import { ReactNode, useRef, useState } from 'react';
-import { Pressable, ScrollView, View } from 'react-native';
+import { Pressable, ScrollView, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { UNIDADES, Unidade } from '../../domain/shared/unidade';
@@ -102,19 +102,36 @@ export function FormularioProduto({
   const [categoriaFocada, setCategoriaFocada] = useState(false);
   const scrollRef = useRef<ScrollView>(null);
   const marcadorMaisOpcoesRef = useRef<View>(null);
+  const primeiroCampoExtraRef = useRef<TextInput>(null);
+  const tinhaCampoFocadoRef = useRef(false);
 
-  // Ao expandir "Mais opções" com o teclado já aberto, o usuário não vê o
-  // campo revelado sem rolar manualmente — aqui o scroll acontece sozinho,
-  // sem dar foco automático em nenhum campo (só posição, não teclado).
+  function registrarFoco() {
+    tinhaCampoFocadoRef.current = true;
+  }
+
+  function registrarDesfoque() {
+    tinhaCampoFocadoRef.current = false;
+  }
+
   function alternarMaisOpcoes() {
     const vaiAbrir = !maisOpcoes;
+    const manterFoco = vaiAbrir && tinhaCampoFocadoRef.current;
     setMaisOpcoes(vaiAbrir);
     if (vaiAbrir) {
       requestAnimationFrame(() => {
         marcadorMaisOpcoesRef.current?.measureLayout(
           // @ts-expect-error -- measureLayout aceita o nó nativo do ScrollView em runtime.
           scrollRef.current,
-          (_x: number, y: number) => scrollRef.current?.scrollTo({ y, animated: true }),
+          (_x: number, y: number) => {
+            scrollRef.current?.scrollTo({ y, animated: true });
+            if (manterFoco) {
+              // Demora breve para o Android preparar o IME antes de chamar .focus()
+              // → evita autoFocus sem teclado aberto no celular físico (ACHADO-058).
+              setTimeout(() => {
+                primeiroCampoExtraRef.current?.focus();
+              }, 200);
+            }
+          },
           () => {},
         );
       });
@@ -162,6 +179,8 @@ export function FormularioProduto({
         onChangeText={definir('nome')}
         erro={erros.nome}
         autoFocus={autofocarNome}
+        onFocus={registrarFoco}
+        onBlur={registrarDesfoque}
       />
 
       {avisoDeNome ? (
@@ -204,6 +223,8 @@ export function FormularioProduto({
         erro={erros.quantidadeNecessaria}
         keyboardType="decimal-pad"
         tipo="quantidade"
+        onFocus={registrarFoco}
+        onBlur={registrarDesfoque}
       />
 
       <Pressable
@@ -237,6 +258,9 @@ export function FormularioProduto({
               erro={erros.quantidadeAtual}
               keyboardType="decimal-pad"
               tipo="quantidade"
+              ref={primeiroCampoExtraRef}
+              onFocus={registrarFoco}
+              onBlur={registrarDesfoque}
             />
           ) : null}
           <CampoTexto
@@ -246,14 +270,23 @@ export function FormularioProduto({
             erro={erros.valorUnitario}
             keyboardType="decimal-pad"
             tipo="dinheiro"
+            ref={quantidadeAtualEditavel ? undefined : primeiroCampoExtraRef}
+            onFocus={registrarFoco}
+            onBlur={registrarDesfoque}
           />
           <View style={{ gap: espaco.sm }}>
             <CampoTexto
               rotulo="Onde guardo"
               value={valores.categoria}
               onChangeText={definir('categoria')}
-              onFocus={() => setCategoriaFocada(true)}
-              onBlur={() => setCategoriaFocada(false)}
+              onFocus={() => {
+                registrarFoco();
+                setCategoriaFocada(true);
+              }}
+              onBlur={() => {
+                registrarDesfoque();
+                setCategoriaFocada(false);
+              }}
             />
             {sugestoes.length > 0 ? (
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: espaco.sm }}>
@@ -271,11 +304,15 @@ export function FormularioProduto({
             rotulo="Marca que prefiro"
             value={valores.marcaPreferida}
             onChangeText={definir('marcaPreferida')}
+            onFocus={registrarFoco}
+            onBlur={registrarDesfoque}
           />
           <CampoTexto
             rotulo="Anotação"
             value={valores.observacao}
             onChangeText={definir('observacao')}
+            onFocus={registrarFoco}
+            onBlur={registrarDesfoque}
             multiline
           />
         </View>

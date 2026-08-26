@@ -19,7 +19,7 @@ estritamente aditiva.
 **Goals:**
 - Tela de editar produto tem o mesmo comportamento de rodapé fixo e keyboard-avoidance que
   "Novo produto" já tem.
-- "Mais opções" rola até o campo revelado, sem dar foco automático.
+- "Mais opções" rola até o campo revelado; quando expandido a partir de um campo já focado, transfere o foco para o primeiro campo revelado após o scroll.
 - Botão de remoção do produto é visualmente reconhecível como ação destrutiva (ícone + cor),
   com rótulo acessível — alinhado à recomendação de HIG (Apple) e Material Design 3 (Google)
   de marcar ações destrutivas com sinal visual redundante, não só posição.
@@ -37,10 +37,10 @@ estritamente aditiva.
   fixo do zero: reaproveita a solução que já existe e já funciona em `produto/novo.tsx`, menor
   diff e nenhuma duplicação de lógica de layout.
 - **`ref` no `ScrollView` de `formulario-produto.tsx` + scroll manual no toggle "Mais opções"**,
-  em vez de depender só do "scroll to focused input" nativo: como nenhum campo recebe foco
-  automático nesse fluxo (autoFocus é explicitamente NÃO desejado aqui — só scroll), o
-  mecanismo nativo baseado em foco não dispara; precisa de scroll explícito por posição
-  (`measureLayout`/`scrollTo`).
+  em vez de depender só do "scroll to focused input" nativo: o scroll explícito por posição
+  (`measureLayout`/`scrollTo`) torna o primeiro campo revelado visível; quando a expansão parte
+  de um campo já focado, o foco é transferido só depois do scroll para preservar o teclado e a
+  continuidade da edição. Sem foco prévio, nenhum campo recebe foco automático.
 - **Extensão aditiva de `Botao`**: nova prop opcional (ícone + cor), variantes
   `primario`/`secundario` existentes continuam bit-a-bit idênticas — nenhuma migração exigida
   nos outros usos do componente.

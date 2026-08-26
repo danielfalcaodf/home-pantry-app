@@ -41,9 +41,14 @@ A tela de cadastro SHALL exigir nome, unidade e quantidade necessária, e SHALL 
 - **WHEN** o controle "Mais opções"/"Menos opções" é medido, em qualquer tela que use `FormularioProduto` (Cadastrar produto ou Detalhe do produto)
 - **THEN** sua área tocável mede no mínimo 48 por 48 pontos independentes, sem alterar seu tamanho visual
 
-#### Scenario: Auto-scroll ao expandir "Mais opções" sem foco automático
+#### Scenario: Auto-scroll ao expandir "Mais opções" com continuidade de edição
 
-- **WHEN** o usuário toca em "Mais opções" com o teclado aberto, em qualquer tela que use `FormularioProduto`
+- **WHEN** o usuário toca em "Mais opções" a partir de um campo já focado (teclado aberto), em qualquer tela que use `FormularioProduto`
+- **THEN** a tela rola automaticamente até o primeiro campo revelado e, depois do scroll, esse campo recebe foco para manter o teclado aberto
+
+#### Scenario: Auto-scroll ao expandir "Mais opções" sem foco prévio
+
+- **WHEN** o usuário toca em "Mais opções" sem haver campo de texto focado, em qualquer tela que use `FormularioProduto`
 - **THEN** a tela rola automaticamente até o primeiro campo revelado, e nenhum campo recebe foco automático
 
 #### Scenario: Controle "Mais opções" continua tocável com o teclado aberto

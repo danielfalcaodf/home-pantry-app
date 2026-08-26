@@ -86,6 +86,69 @@ describe('edição e remoção lógica', () => {
     }
   });
 
+  it('persiste todos os campos opcionais da seção "Mais opções"', async () => {
+    const { repo, casaId, usuarioId } = montar();
+    const criado = await repo.criar(casaId, usuarioId, dadosValidos());
+    if (!criado.ok) {
+      throw new Error('setup');
+    }
+
+    await repo.editar(criado.valor.id, {
+      valorUnitario: centavos(1299),
+      categoria: 'Despensa',
+      marcaPreferida: 'Marca boa',
+      observacao: 'Pote de vidro',
+    });
+    const relido = await repo.obterPorId(criado.valor.id);
+
+    expect(relido).toMatchObject({
+      valorUnitario: 1299,
+      categoria: 'Despensa',
+      marcaPreferida: 'Marca boa',
+      observacao: 'Pote de vidro',
+    });
+  });
+
+  it('persiste campo principal e opcional na mesma edição', async () => {
+    const { repo, casaId, usuarioId } = montar();
+    const criado = await repo.criar(casaId, usuarioId, dadosValidos());
+    if (!criado.ok) {
+      throw new Error('setup');
+    }
+
+    await repo.editar(criado.valor.id, {
+      quantidadeNecessaria: milesimos(5000),
+      observacao: 'Pote de vidro',
+    });
+    const relido = await repo.obterPorId(criado.valor.id);
+
+    expect(relido).toMatchObject({
+      quantidadeNecessaria: 5000,
+      observacao: 'Pote de vidro',
+    });
+  });
+
+  it('preserva campos opcionais existentes quando a edição não os altera', async () => {
+    const { repo, casaId, usuarioId } = montar();
+    const criado = await repo.criar(casaId, usuarioId, dadosValidos());
+    if (!criado.ok) {
+      throw new Error('setup');
+    }
+
+    await repo.editar(criado.valor.id, {
+      marcaPreferida: 'Marca boa',
+      observacao: 'Pote de vidro',
+    });
+    await repo.editar(criado.valor.id, { nome: 'Arroz integral' });
+    const relido = await repo.obterPorId(criado.valor.id);
+
+    expect(relido).toMatchObject({
+      nome: 'Arroz integral',
+      marcaPreferida: 'Marca boa',
+      observacao: 'Pote de vidro',
+    });
+  });
+
   it('editar produto inexistente retorna nao_encontrado', async () => {
     const { repo } = montar();
     const resultado = await repo.editar('fantasma', { nome: 'X' });

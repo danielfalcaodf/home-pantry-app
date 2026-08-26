@@ -159,6 +159,8 @@ function Detalhe({ id, item }: { id: string; item: ProdutoNaDespensa }) {
       quantidadeNecessaria: deDecimal(quantidade),
       valorUnitario: centavos(preco),
       categoria: normalizarCategoria(valores.categoria),
+      marcaPreferida: valores.marcaPreferida || null,
+      observacao: valores.observacao || null,
     });
     if (!resultado.ok) {
       setErros({ [resultado.erro.campo]: resultado.erro.mensagem });

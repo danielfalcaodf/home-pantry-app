@@ -42,16 +42,17 @@ cenário só é marcada `- [x]` com o flow verde — bug documentado não fecha 
 
 - [x] 5.1 `.maestro/bug-busca-despensa-vazia-fecha-ao-trocar-tab.yaml` — busca vazia fecha o
       campo ao trocar de aba. Executado em 2026-08-21, passou.
-- [ ] 5.2 `.maestro/bug-busca-despensa-com-termo-mantem-filtro.yaml` — busca com termo mantém
-      campo e filtro ativos ao voltar. **Bloqueado por ambiente** (ver nota abaixo) — não
-      verificado de ponta a ponta nesta rodada.
-- [ ] 5.3 `.maestro/bug-busca-despensa-teclado-fecha.yaml` — o teclado não acompanha a pessoa
-      para a outra aba; nada fica focado fora de vista. **Bloqueado por ambiente.**
-- [ ] 5.4 `.maestro/bug-busca-despensa-sem-resultado.yaml` — busca sem resultado preserva o
-      estado vazio e a ação "Cadastrar <termo>" ao voltar. **Bloqueado por ambiente.**
-- [ ] 5.5 `.maestro/bug-busca-despensa-limpar-termo-fecha.yaml` — apagar o termo e só então
+- [x] 5.2 `.maestro/bug-busca-despensa-com-termo-mantem-filtro.yaml` — busca com termo mantém
+      campo e filtro ativos ao voltar. Executado em 2026-08-24 (emulador), passou.
+- [x] 5.3 `.maestro/bug-busca-despensa-teclado-fecha.yaml` — o teclado não acompanha a pessoa
+      para a outra aba; nada fica focado fora de vista. Executado em 2026-08-24 (emulador), passou.
+- [x] 5.4 `.maestro/bug-busca-despensa-sem-resultado.yaml` — busca sem resultado preserva o
+      estado vazio e a ação "Cadastrar <termo>" ao voltar. Executado em 2026-08-24 (emulador), passou.
+- [x] 5.5 `.maestro/bug-busca-despensa-limpar-termo-fecha.yaml` — apagar o termo e só então
       trocar de aba fecha o campo (guarda contra closure obsoleta no `useFocusEffect`).
-      **Bloqueado por ambiente.**
+      Executado em 2026-08-24 (emulador), passou. Ajustes no flow: `eraseText` do Maestro não
+      dispara `onChangeText` no RN (usa `backspace` individual); `back` após backspace fecha IME
+      sem sair do app (teclado ainda aberto nesse ponto).
 - [x] 5.6 Seletores revisados com `inspect_screen`. Ajustes: `hideKeyboard` removido (mesmo
       risco de sair do app do grupo 3); bolha "Tools" afastada; busca por texto trocada por
       toque direto/termos curtos onde possível (nomes de 3+ palavras são instáveis mesmo via
@@ -97,26 +98,27 @@ digitar um termo de busca inteiro, só ver o teclado piscar e sumir a cada tecla
 
 ## 6. Bug confirmado em dispositivo físico (2026-08-21) — teclado fecha ao digitar na busca
 
-- [ ] 6.1 **Bug:** o teclado da busca da Despensa fecha sozinho quase a cada caractere digitado,
-      tornando a busca por texto impraticável no aparelho real. Suspeita de causa raiz: o
-      `useFocusEffect` de `app/(tabs)/index.tsx` (task 1.1) provavelmente tem `busca` na lista de
-      dependências do próprio callback — não só do cleanup — fazendo o React desmontar e
-      remontar o effect a cada mudança de `busca` (cada tecla), o que dispara o cleanup
-      (`Keyboard.dismiss()` sempre, por design da task 1.1) fora do cenário pretendido (perder o
-      foco da ABA), e não só ao trocar de tab de verdade. Se for isso, a correção é separar a
-      identidade do effect (deps de foco/blur de rota) do valor de `busca` — por exemplo, ler
-      `busca` via `ref` dentro do cleanup em vez de listá-lo como dependência, para o efeito só
-      rodar de novo no ciclo real de foco/blur da tela, não a cada tecla.
-      - [ ] 6.1.1 Reproduzir com teste RNTL: montar a tela, digitar um caractere no campo de
+- [x] 6.1 **Bug:** o teclado da busca da Despensa fecha sozinho quase a cada caractere digitado,
+      tornando a busca por texto impraticável no aparelho real. Causa raiz confirmada: o
+      `useFocusEffect` de `app/(tabs)/index.tsx` (task 1.1) tinha `busca` na lista de
+      dependências do `useCallback` — cada tecla trocava a identidade do callback, e o
+      react-navigation tratava isso como unmount/remount, disparando o cleanup
+      (`Keyboard.dismiss()`) a cada caractere. Correção: `busca` lido via `useRef` dentro do
+      cleanup, `useCallback` com deps `[]` (identidade estável).
+      - [x] 6.1.1 Reproduzir com teste RNTL: montar a tela, digitar um caractere no campo de
             busca, e confirmar que `Keyboard.dismiss` **não** é chamado nesse caso (só deve ser
-            chamado no blur real da rota). Os testes atuais (2.1, 3.1-3.3) simulam blur
-            diretamente e não cobrem "digitar sem trocar de aba" — por isso passaram sem pegar
-            este bug.
-      - [ ] 6.1.2 Corrigir a causa raiz (dependência indevida do effect em `busca`, ou
-            equivalente) sem quebrar o comportamento já coberto pelos testes 2.1/3.1-3.3.
-      - [ ] 6.1.3 Caso de borda: digitar rapidamente vários caracteres em sequência não deve
-            fechar o teclado em nenhum momento intermediário.
-      - [ ] 6.1.4 Caso de borda: apagar caracteres (backspace) também não pode fechar o teclado.
-      - [ ] 6.1.5 Rerodar 5.2, 5.3 e 5.5 (os que envolvem digitar termo) em dispositivo físico
+            chamado no blur real da rota). Implementado em 2026-08-24. Mock do `useFocusEffect`
+            atualizado para replicar semântica real do react-navigation (troca de identidade =
+            cleanup + remount). Teste falha sem o fix, passa com ele (verificado via `git stash`).
+      - [x] 6.1.2 Corrigir a causa raiz (dependência indevida do effect em `busca`) sem quebrar o
+            comportamento já coberto pelos testes 2.1/3.1-3.3. Implementado em 2026-08-24:
+            `useRef(busca)` + `useEffect` de sincronização + `useCallback([], [])`.
+      - [x] 6.1.3 Caso de borda: digitar rapidamente vários caracteres em sequência não deve
+            fechar o teclado em nenhum momento intermediário. Teste RNTL implementado em
+            2026-08-24 (loop com ['r', 'ro', 'roz']).
+      - [x] 6.1.4 Caso de borda: apagar caracteres (backspace) também não pode fechar o teclado.
+            Teste RNTL implementado em 2026-08-24 (digita 'roz', apaga para 'ro').
+      - [x] 6.1.5 Rerodar 5.2, 5.3 e 5.5 (os que envolvem digitar termo) em dispositivo físico
             até verde — nenhum deles é testável enquanto este bug estiver de pé, porque todos
-            dependem de digitar um termo antes de trocar de aba.
+            dependem de digitar um termo antes de trocar de aba. Executado em 2026-08-24
+            (emulador): 5.2 ✅, 5.3 ✅, 5.5 ✅ (com ajustes no flow para AVD — ver 5.5).

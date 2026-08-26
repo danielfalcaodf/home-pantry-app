@@ -17,8 +17,9 @@ componente `Botao`, sem ícone nem cor de perigo — hoje `Botao` só aceita
   container `flex:1` próprio — isso resolve o rodapé fixo do "Salvar" e reabilita o
   keyboard-avoidance (`EvitaTeclado`) que já existe no componente mas está sem efeito hoje.
 - `formulario-produto.tsx`: o `ScrollView` ganha `ref`; ao expandir "Mais opções", a tela rola
-  automaticamente até o primeiro campo extra revelado — **sem** dar foco automático nele (só
-  scroll, o usuário decide se toca).
+  automaticamente até o primeiro campo extra revelado. Quando a expansão parte de um campo já
+  focado, o primeiro campo revelado recebe foco após o scroll para manter a continuidade de
+  digitação; sem teclado aberto, continua sendo só scroll.
 - `Botao` (`src/presentation/components/botao.tsx`) ganha suporte **aditivo** (variantes
   existentes inalteradas) a ícone e cor customizada.
 - Novo ícone de lixeira em `icones.ts`; o botão "Tirar da despensa" passa a usar ícone de

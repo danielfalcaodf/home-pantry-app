@@ -77,6 +77,8 @@ export class SQLiteProdutoRepository implements ProdutoRepository {
             quantidadeAtual: dados.quantidadeAtual,
             quantidadeNecessaria: dados.quantidadeNecessaria,
             valorUnitario: dados.valorUnitario,
+            marcaPreferida: dados.marcaPreferida,
+            observacao: dados.observacao,
             criadoEm: agora,
             atualizadoEm: agora,
           })
@@ -131,6 +133,8 @@ export class SQLiteProdutoRepository implements ProdutoRepository {
             quantidadeNecessaria: dados.quantidadeNecessaria,
           }),
           ...(dados.valorUnitario !== undefined && { valorUnitario: dados.valorUnitario }),
+          ...(dados.marcaPreferida !== undefined && { marcaPreferida: dados.marcaPreferida }),
+          ...(dados.observacao !== undefined && { observacao: dados.observacao }),
           atualizadoEm: this.clock.agora(),
           syncStatus: 'pendente' as const,
         })

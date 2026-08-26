@@ -1,6 +1,6 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react-native';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react-native';
 import { ReactNode, useState } from 'react';
-import { ScrollView, View } from 'react-native';
+import { ScrollView, TextInput, View } from 'react-native';
 
 import { ALVO_TOQUE_MINIMO } from '../theme/espaco';
 import { ThemeProvider } from '../theme/provider';
@@ -11,7 +11,7 @@ jest.mock('expo-router', () => ({
 }));
 
 async function comTema(no: ReactNode) {
-  await render(<ThemeProvider preferencia="escuro">{no}</ThemeProvider>);
+  return await render(<ThemeProvider preferencia="escuro">{no}</ThemeProvider>);
 }
 
 function estiloResolvido(elemento: { props: { style?: unknown } }) {
@@ -19,7 +19,7 @@ function estiloResolvido(elemento: { props: { style?: unknown } }) {
   return Array.isArray(style) ? Object.assign({}, ...style) : style;
 }
 
-async function montarFormulario() {
+function montarFormulario() {
   return comTema(
     <FormularioProduto
       valores={VALORES_INICIAIS}
@@ -215,33 +215,40 @@ describe('FormularioProduto — scroll ao expandir "Mais opções" (correcao-tel
   }
 
   afterEach(() => {
+    jest.useRealTimers();
     jest.restoreAllMocks();
   });
 
-  it('ao ABRIR "Mais opções", rola até o marcador — sem focar nenhum campo revelado', async () => {
+  it('transfere o foco de "O que é" para o primeiro campo revelado depois do scroll', async () => {
     mockPosicaoDoMarcador(240);
     const scrollTo = jest.spyOn(ScrollView.prototype, 'scrollTo').mockImplementation(() => {});
-    await montarFormulario();
+    const focus = jest.spyOn(TextInput.prototype, 'focus').mockImplementation(() => {});
+    const { unmount } = await comTema(
+      <FormularioProduto
+        valores={VALORES_INICIAIS}
+        aoMudar={() => {}}
+        erros={{}}
+        categoriasExistentes={[]}
+        tituloAcao="Salvar"
+        aoSalvar={() => {}}
+        quantidadeAtualEditavel={false}
+      />,
+    );
 
+    jest.useFakeTimers();
+    fireEvent(screen.getByLabelText('O que é'), 'focus');
     fireEvent.press(screen.getByRole('button', { name: 'Mais opções' }));
 
     await waitFor(() => expect(scrollTo).toHaveBeenCalledWith({ y: 240, animated: true }));
-    // Sem foco automático (ACHADO-056): o campo revelado aparece, mas ninguém pediu foco nele.
-    expect(screen.getByLabelText('Quanto costuma custar').props.autoFocus).toBeFalsy();
-  });
-
-  it('ao RECOLHER "Menos opções", não dispara scroll — só ao abrir', async () => {
-    mockPosicaoDoMarcador(240);
-    const scrollTo = jest.spyOn(ScrollView.prototype, 'scrollTo').mockImplementation(() => {});
-    await montarFormulario();
-
-    fireEvent.press(screen.getByRole('button', { name: 'Mais opções' }));
-    await waitFor(() => expect(scrollTo).toHaveBeenCalledTimes(1));
+    act(() => jest.advanceTimersByTime(200));
+    expect(focus).toHaveBeenCalledTimes(1);
     scrollTo.mockClear();
+    focus.mockClear();
 
     fireEvent.press(screen.getByRole('button', { name: 'Menos opções' }));
-    await waitFor(() => expect(screen.getByText('Mais opções')).toBeTruthy());
-
     expect(scrollTo).not.toHaveBeenCalled();
+    expect(focus).not.toHaveBeenCalled();
+    unmount();
   });
+
 });

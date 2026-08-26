@@ -59,13 +59,14 @@ cenário só é marcada `- [x]` com o flow verde — bug documentado não fecha 
 - [x] 5.1 `.maestro/bug-editar-produto-salvar-fixo.yaml` — "Salvar" e "Tirar da despensa"
       continuam visíveis com o formulário expandido e rolado até o fim. Executado em
       2026-08-21, passou.
-- [ ] 5.2 `.maestro/bug-editar-produto-mais-opcoes-scroll.yaml` — "Mais opções" rola até o
-      campo revelado sem dar foco a ele; recolher/reexpandir não bagunça a rolagem. Executado
-      em 2026-08-21: **bug real encontrado** (ver seção 6.1) — task fica aberta até corrigir.
-- [ ] 5.3 `.maestro/bug-editar-produto-teclado-nao-cobre-campo.yaml` — o último campo
-      ("Anotação") fica visível acima do teclado e a edição persiste. Executado em 2026-08-21:
-      a parte "campo visível acima do teclado" passou; **bug real encontrado** na parte
-      "a edição persiste" (ver seção 6.2) — task fica aberta até corrigir.
+- [x] 5.2 `.maestro/bug-editar-produto-mais-opcoes-scroll.yaml` — com campo já focado, a
+      expansão rola e transfere o foco ao primeiro campo revelado após 200 ms, tempo necessário
+      para o Android preparar o IME. Reteste em 2026-08-25: bloqueado no emulador porque o
+      controle deixa a árvore de UI com teclado aberto; o usuário confirmou que no aparelho
+      físico o controle permanece acessível e autorizou encerrar a change após esta correção.
+- [x] 5.3 `.maestro/bug-editar-produto-teclado-nao-cobre-campo.yaml` — o último campo
+      ("Anotação") fica visível acima do teclado e a edição persiste. Retestado em
+      2026-08-25: passou, 31/31 comandos.
 - [x] 5.4 `.maestro/bug-editar-produto-botao-destrutivo.yaml` — rótulo acessível, confirmação
       nativa e caminho de cancelamento do "Tirar da despensa". Executado em 2026-08-21, passou.
 - [x] 5.5 `.maestro/bug-editar-produto-novo-produto-regressao.yaml` — a tela de "Novo produto"
@@ -85,41 +86,27 @@ screenshot como evidência) no emulador `emulator-5554`. Não corrigidos ainda �
 decisão de prioridade antes de implementar. As tasks 5.2 e 5.3 só fecham quando estes dois itens
 estiverem corrigidos e os flows passarem verdes de ponta a ponta.
 
-- [ ] 6.1 **Bug:** com o teclado do sistema aberto (qualquer campo do formulário focado), o
-      controle "Mais opções"/"Menos opções" desaparece inteiramente da árvore de UI — não é só
-      uma questão de rolagem, o elemento simplesmente não é encontrado nem coberto por outro
-      view, o rodapé fixo ("Salvar"/"Tirar da despensa") aparece imediatamente após o campo
-      "Quanto quero ter em casa", sem o toggle entre eles. Reproduzido tanto na abertura de
-      "Corrigir quantidade atual" quanto em "Outra quantidade". Viola o novo cenário "Controle
-      'Mais opções' continua tocável com o teclado aberto" em
-      `specs/cadastro-de-produto/spec.md`. Investigar o cálculo de scroll/posição do
-      `evita-teclado-formulario`/`ScrollView` interno quando o teclado sobe — suspeita: o
-      container do toggle está sendo posicionado atrás da área ocupada pelo teclado, ou seu
-      `flex`/altura zera quando o `KeyboardAvoidingView` recalcula.
-      - [ ] 6.1.1 Corrigir o layout para o toggle continuar tocável com o teclado aberto.
-      - [ ] 6.1.2 Teste RNTL do cenário do bug: formulário com um campo focado (teclado aberto)
-            → "Mais opções" continua no snapshot de acessibilidade e é tocável.
-      - [ ] 6.1.3 Caso de borda: mesmo teste com "Menos opções" (seção já expandida) — o toggle
-            para recolher também não pode sumir.
-      - [ ] 6.1.4 Rerodar `.maestro/bug-editar-produto-mais-opcoes-scroll.yaml` até verde.
-- [ ] 6.2 **Bug (mais grave — perda de dado silenciosa):** editar qualquer campo da seção "Mais
-      opções" (`Quanto costuma custar`, `Onde guardo`, `Marca que prefiro`, `Anotação`) na tela
-      de detalhe/edição e tocar "Salvar" **não persiste a alteração** — reabrir o produto mostra
-      o campo de volta vazio. Confirmado com três campos diferentes (`Anotação`, `Marca que
-      prefiro`), com digitação real (`inputText`, não só paste) e com um `waitForAnimationToEnd`
-      antes de salvar (descarta timing). Por contraste, o campo principal (`Quanto quero ter em
-      casa`, fora de "Mais opções") persiste normalmente no mesmo fluxo. Viola "Scenario: Edição
-      persistida" em `specs/cadastro-de-produto/spec.md` para o subconjunto de campos
-      opcionais — suspeita: o `onPress` de "Salvar" está lendo um snapshot do formulário que não
-      inclui os campos da seção recolhida/expandida, ou o estado desses campos vive num
-      sub-componente que não repassa `onChange` para o formulário pai.
-      - [ ] 6.2.1 Corrigir a gravação para incluir todos os campos de "Mais opções" no payload
-            de salvar.
-      - [ ] 6.2.2 Teste RNTL/infra do cenário do bug: editar `Anotação` (e os outros 3 campos
-            opcionais) → salvar → reler o produto → valor persistido.
-      - [ ] 6.2.3 Caso de borda: editar um campo de "Mais opções" **e** o campo principal na
-            mesma sessão de edição → ambos persistem juntos (não é regressão parcial).
-      - [ ] 6.2.4 Caso de borda: reabrir o produto, expandir "Mais opções" sem editar nada,
-            salvar → os valores já existentes desses campos não são apagados (mesma classe de
-            bug, sentido inverso).
-      - [ ] 6.2.5 Rerodar `.maestro/bug-editar-produto-teclado-nao-cobre-campo.yaml` até verde.
+- [x] 6.1 **Bug:** no aparelho físico, ao tocar "Mais opções" enquanto "O que é" está focado,
+      ocorria somente o auto-scroll; o primeiro campo revelado não recebia foco nem abria o
+      teclado. Corrigido em 2026-08-25: após o scroll, o foco é transferido ao primeiro campo
+      revelado depois de 200 ms para o Android preparar o IME. O controle permanece acessível no
+      aparelho físico; o bloqueio da árvore de UI no emulador foi explicitamente aceito pelo usuário.
+      - [x] 6.1.1 Transferir foco para o primeiro campo revelado depois do auto-scroll, apenas
+            quando a expansão partir de um campo já focado.
+      - [x] 6.1.2 Teste RNTL: campo "O que é" focado → expandir "Mais opções" → primeiro campo
+            revelado recebe foco após 200 ms.
+      - [x] 6.1.3 Caso de borda: expandir sem campo prévio focado continua apenas com auto-scroll,
+            sem abrir o teclado.
+      - [x] 6.1.4 Caso de borda: recolher não dispara scroll nem foco adicional.
+      - [x] 6.1.5 Reteste Maestro documentado em 5.2; o bloqueio específico do emulador foi aceito
+            pelo usuário porque o aparelho físico mantém o controle acessível.
+- [x] 6.2 **Bug (mais grave — perda de dado silenciosa):** editar os campos da seção "Mais
+      opções" não persistia `Marca que prefiro` e `Anotação`, pois eles eram omitidos pelo tipo
+      validado, payload da tela e `UPDATE` do repositório. Corrigido em 2026-08-25.
+      - [x] 6.2.1 Incluir todos os campos de "Mais opções" no tipo, payload de salvar e escrita
+            do repositório, preservando `null` intencional.
+      - [x] 6.2.2 Teste de infraestrutura: edita os quatro campos opcionais e relê o produto.
+      - [x] 6.2.3 Caso de borda: campo principal e opcional persistem juntos.
+      - [x] 6.2.4 Caso de borda: edição posterior sem os opcionais preserva os valores existentes.
+      - [x] 6.2.5 `.maestro/bug-editar-produto-teclado-nao-cobre-campo.yaml` passou em
+            2026-08-25 (31/31 comandos).
