@@ -4,7 +4,7 @@
 
 ### Requirement: Cadastro com campos essenciais em primeiro plano
 
-A tela de cadastro SHALL exigir nome, unidade e quantidade necessária, e SHALL apresentar no máximo quatro campos em primeiro plano. Os campos opcionais — quantidade atual, valor unitário, categoria, marca preferida e observação — SHALL ficar em uma seção recolhida, colapsada por padrão na renderização inicial de `FormularioProduto`. O controle que expande/recolhe essa seção ("Mais opções"/"Menos opções") SHALL ter alvo de toque mínimo de 48×48dp. Ao expandir a seção, a tela SHALL rolar automaticamente até o primeiro campo revelado, sem atribuir foco automático a ele.
+A tela de cadastro SHALL exigir nome, unidade e quantidade necessária, e SHALL apresentar no máximo quatro campos em primeiro plano. Os campos opcionais — quantidade atual, valor unitário, categoria, marca preferida e observação — SHALL ficar em uma seção recolhida, colapsada por padrão na renderização inicial de `FormularioProduto`. O controle que expande/recolhe essa seção ("Mais opções"/"Menos opções") SHALL ter alvo de toque mínimo de 48×48dp. Ao expandir a seção, a tela SHALL rolar automaticamente até o primeiro campo revelado. Quando a expansão começar com um campo já focado, esse campo revelado SHALL receber foco após o scroll; sem foco prévio, nenhum campo recebe foco automático.
 
 #### Scenario: Cadastro mínimo
 
