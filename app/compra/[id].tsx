@@ -162,7 +162,7 @@ export default function ModoCompra() {
             <ItemCompra
               key={linha.chave}
               linha={linha.item}
-              onMarcar={() => void marcar(linha.item.item)}
+              onMarcar={() => void marcar(linha.item)}
               onDesmarcar={() => void desmarcar(linha.item.item.id)}
               onAjustar={() => setItemEmAjuste(linha.item)}
               onResponderPreco={(resposta) => void responderAtualizarPreco(linha.item.item.id, resposta)}

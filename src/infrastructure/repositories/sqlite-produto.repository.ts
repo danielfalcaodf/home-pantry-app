@@ -19,7 +19,7 @@ import {
 } from '../../ports/produto.repository';
 import { gerarId } from '../../shared/id';
 import { falha, Result, sucesso } from '../../shared/result';
-import { produto as tabelaProduto, movimentoEstoque } from '../db/schema';
+import { produto as tabelaProduto, movimentoEstoque, compraItem as tabelaCompraItem } from '../db/schema';
 import { Db } from '../db/tipos';
 
 type LinhaProduto = typeof tabelaProduto.$inferSelect;
@@ -77,6 +77,8 @@ export class SQLiteProdutoRepository implements ProdutoRepository {
             quantidadeAtual: dados.quantidadeAtual,
             quantidadeNecessaria: dados.quantidadeNecessaria,
             valorUnitario: dados.valorUnitario,
+            marcaPreferida: dados.marcaPreferida,
+            observacao: dados.observacao,
             criadoEm: agora,
             atualizadoEm: agora,
           })
@@ -131,6 +133,8 @@ export class SQLiteProdutoRepository implements ProdutoRepository {
             quantidadeNecessaria: dados.quantidadeNecessaria,
           }),
           ...(dados.valorUnitario !== undefined && { valorUnitario: dados.valorUnitario }),
+          ...(dados.marcaPreferida !== undefined && { marcaPreferida: dados.marcaPreferida }),
+          ...(dados.observacao !== undefined && { observacao: dados.observacao }),
           atualizadoEm: this.clock.agora(),
           syncStatus: 'pendente' as const,
         })
@@ -146,13 +150,29 @@ export class SQLiteProdutoRepository implements ProdutoRepository {
     return sucesso(editado as Produto);
   }
 
+  // Item "fora da lista por agora" (excluido=true) não faz mais sentido depois que o produto
+  // some — sem isso, o FK onDelete:'set null' nunca dispara (é soft-delete, não DELETE físico)
+  // e o item fica preso apontando pro produto morto. Item pendente comum (excluido=false)
+  // continua intocado: a compra aberta precisa dele pra não derrubar o próprio detalhe da
+  // compra (task 5.4/5.7 de correcao-lista-de-compras) — só o registro órfão do bug é apagado.
   async removerLogicamente(id: string): Promise<void> {
     const agora = this.clock.agora();
-    this.db
-      .update(tabelaProduto)
-      .set({ deletadoEm: agora, atualizadoEm: agora, syncStatus: 'pendente' })
-      .where(and(eq(tabelaProduto.id, id), naoRemovido))
-      .run();
+    this.db.transaction((tx) => {
+      tx.update(tabelaProduto)
+        .set({ deletadoEm: agora, atualizadoEm: agora, syncStatus: 'pendente' })
+        .where(and(eq(tabelaProduto.id, id), naoRemovido))
+        .run();
+
+      tx.delete(tabelaCompraItem)
+        .where(
+          and(
+            eq(tabelaCompraItem.produtoId, id),
+            eq(tabelaCompraItem.comprado, false),
+            eq(tabelaCompraItem.excluido, true),
+          ),
+        )
+        .run();
+    });
   }
 
   async listarDespensa(casaId: string): Promise<Produto[]> {

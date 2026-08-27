@@ -1,0 +1,74 @@
+appId: com.danielfalcaodf.repor
+---
+# Change `correcao-busca-despensa-persiste-entre-tabs` (ordem 7) — cenário 5/5.
+#
+# BORDA DE TRANSIÇÃO ENTRE OS DOIS COMPORTAMENTOS: a regra de fechar o campo
+# depende do valor do termo NO MOMENTO DO BLUR (`busca === ''` dentro do
+# cleanup do `useFocusEffect`). Se o efeito capturar um valor obsoleto, apagar
+# o termo e trocar de aba deixaria o campo aberto para sempre — bug de closure
+# clássico, que só aparece nesta ordem exata de passos.
+#
+# O QUE ESTE FLOW PROVA: digitar, apagar tudo e ENTÃO trocar de aba fecha o
+# campo — o comportamento tem de seguir o valor atual, não o de quando a tela
+# ganhou foco.
+#
+# AJUSTES ESPECÍFICOS DO AVD (mesmos do 5.2/5.3):
+# - `eraseText` do Maestro não dispara `onChangeText` no React Native (limpa o
+#   texto nativo sem atualizar o state); usa-se `backspace` individual para
+#   garantir que o `setBusca('')` rode a cada backspace.
+# - Teclado do AVD cobre a barra de abas; `back` entre o último backspace e a
+#   troca de aba fecha o IME sem sair do app (ainda há teclado aberto nesse
+#   ponto, então o back vira dismissKeyboard e não navegação para fora).
+#
+# Sem efeito colateral em dados. Precisa de pelo menos 1 produto na despensa
+# — o flow cadastra um se ela estiver vazia.
+
+- launchApp
+- assertVisible: "Despensa"
+- swipe:
+    start: "970, 173"
+    end: "540, 700"
+    duration: 600
+
+- runFlow:
+    when:
+      visible: "Cadastrar do zero"
+    commands:
+      - tapOn: "Cadastrar do zero"
+      - assertVisible: "Novo produto"
+      - setClipboard: "QA Busca Semente"
+      - pasteText
+      - tapOn: "un"
+      - tapOn: "Quanto quero ter em casa"
+      - inputText: "1"
+      - tapOn: "Adicionar à despensa"
+      - assertVisible: "Despensa"
+
+# --- 1ª rodada: com termo, o campo tem de sobreviver à troca de aba ----
+- tapOn: "Buscar"
+- inputText: "zzqq"
+- assertVisible: "Cadastrar zzqq"
+- pressKey: "back"
+- tapOn: "Lista"
+- tapOn: "Despensa"
+- assertVisible: "Cadastrar zzqq"
+
+# --- 2ª rodada: apaga o termo e SÓ ENTÃO troca de aba ------------------
+- tapOn:
+    point: "540, 384"
+- assertVisible: "Nome do item"
+- pressKey: "backspace"
+- pressKey: "backspace"
+- pressKey: "backspace"
+- pressKey: "backspace"
+# Teclado ainda aberto após o backspace: `back` aqui fecha o IME (não
+# sai do app, ainda há teclado visível neste ponto).
+- pressKey: "back"
+- tapOn: "Lista"
+- assertVisible: "Lista"
+- tapOn: "Despensa"
+- assertVisible: "Despensa"
+
+# --- Verificação: campo fechado ----------------------------------------
+- assertNotVisible: "Nome do item"
+- takeScreenshot: limpar-termo-fecha

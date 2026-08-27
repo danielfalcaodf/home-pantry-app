@@ -51,7 +51,7 @@ jest.mock('@/application/compra/use-modo-compra', () => ({
   useModoCompra: () => {
     const [itens, setItens] = mockReact.useState(mockItensIniciais);
     const marcar = mockReact.useCallback(
-      async (item: { id: string }) =>
+      async ({ item }: { item: { id: string } }) =>
         setItens((atual: typeof mockItensIniciais) =>
           atual.map((linha) =>
             linha.item.id === item.id

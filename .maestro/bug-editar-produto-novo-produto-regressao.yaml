@@ -1,0 +1,66 @@
+appId: com.danielfalcaodf.repor
+---
+# Change `correcao-tela-editar-produto` (ordem 6) — cenário 5/5.
+#
+# REGRESSÃO DA TELA IRMÃ: a change altera `formulario-produto.tsx` e
+# `botao.tsx`, compartilhados com "Novo produto" — que já funcionava. Duas
+# coisas não podem regredir ali: o rodapé fixo com "Adicionar à despensa" e
+# o AUTOFOCO do campo de nome (comportamento existente, citado
+# explicitamente no spec: "Cadastro de produto novo preserva o autofoco").
+#
+# O QUE ESTE FLOW PROVA: na tela de "Novo produto", digitar sem tocar em
+# campo nenhum preenche o nome (autofoco intacto), o rodapé continua visível
+# com o formulário expandido e rolado, e o produto é criado.
+#
+# NÃO EXECUTADO AINDA — seletores lidos do código-fonte, não confirmados com
+# `inspect_screen`.
+#
+# Efeito colateral real e permanente: cria "QA Novo Regressao" na despensa.
+
+- launchApp
+- assertVisible: "Despensa"
+# ambiente: bolha flutuante "Tools" do Expo dev-client sobrepoe os icones do topo
+- swipe:
+    start: "970, 173"
+    end: "540, 700"
+    duration: 600
+
+- runFlow:
+    when:
+      visible: "Cadastrar do zero"
+    commands:
+      - tapOn: "Cadastrar do zero"
+- runFlow:
+    when:
+      notVisible: "Novo produto"
+    commands:
+      - tapOn: "Adicionar produto"
+- assertVisible: "Novo produto"
+
+# --- Autofoco: digita sem tocar no campo de nome -----------------------
+- assertVisible:
+    text: "O que é"
+    focused: true
+- setClipboard: "QA Novo Regressao"
+- pasteText
+- assertVisible: "QA Novo Regressao"
+
+- tapOn: "un"
+- tapOn: "Quanto quero ter em casa"
+- inputText: "4"
+
+# --- Rodapé fixo com o formulário expandido e rolado -------------------
+- tapOn: "Mais opções"
+- scrollUntilVisible:
+    element: "Anotação"
+    direction: DOWN
+    speed: 40
+    timeout: 15000
+- scroll
+- assertVisible: "Adicionar à despensa"
+- takeScreenshot: novo-produto-rodape-fixo
+
+# --- Verificação: cadastro conclui normalmente -------------------------
+- tapOn: "Adicionar à despensa"
+- assertVisible: "Despensa"
+- assertVisible: "QA Novo Regressao, 0 de 4 un, Acabou"

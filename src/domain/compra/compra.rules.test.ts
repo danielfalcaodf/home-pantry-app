@@ -92,6 +92,13 @@ describe('totalPago', () => {
     const itens = [comprado('p1', 2000, null), comprado('p2', 1000, 500)];
     expect(totalPago(itens)).toBe(500);
   });
+
+  it('preço herdado do produto pelo fluxo de marcar() entra no total normalmente (correção-total-compra-preco-heranca)', () => {
+    // valorPagoUnitario já vem preenchido com o valorEstimadoUnit — marcar()
+    // grava o herdado, totalPago() não precisa saber que ele é herdado.
+    const itens = [comprado('p1', 2000, 890)];
+    expect(totalPago(itens)).toBe(1780);
+  });
 });
 
 describe('efeitoDeReposicao', () => {

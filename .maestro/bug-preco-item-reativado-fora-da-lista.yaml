@@ -1,0 +1,52 @@
+appId: com.danielfalcaodf.repor
+---
+# Cenário 4 — item removido da lista ("fora da lista por agora") e depois
+# reativado: cobre o fix em `use-remover-item-lista.ts`, que gravava
+# valorEstimadoUnit=0 (default do schema) na linha de exclusão criada ao
+# remover, mesmo quando o produto já tinha preço na hora da remoção.
+# `reativar()` só vira excluido:false, nunca recalcula o preço — então o
+# item reativado ficava com 0,00 pra sempre, mesmo tendo preço.
+#
+# NÃO EXECUTAR AINDA — task de correcao-total-compra-preco-heranca.
+# Seletores não confirmados no app rodando, revisar com inspect_screen.
+#
+# Pré-condição: "Feijão" (ou outro item da lista base) sem preço cadastrado
+# e sem compra aberta residual — usa item diferente de "Arroz" pra não
+# conflitar com os outros cenários se rodados na mesma sessão de device.
+
+- launchApp
+- assertVisible: "Despensa"
+- tapOn: "Lista"
+
+# 1. Remove o item da lista (fica em "Fora da lista por agora").
+- tapOn: "Remover Feijão da lista"
+- assertVisible:
+    text: "Fora da lista por agora \\(1\\)"
+
+# 2. Dá preço ao produto (pela Despensa, já que ele não aparece mais na
+#    Lista pra editar por lá).
+- tapOn: "Despensa"
+- tapOn: "Feijão"
+- tapOn: "Mais opções"
+- tapOn: "Quanto costuma custar"
+- inputText: "5,50"
+- tapOn: "Salvar"
+
+# 3. Reativa o item — a linha de exclusão antiga é reaproveitada
+#    (excluido:false), não recriada.
+- tapOn: "Lista"
+- tapOn:
+    text: "Fora da lista por agora \\(1\\)"
+- tapOn: "Voltar Feijão pra lista"
+- assertVisible: "R$ 11,00"
+
+- tapOn:
+    text: "Iniciar compra \\(\\d+\\)"
+- assertVisible: "Feijão, 2 pacotes, R\\$ 5,50"
+- assertNotVisible: "Feijão, 2 pacotes, sem preço"
+
+- tapOn:
+    text: "Feijão, 2 pacotes, R\\$ 5,50"
+- assertVisible:
+    text: "Feijão, 2 pacotes, R\\$ 5,50"
+    checked: true

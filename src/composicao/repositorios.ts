@@ -10,6 +10,7 @@ import { ProdutoRepository } from '../ports/produto.repository';
 import { SistemaDeArquivos } from '../ports/sistema-de-arquivos';
 import { db } from '../infrastructure/db/client';
 import { garantirCasaEUsuario, IdentidadeLocal } from '../infrastructure/db/seed';
+import { resetarBanco } from '../infrastructure/db/resetar-banco';
 import { SQLiteBackupRepository } from '../infrastructure/repositories/sqlite-backup.repository';
 import { SQLiteCompraRepository } from '../infrastructure/repositories/sqlite-compra.repository';
 import { SQLiteConfiguracaoRepository } from '../infrastructure/repositories/sqlite-configuracao.repository';
@@ -39,5 +40,15 @@ export function obterIdentidadeLocal(): IdentidadeLocal {
   if (!identidade) {
     identidade = garantirCasaEUsuario(db, relogio);
   }
+  return identidade;
+}
+
+/**
+ * Apaga todos os dados locais e recria casa/usuário na hora — o app
+ * continua funcional sem reiniciar. Invalida o cache de identidade
+ * acima, que senão apontaria pra uma casa/usuário que não existe mais.
+ */
+export function apagarTodosOsDados(): IdentidadeLocal {
+  identidade = resetarBanco(db, relogio);
   return identidade;
 }

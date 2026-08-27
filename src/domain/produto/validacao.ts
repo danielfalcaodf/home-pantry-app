@@ -11,6 +11,8 @@ export type EntradaCadastroProduto = {
   quantidadeAtual?: number;
   valorUnitario?: number;
   categoria?: string;
+  marcaPreferida?: string;
+  observacao?: string;
 };
 
 export type ProdutoValidado = {
@@ -20,6 +22,8 @@ export type ProdutoValidado = {
   quantidadeAtual: Milesimos;
   valorUnitario: Centavos;
   categoria: string | null;
+  marcaPreferida: string | null;
+  observacao: string | null;
 };
 
 export type ErroValidacaoProduto = {
@@ -63,5 +67,7 @@ export function validarCadastroProduto(
     quantidadeAtual: deDecimal(quantidadeAtual),
     valorUnitario: centavos(valorUnitario),
     categoria: entrada.categoria === undefined ? null : normalizarCategoria(entrada.categoria),
+    marcaPreferida: entrada.marcaPreferida?.trim() || null,
+    observacao: entrada.observacao?.trim() || null,
   });
 }

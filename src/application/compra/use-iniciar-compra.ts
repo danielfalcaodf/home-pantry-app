@@ -30,10 +30,10 @@ export function useIniciarCompra(
         const { casaId, usuarioId } = obterIdentidadeLocal();
         const compra = await obterOuAbrirCompra(compras, casaId, usuarioId, relogio.agora());
         const existentes = await compras.listarItens(compra.id);
-        const jaMaterializados = new Set(
+        const jaMaterializados = new Map(
           existentes
             .filter(({ item }) => item.produtoId !== null && !item.excluido)
-            .map(({ item }) => item.produtoId as string),
+            .map(({ item }) => [item.produtoId as string, item] as const),
         );
         const doEstoque = itens.filter(
           (item): item is Extract<ItemDaLista, { tipo: 'produto' }> =>
@@ -46,6 +46,26 @@ export function useIniciarCompra(
             quantidadePlanejada: item.quantidadeAComprar,
             valorEstimadoUnit: item.valorUnitario,
           });
+        }
+        // Item já materializado numa compra aberta residual (ex.: "Iniciar
+        // compra" chamado de novo sem finalizar a anterior) fica com
+        // `valorEstimadoUnit` congelado no preço de quando a linha foi
+        // criada — editar o preço do produto na Lista depois disso nunca
+        // atualiza essa linha sozinho. Reabrir a compra é o único momento
+        // em que dá pra sincronizar sem mexer em nada durante o Modo Compra
+        // em si (D1: só aqui a tela materializa/atualiza o que está exibindo).
+        for (const item of itens) {
+          if (item.tipo !== 'produto') {
+            continue;
+          }
+          const existente = jaMaterializados.get(item.produtoId);
+          if (
+            existente &&
+            !existente.comprado &&
+            existente.valorEstimadoUnit !== item.valorUnitario
+          ) {
+            await compras.editarItem(existente.id, { valorEstimadoUnit: item.valorUnitario });
+          }
         }
         return compra.id;
       } finally {

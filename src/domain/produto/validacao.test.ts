@@ -16,6 +16,8 @@ describe('validarCadastroProduto', () => {
         quantidadeAtual: 0,
         valorUnitario: 0,
         categoria: null,
+        marcaPreferida: null,
+        observacao: null,
       });
     }
   });

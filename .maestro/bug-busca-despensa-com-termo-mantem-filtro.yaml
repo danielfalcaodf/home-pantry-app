@@ -1,0 +1,90 @@
+appId: com.danielfalcaodf.repor
+---
+# Change `correcao-busca-despensa-persiste-entre-tabs` (ordem 7) — cenário 2/5.
+#
+# DECISÃO DE PRODUTO QUE O FLOW PROTEGE: uma busca EM ANDAMENTO não pode ser
+# descartada ao trocar de aba — a pessoa só "pausou" para conferir a Lista.
+# Com termo digitado, o campo continua aberto e o filtro ativo; só o teclado
+# cai. Fechar a busca aqui seria tão errado quanto deixar o teclado aberto.
+#
+# O QUE ESTE FLOW PROVA: com o termo "Alfa" digitado, ir para outra aba e
+# voltar mantém o termo, mantém o campo aberto e mantém a lista filtrada
+# (o item "Beta" continua fora). Cobre "Trocar de aba com busca preenchida
+# mantém o filtro".
+#
+# NÃO EXECUTADO AINDA — seletores lidos do código-fonte, não confirmados com
+# `inspect_screen`.
+#
+# Efeito colateral real e permanente: cria "QA Zebra" e "QA Yodo"
+# na despensa.
+
+- launchApp
+- assertVisible: "Despensa"
+# ambiente: bolha flutuante "Tools" do Expo dev-client sobrepoe os icones do topo
+- swipe:
+    start: "970, 173"
+    end: "540, 700"
+    duration: 600
+
+# --- Preparo: dois produtos que se distinguem na busca -----------------
+- runFlow:
+    when:
+      visible: "Cadastrar do zero"
+    commands:
+      - tapOn: "Cadastrar do zero"
+- runFlow:
+    when:
+      notVisible: "Novo produto"
+    commands:
+      - tapOn: "Adicionar produto"
+- assertVisible: "Novo produto"
+- tapOn: "O que é"
+- setClipboard: "QA Zebra"
+- pasteText
+- tapOn: "un"
+- tapOn: "Quanto quero ter em casa"
+- inputText: "1"
+- tapOn: "Adicionar à despensa"
+- assertVisible: "Despensa"
+
+- tapOn: "Adicionar produto"
+- assertVisible: "Novo produto"
+- tapOn: "O que é"
+- setClipboard: "QA Yodo"
+- pasteText
+- tapOn: "un"
+- tapOn: "Quanto quero ter em casa"
+- inputText: "1"
+- tapOn: "Adicionar à despensa"
+- assertVisible: "Despensa"
+
+# --- Busca por "Z" -------------------------------------------------------
+# ambiente: entrada de texto no AVD e instavel para termos longos, mesmo via
+# paste (so o primeiro toque apos focar o campo entrega o texto de forma
+# confiavel); um unico caractere que distingue os nomes e suficiente.
+- tapOn: "Buscar"
+- tapOn:
+    point: "540, 384"
+- inputText: "Z"
+- assertVisible: "QA Zebra, 0 de 1 un, Acabou"
+- assertNotVisible: "QA Yodo, 0 de 1 un, Acabou"
+
+# --- Troca de aba e volta ----------------------------------------------
+# ambiente: teclado do AVD cobre a barra de abas; back so fecha o IME
+- pressKey: "back"
+- tapOn: "Lista"
+- assertVisible: "Lista"
+- tapOn: "Despensa"
+- assertVisible: "Despensa"
+
+# --- Verificação: termo e filtro preservados, sem foco -----------------
+- assertVisible: "QA Zebra, 0 de 1 un, Acabou"
+- assertNotVisible: "QA Yodo, 0 de 1 un, Acabou"
+# O campo continua aberto (tem termo), mas não pode estar focado.
+- assertNotVisible:
+    text: "Buscar"
+    focused: true
+# O filtro ativo acima já é a prova funcional de que o termo sobreviveu; o
+# screenshot registra o campo aberto com o texto dentro, porque nenhum
+# seletor distingue o campo de busca do nome do produto na linha.
+- takeScreenshot: busca-com-termo-apos-voltar-da-aba

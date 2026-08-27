@@ -84,4 +84,46 @@ describe('useIniciarCompra', () => {
 
     expect(compras.itens.filter((i) => i.produtoId === 'p1')).toHaveLength(1);
   });
+
+  // Bug relatado: preço editado na Lista de compras (produto.valorUnitario)
+  // não aparecia no Modo Compra quando o item já tinha sido materializado
+  // numa compra aberta residual, antes da edição — "Iniciar compra" pulava
+  // o item pelo dedup, sem nunca atualizar valorEstimadoUnit.
+  it('reabrir a compra sincroniza valorEstimadoUnit quando o preço do produto mudou desde a materialização', async () => {
+    const compras = new CompraRepositorioFalso();
+    const { result } = await renderHook(() => useIniciarCompra(compras));
+
+    // Primeira "Iniciar compra": item sem preço (0).
+    await act(async () => {
+      await result.current.iniciar([itemDeFaltante(faltante({ valorUnitario: centavos(0) }))]);
+    });
+    expect(compras.itens[0].valorEstimadoUnit).toBe(0);
+
+    // Preço editado na Lista (fora deste hook) e "Iniciar compra" chamado
+    // de novo — mesma compra aberta, item já materializado.
+    await act(async () => {
+      await result.current.iniciar([itemDeFaltante(faltante({ valorUnitario: centavos(1000) }))]);
+    });
+
+    expect(compras.itens).toHaveLength(1);
+    expect(compras.itens[0].valorEstimadoUnit).toBe(1000);
+  });
+
+  it('reabrir a compra não mexe em valorEstimadoUnit de item já marcado como comprado', async () => {
+    const compras = new CompraRepositorioFalso();
+    const { result } = await renderHook(() => useIniciarCompra(compras));
+
+    let compraId = '';
+    await act(async () => {
+      compraId = await result.current.iniciar([itemDeFaltante(faltante({ valorUnitario: centavos(500) }))]);
+    });
+    await compras.editarItem(compras.itens[0].id, { comprado: true, valorPagoUnitario: centavos(500) });
+
+    await act(async () => {
+      await result.current.iniciar([itemDeFaltante(faltante({ valorUnitario: centavos(1000) }))]);
+    });
+
+    expect(compras.itens[0].valorEstimadoUnit).toBe(500);
+    expect(compras.itens[0].compraId).toBe(compraId);
+  });
 });

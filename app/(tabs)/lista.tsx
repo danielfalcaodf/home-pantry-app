@@ -282,6 +282,7 @@ export default function Lista() {
       ) : null}
 
       <SheetPrecoProduto
+        key={produtoEmEdicaoDePreco?.produtoId}
         visivel={produtoEmEdicaoDePreco !== null}
         nome={produtoEmEdicaoDePreco?.nome ?? ''}
         precoInicial={

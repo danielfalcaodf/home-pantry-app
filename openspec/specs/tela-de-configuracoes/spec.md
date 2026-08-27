@@ -1,7 +1,10 @@
 # tela-de-configuracoes
 
-## Requirements
+## Purpose
 
+Definir a tela de Configurações: preferência de tema, ações sobre os dados locais (backup,
+restauração, exportação, reset) e sinalização de ações destrutivas.
+## Requirements
 ### Requirement: Tela de configurações acessível
 
 O app SHALL oferecer uma tela de configurações contendo a escolha de tema, as ações de backup e restauração, a exportação de dados e o acesso ao diagnóstico. As três opções de tema SHALL ter alvo de toque mínimo de 48×48dp cada.
@@ -37,7 +40,7 @@ Os rótulos da tela de configurações SHALL usar o vocabulário de usuário já
 
 ### Requirement: Ações destrutivas sinalizadas
 
-Ações que sobrescrevem dados SHALL ser visualmente distinguidas das demais e SHALL exigir confirmação.
+Ações que sobrescrevem ou apagam dados SHALL ser visualmente distinguidas das demais e SHALL exigir confirmação. A ação de apagar todos os dados, por ser irreversível, SHALL exigir uma confirmação em duas camadas (confirmação inline seguida de alerta nativo com estilo destrutivo).
 
 #### Scenario: Restauração sinalizada
 
@@ -48,6 +51,12 @@ Ações que sobrescrevem dados SHALL ser visualmente distinguidas das demais e S
 
 - **WHEN** a ação de exportar é acionada
 - **THEN** ela executa diretamente, por não alterar dados
+
+#### Scenario: Apagar todos os dados exige dupla confirmação
+
+- **WHEN** o usuário aciona "Apagar todos os dados" em Configurações
+- **THEN** uma confirmação inline é exibida e, ao confirmar, um alerta nativo com estilo
+  destrutivo pede confirmação final antes de executar o reset
 
 ### Requirement: Recomendação de backup periódico
 
@@ -62,3 +71,4 @@ A tela SHALL informar quando o último backup foi feito, para que o usuário per
 
 - **WHEN** nenhum backup foi gerado
 - **THEN** a tela informa que ainda não há backup e convida a fazer um
+

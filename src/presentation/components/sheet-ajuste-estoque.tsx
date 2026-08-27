@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { useRef, useState } from 'react';
+import { Pressable, TextInput, View } from 'react-native';
 
 import { MotivoAjuste } from '../../domain/movimento/movimento';
 import { rotuloDaUnidade, Unidade } from '../../domain/shared/unidade';
@@ -43,6 +43,7 @@ export function SheetAjusteEstoque({
   onSalvar,
 }: SheetAjusteEstoqueProps) {
   const tema = useTheme();
+  const campoValorRef = useRef<TextInput>(null);
   const [valor, setValor] = useState(String(quantidadeAtual).replace('.', ','));
   const [motivo, setMotivo] = useState<MotivoAjuste | null>(null);
   const [erro, setErro] = useState<string | undefined>(undefined);
@@ -70,6 +71,7 @@ export function SheetAjusteEstoque({
     <PainelInferior
       visivel={visivel}
       onFechar={fechar}
+      onAberto={() => campoValorRef.current?.focus()}
       testID="evita-teclado-ajuste-estoque"
       style={{ padding: espaco.xl, gap: espaco.lg }}
     >
@@ -91,6 +93,7 @@ export function SheetAjusteEstoque({
         </Pressable>
       </View>
       <CampoTexto
+        ref={campoValorRef}
         rotulo={`Quanto você tem agora (${rotuloDaUnidade(unidade, true)})`}
         value={valor}
         onChangeText={(texto) => {

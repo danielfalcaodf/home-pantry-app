@@ -121,4 +121,13 @@ describe('SheetAvulso', () => {
     expect(screen.getByText('Editar item')).toBeTruthy();
     expect(screen.getByText('Salvar')).toBeTruthy();
   });
+
+  it('não usa autoFocus na montagem — foco vem do onAberto do PainelInferior (correcao-sheets-ajuste-sem-autofoco)', async () => {
+    await comTema(<SheetAvulso visivel inicial={undefined} onFechar={jest.fn()} onSalvar={jest.fn()} />);
+
+    // `autoFocus` na montagem é a causa raiz do bug de teclado em sheets
+    // sobre `Modal` no Android real — ver painel-inferior.test.tsx para a
+    // prova de que o foco correto (via `onAberto`) funciona.
+    expect(screen.getByLabelText('O que é').props.autoFocus).toBeFalsy();
+  });
 });

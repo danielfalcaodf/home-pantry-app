@@ -1,0 +1,56 @@
+appId: com.danielfalcaodf.repor
+---
+# BUG REPORTADO (reaberto em correcao-total-compra-preco-heranca): editar o
+# preço de um item "sem preço" direto na Lista de Compras, depois iniciar a
+# compra e marcar esse item, mostrava "0,00" em vez do preço editado — tanto
+# na linha do item quanto no total da compra.
+#
+# Cenário 1 (repro exata do relato): edita na Lista, ANTES de qualquer compra
+# aberta existir. Cobre o caminho mais comum — primeira vez que a pessoa
+# inicia uma compra depois de editar o preço.
+#
+# NÃO EXECUTAR AINDA — arquivo criado como task da change
+# correcao-total-compra-preco-heranca, execução real fica pra sessão
+# dedicada de Maestro (device/emulador com a massa de dados de seed).
+# Seletores de texto (labels/placeholders) foram lidos do código-fonte mas
+# não confirmados no app rodando — revisar contra `inspect_screen` antes de
+# rodar de verdade.
+#
+# Pré-condição: "Arroz" existe na lista básica de seed
+# (src/infrastructure/db/lista-base.json), sem preço cadastrado, e sem
+# nenhuma compra aberta residual (se houver, "Fechar compra" primeiro, ou
+# trocar "Arroz" por outro item garantidamente sem preço/sem compra aberta).
+
+- launchApp
+- assertVisible: "Despensa"
+- tapOn: "Lista"
+
+# Tocar na linha do item na Lista abre SheetPrecoProduto (lista.tsx:
+# Pressable ao redor de ItemLista, sem accessibilityLabel combinado — o
+# texto "Arroz" da linha é o alvo do toque, não um rótulo composto).
+- tapOn: "Arroz"
+- assertVisible: "Preço de Arroz"
+- tapOn: "Quanto costuma custar"
+- inputText: "10,00"
+- tapOn: "Salvar"
+
+# Confirma que a Lista já reflete o preço editado antes de prosseguir —
+# isola se o bug está na escrita/leitura da Lista ou só no Modo Compra.
+- assertVisible: "R$ 20,00"
+
+- tapOn:
+    text: "Iniciar compra \\(\\d+\\)"
+
+# item-compra.tsx compõe o rótulo acessível como "{nome}, {quantidade},
+# {preço ou 'sem preço'}" — antes do fix, mostraria "sem preço" mesmo com o
+# produto já tendo R$10 (bug: valorEstimadoUnit obsoleto na compra_item).
+- assertVisible: "Arroz, 2 pacotes, R\\$ 10,00"
+- assertNotVisible: "Arroz, 2 pacotes, sem preço"
+
+- tapOn:
+    text: "Arroz, 2 pacotes, R\\$ 10,00"
+- assertVisible:
+    text: "Arroz, 2 pacotes, R\\$ 10,00"
+    checked: true
+- assertVisible: "R$ 20,00"
+- assertNotVisible: "0,00"

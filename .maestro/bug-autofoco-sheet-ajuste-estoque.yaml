@@ -1,0 +1,87 @@
+appId: com.danielfalcaodf.repor
+---
+# Change `correcao-sheets-ajuste-sem-autofoco` (ordem 5) — cenário 1/5.
+#
+# BUG ORIGINAL: `sheet-ajuste-estoque.tsx` abria sem `autoFocus` no primeiro
+# campo — o teclado não subia e a pessoa precisava de um toque extra antes de
+# digitar, quebrando o padrão dos outros sheets do app.
+#
+# O QUE PRECISA ACONTECER AO ABRIR: campo focado **e teclado levantado** —
+# o foco sem teclado não resolve o problema relatado (a pessoa continuaria
+# precisando de um toque). O flow afirma os dois, e ainda digita SEM TOCAR
+# em nenhum campo como terceira prova, pelo efeito.
+#
+# SELETOR DO TECLADO: a janela do IME entra na hierarquia do uiautomator com
+# id `<pacote-do-teclado>:id/keyboard_view`. O pacote varia por dispositivo
+# (Gboard: `com.google.android.inputmethod.latin`; AOSP:
+# `com.android.inputmethod.latin`), por isso o matcher usa regex. Confirmar
+# com `maestro hierarchy` (com o teclado aberto) na primeira execução e
+# ajustar se o id for outro.
+#
+# NÃO EXECUTADO AINDA — seletores lidos do código-fonte
+# (`sheet-ajuste-estoque.tsx`, `app/produto/[id].tsx`), não confirmados com
+# `inspect_screen`.
+#
+# Efeito colateral real e permanente: cria "QA Foco Estoque" e grava um
+# movimento de ajuste nele (histórico append-only, por design). O produto
+# fica na despensa com 2 de 3 un.
+
+- launchApp
+- assertVisible: "Despensa"
+# ambiente: bolha flutuante "Tools" do Expo dev-client sobrepoe os icones do topo
+- swipe:
+    start: "970, 173"
+    end: "540, 700"
+    duration: 600
+
+# --- Preparo: produto de teste (0 de 3 un) -----------------------------
+- runFlow:
+    when:
+      visible: "Cadastrar do zero"
+    commands:
+      - tapOn: "Cadastrar do zero"
+- runFlow:
+    when:
+      notVisible: "Novo produto"
+    commands:
+      - tapOn: "Adicionar produto"
+- assertVisible: "Novo produto"
+- tapOn: "O que é"
+- setClipboard: "QA Foco Estoque"
+- pasteText
+- tapOn: "un"
+- tapOn: "Quanto quero ter em casa"
+- inputText: "3"
+- tapOn: "Adicionar à despensa"
+- assertVisible: "Despensa"
+
+# --- Abre o sheet de ajuste pelo detalhe do produto --------------------
+# Nota de ambiente: busca por texto multi-palavra é instável no teclado do
+# AVD (caracteres descartados/embaralhados); como a despensa tem só este
+# item, toca-se direto no rótulo acessível, sem busca.
+- tapOn: "QA Foco Estoque, 0 de 3 un, Acabou"
+- tapOn: "Corrigir quantidade atual"
+- assertVisible: "Corrigir QA Foco Estoque"
+- assertVisible: "Quanto você tem agora (un)"
+# Prova direta pelo matcher de foco do Maestro (o campo herda o rótulo como
+# `accessibilityLabel`, então o `focused: true` isola o TextInput do texto
+# do rótulo).
+- assertVisible:
+    text: "Quanto você tem agora \\(un\\)"
+    focused: true
+# O teclado precisa ter subido junto com o foco — é isso que economiza o
+# toque extra que motivou a change.
+- assertVisible:
+    id: ".*inputmethod.*:id/keyboard_view"
+- takeScreenshot: autofoco-ajuste-estoque-teclado
+
+# --- Digita SEM tocar no campo (terceira prova, pelo efeito) -----------
+- eraseText: 5
+- inputText: "2"
+- tapOn: "Corrigir"
+
+# --- Verificação: o valor digitado chegou ao campo certo ---------------
+- assertVisible: "Voltar"
+- tapOn: "Voltar"
+- assertVisible: "Despensa"
+- assertVisible: "QA Foco Estoque, 2 de 3 un, Falta 1"

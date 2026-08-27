@@ -190,6 +190,21 @@ describe('Lista — editar preço de produto direto na lista', () => {
     );
   });
 
+  it('editar e salvar o preço de um produto não vaza para o sheet do próximo produto aberto (regressão)', async () => {
+    await comTema(<Lista />);
+
+    fireEvent.press(screen.getByText('Arroz'));
+    await waitFor(() => expect(screen.getByText('Preço de Arroz')).toBeTruthy());
+    fireEvent.changeText(screen.getByLabelText('Quanto costuma custar'), '990');
+    await waitFor(() => expect(screen.getByLabelText('Quanto costuma custar').props.value).toBe('9,90'));
+    fireEvent.press(screen.getByRole('button', { name: 'Salvar' }));
+    await waitFor(() => expect(mockEditarProduto).toHaveBeenCalledWith('p1', { valorUnitario: 990 }));
+
+    fireEvent.press(screen.getByText('Feijão'));
+    await waitFor(() => expect(screen.getByText('Preço de Feijão')).toBeTruthy());
+    expect(screen.getByLabelText('Quanto costuma custar').props.value).toBe('');
+  });
+
   it('item avulso continua abrindo a edição completa do avulso, não o sheet de preço', async () => {
     await comTema(<Lista />);
 

@@ -1,0 +1,64 @@
+appId: com.danielfalcaodf.repor
+---
+# Change `correcao-busca-despensa-persiste-entre-tabs` (ordem 7) — cenário 4/5.
+#
+# BORDA MAIS ARRISCADA DA CORREÇÃO: busca SEM RESULTADO. A tela troca a
+# lista pelo estado vazio ("Nenhum item chamado X por aqui" + ação
+# "Cadastrar X"), então não há nenhuma linha de produto para ancorar a
+# verificação — e é justamente o caso em que perder o termo ao trocar de aba
+# doeria mais (a pessoa ia cadastrar o item e voltaria com o campo limpo).
+#
+# O QUE ESTE FLOW PROVA: com um termo sem correspondência, trocar de aba e
+# voltar preserva o estado vazio com o mesmo termo e a mesma ação de
+# cadastro.
+#
+# NÃO EXECUTADO AINDA — seletores lidos do código-fonte
+# (`app/(tabs)/index.tsx`, `estado-vazio.tsx`), não confirmados com
+# `inspect_screen`.
+#
+# Sem efeito colateral em dados: nada é cadastrado (o flow NÃO toca em
+# "Cadastrar ..."). Precisa de pelo menos 1 produto na despensa — o flow
+# cadastra um se ela estiver vazia.
+
+- launchApp
+- assertVisible: "Despensa"
+# ambiente: bolha flutuante "Tools" do Expo dev-client sobrepoe os icones do topo
+- swipe:
+    start: "970, 173"
+    end: "540, 700"
+    duration: 600
+
+- runFlow:
+    when:
+      visible: "Cadastrar do zero"
+    commands:
+      - tapOn: "Cadastrar do zero"
+      - assertVisible: "Novo produto"
+      - setClipboard: "QA Busca Semente"
+      - pasteText
+      - tapOn: "un"
+      - tapOn: "Quanto quero ter em casa"
+      - inputText: "1"
+      - tapOn: "Adicionar à despensa"
+      - assertVisible: "Despensa"
+
+# --- Busca por algo que não existe -------------------------------------
+- tapOn: "Buscar"
+- inputText: "zzqq"
+- assertVisible: "Nenhum item chamado \"zzqq\" por aqui."
+- assertVisible: "Cadastrar zzqq"
+
+# --- Troca de aba e volta ----------------------------------------------
+# ambiente: teclado do AVD cobre a barra de abas; back so fecha o IME
+- pressKey: "back"
+- tapOn: "Resumo"
+- assertVisible: "Resumo"
+- tapOn: "Despensa"
+- assertVisible: "Despensa"
+
+# --- Verificação: termo e estado vazio preservados ---------------------
+- assertVisible: "Nenhum item chamado \"zzqq\" por aqui."
+- assertVisible: "Cadastrar zzqq"
+- assertNotVisible:
+    text: "Buscar"
+    focused: true

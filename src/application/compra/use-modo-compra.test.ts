@@ -36,11 +36,122 @@ describe('useModoCompra', () => {
     await waitFor(() => expect(result.current.carregando).toBe(false));
 
     await act(async () => {
-      await result.current.marcar(item);
+      await result.current.marcar({ item, produto: null });
       observador.notificar();
     });
     await waitFor(() => expect(result.current.itens[0].item.comprado).toBe(true));
     expect(result.current.itens[0].item.quantidadeComprada).toBe(2000);
+  });
+
+  it('marca sem preço pago digitado assume o preço estimado do produto (correção do total zerado)', async () => {
+    const { compras, compraId, item, observador } = await montarCompraComItem();
+    const { result } = await renderHook(() => useModoCompra(compraId, compras, observador));
+    await waitFor(() => expect(result.current.carregando).toBe(false));
+    expect(item.valorEstimadoUnit).toBe(890);
+    expect(item.valorPagoUnitario).toBeNull();
+
+    await act(async () => {
+      await result.current.marcar({ item, produto: null });
+      observador.notificar();
+    });
+    await waitFor(() => expect(result.current.itens[0].item.comprado).toBe(true));
+    expect(result.current.itens[0].item.valorPagoUnitario).toBe(890);
+  });
+
+  it('marca com valorEstimadoUnit obsoleto (zero) usa o preço vivo do produto como rede de segurança', async () => {
+    // Reproduz o bug relatado: item materializado numa compra aberta residual
+    // ANTES de o preço do produto ter sido editado na Lista — valorEstimadoUnit
+    // fica congelado em 0, mas o produto já tem preço vivo na mesma consulta.
+    const produtos = new ProdutoRepositorioFalso([
+      produtoFalso({ id: 'p1', nome: 'Arroz', valorUnitario: centavos(1000), quantidadeAtual: milesimos(0), quantidadeNecessaria: milesimos(2000) }),
+    ]);
+    const compras = new CompraRepositorioFalso(produtos);
+    const aberta = await compras.abrir('casa-teste', 'usuario-teste', 1000);
+    if (!aberta.ok) {
+      throw new Error('setup');
+    }
+    const item = await compras.adicionarItem(aberta.valor.id, {
+      produtoId: 'p1',
+      unidade: 'un',
+      quantidadePlanejada: milesimos(2000),
+      // valorEstimadoUnit omitido de propósito -> default 0 do schema, como
+      // aconteceria com uma linha residual criada antes do preço existir.
+    });
+    expect(item.valorEstimadoUnit).toBe(0);
+    const observador = new ObservadorFalso();
+    const { result } = await renderHook(() => useModoCompra(aberta.valor.id, compras, observador));
+    await waitFor(() => expect(result.current.carregando).toBe(false));
+
+    await act(async () => {
+      await result.current.marcar(result.current.itens[0]);
+      observador.notificar();
+    });
+    await waitFor(() => expect(result.current.itens[0].item.comprado).toBe(true));
+    expect(result.current.itens[0].item.valorPagoUnitario).toBe(1000);
+  });
+
+  it('marca item sem nenhum preço cadastrado grava zero (não inventa valor, contribui zero no total)', async () => {
+    const produtos = new ProdutoRepositorioFalso([
+      produtoFalso({ id: 'p1', nome: 'Pilha', quantidadeAtual: milesimos(0), quantidadeNecessaria: milesimos(1000) }),
+    ]);
+    const compras = new CompraRepositorioFalso(produtos);
+    const aberta = await compras.abrir('casa-teste', 'usuario-teste', 1000);
+    if (!aberta.ok) {
+      throw new Error('setup');
+    }
+    const item = await compras.adicionarItem(aberta.valor.id, {
+      produtoId: 'p1',
+      unidade: 'un',
+      quantidadePlanejada: milesimos(1000),
+    });
+    expect(item.valorEstimadoUnit).toBe(0);
+    const observador = new ObservadorFalso();
+    const { result } = await renderHook(() => useModoCompra(aberta.valor.id, compras, observador));
+    await waitFor(() => expect(result.current.carregando).toBe(false));
+
+    await act(async () => {
+      await result.current.marcar({ item, produto: null });
+      observador.notificar();
+    });
+    await waitFor(() => expect(result.current.itens[0].item.comprado).toBe(true));
+    expect(result.current.itens[0].item.valorPagoUnitario).toBe(0);
+  });
+
+  it('marca item com preço já ajustado manualmente não sobrescreve o valor ajustado', async () => {
+    const { compras, compraId, item, observador } = await montarCompraComItem();
+    const { result } = await renderHook(() => useModoCompra(compraId, compras, observador));
+    await waitFor(() => expect(result.current.carregando).toBe(false));
+
+    await act(async () => {
+      await result.current.ajustarPreco(item.id, centavos(950));
+      observador.notificar();
+    });
+    await waitFor(() => expect(result.current.itens[0].item.valorPagoUnitario).toBe(950));
+
+    await act(async () => {
+      await result.current.marcar({ item: { ...item, valorPagoUnitario: centavos(950) }, produto: null });
+      observador.notificar();
+    });
+    await waitFor(() => expect(result.current.itens[0].item.comprado).toBe(true));
+    expect(result.current.itens[0].item.valorPagoUnitario).toBe(950);
+  });
+
+  it('ajustarPreco depois de marcar continua sobrescrevendo o preço herdado assumido por padrão', async () => {
+    const { compras, compraId, item, observador } = await montarCompraComItem();
+    const { result } = await renderHook(() => useModoCompra(compraId, compras, observador));
+    await waitFor(() => expect(result.current.carregando).toBe(false));
+
+    await act(async () => {
+      await result.current.marcar({ item, produto: null });
+      observador.notificar();
+    });
+    await waitFor(() => expect(result.current.itens[0].item.valorPagoUnitario).toBe(890));
+
+    await act(async () => {
+      await result.current.ajustarPreco(item.id, centavos(750));
+      observador.notificar();
+    });
+    await waitFor(() => expect(result.current.itens[0].item.valorPagoUnitario).toBe(750));
   });
 
   it('desmarcar reverte a marcação sem apagar os valores ajustados', async () => {
@@ -49,7 +160,7 @@ describe('useModoCompra', () => {
     await waitFor(() => expect(result.current.carregando).toBe(false));
 
     await act(async () => {
-      await result.current.marcar(item);
+      await result.current.marcar({ item, produto: null });
       await result.current.ajustarPreco(item.id, centavos(950));
       observador.notificar();
     });

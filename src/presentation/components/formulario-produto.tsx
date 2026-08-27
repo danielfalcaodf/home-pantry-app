@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Pressable, ScrollView, View } from 'react-native';
+import { ReactNode, useRef, useState } from 'react';
+import { Pressable, ScrollView, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { UNIDADES, Unidade } from '../../domain/shared/unidade';
@@ -70,6 +70,13 @@ export type FormularioProdutoProps = {
    * (correcao-layout-formulario-produto).
    */
   telaCheia?: boolean;
+  /** Conteúdo extra renderizado no mesmo scroll, antes dos campos (ex.: cabeçalho e
+   *  botões de ação da tela de detalhe do produto) — evita duplicar scroll/rodapé. */
+  conteudoAntes?: ReactNode;
+  /** Conteúdo extra renderizado no mesmo scroll, depois dos campos. */
+  conteudoDepois?: ReactNode;
+  /** Botão extra no mesmo rodapé fixo do botão principal (ex.: "Tirar da despensa"). */
+  botaoExtra?: ReactNode;
 };
 
 export function FormularioProduto({
@@ -85,11 +92,51 @@ export function FormularioProduto({
   tituloCabecalho,
   autofocarNome = false,
   telaCheia = true,
+  conteudoAntes,
+  conteudoDepois,
+  botaoExtra,
 }: FormularioProdutoProps) {
   const tema = useTheme();
   const insets = useSafeAreaInsets();
   const [maisOpcoes, setMaisOpcoes] = useState(false);
   const [categoriaFocada, setCategoriaFocada] = useState(false);
+  const scrollRef = useRef<ScrollView>(null);
+  const marcadorMaisOpcoesRef = useRef<View>(null);
+  const primeiroCampoExtraRef = useRef<TextInput>(null);
+  const tinhaCampoFocadoRef = useRef(false);
+
+  function registrarFoco() {
+    tinhaCampoFocadoRef.current = true;
+  }
+
+  function registrarDesfoque() {
+    tinhaCampoFocadoRef.current = false;
+  }
+
+  function alternarMaisOpcoes() {
+    const vaiAbrir = !maisOpcoes;
+    const manterFoco = vaiAbrir && tinhaCampoFocadoRef.current;
+    setMaisOpcoes(vaiAbrir);
+    if (vaiAbrir) {
+      requestAnimationFrame(() => {
+        marcadorMaisOpcoesRef.current?.measureLayout(
+          // @ts-expect-error -- measureLayout aceita o nó nativo do ScrollView em runtime.
+          scrollRef.current,
+          (_x: number, y: number) => {
+            scrollRef.current?.scrollTo({ y, animated: true });
+            if (manterFoco) {
+              // Demora breve para o Android preparar o IME antes de chamar .focus()
+              // → evita autoFocus sem teclado aberto no celular físico (ACHADO-058).
+              setTimeout(() => {
+                primeiroCampoExtraRef.current?.focus();
+              }, 200);
+            }
+          },
+          () => {},
+        );
+      });
+    }
+  }
 
   const definir = (campo: keyof ValoresDoProduto) => (texto: string) =>
     aoMudar({ ...valores, [campo]: texto });
@@ -111,11 +158,14 @@ export function FormularioProduto({
     <EvitaTeclado testID="evita-teclado-formulario">
     <View style={[{ backgroundColor: tema.bg.base }, telaCheia && { flex: 1 }]}>
     <ScrollView
+      ref={scrollRef}
       style={telaCheia ? { flex: 1 } : undefined}
       scrollEnabled={telaCheia}
       contentContainerStyle={{ padding: espaco.lg, gap: espaco.lg }}
       keyboardShouldPersistTaps="handled"
     >
+      {conteudoAntes}
+
       {tituloCabecalho ? (
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: espaco.sm }}>
           <BotaoVoltar />
@@ -129,6 +179,8 @@ export function FormularioProduto({
         onChangeText={definir('nome')}
         erro={erros.nome}
         autoFocus={autofocarNome}
+        onFocus={registrarFoco}
+        onBlur={registrarDesfoque}
       />
 
       {avisoDeNome ? (
@@ -171,10 +223,12 @@ export function FormularioProduto({
         erro={erros.quantidadeNecessaria}
         keyboardType="decimal-pad"
         tipo="quantidade"
+        onFocus={registrarFoco}
+        onBlur={registrarDesfoque}
       />
 
       <Pressable
-        onPress={() => setMaisOpcoes(!maisOpcoes)}
+        onPress={alternarMaisOpcoes}
         accessibilityRole="button"
         accessibilityState={{ expanded: maisOpcoes }}
         hitSlop={8}
@@ -192,6 +246,7 @@ export function FormularioProduto({
           <IconeSvg path={icones.cheveron} cor={tema.action.azulejo} tamanho={16} />
         </View>
       </Pressable>
+      <View ref={marcadorMaisOpcoesRef} />
 
       {maisOpcoes ? (
         <View style={{ gap: espaco.lg }}>
@@ -203,6 +258,9 @@ export function FormularioProduto({
               erro={erros.quantidadeAtual}
               keyboardType="decimal-pad"
               tipo="quantidade"
+              ref={primeiroCampoExtraRef}
+              onFocus={registrarFoco}
+              onBlur={registrarDesfoque}
             />
           ) : null}
           <CampoTexto
@@ -212,14 +270,23 @@ export function FormularioProduto({
             erro={erros.valorUnitario}
             keyboardType="decimal-pad"
             tipo="dinheiro"
+            ref={quantidadeAtualEditavel ? undefined : primeiroCampoExtraRef}
+            onFocus={registrarFoco}
+            onBlur={registrarDesfoque}
           />
           <View style={{ gap: espaco.sm }}>
             <CampoTexto
               rotulo="Onde guardo"
               value={valores.categoria}
               onChangeText={definir('categoria')}
-              onFocus={() => setCategoriaFocada(true)}
-              onBlur={() => setCategoriaFocada(false)}
+              onFocus={() => {
+                registrarFoco();
+                setCategoriaFocada(true);
+              }}
+              onBlur={() => {
+                registrarDesfoque();
+                setCategoriaFocada(false);
+              }}
             />
             {sugestoes.length > 0 ? (
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: espaco.sm }}>
@@ -237,25 +304,33 @@ export function FormularioProduto({
             rotulo="Marca que prefiro"
             value={valores.marcaPreferida}
             onChangeText={definir('marcaPreferida')}
+            onFocus={registrarFoco}
+            onBlur={registrarDesfoque}
           />
           <CampoTexto
             rotulo="Anotação"
             value={valores.observacao}
             onChangeText={definir('observacao')}
+            onFocus={registrarFoco}
+            onBlur={registrarDesfoque}
             multiline
           />
         </View>
       ) : null}
+
+      {conteudoDepois}
     </ScrollView>
     <View
       style={{
         padding: espaco.lg,
         paddingBottom: espaco.lg + insets.bottom,
+        gap: espaco.sm,
         borderTopWidth: 1,
         borderTopColor: tema.line.hairline,
       }}
     >
       <Botao titulo={tituloAcao} onPress={aoSalvar} disabled={salvando} />
+      {botaoExtra}
     </View>
     </View>
     </EvitaTeclado>

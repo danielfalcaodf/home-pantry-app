@@ -1,7 +1,8 @@
 import { validarCadastroProduto } from '../../domain/produto/validacao';
-import { converterValorBruto } from '../../domain/shared/dinheiro';
+import { centavos, converterValorBruto } from '../../domain/shared/dinheiro';
 import { milesimos } from '../../domain/shared/quantidade';
 import { criarDbDeTeste, semearCasaEUsuario } from '../db/teste/criar-db-teste';
+import { SQLiteCompraRepository } from './sqlite-compra.repository';
 import { SQLiteProdutoRepository } from './sqlite-produto.repository';
 
 const clock = { agora: () => 1_700_000_000_000 };
@@ -11,6 +12,16 @@ function montar() {
   const { casaId, usuarioId } = semearCasaEUsuario(sqlite);
   const repo = new SQLiteProdutoRepository(db, clock);
   return { repo, sqlite, casaId, usuarioId };
+}
+
+// Compras entram só nos testes de `removerLogicamente` que provam a limpeza
+// de `compra_item` — os demais testes deste arquivo não precisam da dependência.
+function montarComCompra() {
+  const { db, sqlite } = criarDbDeTeste();
+  const { casaId, usuarioId } = semearCasaEUsuario(sqlite);
+  const repo = new SQLiteProdutoRepository(db, clock);
+  const compras = new SQLiteCompraRepository(db);
+  return { repo, compras, sqlite, casaId, usuarioId };
 }
 
 function dadosValidos(nome = 'Arroz', quantidadeAtual = 0) {
@@ -73,6 +84,69 @@ describe('edição e remoção lógica', () => {
       expect(editado.valor.nome).toBe('Arroz integral');
       expect(editado.valor.syncStatus).toBe('pendente');
     }
+  });
+
+  it('persiste todos os campos opcionais da seção "Mais opções"', async () => {
+    const { repo, casaId, usuarioId } = montar();
+    const criado = await repo.criar(casaId, usuarioId, dadosValidos());
+    if (!criado.ok) {
+      throw new Error('setup');
+    }
+
+    await repo.editar(criado.valor.id, {
+      valorUnitario: centavos(1299),
+      categoria: 'Despensa',
+      marcaPreferida: 'Marca boa',
+      observacao: 'Pote de vidro',
+    });
+    const relido = await repo.obterPorId(criado.valor.id);
+
+    expect(relido).toMatchObject({
+      valorUnitario: 1299,
+      categoria: 'Despensa',
+      marcaPreferida: 'Marca boa',
+      observacao: 'Pote de vidro',
+    });
+  });
+
+  it('persiste campo principal e opcional na mesma edição', async () => {
+    const { repo, casaId, usuarioId } = montar();
+    const criado = await repo.criar(casaId, usuarioId, dadosValidos());
+    if (!criado.ok) {
+      throw new Error('setup');
+    }
+
+    await repo.editar(criado.valor.id, {
+      quantidadeNecessaria: milesimos(5000),
+      observacao: 'Pote de vidro',
+    });
+    const relido = await repo.obterPorId(criado.valor.id);
+
+    expect(relido).toMatchObject({
+      quantidadeNecessaria: 5000,
+      observacao: 'Pote de vidro',
+    });
+  });
+
+  it('preserva campos opcionais existentes quando a edição não os altera', async () => {
+    const { repo, casaId, usuarioId } = montar();
+    const criado = await repo.criar(casaId, usuarioId, dadosValidos());
+    if (!criado.ok) {
+      throw new Error('setup');
+    }
+
+    await repo.editar(criado.valor.id, {
+      marcaPreferida: 'Marca boa',
+      observacao: 'Pote de vidro',
+    });
+    await repo.editar(criado.valor.id, { nome: 'Arroz integral' });
+    const relido = await repo.obterPorId(criado.valor.id);
+
+    expect(relido).toMatchObject({
+      nome: 'Arroz integral',
+      marcaPreferida: 'Marca boa',
+      observacao: 'Pote de vidro',
+    });
   });
 
   it('editar produto inexistente retorna nao_encontrado', async () => {
@@ -524,5 +598,112 @@ describe('valorBrutoDoEstoque', () => {
       .prepare('INSERT INTO casa (id, nome, criada_em, atualizado_em) VALUES (?, ?, 0, 0)')
       .run('outra-casa', 'Outra casa');
     expect(await repo.valorBrutoDoEstoque('outra-casa')).toBe(0);
+  });
+});
+
+describe('removerLogicamente — limpeza de compra_item pendente', () => {
+  function contarComprasItem(sqlite: ReturnType<typeof criarDbDeTeste>['sqlite']): number {
+    return (sqlite.prepare('SELECT COUNT(*) AS n FROM compra_item').get() as { n: number }).n;
+  }
+
+  it('prova do bug: item "fora da lista por agora" (excluido = true) some quando o produto é removido', async () => {
+    const { repo, compras, casaId, usuarioId, sqlite } = montarComCompra();
+    const produto = await repo.criar(casaId, usuarioId, dadosValidos('Arroz'));
+    if (!produto.ok) throw new Error('setup');
+    const compra = await compras.abrir(casaId, usuarioId, clock.agora());
+    if (!compra.ok) throw new Error('setup');
+    const item = await compras.adicionarItem(compra.valor.id, {
+      produtoId: produto.valor.id,
+      unidade: 'pacote',
+      quantidadePlanejada: milesimos(1000),
+    });
+    await compras.editarItem(item.id, { excluido: true });
+
+    await repo.removerLogicamente(produto.valor.id);
+
+    const linha = sqlite.prepare('SELECT id FROM compra_item WHERE id = ?').get(item.id);
+    expect(linha).toBeUndefined();
+  });
+
+  // Item pendente comum (excluido=false) NÃO é apagado — só o registro
+  // "fora da lista por agora" é o bug. A compra aberta continua precisando
+  // dele pra não derrubar o próprio detalhe da compra (task 5.4/5.7 de
+  // correcao-lista-de-compras, ver sqlite-compra.repository.test.ts).
+  it('item pendente comum (comprado = false, excluido = false) permanece quando o produto é removido', async () => {
+    const { repo, compras, casaId, usuarioId, sqlite } = montarComCompra();
+    const produto = await repo.criar(casaId, usuarioId, dadosValidos('Arroz'));
+    if (!produto.ok) throw new Error('setup');
+    const compra = await compras.abrir(casaId, usuarioId, clock.agora());
+    if (!compra.ok) throw new Error('setup');
+    const item = await compras.adicionarItem(compra.valor.id, {
+      produtoId: produto.valor.id,
+      unidade: 'pacote',
+      quantidadePlanejada: milesimos(1000),
+    });
+
+    await repo.removerLogicamente(produto.valor.id);
+
+    const linha = sqlite
+      .prepare('SELECT produto_id AS produtoId FROM compra_item WHERE id = ?')
+      .get(item.id) as { produtoId: string | null } | undefined;
+    expect(linha).not.toBeUndefined();
+    expect(linha?.produtoId).toBe(produto.valor.id);
+  });
+
+  // A remoção de produto é soft-delete (UPDATE deletado_em), nunca DELETE
+  // físico — o FK onDelete:'set null' de compra_item.produto_id só dispara
+  // em DELETE físico, que este fluxo nunca faz. Por isso o DELETE explícito
+  // do compra_item cobre só excluido = true (design.md); item já comprado
+  // não é tocado e continua apontando pro produto (agora soft-deletado).
+  it('item já comprado em compra fechada permanece intacto, sem regredir o vínculo com o produto', async () => {
+    const { repo, compras, casaId, usuarioId, sqlite } = montarComCompra();
+    const produto = await repo.criar(casaId, usuarioId, dadosValidos('Arroz'));
+    if (!produto.ok) throw new Error('setup');
+    const compra = await compras.abrir(casaId, usuarioId, clock.agora());
+    if (!compra.ok) throw new Error('setup');
+    const item = await compras.adicionarItem(compra.valor.id, {
+      produtoId: produto.valor.id,
+      unidade: 'pacote',
+      quantidadePlanejada: milesimos(1000),
+    });
+    await compras.editarItem(item.id, {
+      comprado: true,
+      quantidadeComprada: milesimos(1000),
+      valorPagoUnitario: centavos(890),
+    });
+    await compras.finalizar(
+      compra.valor.id,
+      { reposicoes: [], atualizacoesDePreco: [], totalPago: centavos(890) },
+      usuarioId,
+      clock.agora() + 1,
+    );
+
+    await repo.removerLogicamente(produto.valor.id);
+
+    const linha = sqlite
+      .prepare('SELECT produto_id AS produtoId FROM compra_item WHERE id = ?')
+      .get(item.id) as { produtoId: string | null } | undefined;
+    expect(linha).not.toBeUndefined();
+    expect(linha?.produtoId).toBe(produto.valor.id);
+  });
+
+  it('produto sem nenhum item de compra associado: remoção não afeta compra_item de outros produtos', async () => {
+    const { repo, compras, casaId, usuarioId, sqlite } = montarComCompra();
+    const semItem = await repo.criar(casaId, usuarioId, dadosValidos('Arroz'));
+    const comItem = await repo.criar(casaId, usuarioId, dadosValidos('Feijão'));
+    if (!semItem.ok || !comItem.ok) throw new Error('setup');
+    const compra = await compras.abrir(casaId, usuarioId, clock.agora());
+    if (!compra.ok) throw new Error('setup');
+    const item = await compras.adicionarItem(compra.valor.id, {
+      produtoId: comItem.valor.id,
+      unidade: 'pacote',
+      quantidadePlanejada: milesimos(1000),
+    });
+
+    await repo.removerLogicamente(semItem.valor.id);
+
+    expect(contarComprasItem(sqlite)).toBe(1);
+    const linha = sqlite.prepare('SELECT id FROM compra_item WHERE id = ?').get(item.id);
+    expect(linha).not.toBeUndefined();
   });
 });

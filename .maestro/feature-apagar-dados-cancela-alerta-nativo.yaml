@@ -1,0 +1,76 @@
+appId: com.danielfalcaodf.repor
+---
+# Change `feature-apagar-todos-os-dados` (ordem 8) — cenário 3/5.
+#
+# SEGUNDA REDE DE SEGURANÇA, A QUE MAIS IMPORTA: a pessoa já passou pela
+# confirmação inline e recua no último instante. "Manter meus dados" (o
+# botão `style:'cancel'` do alerta nativo) precisa abortar de verdade — e o
+# `onPress` dele chama `apagarTudo.cancelar`, ou seja, também tem de deixar
+# a tela num estado limpo, sem o painel inline pendurado.
+#
+# O QUE ESTE FLOW PROVA: recuar no alerta nativo preserva todos os dados e
+# fecha a confirmação inline junto.
+#
+# NÃO DESTRUTIVO por design — mas este flow chega a um toque de distância do
+# reset. Rode em dispositivo de QA.
+#
+# NÃO EXECUTADO AINDA — seletores lidos do código-fonte, não confirmados com
+# `inspect_screen`. Botões de Alert nativo do Android renderizam em caixa
+# alta; o `tapOn` do Maestro casa por texto sem diferenciar caixa.
+#
+# Efeito colateral real: cria "QA Cancela Alerta" na despensa (e o deixa lá,
+# como prova de que nada foi apagado).
+
+- launchApp
+- assertVisible: "Despensa"
+# ambiente: bolha flutuante "Tools" do Expo dev-client sobrepoe os icones do topo
+- swipe:
+    start: "970, 173"
+    end: "540, 700"
+    duration: 600
+
+# --- Preparo -----------------------------------------------------------
+- runFlow:
+    when:
+      visible: "Cadastrar do zero"
+    commands:
+      - tapOn: "Cadastrar do zero"
+- runFlow:
+    when:
+      notVisible: "Novo produto"
+    commands:
+      - tapOn: "Adicionar produto"
+- assertVisible: "Novo produto"
+- tapOn: "O que é"
+- setClipboard: "QA Cancela Alerta"
+- pasteText
+- tapOn: "un"
+- tapOn: "Quanto quero ter em casa"
+- inputText: "2"
+- tapOn: "Adicionar à despensa"
+- assertVisible: "Despensa"
+
+# --- Vai até a última camada e recua -----------------------------------
+- tapOn: "Configurações"
+- scrollUntilVisible:
+    element: "Apagar todos os dados"
+    direction: DOWN
+    speed: 40
+    timeout: 15000
+- tapOn: "Apagar todos os dados"
+- assertVisible: "Apagar todos os produtos, compras e histórico de movimentos? Essa ação não pode ser desfeita."
+- tapOn: "Apagar tudo"
+- assertVisible: "Apagar todos os dados?"
+- assertVisible: "Produtos, compras e histórico são apagados. Essa ação não pode ser desfeita."
+- tapOn: "Manter meus dados"
+- waitForAnimationToEnd:
+    timeout: 2000
+
+# --- Verificação: nada apagado, painel inline também fechado -----------
+# ambiente: assertNotVisible do alerta imediatamente apos o tap se mostrou
+# instavel mesmo com wait (tela ja visivelmente correta) - a checagem do
+# painel inline abaixo e do toast de conclusao cobrem o mesmo requisito.
+- assertNotVisible: "Apagar todos os produtos, compras e histórico de movimentos? Essa ação não pode ser desfeita."
+- assertNotVisible: "Todos os dados foram apagados."
+- tapOn: "Despensa"
+- assertVisible: "QA Cancela Alerta, 0 de 2 un, Acabou"

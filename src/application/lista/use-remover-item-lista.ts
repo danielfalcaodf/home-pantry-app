@@ -93,6 +93,12 @@ export function useRemoverItemDaLista(
         produtoId: item.produtoId,
         unidade: item.unidade,
         quantidadePlanejada: QUANTIDADE_PLACEHOLDER,
+        // Sem isso, a linha nasce com o default 0 do schema — se essa linha
+        // for reativada depois (a marcação nunca é apagada, só vira
+        // excluido:false), o preço fica congelado em 0 mesmo que o produto
+        // já tenha preço na hora da reativação (mesma classe de bug da
+        // valorEstimadoUnit obsoleta em use-iniciar-compra.ts).
+        valorEstimadoUnit: item.valorUnitario,
         excluido: true,
       });
       setUltimaRemocao({

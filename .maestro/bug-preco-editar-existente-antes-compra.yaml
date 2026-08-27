@@ -1,0 +1,38 @@
+appId: com.danielfalcaodf.repor
+---
+# Cenário 5 — item que JÁ tinha preço (não "sem preço") tem o preço trocado
+# na Lista antes de iniciar a compra. O bug relatado descreve especificamente
+# um item "sem preço", mas a mesma causa raiz (valorEstimadoUnit obsoleto)
+# se aplica a qualquer mudança de preço, não só de 0 pra um valor — este
+# cenário garante que o Modo Compra mostra o preço NOVO, não o antigo.
+#
+# NÃO EXECUTAR AINDA — task de correcao-total-compra-preco-heranca.
+# Seletores não confirmados no app rodando, revisar com inspect_screen.
+#
+# Pré-condição: "Açúcar" (ou outro item da lista base) já com um preço
+# cadastrado (ex.: R$ 8,90) e sem compra aberta residual.
+
+- launchApp
+- assertVisible: "Despensa"
+- tapOn: "Lista"
+- assertVisible: "R$ 8,90"
+
+# Troca o preço de R$8,90 pra R$15,00.
+- tapOn: "Açúcar"
+- assertVisible: "Preço de Açúcar"
+- eraseText
+- inputText: "15,00"
+- tapOn: "Salvar"
+- assertVisible: "R$ 15,00"
+- assertNotVisible: "R$ 8,90"
+
+- tapOn:
+    text: "Iniciar compra \\(\\d+\\)"
+- assertVisible: "Açúcar, 1 un, R\\$ 15,00"
+- assertNotVisible: "Açúcar, 1 un, R\\$ 8,90"
+
+- tapOn:
+    text: "Açúcar, 1 un, R\\$ 15,00"
+- assertVisible:
+    text: "Açúcar, 1 un, R\\$ 15,00"
+    checked: true

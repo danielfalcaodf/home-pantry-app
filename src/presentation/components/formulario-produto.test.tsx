@@ -1,5 +1,6 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react-native';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react-native';
 import { ReactNode, useState } from 'react';
+import { ScrollView, TextInput, View } from 'react-native';
 
 import { ALVO_TOQUE_MINIMO } from '../theme/espaco';
 import { ThemeProvider } from '../theme/provider';
@@ -10,7 +11,7 @@ jest.mock('expo-router', () => ({
 }));
 
 async function comTema(no: ReactNode) {
-  await render(<ThemeProvider preferencia="escuro">{no}</ThemeProvider>);
+  return await render(<ThemeProvider preferencia="escuro">{no}</ThemeProvider>);
 }
 
 function estiloResolvido(elemento: { props: { style?: unknown } }) {
@@ -18,7 +19,7 @@ function estiloResolvido(elemento: { props: { style?: unknown } }) {
   return Array.isArray(style) ? Object.assign({}, ...style) : style;
 }
 
-async function montarFormulario() {
+function montarFormulario() {
   return comTema(
     <FormularioProduto
       valores={VALORES_INICIAIS}
@@ -197,4 +198,57 @@ describe('FormularioProduto — categoria sugere antes de digitar (affordance)',
     fireEvent(screen.getByLabelText('Onde guardo'), 'blur');
     await waitFor(() => expect(screen.queryByText('Mercearia')).toBeNull());
   });
+});
+
+describe('FormularioProduto — scroll ao expandir "Mais opções" (correcao-tela-editar-produto)', () => {
+  /** O `measureLayout` real do RN não roda sob Jest (mock no-op) — aqui ele
+   *  simula a posição do marcador que fica logo após "Mais opções", como a
+   *  implementação faria de verdade via bridge nativa. */
+  function mockPosicaoDoMarcador(y: number) {
+    const alvo = View.prototype as unknown as {
+      measureLayout: (...args: unknown[]) => void;
+    };
+    return jest.spyOn(alvo, 'measureLayout').mockImplementation((...args: unknown[]) => {
+      const aoMedir = args[1] as (x: number, y: number, largura: number, altura: number) => void;
+      aoMedir(0, y, 100, 20);
+    });
+  }
+
+  afterEach(() => {
+    jest.useRealTimers();
+    jest.restoreAllMocks();
+  });
+
+  it('transfere o foco de "O que é" para o primeiro campo revelado depois do scroll', async () => {
+    mockPosicaoDoMarcador(240);
+    const scrollTo = jest.spyOn(ScrollView.prototype, 'scrollTo').mockImplementation(() => {});
+    const focus = jest.spyOn(TextInput.prototype, 'focus').mockImplementation(() => {});
+    const { unmount } = await comTema(
+      <FormularioProduto
+        valores={VALORES_INICIAIS}
+        aoMudar={() => {}}
+        erros={{}}
+        categoriasExistentes={[]}
+        tituloAcao="Salvar"
+        aoSalvar={() => {}}
+        quantidadeAtualEditavel={false}
+      />,
+    );
+
+    jest.useFakeTimers();
+    fireEvent(screen.getByLabelText('O que é'), 'focus');
+    fireEvent.press(screen.getByRole('button', { name: 'Mais opções' }));
+
+    await waitFor(() => expect(scrollTo).toHaveBeenCalledWith({ y: 240, animated: true }));
+    act(() => jest.advanceTimersByTime(200));
+    expect(focus).toHaveBeenCalledTimes(1);
+    scrollTo.mockClear();
+    focus.mockClear();
+
+    fireEvent.press(screen.getByRole('button', { name: 'Menos opções' }));
+    expect(scrollTo).not.toHaveBeenCalled();
+    expect(focus).not.toHaveBeenCalled();
+    unmount();
+  });
+
 });

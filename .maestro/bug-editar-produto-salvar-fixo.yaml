@@ -1,0 +1,72 @@
+appId: com.danielfalcaodf.repor
+---
+# Change `correcao-tela-editar-produto` (ordem 6) — cenário 1/5.
+#
+# BUG ORIGINAL: em `app/produto/[id].tsx` o `FormularioProduto` era montado
+# com `telaCheia={false}` dentro de um `ScrollView` externo — o rodapé
+# "fixo" caía dentro do scroll alheio e o botão "Salvar" rolava junto com o
+# conteúdo, sumindo da tela. Na tela de "Novo produto" (`telaCheia`) o mesmo
+# rodapé sempre funcionou.
+#
+# O QUE ESTE FLOW PROVA: com o formulário expandido ("Mais opções") e a tela
+# rolada até o fim, "Salvar" e "Tirar da despensa" continuam visíveis. Cobre
+# o cenário "Botão Salvar permanece fixo" da capability
+# `cadastro-de-produto`.
+#
+# NÃO EXECUTADO AINDA — seletores lidos do código-fonte
+# (`app/produto/[id].tsx`, `formulario-produto.tsx`), não confirmados com
+# `inspect_screen`.
+#
+# Efeito colateral real: cria "QA Rodape Fixo". Nada é salvo nem removido —
+# o flow só rola a tela e verifica o rodapé.
+
+- launchApp
+- assertVisible: "Despensa"
+# ambiente: bolha flutuante "Tools" do Expo dev-client sobrepoe os icones do topo
+- swipe:
+    start: "970, 173"
+    end: "540, 700"
+    duration: 600
+
+# --- Preparo -----------------------------------------------------------
+- runFlow:
+    when:
+      visible: "Cadastrar do zero"
+    commands:
+      - tapOn: "Cadastrar do zero"
+- runFlow:
+    when:
+      notVisible: "Novo produto"
+    commands:
+      - tapOn: "Adicionar produto"
+- assertVisible: "Novo produto"
+- tapOn: "O que é"
+- setClipboard: "QA Rodape Fixo"
+- pasteText
+- tapOn: "un"
+- tapOn: "Quanto quero ter em casa"
+- inputText: "3"
+- tapOn: "Adicionar à despensa"
+- assertVisible: "Despensa"
+
+# --- Abre o detalhe/edição ---------------------------------------------
+# ambiente: busca por texto multi-palavra e instavel no teclado do AVD; toca direto
+- tapOn: "QA Rodape Fixo, 0 de 3 un, Acabou"
+- assertVisible: "Salvar"
+- assertVisible: "Tirar da despensa"
+
+# --- Expande e rola até o fim do conteúdo ------------------------------
+- tapOn: "Mais opções"
+- assertVisible: "Anotação"
+- scrollUntilVisible:
+    element: "Anotação"
+    direction: DOWN
+    speed: 40
+    timeout: 15000
+- scroll
+- scroll
+
+# --- Verificação: o rodapé não rolou junto -----------------------------
+- assertVisible: "Salvar"
+- assertVisible: "Tirar da despensa"
+- takeScreenshot: editar-produto-rodape-fixo

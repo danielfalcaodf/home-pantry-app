@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { useRef, useState } from 'react';
+import { Pressable, TextInput, View } from 'react-native';
 
 import { rotuloDaUnidade, Unidade } from '../../domain/shared/unidade';
 import { ALVO_TOQUE_MINIMO, espaco } from '../theme/espaco';
@@ -37,6 +37,7 @@ export function SheetAjusteCompra({
   onSalvar,
 }: SheetAjusteCompraProps) {
   const tema = useTheme();
+  const campoQuantidadeRef = useRef<TextInput>(null);
   const [quantidade, setQuantidade] = useState(String(quantidadeInicial).replace('.', ','));
   // Duas casas sempre — é o formato que a máscara de dinheiro espera pra
   // reconhecer o valor semeado (CampoTexto extrai dígitos do que está aqui).
@@ -69,6 +70,7 @@ export function SheetAjusteCompra({
     <PainelInferior
       visivel={visivel}
       onFechar={fechar}
+      onAberto={() => campoQuantidadeRef.current?.focus()}
       testID="evita-teclado-ajuste-compra"
       style={{ padding: espaco.xl, gap: espaco.lg }}
     >
@@ -92,6 +94,7 @@ export function SheetAjusteCompra({
       <View style={{ flexDirection: 'row', gap: espaco.md }}>
         <View style={{ flex: 1 }}>
           <CampoTexto
+            ref={campoQuantidadeRef}
             rotulo={`Quantidade (${rotuloDaUnidade(unidade, true)})`}
             value={quantidade}
             onChangeText={setQuantidade}

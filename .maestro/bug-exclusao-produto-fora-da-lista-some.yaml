@@ -1,0 +1,90 @@
+appId: com.danielfalcaodf.repor
+---
+# Change `correcao-baixa-produto-excluido-da-lista` (ordem 3) — cenário 1/5.
+#
+# BUG ORIGINAL: um item colocado em "Fora da lista por agora" continuava
+# preso à compra aberta depois de o produto ser excluído da despensa, porque
+# `removerLogicamente` é soft-delete e o FK `onDelete:'set null'` só dispara
+# em DELETE físico. Resultado: item fantasma reaparecendo indefinidamente na
+# seção "Fora da lista por agora", apontando para um produto morto.
+#
+# O QUE ESTE FLOW PROVA: depois de excluir o produto, a linha correspondente
+# some da seção "Fora da lista por agora" — cobre pela UI o cenário
+# "Item 'fora da lista por agora' some ao excluir o produto"
+# (specs/repositorios/spec.md).
+#
+# NÃO EXECUTADO AINDA — flow criado como task da change, execução real fica
+# para a sessão dedicada de Maestro. Seletores lidos do código-fonte
+# (`app/(tabs)/lista.tsx`, `item-lista.tsx`, `app/produto/[id].tsx`), ainda
+# não confirmados com `inspect_screen` no app rodando.
+#
+# Parte do zero: cria o próprio produto de teste ("QA Excluir Fora"), não
+# depende de massa de seed.
+#
+# Efeito colateral real e permanente no dispositivo de teste: cria e depois
+# remove logicamente o produto "QA Excluir Fora" (o histórico dele fica no
+# banco, por design). Se uma compra estiver aberta no dispositivo, o item
+# entra e sai dela; nenhuma compra é fechada.
+
+- launchApp
+- assertVisible: "Despensa"
+
+# --- Preparo: cadastrar o produto de teste -----------------------------
+# Despensa vazia mostra o estado vazio (sem o ícone "Adicionar produto"),
+# por isso os dois caminhos de entrada no cadastro.
+- runFlow:
+    when:
+      visible: "Cadastrar do zero"
+    commands:
+      - tapOn: "Cadastrar do zero"
+- runFlow:
+    when:
+      notVisible: "Novo produto"
+    commands:
+      - tapOn: "Adicionar produto"
+- assertVisible: "Novo produto"
+- tapOn: "O que é"
+- inputText: "QA Excluir Fora"
+- tapOn: "un"
+- tapOn: "Quanto quero ter em casa"
+- inputText: "2"
+- tapOn: "Adicionar à despensa"
+- assertVisible: "Despensa"
+
+# Nasce com 0 de 2 un ("Acabou"), logo entra na lista derivada.
+- tapOn: "Lista"
+- scrollUntilVisible:
+    element: "Remover QA Excluir Fora da lista"
+    direction: DOWN
+    speed: 40
+    timeout: 20000
+
+# --- Ação: tirar da lista (marca `excluido = true`) --------------------
+- tapOn: "Remover QA Excluir Fora da lista"
+- assertVisible: "QA Excluir Fora removido da lista"
+- tapOn:
+    text: "Fora da lista por agora \\(\\d+\\)"
+- assertVisible: "Voltar QA Excluir Fora pra lista"
+
+# --- Ação: excluir o produto na Despensa -------------------------------
+- tapOn: "Despensa"
+- tapOn: "Buscar"
+- inputText: "QA Excluir Fora"
+- tapOn: "QA Excluir Fora, 0 de 2 un, Acabou"
+- tapOn: "Tirar da despensa"
+- assertVisible: "Tirar QA Excluir Fora da despensa?"
+- assertVisible: "O histórico de uso continua guardado."
+- tapOn: "Tirar da despensa"
+- assertVisible: "Despensa"
+
+# --- Verificação: nada de item fantasma na Lista -----------------------
+- tapOn: "Lista"
+- runFlow:
+    when:
+      visible:
+        text: "Fora da lista por agora \\(\\d+\\)"
+    commands:
+      - tapOn:
+          text: "Fora da lista por agora \\(\\d+\\)"
+- assertNotVisible: "Voltar QA Excluir Fora pra lista"
+- assertNotVisible: "QA Excluir Fora"

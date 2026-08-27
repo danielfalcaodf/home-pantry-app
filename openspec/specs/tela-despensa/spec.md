@@ -1,7 +1,10 @@
 # tela-despensa
 
-## Requirements
+## Purpose
 
+Definir a tela principal da despensa: ordenação por estado, agrupamento por categoria, filtros,
+busca por nome e reatividade da lista aos registros de consumo/reposição.
+## Requirements
 ### Requirement: Ordenação por estado
 
 A despensa SHALL listar os itens em ordem de urgência — primeiro os críticos, depois os em falta, depois os ok — e, dentro de cada grupo, em ordem alfabética ignorando diferença de caixa.
@@ -80,7 +83,7 @@ A despensa SHALL permitir filtrar por categoria, a partir das categorias efetiva
 
 ### Requirement: Busca por nome
 
-A despensa SHALL permitir buscar itens por nome, ignorando diferença de caixa e acentuação. A normalização SHALL ser feita por uma função pura (`normalizarParaBusca`/`casaComBusca`, em `src/presentation/format/normalizar-busca.ts`), diretamente testável e independente do `COLLATE NOCASE` do SQLite (que é ASCII-only e não resolve acento).
+A despensa SHALL permitir buscar itens por nome, ignorando diferença de caixa e acentuação. A normalização SHALL ser feita por uma função pura (`normalizarParaBusca`/`casaComBusca`, em `src/presentation/format/normalizar-busca.ts`), diretamente testável e independente do `COLLATE NOCASE` do SQLite (que é ASCII-only e não resolve acento). Ao trocar de aba, o teclado SHALL ser fechado; se o campo de busca estiver vazio, o campo SHALL ser fechado; se houver termo digitado, o campo e o filtro SHALL permanecer ativos, apenas sem foco.
 
 #### Scenario: Busca parcial
 
@@ -96,6 +99,16 @@ A despensa SHALL permitir buscar itens por nome, ignorando diferença de caixa e
 
 - **WHEN** a busca não encontra nenhum item
 - **THEN** é exibida a mensagem de nenhum item com esse nome e uma ação para cadastrar o termo buscado
+
+#### Scenario: Trocar de aba com busca vazia fecha o campo
+
+- **WHEN** o usuário abre o campo de busca sem digitar nada e troca de aba
+- **THEN** o teclado é fechado e o campo de busca fecha
+
+#### Scenario: Trocar de aba com busca preenchida mantém o filtro
+
+- **WHEN** o usuário digita um termo de busca e troca de aba
+- **THEN** o teclado é fechado, mas o campo permanece aberto com o termo e o filtro continuam ativos ao voltar para a aba
 
 ### Requirement: Lista reativa à escrita
 
@@ -124,3 +137,4 @@ A lista SHALL permanecer fluida com o volume esperado de produtos da casa.
 
 - **WHEN** a lista ultrapassa cerca de 150 itens
 - **THEN** ela é renderizada por lista virtualizada de alto desempenho
+

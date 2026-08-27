@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
 
-import { CompraItem } from '../../domain/compra/compra';
 import { divergenciaDePreco } from '../../domain/compra/compra.rules';
 import { Centavos } from '../../domain/shared/dinheiro';
 import { Milesimos } from '../../domain/shared/quantidade';
@@ -26,7 +25,7 @@ export type EstadoModoCompra = {
   itens: ItemDaCompra[];
   carregando: boolean;
   /** Marca o item, assumindo a quantidade planejada quando não há ajuste (3.1). */
-  marcar: (item: CompraItem) => Promise<void>;
+  marcar: (item: ItemComProduto) => Promise<void>;
   desmarcar: (itemId: string) => Promise<void>;
   ajustarQuantidade: (itemId: string, quantidadeComprada: Milesimos) => Promise<void>;
   ajustarPreco: (itemId: string, valorPagoUnitario: Centavos | null) => Promise<void>;
@@ -77,10 +76,19 @@ export function useModoCompra(
   }, [recarregar, observador]);
 
   const marcar = useCallback(
-    async (item: CompraItem) => {
+    async ({ item, produto }: ItemComProduto) => {
+      // `valorEstimadoUnit` é Centavos não-nulável (0 = "sem preço", não
+      // "não informado" — `??` nunca dispararia nele). Se estiver zerado
+      // mas o produto já tem preço vivo (compra aberta residual criada
+      // antes do preço ter sido editado na Lista — ver design.md), usa o
+      // preço vivo do produto, já trazido junto na mesma consulta.
+      const precoEstimado = item.valorEstimadoUnit > 0 ? item.valorEstimadoUnit : (produto?.valorUnitario ?? item.valorEstimadoUnit);
       await compras.editarItem(item.id, {
         comprado: true,
         quantidadeComprada: item.quantidadeComprada ?? item.quantidadePlanejada,
+        // Sem preço pago digitado, assume o preço estimado do produto — mesmo padrão já
+        // usado acima para a quantidade planejada (3.1).
+        valorPagoUnitario: item.valorPagoUnitario ?? precoEstimado,
       });
     },
     [compras],

@@ -1,4 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/react-native';
+import { Alert } from 'react-native';
 import { ReactNode } from 'react';
 
 import { ThemeProvider } from '@/presentation/theme/provider';
@@ -38,6 +39,19 @@ let mockUltimoBackupEm = '';
 jest.mock('@/application/backup/use-ultimo-backup', () => ({
   useUltimoBackup: () => ({ ultimoBackupEm: mockUltimoBackupEm, recarregar: jest.fn() }),
 }));
+const mockPedirConfirmacaoApagarTudo = jest.fn();
+const mockConfirmarApagarTudo = jest.fn();
+const mockCancelarApagarTudo = jest.fn();
+let mockEstadoApagarTudo: unknown = { fase: 'ocioso' };
+
+jest.mock('@/application/backup/use-apagar-todos-os-dados', () => ({
+  useApagarTodosOsDados: () => ({
+    estado: mockEstadoApagarTudo,
+    pedirConfirmacao: mockPedirConfirmacaoApagarTudo,
+    confirmar: mockConfirmarApagarTudo,
+    cancelar: mockCancelarApagarTudo,
+  }),
+}));
 
 function estiloResolvido(elemento: { props: { style?: unknown } }) {
   const { style } = elemento.props;
@@ -45,7 +59,7 @@ function estiloResolvido(elemento: { props: { style?: unknown } }) {
 }
 
 async function comTema(no: ReactNode) {
-  await render(
+  return render(
     <ThemeProvider preferencia="escuro" escolher={mockEscolherTema}>
       {no}
     </ThemeProvider>,
@@ -61,6 +75,10 @@ describe('Configuracoes', () => {
     mockExportarDados.mockClear();
     mockEstadoRestauracao = { fase: 'ocioso' };
     mockUltimoBackupEm = '';
+    mockEstadoApagarTudo = { fase: 'ocioso' };
+    mockPedirConfirmacaoApagarTudo.mockClear();
+    mockConfirmarApagarTudo.mockClear();
+    mockCancelarApagarTudo.mockClear();
   });
 
   // ACHADO-059 (task 3.2): as três opções de tema precisam medir ≥48dp.
@@ -186,6 +204,82 @@ describe('Configuracoes', () => {
       mockUltimoBackupEm = '';
       await comTema(<Configuracoes />);
       expect(screen.getByText('Você ainda não fez backup.')).toBeTruthy();
+    });
+  });
+
+  // Lacuna de auditoria de QA: dupla confirmação de "Apagar todos os dados"
+  // nunca era exercitada — o Alert.alert nativo é a segunda camada.
+  describe('apagar todos os dados', () => {
+    it('tocar em "Apagar todos os dados" chama pedirConfirmacao', async () => {
+      await comTema(<Configuracoes />);
+      fireEvent.press(screen.getByText('Apagar todos os dados'));
+      expect(mockPedirConfirmacaoApagarTudo).toHaveBeenCalled();
+    });
+
+    it('painel inline: "Cancelar" chama apagarTudo.cancelar', async () => {
+      mockEstadoApagarTudo = { fase: 'confirmando' };
+      const { getByText } = await comTema(<Configuracoes />);
+
+      fireEvent.press(getByText('Cancelar'));
+      expect(mockCancelarApagarTudo).toHaveBeenCalled();
+    });
+
+    it('painel inline: "Apagar tudo" abre o Alert nativo destrutivo, sem confirmar direto', async () => {
+      const alertSpy = jest.spyOn(Alert, 'alert').mockImplementation(() => {});
+      mockEstadoApagarTudo = { fase: 'confirmando' };
+      const { getByText } = await comTema(<Configuracoes />);
+
+      fireEvent.press(getByText('Apagar tudo'));
+      expect(alertSpy).toHaveBeenCalledWith(
+        'Apagar todos os dados?',
+        expect.any(String),
+        expect.arrayContaining([
+          expect.objectContaining({ text: 'Apagar tudo', style: 'destructive' }),
+        ]),
+      );
+      expect(mockConfirmarApagarTudo).not.toHaveBeenCalled();
+      alertSpy.mockRestore();
+    });
+
+    it('tocar no botão destrutivo do Alert chama confirmar', async () => {
+      const alertSpy = jest.spyOn(Alert, 'alert').mockImplementation(() => {});
+      mockEstadoApagarTudo = { fase: 'confirmando' };
+      const { getByText } = await comTema(<Configuracoes />);
+
+      fireEvent.press(getByText('Apagar tudo'));
+      const botoes = alertSpy.mock.calls[0][2] as { text: string; onPress?: () => void }[];
+      const destrutivo = botoes.find((b) => b.text === 'Apagar tudo')!;
+      destrutivo.onPress?.();
+
+      expect(mockConfirmarApagarTudo).toHaveBeenCalled();
+      alertSpy.mockRestore();
+    });
+
+    it('tocar em "Manter meus dados" do Alert chama cancelar, sem chamar confirmar', async () => {
+      const alertSpy = jest.spyOn(Alert, 'alert').mockImplementation(() => {});
+      mockEstadoApagarTudo = { fase: 'confirmando' };
+      const { getByText } = await comTema(<Configuracoes />);
+
+      fireEvent.press(getByText('Apagar tudo'));
+      const botoes = alertSpy.mock.calls[0][2] as { text: string; onPress?: () => void }[];
+      const manter = botoes.find((b) => b.text === 'Manter meus dados')!;
+      manter.onPress?.();
+
+      expect(mockCancelarApagarTudo).toHaveBeenCalled();
+      expect(mockConfirmarApagarTudo).not.toHaveBeenCalled();
+      alertSpy.mockRestore();
+    });
+
+    it('fase erro exibe o toast de erro com a mensagem', async () => {
+      mockEstadoApagarTudo = { fase: 'erro', mensagem: 'Falha ao apagar. Tente novamente.' };
+      await comTema(<Configuracoes />);
+      expect(screen.getByText('Falha ao apagar. Tente novamente.')).toBeTruthy();
+    });
+
+    it('fase concluido exibe o toast de sucesso', async () => {
+      mockEstadoApagarTudo = { fase: 'concluido' };
+      await comTema(<Configuracoes />);
+      expect(screen.getByText('Todos os dados foram apagados.')).toBeTruthy();
     });
   });
 });

@@ -1,7 +1,10 @@
 # ajuste-de-estoque
 
-## Requirements
+## Purpose
 
+Definir o caminho de correção da quantidade atual de um produto (recalibração), distinto de
+consumo e reposição — sempre grava movimento de estoque, nunca altera a quantidade solta.
+## Requirements
 ### Requirement: Ajuste grava movimento, nunca alteração solta
 
 Corrigir a quantidade de um produto SHALL gravar um movimento do tipo ajuste, com a variação necessária para chegar ao valor informado, na mesma transação da atualização da quantidade. A quantidade NÃO deve ser alterada sem movimento correspondente.
@@ -76,7 +79,9 @@ O tipo ajuste SHALL ser preservado como categoria própria de movimento. Ajustes
 
 ### Requirement: Quantidade editável no detalhe do produto
 
-A tela de detalhe do produto SHALL permitir corrigir a quantidade atual, e essa edição SHALL passar pelo caminho de ajuste.
+A tela de detalhe do produto SHALL permitir corrigir a quantidade atual, e essa edição SHALL
+passar pelo caminho de ajuste. Ao abrir o sheet de ajuste, o primeiro campo SHALL receber foco
+automático e o teclado SHALL ser levantado.
 
 #### Scenario: Edição abre o ajuste
 
@@ -92,3 +97,9 @@ A tela de detalhe do produto SHALL permitir corrigir a quantidade atual, e essa 
 
 - **WHEN** o usuário altera a quantidade necessária
 - **THEN** nenhum movimento é gravado, pois isso é alteração de cadastro
+
+#### Scenario: Sheet de ajuste abre com foco automático
+
+- **WHEN** o usuário toca na quantidade atual na tela de detalhe e o sheet de ajuste abre
+- **THEN** o primeiro campo já está em foco e o teclado já está visível, sem toque adicional
+

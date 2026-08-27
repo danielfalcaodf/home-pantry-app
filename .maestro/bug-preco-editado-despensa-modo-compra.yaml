@@ -1,0 +1,36 @@
+appId: com.danielfalcaodf.repor
+---
+# Cenário 2 — mesma classe de bug, entrada diferente: o usuário mencionou
+# "o preço editado na lista OU na despensa deveria mostrar valor no modo
+# compra". Este cenário edita o preço pelo Detalhe do Produto (Despensa),
+# não pela Lista de compras — cobre "Quanto costuma custar" dentro de "Mais
+# opções" em app/produto/[id].tsx, caminho totalmente diferente de código
+# (FormularioProduto) do usado no Cenário 1 (SheetPrecoProduto).
+#
+# NÃO EXECUTAR AINDA — task de correcao-total-compra-preco-heranca.
+# Seletores não confirmados no app rodando, revisar com inspect_screen.
+#
+# Pré-condição: "Arroz" sem preço cadastrado, sem compra aberta residual.
+
+- launchApp
+- assertVisible: "Despensa"
+- tapOn: "Arroz"
+- tapOn: "Mais opções"
+- tapOn: "Quanto costuma custar"
+- inputText: "10,00"
+- tapOn: "Salvar"
+- assertVisible: "Despensa"
+
+- tapOn: "Lista"
+- assertVisible: "R$ 20,00"
+- tapOn:
+    text: "Iniciar compra \\(\\d+\\)"
+- assertVisible: "Arroz, 2 pacotes, R\\$ 10,00"
+
+- tapOn:
+    text: "Arroz, 2 pacotes, R\\$ 10,00"
+- assertVisible:
+    text: "Arroz, 2 pacotes, R\\$ 10,00"
+    checked: true
+- assertVisible: "R$ 20,00"
+- assertNotVisible: "0,00"

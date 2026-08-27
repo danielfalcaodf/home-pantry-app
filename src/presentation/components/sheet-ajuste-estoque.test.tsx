@@ -125,4 +125,26 @@ describe('SheetAjusteEstoque', () => {
     expect(within(avoidingView).getByLabelText(/Quanto você tem agora/)).toBeTruthy();
     expect(within(avoidingView).getByRole('button', { name: 'Corrigir' })).toBeTruthy();
   });
+
+  it('não usa autoFocus na montagem (ACHADO-3-8, bug real em dispositivo físico)', async () => {
+    await comTema(
+      <SheetAjusteEstoque
+        visivel
+        nome="Arroz"
+        unidade="pacote"
+        quantidadeAtual={2}
+        onFechar={jest.fn()}
+        onSalvar={jest.fn()}
+      />,
+    );
+
+    // `autoFocus` na montagem foi a causa raiz do bug: no Android real o
+    // `.focus()` roda antes da janela do Modal estar anexada, então o
+    // campo fica com foco lógico sem levantar o teclado. O foco agora só
+    // é disparado pelo `onShow` nativo do `Modal` (repassado como
+    // `onAberto` — ver painel-inferior.test.tsx para a prova da fiação;
+    // o `Modal` real não roda sob Jest, então esse teste só garante que
+    // o gatilho de foco na montagem foi removido).
+    expect(screen.getByLabelText(/Quanto você tem agora/).props.autoFocus).toBeFalsy();
+  });
 });

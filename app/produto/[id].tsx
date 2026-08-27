@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Pressable, ScrollView, View } from 'react-native';
+import { Alert, Pressable, View } from 'react-native';
 
 import { ProdutoNaDespensa } from '@/application/estoque/use-produtos';
 import { useAjustarEstoque } from '@/application/estoque/use-ajustar-estoque';
@@ -44,6 +44,7 @@ import {
 import { useRegistroDeConsumo } from '@/presentation/components/use-registro-de-consumo';
 import { useVoltarFechaTeclado } from '@/presentation/components/use-voltar-fecha-teclado';
 import { ALVO_TOQUE_MINIMO, espaco } from '@/presentation/theme/espaco';
+import { useTheme } from '@/presentation/theme/provider';
 
 function valoresDoItem(item: ProdutoNaDespensa): ValoresDoProduto {
   const { produto } = item;
@@ -158,6 +159,8 @@ function Detalhe({ id, item }: { id: string; item: ProdutoNaDespensa }) {
       quantidadeNecessaria: deDecimal(quantidade),
       valorUnitario: centavos(preco),
       categoria: normalizarCategoria(valores.categoria),
+      marcaPreferida: valores.marcaPreferida || null,
+      observacao: valores.observacao || null,
     });
     if (!resultado.ok) {
       setErros({ [resultado.erro.campo]: resultado.erro.mensagem });
@@ -186,65 +189,13 @@ function Detalhe({ id, item }: { id: string; item: ProdutoNaDespensa }) {
   }
 
   const { produto } = item;
+  const tema = useTheme();
 
   return (
     <TelaBase>
-      {/* Tela inteira rolável: com o formulário embutido (`telaCheia={false}`)
-          sem altura forçada, "Mais opções" expandido pode superar a altura
-          visível — sem scroll aqui, os campos do fim ficavam inacessíveis
-          atrás do rodapé fixo (correcao-layout-formulario-produto). */}
-      <ScrollView keyboardShouldPersistTaps="handled">
-      <View style={{ paddingHorizontal: espaco.lg, paddingTop: espaco.lg, alignItems: 'flex-start' }}>
-        <BotaoVoltar />
-      </View>
-      <View style={{ padding: espaco.lg, gap: espaco.xs, alignItems: 'center' }}>
-        {/* O toque abre o caminho de ajuste (design D3) — a quantidade
-            atual nunca é um campo de formulário comum (task 2.2). Centralizado
-            como no design system (ProductDetailScreen.jsx) — só espaçamento,
-            nenhum campo ou botão foi removido. */}
-        <Pressable
-          onPress={() => setAjusteAberto(true)}
-          accessibilityRole="button"
-          accessibilityLabel="Corrigir quantidade atual"
-          hitSlop={8}
-          style={{ minWidth: ALVO_TOQUE_MINIMO, minHeight: ALVO_TOQUE_MINIMO, justifyContent: 'center' }}
-        >
-          <Texto papel="display.lg" style={{ textAlign: 'center' }}>
-            {formatarNumero(produto.quantidadeAtual)}{' '}
-            {rotuloDaUnidade(produto.unidade, produto.quantidadeAtual !== 1000)}
-          </Texto>
-        </Pressable>
-        <Texto papel="label" tom="secondary" style={{ textAlign: 'center' }}>
-          {item.rotulo}
-          {produto.valorUnitario > 0
-            ? ` · costuma custar ${formatarBRL(produto.valorUnitario)}`
-            : ''}
-        </Texto>
-      </View>
-
-      {/* Caminho visível para as mesmas ações do toque longo na lista:
-          gesto invisível não pode ser o único acesso (FRONTEND §10). */}
-      <View style={{ flexDirection: 'row', gap: espaco.md, paddingHorizontal: espaco.lg }}>
-        <View style={{ flex: 1 }}>
-          <Botao
-            titulo="Usei"
-            onPress={() => void usar()}
-            disabled={produto.quantidadeAtual <= 0}
-          />
-        </View>
-        <View style={{ flex: 1 }}>
-          <Botao titulo="Repus" variante="secundario" onPress={() => void repor()} />
-        </View>
-        <View style={{ flex: 1.5 }}>
-          <Botao
-            titulo="Outra quantidade"
-            variante="secundario"
-            numberOfLines={1}
-            onPress={() => setTecladoAberto(true)}
-          />
-        </View>
-      </View>
-
+      {/* Cabeçalho, quantidade e ações de Usei/Repus/Ajuste renderizam no mesmo
+          scroll do formulário (conteudoAntes) — um só rodapé fixo com Salvar e
+          Tirar da despensa, igual à tela de Novo produto (correcao-tela-editar-produto). */}
       <FormularioProduto
         valores={valores}
         aoMudar={setValores}
@@ -253,28 +204,85 @@ function Detalhe({ id, item }: { id: string; item: ProdutoNaDespensa }) {
         tituloAcao="Salvar"
         aoSalvar={salvar}
         quantidadeAtualEditavel={false}
-        telaCheia={false}
+        telaCheia
+        conteudoAntes={
+          <>
+            <View style={{ alignItems: 'flex-start' }}>
+              <BotaoVoltar />
+            </View>
+            <View style={{ gap: espaco.xs, alignItems: 'center' }}>
+              {/* O toque abre o caminho de ajuste (design D3) — a quantidade
+                  atual nunca é um campo de formulário comum (task 2.2). */}
+              <Pressable
+                onPress={() => setAjusteAberto(true)}
+                accessibilityRole="button"
+                accessibilityLabel="Corrigir quantidade atual"
+                hitSlop={8}
+                style={{ minWidth: ALVO_TOQUE_MINIMO, minHeight: ALVO_TOQUE_MINIMO, justifyContent: 'center' }}
+              >
+                <Texto papel="display.lg" style={{ textAlign: 'center' }}>
+                  {formatarNumero(produto.quantidadeAtual)}{' '}
+                  {rotuloDaUnidade(produto.unidade, produto.quantidadeAtual !== 1000)}
+                </Texto>
+              </Pressable>
+              <Texto papel="label" tom="secondary" style={{ textAlign: 'center' }}>
+                {item.rotulo}
+                {produto.valorUnitario > 0
+                  ? ` · costuma custar ${formatarBRL(produto.valorUnitario)}`
+                  : ''}
+              </Texto>
+            </View>
+
+            {/* Caminho visível para as mesmas ações do toque longo na lista:
+                gesto invisível não pode ser o único acesso (FRONTEND §10). */}
+            <View style={{ flexDirection: 'row', gap: espaco.md }}>
+              <View style={{ flex: 1 }}>
+                <Botao
+                  titulo="Usei"
+                  onPress={() => void usar()}
+                  disabled={produto.quantidadeAtual <= 0}
+                />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Botao titulo="Repus" variante="secundario" onPress={() => void repor()} />
+              </View>
+              <View style={{ flex: 1.5 }}>
+                <Botao
+                  titulo="Outra quantidade"
+                  variante="secundario"
+                  numberOfLines={1}
+                  onPress={() => setTecladoAberto(true)}
+                />
+              </View>
+            </View>
+          </>
+        }
+        conteudoDepois={
+          // Resumo do histórico (task 5.10): a mesma confiança de que o app
+          // registra o que deveria, com acesso ao histórico completo.
+          !resumoHistorico.carregando ? (
+            <AcaoSecundaria
+              onPress={() => router.push(`/produto/${id}/historico`)}
+              titulo={
+                resumoHistorico.quantidadeDeUsos === 0
+                  ? 'Sem uso registrado nos últimos 30 dias'
+                  : resumoHistorico.quantidadeDeUsos === 1
+                    ? 'Você anotou 1 uso nos últimos 30 dias'
+                    : `Você anotou ${resumoHistorico.quantidadeDeUsos} usos nos últimos 30 dias`
+              }
+            />
+          ) : null
+        }
+        botaoExtra={
+          <Botao
+            titulo="Tirar da despensa"
+            variante="secundario"
+            icone="lixeira"
+            corDestrutiva={tema.state.critico}
+            onPress={confirmarRemocao}
+          />
+        }
       />
-
-      {/* Resumo do histórico (task 5.10): a mesma confiança de que o app
-          registra o que deveria, com acesso ao histórico completo. */}
-      {!resumoHistorico.carregando ? (
-        <AcaoSecundaria
-          onPress={() => router.push(`/produto/${id}/historico`)}
-          titulo={
-            resumoHistorico.quantidadeDeUsos === 0
-              ? 'Sem uso registrado nos últimos 30 dias'
-              : resumoHistorico.quantidadeDeUsos === 1
-                ? 'Você anotou 1 uso nos últimos 30 dias'
-                : `Você anotou ${resumoHistorico.quantidadeDeUsos} usos nos últimos 30 dias`
-          }
-        />
-      ) : null}
-
-      <View style={{ padding: espaco.lg }}>
-        <Botao titulo="Tirar da despensa" variante="secundario" onPress={confirmarRemocao} />
-      </View>
-      </ScrollView>
 
       <ToastDesfazer
         registro={confirmacao.registro}

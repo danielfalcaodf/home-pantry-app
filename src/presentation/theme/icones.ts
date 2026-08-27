@@ -26,6 +26,9 @@ export const icones = {
   // cabecalho-lista-icones), desenhado à mão no mesmo estilo dos demais
   // (viewBox 24x24, stroke 1.5), sem dependência nova.
   compartilhar: 'M4 12v7a1 1 0 001 1h14a1 1 0 001-1v-7M16 6l-4-4-4 4M12 2v13',
+  // Lixeira — mesmo estilo dos demais (viewBox 24x24, stroke 1.5, sem
+  // curva preenchida): tampa + corpo + duas linhas internas.
+  lixeira: 'M4 7h16M9 7V4h6v3M6 7l1 13a1 1 0 001 1h8a1 1 0 001-1l1-13M10 11v6M14 11v6',
 } as const;
 
 export type NomeDoIcone = keyof typeof icones;
