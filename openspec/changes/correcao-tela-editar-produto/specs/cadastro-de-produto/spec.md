@@ -46,7 +46,7 @@ A tela de cadastro SHALL exigir nome, unidade e quantidade necessária, e SHALL 
 - **WHEN** o usuário toca em "Mais opções" a partir de um campo já focado (teclado aberto), em qualquer tela que use `FormularioProduto`
 - **THEN** a tela rola automaticamente até o primeiro campo revelado e, depois do scroll, esse campo recebe foco para manter o teclado aberto
 
-#### Scenario: Auto-scroll ao expandir "Mais opções" sem foco prévio
+#### Scenario: Auto-scroll ao expandir "Mais opções" sem foco automático
 
 - **WHEN** o usuário toca em "Mais opções" sem haver campo de texto focado, em qualquer tela que use `FormularioProduto`
 - **THEN** a tela rola automaticamente até o primeiro campo revelado, e nenhum campo recebe foco automático
