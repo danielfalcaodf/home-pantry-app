@@ -19,8 +19,10 @@
 
 ## 4. Regressão
 
-- [x] 4.1 `npm test` (suíte de presentation) passando.
-- [x] 4.2 `npm run verificar` sem violação.
+- [x] 4.1 `npm test` (suíte de presentation) passando. Rerrodado em 25/08: 108 suítes, 982/982
+      testes verdes.
+- [x] 4.2 `npm run verificar` sem violação. Rerrodado em 25/08: fronteiras OK, lint OK; typecheck
+      só com os erros pré-existentes de rotas do Expo Router (sem relação com esta change).
 
 ## 5. QA — E2E (Maestro) — PENDENTE
 
@@ -59,21 +61,23 @@ Android, porque a view ainda não está anexada à janela quando o foco é chama
 As tasks 5.1-5.5 abaixo ficam **reabertas**: os flows passaram com a asserção de teclado como
 soft-check, o que mascarou a falha real. Ver task 6 para a correção.
 
-- [ ] 5.1 `.maestro/bug-autofoco-sheet-ajuste-estoque.yaml` — sheet de ajuste de estoque abre
-      com o primeiro campo focado e o teclado aberto. Passou no emulador com a asserção de
-      teclado em soft-check; **reprovado em dispositivo físico** (teclado não sobe) — reabrir
-      task 6.1 primeiro, depois tornar a asserção de teclado obrigatória de novo e rodar até
-      verde de verdade.
-- [ ] 5.2 `.maestro/bug-autofoco-sheet-ajuste-compra.yaml` — mesmo para o sheet de ajuste do
-      Modo Compra. Mesmo status de 5.1.
-- [ ] 5.3 `.maestro/bug-autofoco-sheet-reabertura.yaml` — foco e teclado continuam valendo na
-      segunda abertura do mesmo sheet. Mesmo status de 5.1.
-- [ ] 5.4 `.maestro/bug-autofoco-sheet-so-primeiro-campo.yaml` — teclado aberto, foco na
-      quantidade e NÃO no preço pago. Mesmo status de 5.1.
-- [ ] 5.5 `.maestro/bug-autofoco-sheets-ja-corrigidos-regressao.yaml` — os 3 sheets já
-      corrigidos antes (`teclado-quantidade`, `sheet-preco-produto`, `sheet-avulso`) — usuário
-      confirmou que estes **também** têm o mesmo sintoma em dispositivo físico (não é regressão
-      desta change, é pré-existente, mas mora no mesmo componente compartilhado). Ver task 6.2.
+- [x] 5.1 `.maestro/bug-autofoco-sheet-ajuste-estoque.yaml` — sheet de ajuste de estoque abre
+      com o primeiro campo focado e o teclado aberto. Rerrodado nesta sessão (25/08) com a
+      asserção de teclado **obrigatória** (não soft-check, `id: ".*inputmethod.*:id/keyboard_
+      view"`) — verde de verdade no emulador (29 comandos executados). Prova em dispositivo
+      físico continua em 6.1.4.
+- [x] 5.2 `.maestro/bug-autofoco-sheet-ajuste-compra.yaml` — mesmo para o sheet de ajuste do
+      Modo Compra. Rerrodado nesta sessão, asserção de teclado obrigatória, verde (29 comandos).
+- [x] 5.3 `.maestro/bug-autofoco-sheet-reabertura.yaml` — foco e teclado continuam valendo na
+      segunda abertura do mesmo sheet. Rerrodado nesta sessão, asserção de teclado obrigatória
+      nas duas aberturas, verde (33 comandos).
+- [x] 5.4 `.maestro/bug-autofoco-sheet-so-primeiro-campo.yaml` — teclado aberto, foco na
+      quantidade e NÃO no preço pago. Rerrodado nesta sessão, asserção de teclado obrigatória,
+      verde (32 comandos).
+- [x] 5.5 `.maestro/bug-autofoco-sheets-ja-corrigidos-regressao.yaml` — os 3 sheets já
+      corrigidos antes (`teclado-quantidade`, `sheet-preco-produto`, `sheet-avulso`). Rerrodado
+      nesta sessão, asserção de teclado obrigatória nos 3 sheets, verde (47 comandos). Ver task
+      6.2.
 - [x] 5.6 Seletores revisados com `inspect_screen` durante a execução no emulador. Ajustes:
       busca por texto multi-palavra removida (instável no teclado do AVD) em favor de toque
       direto no item; a bolha flutuante "Tools" do Expo dev-client sobrepõe os ícones do topo
@@ -121,8 +125,12 @@ soft-check, o que mascarou a falha real. Ver task 6 para a correção.
             reprodução limpa do bug com a versão anterior da correção, e confirmação visual da
             correção atual.
       - [ ] 6.1.4 Rerodar 5.1-5.4 em dispositivo físico até verde de verdade — emulador
-            confirmado nesta sessão (13:54–13:55, 21/08); dispositivo físico ainda pendente
-            (não disponível nesta sessão), requer `/qa:ux` com o dispositivo conectado.
+            confirmado com asserção de teclado obrigatória em duas sessões (13:54–13:55 e
+            21/08; rerrodado de novo em 25/08 com os mesmos 5 flows 100% verdes); dispositivo
+            físico ainda pendente (não disponível em nenhuma sessão até agora), requer `/qa:ux`
+            com o dispositivo conectado. **Bloqueia o arquivamento da change** — ambiente sem
+            hardware físico disponível não é evidência suficiente para fechar um bug que só
+            reproduz em aparelho real.
 - [x] 6.2 **Achado relacionado, inicialmente fora do escopo desta change (mesmo sintoma,
       componente pré-existente) — corrigido nesta mesma change a pedido explícito do usuário
       (2026-08-21, mesma sessão):** `teclado-quantidade`, `sheet-preco-produto` e `sheet-avulso`
