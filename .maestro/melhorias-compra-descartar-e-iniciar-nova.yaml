@@ -13,6 +13,12 @@ appId: com.danielfalcaodf.repor
 - tapOn: "Lista"
 - tapOn:
     text: "Iniciar compra \\(\\d+\\)"
+- scroll
+- scrollUntilVisible:
+    element: "Macarrão, 2 pacotes, sem preço"
+    direction: DOWN
+    timeout: 15000
+    speed: 40
 - tapOn: "Macarrão, 2 pacotes, sem preço"
 - assertVisible:
     text: "Macarrão, 2 pacotes, sem preço"
@@ -26,9 +32,15 @@ appId: com.danielfalcaodf.repor
 - tapOn: "Começar nova lista"
 # há progresso (item marcado) — precisa exigir confirmação, não recomeçar direto
 - assertVisible:
-    text: "rascunho"
+    text: ".*rascunho.*"
 - tapOn: "Começar nova lista"
 - assertVisible: "Compra"
+- scroll
+- scrollUntilVisible:
+    element: "Macarrão, 2 pacotes, sem preço"
+    direction: DOWN
+    timeout: 15000
+    speed: 40
 - assertVisible:
     text: "Macarrão, 2 pacotes, sem preço"
     checked: false

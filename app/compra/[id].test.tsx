@@ -3,6 +3,7 @@ import { ReactNode } from 'react';
 import * as mockReact from 'react';
 import { Alert } from 'react-native';
 
+import { useAvisoCompraStore } from '@/application/compra/aviso-compra-store';
 import { ThemeProvider } from '@/presentation/theme/provider';
 import ModoCompra from './[id]';
 
@@ -127,6 +128,7 @@ describe('ModoCompra (app/compra/[id].tsx)', () => {
     mockFinalizar.mockReset();
     mockCancelar.mockReset();
     mockCarregando = false;
+    useAvisoCompraStore.getState().limpar();
     jest.spyOn(Alert, 'alert').mockImplementation(() => {});
   });
 
@@ -145,7 +147,7 @@ describe('ModoCompra (app/compra/[id].tsx)', () => {
   // Achado de QA: a tela ficava totalmente em branco (`return null`) enquanto
   // `carregando` era true — crítico logo após "Começar nova lista", quando a
   // navegação chega antes do primeiro carregamento da compra recém-criada.
-  it('não fica em branco enquanto os itens ainda carregam — mostra a estrutura da tela', async () => {
+  it('não fica em branco enquanto os itens ainda carregam — mostra a estrutura da tela e um aviso de carregamento', async () => {
     mockCarregando = true;
     mockItensIniciais = [];
     await comTema(<ModoCompra />);
@@ -153,6 +155,7 @@ describe('ModoCompra (app/compra/[id].tsx)', () => {
     expect(
       screen.getByText('Toque em cada item para marcar. Se sair, a compra continua aberta com o que você já marcou.'),
     ).toBeTruthy();
+    expect(screen.getByText('Preparando sua compra…')).toBeTruthy();
   });
 
   it('item já no piso de quantidade (1 un) chega com o controle de diminuir desabilitado', async () => {
@@ -221,10 +224,13 @@ describe('ModoCompra (app/compra/[id].tsx)', () => {
     expect(mockBack).toHaveBeenCalledTimes(1);
   });
 
-  // ACHADO-035 (tasks 5.4/5.5): mensagem em linguagem do usuário e retorno
-  // à despensa após o toast de sucesso terminar.
-  it('fechar a compra mostra "Você repôs N itens" e volta à despensa após o toast', async () => {
-    jest.useFakeTimers();
+  // ACHADO-035 (tasks 5.4/5.5): mensagem em linguagem do usuário.
+  // Achado de QA: esperar o toast sumir (5s) pra só então voltar à Despensa
+  // travava quem já fechou a compra e quer seguir. Navega na hora — o toast
+  // local não teria tempo de aparecer (a tela desmonta com a navegação) —
+  // e a mensagem viaja pela store global (`useAvisoCompraStore`) pra
+  // aparecer já na Despensa, que costuma continuar montada por trás.
+  it('fechar a compra navega pra despensa na hora, levando "Você repôs N itens" pela store global', async () => {
     mockItensIniciais = [itemFake('i1', 'Arroz', true)];
     mockFinalizar.mockResolvedValue({ ok: true, itensRepostos: 2 });
     await comTema(<ModoCompra />);
@@ -232,14 +238,8 @@ describe('ModoCompra (app/compra/[id].tsx)', () => {
     await act(async () => {
       fireEvent.press(screen.getByLabelText('Fechar compra'));
     });
-    await waitFor(() => expect(screen.getByText('Você repôs 2 itens')).toBeTruthy());
-    expect(mockReplace).not.toHaveBeenCalled();
-
-    await act(async () => {
-      jest.advanceTimersByTime(5000);
-    });
-    expect(mockReplace).toHaveBeenCalledWith('/');
-    jest.useRealTimers();
+    await waitFor(() => expect(mockReplace).toHaveBeenCalledWith('/'));
+    expect(useAvisoCompraStore.getState().mensagem).toBe('Você repôs 2 itens');
   });
 
   it('fechar a compra com 1 item reposto usa singular: "Você repôs 1 item"', async () => {
@@ -250,7 +250,9 @@ describe('ModoCompra (app/compra/[id].tsx)', () => {
     await act(async () => {
       fireEvent.press(screen.getByLabelText('Fechar compra'));
     });
-    await waitFor(() => expect(screen.getByText('Você repôs 1 item')).toBeTruthy());
+    await waitFor(() =>
+      expect(useAvisoCompraStore.getState().mensagem).toBe('Você repôs 1 item'),
+    );
   });
 
   // ACHADO-052 (task 7.3): RodapeCompra aparece imediatamente acima do botão

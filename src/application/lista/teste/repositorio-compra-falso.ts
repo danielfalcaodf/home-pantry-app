@@ -77,6 +77,17 @@ export class CompraRepositorioFalso implements CompraRepository {
     return criado;
   }
 
+  async adicionarItens(
+    compraId: string,
+    itens: readonly NovoItemCompra[],
+  ): Promise<readonly CompraItem[]> {
+    const criados: CompraItem[] = [];
+    for (const item of itens) {
+      criados.push(await this.adicionarItem(compraId, item));
+    }
+    return criados;
+  }
+
   async editarItem(itemId: string, dados: EdicaoItemCompra): Promise<void> {
     const indice = this.itens.findIndex((i) => i.id === itemId);
     if (indice !== -1) {

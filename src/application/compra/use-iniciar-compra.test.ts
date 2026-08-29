@@ -30,6 +30,27 @@ function faltante(sobrescreve: Partial<FaltanteBruto> = {}): FaltanteBruto {
 }
 
 describe('useIniciarCompra', () => {
+  // Achado de QA: materializar item a item deixava "Iniciar compra"
+  // perceptivelmente lento com a lista inteira (uma ida ao banco por item) —
+  // precisa ser uma única chamada em lote, não um loop de `adicionarItem`.
+  it('materializa vários itens numa única chamada em lote, não uma por item', async () => {
+    const compras = new CompraRepositorioFalso();
+    const chamadasEmLote = jest.spyOn(compras, 'adicionarItens');
+    const itens = [
+      itemDeFaltante(faltante({ id: 'p1' })),
+      itemDeFaltante(faltante({ id: 'p2', nome: 'Feijão' })),
+      itemDeFaltante(faltante({ id: 'p3', nome: 'Café' })),
+    ];
+    const { result } = await renderHook(() => useIniciarCompra(compras));
+
+    await act(async () => {
+      await result.current.iniciar(itens);
+    });
+
+    expect(chamadasEmLote).toHaveBeenCalledTimes(1);
+    expect(compras.itens).toHaveLength(3);
+  });
+
   it('materializa os itens do estoque da lista corrente, com a quantidade e o preço exatamente exibidos', async () => {
     const compras = new CompraRepositorioFalso();
     const item = itemDeFaltante(faltante());

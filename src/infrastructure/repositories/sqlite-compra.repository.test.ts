@@ -94,6 +94,74 @@ describe('cancelamento de compra', () => {
   });
 });
 
+describe('adicionarItens em lote (achado de QA: "Iniciar compra" lento com muitos itens)', () => {
+  it('insere todos os itens numa única transação, com ordem sequencial', async () => {
+    const { compras, casaId, usuarioId, criarProduto, sqlite } = await montar();
+    const p1 = await criarProduto('Arroz');
+    const p2 = await criarProduto('Feijão');
+    const compra = await compras.abrir(casaId, usuarioId, clock.agora());
+    if (!compra.ok) {
+      throw new Error('setup');
+    }
+
+    const originalPrepare = sqlite.prepare.bind(sqlite);
+    let consultas = 0;
+    (sqlite as unknown as { prepare: typeof sqlite.prepare }).prepare = ((fonte: string) => {
+      consultas += 1;
+      return originalPrepare(fonte);
+    }) as typeof sqlite.prepare;
+
+    const criados = await compras.adicionarItens(compra.valor.id, [
+      { produtoId: p1.id, unidade: 'un', quantidadePlanejada: milesimos(1000) },
+      { produtoId: p2.id, unidade: 'un', quantidadePlanejada: milesimos(2000) },
+    ]);
+    (sqlite as unknown as { prepare: typeof sqlite.prepare }).prepare = originalPrepare;
+
+    // uma consulta pro máximo de ordem, duas de insert, uma de leitura de
+    // volta — bem menos que as ~9 (2 pesquisas de ordem + 2 inserts + 2
+    // leituras + overhead) que dois `adicionarItem` sequenciais fariam.
+    expect(consultas).toBeLessThanOrEqual(4);
+    expect(criados).toHaveLength(2);
+    expect(criados[0].ordem).toBe(0);
+    expect(criados[1].ordem).toBe(1);
+    expect(criados[0].quantidadePlanejada).toBe(1000);
+    expect(criados[1].quantidadePlanejada).toBe(2000);
+
+    const itens = await compras.listarItens(compra.valor.id);
+    expect(itens).toHaveLength(2);
+  });
+
+  it('continua a ordem a partir dos itens já existentes na compra', async () => {
+    const { compras, casaId, usuarioId, criarProduto } = await montar();
+    const p1 = await criarProduto('Arroz');
+    const p2 = await criarProduto('Feijão');
+    const compra = await compras.abrir(casaId, usuarioId, clock.agora());
+    if (!compra.ok) {
+      throw new Error('setup');
+    }
+    await compras.adicionarItem(compra.valor.id, {
+      produtoId: p1.id,
+      unidade: 'un',
+      quantidadePlanejada: milesimos(1000),
+    });
+
+    const [criado] = await compras.adicionarItens(compra.valor.id, [
+      { produtoId: p2.id, unidade: 'un', quantidadePlanejada: milesimos(2000) },
+    ]);
+
+    expect(criado.ordem).toBe(1);
+  });
+
+  it('lista vazia não faz nada e não falha', async () => {
+    const { compras, casaId, usuarioId } = await montar();
+    const compra = await compras.abrir(casaId, usuarioId, clock.agora());
+    if (!compra.ok) {
+      throw new Error('setup');
+    }
+    expect(await compras.adicionarItens(compra.valor.id, [])).toEqual([]);
+  });
+});
+
 describe('recomecar (change melhorias-usabilidade-modo-compra)', () => {
   it('cancela a compra aberta e materializa a substituta na mesma transação', async () => {
     const { compras, casaId, usuarioId, criarProduto } = await montar();

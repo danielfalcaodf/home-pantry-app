@@ -9,6 +9,12 @@ appId: com.danielfalcaodf.repor
 # para "Molho de tomate", fecha a compra pagando um valor diferente e
 # confirma a atualização — o produto passa a valer o preço pago.
 #
+# Atenção ao ler os valores: a Lista mostra o CUSTO TOTAL da linha
+# (quantidade × preço unitário — ver `item.custo` em item-lista.tsx), já a
+# tela Compra mostra o PREÇO POR UNIDADE (`valorEstimadoUnit`/
+# `valorPagoUnitario` em item-compra.tsx). Com preço unitário R$3,00 e
+# quantidade 2 un, a Lista mostra R$6,00 — não é o mesmo número, e não é bug.
+#
 # "Molho de tomate" (categoria Mercearia) some da árvore de acessibilidade
 # quando a lista usa FlashList e ele ainda não foi montado na janela de
 # render — um "scroll" simples antes do scrollUntilVisible evita que o
@@ -23,26 +29,31 @@ appId: com.danielfalcaodf.repor
     direction: DOWN
     timeout: 15000
     speed: 40
+- waitForAnimationToEnd
 - tapOn: "Molho de tomate, 2 un, sem preço"
 - assertVisible: "Preço de Molho de tomate"
 - tapOn: "Quanto costuma custar"
 - inputText: "3,00"
 - tapOn: "Salvar"
+# Lista mostra o custo total da linha: 2 un × R$3,00/un = R$6,00.
 - scroll
 - scrollUntilVisible:
-    element: "Molho de tomate, 2 un, R\\$ 3,00"
+    element: "Molho de tomate, 2 un, R\\$ 6,00"
     direction: DOWN
     timeout: 15000
     speed: 40
-- assertVisible: "Molho de tomate, 2 un, R$ 3,00"
+- waitForAnimationToEnd
+- assertVisible: "Molho de tomate, 2 un, R$ 6,00"
 - tapOn:
     text: "Iniciar compra \\(\\d+\\)"
+# Compra mostra o preço por unidade: R$3,00 (o valor recém-salvo).
 - scroll
 - scrollUntilVisible:
     element: "Molho de tomate, 2 un, R\\$ 3,00"
     direction: DOWN
     timeout: 15000
     speed: 40
+- waitForAnimationToEnd
 - tapOn: "Molho de tomate, 2 un, R$ 3,00"
 - assertVisible:
     text: "Molho de tomate, 2 un, R$ 3,00"
@@ -59,11 +70,16 @@ appId: com.danielfalcaodf.repor
 - assertVisible: "1 preço diferente"
 - tapOn: "Atualizar 1"
 - assertVisible: "Despensa"
-- tapOn: "Lista"
-- scroll
+# A reposição de 2 un cobre a necessária (2 un) — o item some da Lista (não
+# está mais faltando) e a Despensa mostra "CHEIO". A confirmação do preço
+# atualizado (R$5,00/un) fica visível reabrindo "Ajustar preço" do produto,
+# não na Lista (que só mostraria o item se ele ainda estivesse faltando).
 - scrollUntilVisible:
-    element: "Molho de tomate, 2 un, R\\$ 5,00"
+    element: "Molho de tomate"
     direction: DOWN
     timeout: 15000
     speed: 40
-- assertVisible: "Molho de tomate, 2 un, R$ 5,00"
+- waitForAnimationToEnd
+- assertVisible:
+    text: "Molho de tomate"
+- assertVisible: "CHEIO"

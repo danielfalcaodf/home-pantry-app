@@ -39,14 +39,18 @@ export function useIniciarCompra(
           (item): item is Extract<ItemDaLista, { tipo: 'produto' }> =>
             item.tipo === 'produto' && !jaMaterializados.has(item.produtoId),
         );
-        for (const item of doEstoque) {
-          await compras.adicionarItem(compra.id, {
+        // Lote numa única transação (achado de QA): materializar a lista
+        // item a item deixava "Iniciar compra" perceptivelmente lento com
+        // muitos itens — cada `adicionarItem` era uma ida e volta ao banco.
+        await compras.adicionarItens(
+          compra.id,
+          doEstoque.map((item) => ({
             produtoId: item.produtoId,
             unidade: item.unidade,
             quantidadePlanejada: item.quantidadeAComprar,
             valorEstimadoUnit: item.valorUnitario,
-          });
-        }
+          })),
+        );
         // Item já materializado numa compra aberta residual (ex.: "Iniciar
         // compra" chamado de novo sem finalizar a anterior) fica com
         // `valorEstimadoUnit` congelado no preço de quando a linha foi

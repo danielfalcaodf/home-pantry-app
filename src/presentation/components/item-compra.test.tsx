@@ -3,7 +3,7 @@ import { ReactNode } from 'react';
 
 import { ItemDaCompra } from '../../application/compra/use-modo-compra';
 import { CompraItem } from '../../domain/compra/compra';
-import { centavos } from '../../domain/shared/dinheiro';
+import { centavos, multiplicarQuantidadePorPreco } from '../../domain/shared/dinheiro';
 import { milesimos } from '../../domain/shared/quantidade';
 import { ALVO_TOQUE_MINIMO, raio } from '../theme/espaco';
 import { ThemeProvider } from '../theme/provider';
@@ -47,20 +47,31 @@ function linhaBase(sobrescreve: Partial<ItemDaCompra> = {}): ItemDaCompra {
   };
 }
 
+function custoDe(linha: ItemDaCompra) {
+  const quantidade = linha.item.quantidadeComprada ?? linha.item.quantidadePlanejada;
+  const preco = linha.item.valorPagoUnitario ?? linha.item.valorEstimadoUnit;
+  return multiplicarQuantidadePorPreco(quantidade, preco);
+}
+
 describe('ItemCompra', () => {
   afterEach(cleanup);
-  it('item não marcado mostra nome, quantidade e preço estimado', async () => {
+  // linhaBase() por padrão: 2 un de Arroz a R$8,90/un — custo da linha é
+  // R$17,80, nunca R$8,90 (achado de QA: preço por unidade sozinho lia como
+  // se fosse o total da linha inteira).
+  it('item não marcado mostra nome, quantidade e custo total da linha', async () => {
+    const linha = linhaBase();
     await comTema(
-      <ItemCompra linha={linhaBase()} onMarcar={jest.fn()} onDesmarcar={jest.fn()} onAjustar={jest.fn()} />,
+      <ItemCompra linha={linha} custoTotal={custoDe(linha)} onMarcar={jest.fn()} onDesmarcar={jest.fn()} onAjustar={jest.fn()} />,
     );
     expect(screen.getByText('Arroz')).toBeTruthy();
-    expect(screen.getByText('R$ 8,90')).toBeTruthy();
+    expect(screen.getByText('R$ 17,80')).toBeTruthy();
   });
 
   it('toque na linha marca o item', async () => {
     const onMarcar = jest.fn();
+    const linha = linhaBase();
     await comTema(
-      <ItemCompra linha={linhaBase()} onMarcar={onMarcar} onDesmarcar={jest.fn()} onAjustar={jest.fn()} />,
+      <ItemCompra linha={linha} custoTotal={custoDe(linha)} onMarcar={onMarcar} onDesmarcar={jest.fn()} onAjustar={jest.fn()} />,
     );
     fireEvent.press(screen.getByRole('checkbox', { name: /Arroz/ }));
     expect(onMarcar).toHaveBeenCalledTimes(1);
@@ -68,13 +79,14 @@ describe('ItemCompra', () => {
 
   it('item marcado tem risco no nome e chama desmarcar ao tocar de novo', async () => {
     const onDesmarcar = jest.fn();
+    const linha = linhaBase({ item: itemBase({ comprado: true, quantidadeComprada: milesimos(2000) }) });
     await comTema(
       <ItemCompra
-        linha={linhaBase({ item: itemBase({ comprado: true, quantidadeComprada: milesimos(2000) }) })}
+        linha={linha}
+        custoTotal={custoDe(linha)}
         onMarcar={jest.fn()}
         onDesmarcar={onDesmarcar}
         onAjustar={jest.fn()}
-       
       />,
     );
     fireEvent.press(screen.getByRole('checkbox', { name: /Arroz/ }));
@@ -82,34 +94,24 @@ describe('ItemCompra', () => {
   });
 
   it('item avulso nunca mostra a pergunta de atualizar preço', async () => {
+    const linha = linhaBase({
+      item: itemBase({ produtoId: null, nomeAvulso: 'Pilha AA', comprado: true, quantidadeComprada: milesimos(1000), valorPagoUnitario: centavos(300) }),
+      produto: null,
+      divergePreco: false,
+    });
     await comTema(
-      <ItemCompra
-        linha={linhaBase({
-          item: itemBase({ produtoId: null, nomeAvulso: 'Pilha AA', comprado: true, quantidadeComprada: milesimos(1000), valorPagoUnitario: centavos(300) }),
-          produto: null,
-          divergePreco: false,
-        })}
-        onMarcar={jest.fn()}
-        onDesmarcar={jest.fn()}
-        onAjustar={jest.fn()}
-       
-      />,
+      <ItemCompra linha={linha} custoTotal={custoDe(linha)} onMarcar={jest.fn()} onDesmarcar={jest.fn()} onAjustar={jest.fn()} />,
     );
     expect(screen.queryByText(/Atualizar o preço/)).toBeNull();
   });
 
   it('item marcado com preço divergente não interrompe a marcação com chips inline', async () => {
+    const linha = linhaBase({
+      item: itemBase({ comprado: true, quantidadeComprada: milesimos(2000), valorPagoUnitario: centavos(950) }),
+      divergePreco: true,
+    });
     await comTema(
-      <ItemCompra
-        linha={linhaBase({
-          item: itemBase({ comprado: true, quantidadeComprada: milesimos(2000), valorPagoUnitario: centavos(950) }),
-          divergePreco: true,
-        })}
-        onMarcar={jest.fn()}
-        onDesmarcar={jest.fn()}
-        onAjustar={jest.fn()}
-       
-      />,
+      <ItemCompra linha={linha} custoTotal={custoDe(linha)} onMarcar={jest.fn()} onDesmarcar={jest.fn()} onAjustar={jest.fn()} />,
     );
     expect(screen.queryByText(/Atualizar o preço de Arroz/)).toBeNull();
     expect(screen.queryByRole('button', { name: 'Sim' })).toBeNull();
@@ -118,13 +120,14 @@ describe('ItemCompra', () => {
   it('expõe controles acessíveis para diminuir e aumentar quantidade', async () => {
     const onDiminuirQuantidade = jest.fn();
     const onAumentarQuantidade = jest.fn();
+    const linha = linhaBase();
     await comTema(
       <ItemCompra
-        linha={linhaBase()}
+        linha={linha}
+        custoTotal={custoDe(linha)}
         onMarcar={jest.fn()}
         onDesmarcar={jest.fn()}
         onAjustar={jest.fn()}
-       
         onDiminuirQuantidade={onDiminuirQuantidade}
         onAumentarQuantidade={onAumentarQuantidade}
       />,
@@ -140,9 +143,11 @@ describe('ItemCompra', () => {
   // aparência de sempre habilitado — toques adicionais eram no-ops
   // silenciosos, sem indicar visualmente que não há mais o que diminuir.
   it('no piso de quantidade, o controle de diminuir fica desabilitado (sem indicar erro silencioso)', async () => {
+    const linha = linhaBase();
     await comTema(
       <ItemCompra
-        linha={linhaBase()}
+        linha={linha}
+        custoTotal={custoDe(linha)}
         onMarcar={jest.fn()}
         onDesmarcar={jest.fn()}
         onAjustar={jest.fn()}
@@ -159,14 +164,9 @@ describe('ItemCompra', () => {
   // ACHADO-037 (task 7.1): item marcado perde toda a tinta (design D7) —
   // risco no nome, cor secundária, sem preenchimento no fundo do preço.
   it('item marcado tem risco e cor secundária no nome', async () => {
+    const linha = linhaBase({ item: itemBase({ comprado: true, quantidadeComprada: milesimos(2000) }) });
     await comTema(
-      <ItemCompra
-        linha={linhaBase({ item: itemBase({ comprado: true, quantidadeComprada: milesimos(2000) }) })}
-        onMarcar={jest.fn()}
-        onDesmarcar={jest.fn()}
-        onAjustar={jest.fn()}
-       
-      />,
+      <ItemCompra linha={linha} custoTotal={custoDe(linha)} onMarcar={jest.fn()} onDesmarcar={jest.fn()} onAjustar={jest.fn()} />,
     );
     const nome = screen.getByText('Arroz');
     expect(estiloResolvido(nome).textDecorationLine).toBe('line-through');
@@ -174,8 +174,9 @@ describe('ItemCompra', () => {
   });
 
   it('item não marcado não tem risco no nome', async () => {
+    const linha = linhaBase();
     await comTema(
-      <ItemCompra linha={linhaBase()} onMarcar={jest.fn()} onDesmarcar={jest.fn()} onAjustar={jest.fn()} />,
+      <ItemCompra linha={linha} custoTotal={custoDe(linha)} onMarcar={jest.fn()} onDesmarcar={jest.fn()} onAjustar={jest.fn()} />,
     );
     const nome = screen.getByText('Arroz');
     expect(estiloResolvido(nome)?.textDecorationLine).toBeUndefined();
@@ -185,8 +186,9 @@ describe('ItemCompra', () => {
   // ACHADO-037 (task 7.2): controle de marcação é quadrado (raio.linha),
   // não circular, com área tocável de no mínimo 48×48.
   it('controle de marcação é quadrado e a área tocável mede no mínimo 48×48', async () => {
+    const linha = linhaBase();
     await comTema(
-      <ItemCompra linha={linhaBase()} onMarcar={jest.fn()} onDesmarcar={jest.fn()} onAjustar={jest.fn()} />,
+      <ItemCompra linha={linha} custoTotal={custoDe(linha)} onMarcar={jest.fn()} onDesmarcar={jest.fn()} onAjustar={jest.fn()} />,
     );
     const areaTocavel = screen.getByTestId('area-marcacao');
     const estiloArea = estiloResolvido(areaTocavel);
@@ -200,16 +202,18 @@ describe('ItemCompra', () => {
   // ACHADO affordance (correcao-lista-de-compras, task 3.1): o ajuste por
   // toque longo não tinha nenhuma pista visual — só o gesto invisível.
   it('mostra um ícone indicador de que a linha aceita ajuste', async () => {
+    const linha = linhaBase();
     await comTema(
-      <ItemCompra linha={linhaBase()} onMarcar={jest.fn()} onDesmarcar={jest.fn()} onAjustar={jest.fn()} />,
+      <ItemCompra linha={linha} custoTotal={custoDe(linha)} onMarcar={jest.fn()} onDesmarcar={jest.fn()} onAjustar={jest.fn()} />,
     );
     expect(screen.getByTestId('icone-ajustar')).toBeTruthy();
   });
 
   it('toque longo na linha continua chamando onAjustar (sem regressão)', async () => {
     const onAjustar = jest.fn();
+    const linha = linhaBase();
     await comTema(
-      <ItemCompra linha={linhaBase()} onMarcar={jest.fn()} onDesmarcar={jest.fn()} onAjustar={onAjustar} />,
+      <ItemCompra linha={linha} custoTotal={custoDe(linha)} onMarcar={jest.fn()} onDesmarcar={jest.fn()} onAjustar={onAjustar} />,
     );
     fireEvent(screen.getByRole('checkbox', { name: /Arroz/ }), 'longPress');
     expect(onAjustar).toHaveBeenCalledTimes(1);

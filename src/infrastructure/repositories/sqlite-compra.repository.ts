@@ -1,4 +1,4 @@
-import { and, eq, sql } from 'drizzle-orm';
+import { and, eq, inArray, sql } from 'drizzle-orm';
 
 import { Compra, CompraItem, StatusCompra } from '../../domain/compra/compra';
 import { EfeitosFinalizacao, GastoDoMes } from '../../domain/compra/compra.rules';
@@ -133,6 +133,46 @@ export class SQLiteCompraRepository implements CompraRepository {
       .where(eq(tabelaCompraItem.id, id))
       .get() as LinhaItem;
     return itemParaDominio(linha);
+  }
+
+  async adicionarItens(
+    compraId: string,
+    itens: readonly NovoItemCompra[],
+  ): Promise<readonly CompraItem[]> {
+    if (itens.length === 0) {
+      return [];
+    }
+    return this.db.transaction((tx) => {
+      const ordemBase =
+        (tx
+          .select({ maxOrdem: sql<number>`COALESCE(MAX(${tabelaCompraItem.ordem}), -1)` })
+          .from(tabelaCompraItem)
+          .where(eq(tabelaCompraItem.compraId, compraId))
+          .get()?.maxOrdem ?? -1) + 1;
+      const ids = itens.map(() => gerarId());
+      for (const [indice, item] of itens.entries()) {
+        tx.insert(tabelaCompraItem)
+          .values({
+            id: ids[indice],
+            compraId,
+            produtoId: item.produtoId ?? null,
+            nomeAvulso: item.nomeAvulso ?? null,
+            unidade: item.unidade,
+            quantidadePlanejada: item.quantidadePlanejada,
+            valorEstimadoUnit: item.valorEstimadoUnit ?? 0,
+            ordem: item.ordem ?? ordemBase + indice,
+            excluido: item.excluido ?? false,
+          })
+          .run();
+      }
+      const linhas = tx
+        .select()
+        .from(tabelaCompraItem)
+        .where(inArray(tabelaCompraItem.id, ids))
+        .all() as LinhaItem[];
+      const porId = new Map(linhas.map((linha) => [linha.id, linha]));
+      return ids.map((id) => itemParaDominio(porId.get(id) as LinhaItem));
+    });
   }
 
   async editarItem(itemId: string, dados: EdicaoItemCompra): Promise<void> {

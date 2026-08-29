@@ -62,6 +62,10 @@ export interface CompraRepository {
   /** Qualquer status — o detalhe de uma compra finalizada ou cancelada usa este método. */
   obterPorId(compraId: string): Promise<Compra | null>;
   adicionarItem(compraId: string, item: NovoItemCompra): Promise<CompraItem>;
+  /** Insere todos os itens em uma única transação (evita N idas ao banco ao
+   *  materializar a lista inteira — achado de QA: "Iniciar compra" com 40
+   *  itens perceptivelmente lento por inserir um a um). */
+  adicionarItens(compraId: string, itens: readonly NovoItemCompra[]): Promise<readonly CompraItem[]>;
   editarItem(itemId: string, dados: EdicaoItemCompra): Promise<void>;
   removerItem(itemId: string): Promise<void>;
   listarItens(compraId: string): Promise<ItemComProduto[]>;

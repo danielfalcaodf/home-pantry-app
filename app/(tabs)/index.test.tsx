@@ -2,6 +2,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react-nativ
 import { ReactNode } from 'react';
 import { Keyboard, View as MockView } from 'react-native';
 
+import { useAvisoCompraStore } from '@/application/compra/aviso-compra-store';
 import { milesimos } from '@/domain/shared/quantidade';
 import { ThemeProvider } from '@/presentation/theme/provider';
 import Despensa from './index';
@@ -32,9 +33,11 @@ function dispararBlur() {
   mockCleanupAtual?.();
 }
 
+const mockParams: Record<string, string> = {};
+
 jest.mock('expo-router', () => ({
   router: { push: jest.fn() },
-  useLocalSearchParams: () => ({}),
+  useLocalSearchParams: () => mockParams,
   useFocusEffect: (efeito: () => void | (() => void)) => {
     if (efeito !== mockEfeitoAtual) {
       mockCleanupAtual?.();
@@ -92,6 +95,35 @@ describe('Despensa — rótulo acessível do stepper de consumo', () => {
     await comTema(<Despensa />);
     expect(screen.getByLabelText('Usei 1 kg de Arroz')).toBeTruthy();
     expect(screen.queryByLabelText(/Registrar consumo/)).toBeNull();
+  });
+});
+
+describe('Despensa — aviso de compra fechada (achado de QA)', () => {
+  afterEach(() => {
+    useAvisoCompraStore.getState().limpar();
+  });
+
+  // Achado de QA: fechar a compra navegava direto pra cá sem mostrar
+  // nenhum aviso — a notificação "Você repôs N itens" nunca aparecia.
+  // Tentativa inicial via parâmetro de rota (`?avisoCompra=`) não chegava:
+  // esta aba já costuma estar montada, então `useLocalSearchParams` não
+  // reage à navegação vinda de fora do grupo de abas. A mensagem viaja
+  // pela store global (`useAvisoCompraStore`) em vez disso.
+  it('mostra o toast de "Você repôs N itens" recebido da tela de Compra e depois limpa a store', async () => {
+    useAvisoCompraStore.getState().definir('Você repôs 2 itens');
+    await comTema(<Despensa />);
+
+    const toast = await screen.findByText('Você repôs 2 itens');
+    expect(toast).toBeTruthy();
+
+    fireEvent(toast, 'onFim');
+    expect(useAvisoCompraStore.getState().mensagem).toBeNull();
+  });
+
+  it('sem mensagem na store, não mostra nenhum toast de compra', async () => {
+    await comTema(<Despensa />);
+
+    expect(screen.queryByText(/Você repôs/)).toBeNull();
   });
 });
 

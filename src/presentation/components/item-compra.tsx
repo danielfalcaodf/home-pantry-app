@@ -1,7 +1,7 @@
 import { Pressable, View } from 'react-native';
 
 import { CompraItem } from '../../domain/compra/compra';
-import { formatarBRL } from '../../domain/shared/dinheiro';
+import { Centavos, formatarBRL } from '../../domain/shared/dinheiro';
 import { formatarQuantidade } from '../../domain/shared/quantidade';
 import { ALVO_TOQUE_MINIMO, espaco, raio } from '../theme/espaco';
 import { icones } from '../theme/icones';
@@ -25,6 +25,10 @@ export type LinhaDeCompra = {
 
 export type ItemCompraProps = {
   linha: LinhaDeCompra;
+  /** Custo da linha inteira (quantidade × preço unitário) — nunca o preço
+   *  por unidade sozinho: achado de QA, "2 caixas, R$33,99" lia como se
+   *  33,99 fosse o total, quando era só o valor de uma unidade. */
+  custoTotal: Centavos;
   onMarcar: () => void;
   onDesmarcar: () => void;
   onAjustar: () => void;
@@ -41,6 +45,7 @@ export type ItemCompraProps = {
  */
 export function ItemCompra({
   linha,
+  custoTotal,
   onMarcar,
   onDesmarcar,
   onAjustar,
@@ -72,7 +77,7 @@ export function ItemCompra({
         accessibilityRole="checkbox"
         accessibilityState={{ checked: item.comprado }}
         accessibilityLabel={`${nome}, ${formatarQuantidade(quantidade, item.unidade)}${
-          semPreco ? ', sem preço' : `, ${formatarBRL(precoPorUnidade)}`
+          semPreco ? ', sem preço' : `, ${formatarBRL(custoTotal)}`
         }`}
         style={{
           flex: 1,
@@ -133,7 +138,7 @@ export function ItemCompra({
               </Texto>
             ) : (
               <Texto papel="data.md" tom={item.comprado ? 'secondary' : 'primary'}>
-                {formatarBRL(precoPorUnidade)}
+                {formatarBRL(custoTotal)}
               </Texto>
             )}
           </View>

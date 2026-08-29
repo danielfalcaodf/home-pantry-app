@@ -1,16 +1,17 @@
 import { useKeepAwake } from 'expo-keep-awake';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { Alert, Pressable, ScrollView, View } from 'react-native';
+import { ActivityIndicator, Alert, Pressable, ScrollView, View } from 'react-native';
 
 import { useCancelarCompra } from '@/application/compra/use-cancelar-compra';
+import { useAvisoCompraStore } from '@/application/compra/aviso-compra-store';
 import { useFinalizarCompra } from '@/application/compra/use-finalizar-compra';
 import { DivergenciaDePrecoDaCompra } from '@/application/compra/revisao-preco';
 import { ItemDaCompra, useModoCompra } from '@/application/compra/use-modo-compra';
 import { usePreferenciaDeAgrupamento } from '@/application/lista/use-preferencia-agrupamento';
 import { totalPago } from '@/domain/compra/compra.rules';
 import { passoRapido } from '@/domain/compra/quantidade-compra.rules';
-import { centavos, formatarBRL } from '@/domain/shared/dinheiro';
+import { centavos, formatarBRL, multiplicarQuantidadePorPreco } from '@/domain/shared/dinheiro';
 import { deDecimal, paraDecimal } from '@/domain/shared/quantidade';
 import { Botao } from '@/presentation/components/botao';
 import { BotaoVoltar } from '@/presentation/components/botao-voltar';
@@ -65,7 +66,9 @@ export default function ModoCompra() {
   const { agrupado } = usePreferenciaDeAgrupamento();
 
   const [itemEmAjuste, setItemEmAjuste] = useState<ItemDaCompra | null>(null);
-  const [aviso, setAviso] = useState<{ mensagem: string; sucesso: boolean } | null>(null);
+  // Só mensagem de falha: sucesso navega na hora pra Despensa e mostra o
+  // aviso lá (via parâmetro `avisoCompra`) — esta tela já desmontou.
+  const [avisoDeFalha, setAvisoDeFalha] = useState<string | null>(null);
   const [revisaoAberta, setRevisaoAberta] = useState(false);
   const [itensEmRevisao, setItensEmRevisao] = useState<DivergenciaDePrecoDaCompra[]>([]);
   const [precosSelecionados, setPrecosSelecionados] = useState<ReadonlySet<string>>(new Set());
@@ -89,6 +92,22 @@ export default function ModoCompra() {
     [agrupado, itens],
   );
 
+  // Achado de QA: navegar só depois do toast sumir (5s) trava quem já
+  // fechou a compra e quer seguir pra Despensa — a confirmação é um
+  // reforço, não um portão. Sai da tela na hora (o toast local não teria
+  // tempo de aparecer, pois esta tela desmonta com a navegação); a
+  // mensagem viaja pela store global (a aba Despensa já costuma estar
+  // montada, então parâmetro de rota não chega até ela).
+  function tratarResultadoDoFechamento(resultado: Awaited<ReturnType<typeof finalizar>>) {
+    if (resultado.ok) {
+      const plural = resultado.itensRepostos !== 1;
+      useAvisoCompraStore.getState().definir(`Você repôs ${resultado.itensRepostos} ${plural ? 'itens' : 'item'}`);
+      router.replace('/');
+      return;
+    }
+    setAvisoDeFalha('Não foi possível fechar a compra agora. Toque em Fechar compra para tentar de novo.');
+  }
+
   async function fecharCompra() {
     const divergentes = await divergencias(id);
     if (divergentes.length > 0) {
@@ -97,19 +116,7 @@ export default function ModoCompra() {
       setRevisaoAberta(true);
       return;
     }
-    const resultado = await finalizar(id);
-    if (resultado.ok) {
-      const plural = resultado.itensRepostos !== 1;
-      setAviso({
-        mensagem: `Você repôs ${resultado.itensRepostos} ${plural ? 'itens' : 'item'}`,
-        sucesso: true,
-      });
-      return;
-    }
-    setAviso({
-      mensagem: 'Não foi possível fechar a compra agora. Toque em Fechar compra para tentar de novo.',
-      sucesso: false,
-    });
+    tratarResultadoDoFechamento(await finalizar(id));
   }
 
   async function confirmarRevisao() {
@@ -124,19 +131,7 @@ export default function ModoCompra() {
   }
 
   async function fecharCompraSemRevisar() {
-    const resultado = await finalizar(id);
-    if (resultado.ok) {
-      const plural = resultado.itensRepostos !== 1;
-      setAviso({
-        mensagem: `Você repôs ${resultado.itensRepostos} ${plural ? 'itens' : 'item'}`,
-        sucesso: true,
-      });
-      return;
-    }
-    setAviso({
-      mensagem: 'Não foi possível fechar a compra agora. Toque em Fechar compra para tentar de novo.',
-      sucesso: false,
-    });
+    tratarResultadoDoFechamento(await finalizar(id));
   }
 
   function alternarSelecaoDePreco(produtoId: string) {
@@ -199,6 +194,14 @@ export default function ModoCompra() {
         </Texto>
       </View>
 
+      {carregando ? (
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: espaco.md }}>
+          <ActivityIndicator size="large" color={tema.action.azulejo} />
+          <Texto papel="label" tom="secondary">
+            Preparando sua compra…
+          </Texto>
+        </View>
+      ) : (
       <ScrollView style={{ flex: 1 }}>
         {linhas.map((linha) =>
           linha.tipo === 'cabecalho' ? (
@@ -219,6 +222,10 @@ export default function ModoCompra() {
             <ItemCompra
               key={linha.chave}
               linha={linha.item}
+              custoTotal={multiplicarQuantidadePorPreco(
+                linha.item.item.quantidadeComprada ?? linha.item.item.quantidadePlanejada,
+                linha.item.item.valorPagoUnitario ?? linha.item.item.valorEstimadoUnit,
+              )}
               onMarcar={() => void marcar(linha.item)}
               onDesmarcar={() => void desmarcar(linha.item.item.id)}
               onAjustar={() => setItemEmAjuste(linha.item)}
@@ -232,8 +239,9 @@ export default function ModoCompra() {
           ),
         )}
       </ScrollView>
+      )}
 
-      {aviso?.sucesso || carregando ? null : (
+      {carregando ? null : (
         <>
           <RodapeCompra marcados={marcados} totalDeItens={itens.length} total={total} />
           <View style={{ padding: espaco.lg, gap: espaco.md }}>
@@ -358,18 +366,7 @@ export default function ModoCompra() {
         </View>
       </PainelInferior>
 
-      {aviso ? (
-        <Toast
-          mensagem={aviso.mensagem}
-          onFim={() => {
-            const foiSucesso = aviso.sucesso;
-            setAviso(null);
-            if (foiSucesso) {
-              router.replace('/');
-            }
-          }}
-        />
-      ) : null}
+      {avisoDeFalha ? <Toast mensagem={avisoDeFalha} onFim={() => setAvisoDeFalha(null)} /> : null}
     </TelaBase>
   );
 }
