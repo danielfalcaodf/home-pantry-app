@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react';
 
 import { compraRepository, obterIdentidadeLocal, produtoRepository, relogio } from '../../composicao/repositorios';
 import { efeitosDaFinalizacao } from '../../domain/compra/compra.rules';
+import { DivergenciaDePrecoDaCompra, divergenciasDePrecoMarcadas } from './revisao-preco';
 import { CompraRepository } from '../../ports/compra.repository';
 import { ProdutoRepository } from '../../ports/produto.repository';
 
@@ -11,6 +12,7 @@ export type ResultadoFechamento =
 
 export type EstadoFinalizarCompra = {
   finalizando: boolean;
+  divergencias: (compraId: string) => Promise<DivergenciaDePrecoDaCompra[]>;
   finalizar: (compraId: string) => Promise<ResultadoFechamento>;
 };
 
@@ -25,6 +27,11 @@ export function useFinalizarCompra(
   produtos: ProdutoRepository = produtoRepository,
 ): EstadoFinalizarCompra {
   const [finalizando, setFinalizando] = useState(false);
+
+  const divergencias = useCallback(
+    async (compraId: string) => divergenciasDePrecoMarcadas(await compras.listarItens(compraId)),
+    [compras],
+  );
 
   const finalizar = useCallback(
     async (compraId: string): Promise<ResultadoFechamento> => {
@@ -59,5 +66,5 @@ export function useFinalizarCompra(
     [compras, produtos],
   );
 
-  return { finalizando, finalizar };
+  return { finalizando, divergencias, finalizar };
 }

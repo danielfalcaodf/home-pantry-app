@@ -19,6 +19,15 @@ export type NovoItemCompra = {
   excluido?: boolean;
 };
 
+export type NovaCompraComItens = {
+  casaId: string;
+  usuarioId: string;
+  criadaEm: number;
+  itens: readonly NovoItemCompra[];
+};
+
+export type ErroAoRecomecarCompra = 'nao_encontrada' | 'nao_esta_aberta' | 'falha_ao_criar';
+
 export type EdicaoItemCompra = Partial<
   Pick<
     CompraItem,
@@ -65,6 +74,11 @@ export interface CompraRepository {
     compraId: string,
     canceladaEm: number,
   ): Promise<Result<Compra, 'nao_encontrada' | 'nao_esta_aberta'>>;
+  /** Cancela a aberta e materializa a substituta na mesma transação. */
+  recomecar(
+    compraId: string,
+    novaCompra: NovaCompraComItens,
+  ): Promise<Result<Compra, ErroAoRecomecarCompra>>;
   /**
    * Aplica os efeitos calculados pelo domínio em UMA transação: reposições,
    * movimentos, atualizações de preço confirmadas e a mudança de status.

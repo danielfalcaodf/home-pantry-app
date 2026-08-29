@@ -107,6 +107,41 @@ export class CompraRepositorioFalso implements CompraRepository {
     return sucesso(this.compras[indice]);
   }
 
+
+  async recomecar(
+    compraId: string,
+    novaCompra: import('../../../ports/compra.repository').NovaCompraComItens,
+  ): Promise<import('../../../shared/result').Result<Compra, import('../../../ports/compra.repository').ErroAoRecomecarCompra>> {
+    const indice = this.compras.findIndex((compra) => compra.id === compraId);
+    if (indice === -1) {
+      return falha('nao_encontrada');
+    }
+    if (this.compras[indice].status !== 'aberta') {
+      return falha('nao_esta_aberta');
+    }
+
+    const copiaCompras = this.compras.map((compra) => ({ ...compra }));
+    const copiaItens = this.itens.map((item) => ({ ...item }));
+    try {
+      const cancelada = await this.cancelar(compraId, novaCompra.criadaEm);
+      if (!cancelada.ok) {
+        return cancelada;
+      }
+      const aberta = await this.abrir(novaCompra.casaId, novaCompra.usuarioId, novaCompra.criadaEm);
+      if (!aberta.ok) {
+        throw new Error('falha ao criar compra');
+      }
+      for (const item of novaCompra.itens) {
+        await this.adicionarItem(aberta.valor.id, item);
+      }
+      return sucesso(aberta.valor);
+    } catch {
+      this.compras = copiaCompras;
+      this.itens = copiaItens;
+      return falha('falha_ao_criar');
+    }
+  }
+
   async listarItens(compraId: string): Promise<ItemComProduto[]> {
     return this.itens
       .filter((item) => item.compraId === compraId)

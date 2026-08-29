@@ -1,0 +1,69 @@
+appId: com.danielfalcaodf.repor
+---
+# Revisar preços de referência no fechamento (change
+# melhorias-usabilidade-modo-compra, task 1.5, cenários "Revisão agrupada ao
+# divergir" e "Atualizar todos os preços divergentes" das specs
+# atualizacao-de-preco-referencia e fechamento-de-compra).
+#
+# Efeito colateral real, irreversível pela UI: define um preço de referência
+# para "Molho de tomate", fecha a compra pagando um valor diferente e
+# confirma a atualização — o produto passa a valer o preço pago.
+#
+# "Molho de tomate" (categoria Mercearia) some da árvore de acessibilidade
+# quando a lista usa FlashList e ele ainda não foi montado na janela de
+# render — um "scroll" simples antes do scrollUntilVisible evita que o
+# comando falhe quando o alvo já está visível (comportamento observado do
+# scrollUntilVisible neste ambiente).
+- launchApp
+- assertVisible: "Despensa"
+- tapOn: "Lista"
+- scroll
+- scrollUntilVisible:
+    element: "Molho de tomate, 2 un, sem preço"
+    direction: DOWN
+    timeout: 15000
+    speed: 40
+- tapOn: "Molho de tomate, 2 un, sem preço"
+- assertVisible: "Preço de Molho de tomate"
+- tapOn: "Quanto costuma custar"
+- inputText: "3,00"
+- tapOn: "Salvar"
+- scroll
+- scrollUntilVisible:
+    element: "Molho de tomate, 2 un, R\\$ 3,00"
+    direction: DOWN
+    timeout: 15000
+    speed: 40
+- assertVisible: "Molho de tomate, 2 un, R$ 3,00"
+- tapOn:
+    text: "Iniciar compra \\(\\d+\\)"
+- scroll
+- scrollUntilVisible:
+    element: "Molho de tomate, 2 un, R\\$ 3,00"
+    direction: DOWN
+    timeout: 15000
+    speed: 40
+- tapOn: "Molho de tomate, 2 un, R$ 3,00"
+- assertVisible:
+    text: "Molho de tomate, 2 un, R$ 3,00"
+    checked: true
+- tapOn: "Ajustar quantidade e preço de Molho de tomate"
+- tapOn: "Preço pago (opcional)"
+- eraseText
+- inputText: "5,00"
+- tapOn: "Salvar"
+- assertVisible:
+    text: "Molho de tomate, 2 un, R$ 5,00"
+    checked: true
+- tapOn: "Fechar compra"
+- assertVisible: "1 preço diferente"
+- tapOn: "Atualizar 1"
+- assertVisible: "Despensa"
+- tapOn: "Lista"
+- scroll
+- scrollUntilVisible:
+    element: "Molho de tomate, 2 un, R\\$ 5,00"
+    direction: DOWN
+    timeout: 15000
+    speed: 40
+- assertVisible: "Molho de tomate, 2 un, R$ 5,00"

@@ -9,7 +9,9 @@ import {
   CompraDoHistorico,
   CompraRepository,
   EdicaoItemCompra,
+  ErroAoRecomecarCompra,
   ItemComProduto,
+  NovaCompraComItens,
   NovoItemCompra,
 } from '../../ports/compra.repository';
 import { gerarId } from '../../shared/id';
@@ -190,6 +192,65 @@ export class SQLiteCompraRepository implements CompraRepository {
       .where(eq(tabelaCompra.id, compraId))
       .get() as LinhaCompra;
     return sucesso(compraParaDominio(cancelada));
+  }
+
+
+  async recomecar(
+    compraId: string,
+    novaCompra: NovaCompraComItens,
+  ): Promise<Result<Compra, ErroAoRecomecarCompra>> {
+    return this.db.transaction((tx): Result<Compra, ErroAoRecomecarCompra> => {
+      const atual = tx
+        .select()
+        .from(tabelaCompra)
+        .where(eq(tabelaCompra.id, compraId))
+        .get() as LinhaCompra | undefined;
+      if (!atual) {
+        return falha('nao_encontrada');
+      }
+      if (atual.status !== 'aberta') {
+        return falha('nao_esta_aberta');
+      }
+
+      const id = gerarId(() => novaCompra.criadaEm);
+      tx.update(tabelaCompra)
+        .set({ status: 'cancelada', atualizadoEm: novaCompra.criadaEm, syncStatus: 'pendente' })
+        .where(eq(tabelaCompra.id, compraId))
+        .run();
+
+      tx.insert(tabelaCompra)
+        .values({
+          id,
+          casaId: novaCompra.casaId,
+          usuarioId: novaCompra.usuarioId,
+          criadaEm: novaCompra.criadaEm,
+          atualizadoEm: novaCompra.criadaEm,
+        })
+        .run();
+
+      for (const [ordem, item] of novaCompra.itens.entries()) {
+        tx.insert(tabelaCompraItem)
+          .values({
+            id: gerarId(() => novaCompra.criadaEm),
+            compraId: id,
+            produtoId: item.produtoId ?? null,
+            nomeAvulso: item.nomeAvulso ?? null,
+            unidade: item.unidade,
+            quantidadePlanejada: item.quantidadePlanejada,
+            valorEstimadoUnit: item.valorEstimadoUnit ?? 0,
+            ordem: item.ordem ?? ordem,
+            excluido: item.excluido ?? false,
+          })
+          .run();
+      }
+
+      const nova = tx
+        .select()
+        .from(tabelaCompra)
+        .where(eq(tabelaCompra.id, id))
+        .get() as LinhaCompra;
+      return sucesso(compraParaDominio(nova));
+    });
   }
 
   // Uma única consulta com junção EXTERNA: item avulso tem produto NULL e

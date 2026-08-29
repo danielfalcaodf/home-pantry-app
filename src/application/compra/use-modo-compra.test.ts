@@ -162,6 +162,7 @@ describe('useModoCompra', () => {
     await act(async () => {
       await result.current.marcar({ item, produto: null });
       await result.current.ajustarPreco(item.id, centavos(950));
+      await result.current.responderAtualizarPreco(item.id, true);
       observador.notificar();
     });
     await waitFor(() => expect(result.current.itens[0].item.comprado).toBe(true));
@@ -172,6 +173,7 @@ describe('useModoCompra', () => {
     });
     await waitFor(() => expect(result.current.itens[0].item.comprado).toBe(false));
     expect(result.current.itens[0].item.valorPagoUnitario).toBe(950);
+    expect(result.current.itens[0].item.atualizarPreco).toBeNull();
   });
 
   it('ajustar quantidade e preço recalcula o que fica gravado no item', async () => {
@@ -256,6 +258,47 @@ describe('useModoCompra', () => {
     await waitFor(() => expect(segunda.result.current.carregando).toBe(false));
     expect(segunda.result.current.itens[0].item.comprado).toBe(true);
     expect(segunda.result.current.itens[0].item.quantidadeComprada).toBe(2000);
+  });
+
+  it('ajuste rápido altera quantidade antes e depois da marcação sem mudar a marcação nem o preço detalhado', async () => {
+    const { compras, compraId, item, observador } = await montarCompraComItem();
+    const { result } = await renderHook(() => useModoCompra(compraId, compras, observador));
+    await waitFor(() => expect(result.current.carregando).toBe(false));
+
+    await act(async () => {
+      await result.current.ajustarQuantidadeRapida(item.id, 1);
+      observador.notificar();
+    });
+    await waitFor(() => expect(result.current.itens[0].item.quantidadeComprada).toBe(3000));
+    expect(result.current.itens[0].item.comprado).toBe(false);
+
+    await act(async () => {
+      await result.current.ajustarPreco(item.id, centavos(700));
+      observador.notificar();
+    });
+    await waitFor(() => expect(result.current.itens[0].item.valorPagoUnitario).toBe(700));
+
+    await act(async () => {
+      await result.current.marcar(result.current.itens[0]);
+      await result.current.ajustarQuantidadeRapida(item.id, -1);
+      observador.notificar();
+    });
+    await waitFor(() => expect(result.current.itens[0].item.quantidadeComprada).toBe(2000));
+    expect(result.current.itens[0].item.comprado).toBe(true);
+    expect(result.current.itens[0].item.valorPagoUnitario).toBe(700);
+  });
+
+  it('ajuste rápido não reduz unidade indivisível abaixo de uma unidade', async () => {
+    const { compras, compraId, item, observador } = await montarCompraComItem();
+    await compras.editarItem(item.id, { quantidadeComprada: milesimos(1000) });
+    const { result } = await renderHook(() => useModoCompra(compraId, compras, observador));
+    await waitFor(() => expect(result.current.carregando).toBe(false));
+
+    await act(async () => {
+      await result.current.ajustarQuantidadeRapida(item.id, -1);
+      observador.notificar();
+    });
+    await waitFor(() => expect(result.current.itens[0].item.quantidadeComprada).toBe(1000));
   });
 
   // ACHADO-054 (task 4): reproduzido e não confirmado com um componente real

@@ -24,7 +24,6 @@ function ListaDeTeste({ itens, marcar }: { itens: ItemDaCompra[]; marcar: (item:
           onMarcar={() => marcar(linha)}
           onDesmarcar={() => {}}
           onAjustar={() => {}}
-          onResponderPreco={() => {}}
         />
       ))}
     </>

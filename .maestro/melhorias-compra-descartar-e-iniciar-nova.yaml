@@ -1,0 +1,34 @@
+appId: com.danielfalcaodf.repor
+---
+# Descartar rascunho e iniciar lista atualizada (change
+# melhorias-usabilidade-modo-compra, task 1.5, cenários "Nova lista exige
+# confirmação ao descartar progresso" e "Começar nova lista atualizada" da
+# spec modo-compra).
+#
+# Efeito colateral real, irreversível pela UI: cancela a compra aberta
+# marcada com "Macarrão" (sem repor nada) e abre uma compra nova a partir da
+# Lista atual.
+- launchApp
+- assertVisible: "Despensa"
+- tapOn: "Lista"
+- tapOn:
+    text: "Iniciar compra \\(\\d+\\)"
+- tapOn: "Macarrão, 2 pacotes, sem preço"
+- assertVisible:
+    text: "Macarrão, 2 pacotes, sem preço"
+    checked: true
+- tapOn: "Voltar"
+- tapOn: "Sair"
+- assertVisible: "Lista"
+- tapOn:
+    text: "Iniciar compra \\(\\d+\\)"
+- assertVisible: "Continuar compra"
+- tapOn: "Começar nova lista"
+# há progresso (item marcado) — precisa exigir confirmação, não recomeçar direto
+- assertVisible:
+    text: "rascunho"
+- tapOn: "Começar nova lista"
+- assertVisible: "Compra"
+- assertVisible:
+    text: "Macarrão, 2 pacotes, sem preço"
+    checked: false

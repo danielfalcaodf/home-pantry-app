@@ -94,6 +94,89 @@ describe('cancelamento de compra', () => {
   });
 });
 
+describe('recomecar (change melhorias-usabilidade-modo-compra)', () => {
+  it('cancela a compra aberta e materializa a substituta na mesma transação', async () => {
+    const { compras, casaId, usuarioId, criarProduto } = await montar();
+    const produto = await criarProduto('Arroz');
+    const aberta = await compras.abrir(casaId, usuarioId, clock.agora());
+    if (!aberta.ok) {
+      throw new Error('setup');
+    }
+    await compras.adicionarItem(aberta.valor.id, {
+      produtoId: produto.id,
+      unidade: 'un',
+      quantidadePlanejada: milesimos(1000),
+    });
+
+    const resultado = await compras.recomecar(aberta.valor.id, {
+      casaId,
+      usuarioId,
+      criadaEm: clock.agora() + 1,
+      itens: [{ produtoId: produto.id, unidade: 'un', quantidadePlanejada: milesimos(2000) }],
+    });
+
+    expect(resultado.ok).toBe(true);
+    if (!resultado.ok) {
+      throw new Error('assert');
+    }
+    expect(resultado.valor.id).not.toBe(aberta.valor.id);
+
+    // a antiga vira histórico (cancelada), a nova é a única aberta.
+    const antiga = await compras.obterPorId(aberta.valor.id);
+    expect(antiga?.status).toBe('cancelada');
+    const novaAberta = await compras.obterAberta(casaId);
+    expect(novaAberta?.id).toBe(resultado.valor.id);
+
+    const itensDaNova = await compras.listarItens(resultado.valor.id);
+    expect(itensDaNova).toHaveLength(1);
+    expect(itensDaNova[0].item.quantidadePlanejada).toBe(2000);
+
+    // nunca duas compras abertas ao mesmo tempo (ux_compra_aberta).
+    const segundaAbertura = await compras.abrir(casaId, usuarioId, clock.agora() + 2);
+    expect(segundaAbertura.ok).toBe(false);
+  });
+
+  it('recomeçar uma compra inexistente falha e não cria nada', async () => {
+    const { compras, casaId, usuarioId } = await montar();
+    const resultado = await compras.recomecar('inexistente', {
+      casaId,
+      usuarioId,
+      criadaEm: clock.agora(),
+      itens: [],
+    });
+    expect(resultado.ok).toBe(false);
+    if (!resultado.ok) {
+      expect(resultado.erro).toBe('nao_encontrada');
+    }
+    expect(await compras.obterAberta(casaId)).toBeNull();
+  });
+
+  it('recomeçar uma compra já finalizada falha e preserva o histórico intacto', async () => {
+    const { compras, casaId, usuarioId } = await montar();
+    const aberta = await compras.abrir(casaId, usuarioId, clock.agora());
+    if (!aberta.ok) {
+      throw new Error('setup');
+    }
+    const efeitosVazios = { reposicoes: [], atualizacoesDePreco: [], totalPago: centavos(0) };
+    await compras.finalizar(aberta.valor.id, efeitosVazios, usuarioId, clock.agora() + 1);
+
+    const resultado = await compras.recomecar(aberta.valor.id, {
+      casaId,
+      usuarioId,
+      criadaEm: clock.agora() + 2,
+      itens: [],
+    });
+
+    expect(resultado.ok).toBe(false);
+    if (!resultado.ok) {
+      expect(resultado.erro).toBe('nao_esta_aberta');
+    }
+    // a compra finalizada continua com o status intacto — nada foi alterado.
+    expect((await compras.obterPorId(aberta.valor.id))?.status).toBe('finalizada');
+    expect(await compras.obterAberta(casaId)).toBeNull();
+  });
+});
+
 describe('itens da compra', () => {
   it('adiciona, edita, ordena e remove itens, inclusive avulsos', async () => {
     const { compras, casaId, usuarioId, criarProduto } = await montar();
