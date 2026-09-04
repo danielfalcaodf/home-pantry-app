@@ -1,0 +1,44 @@
+appId: com.danielfalcaodf.repor
+---
+# Retomar compra aberta (change melhorias-usabilidade-modo-compra, task 1.5,
+# cenário "Continuar compra em andamento" da spec modo-compra).
+#
+# Efeito colateral real, irreversível pela UI: marca "Feijão" como comprado
+# na compra aberta (não fecha a compra, então nada é reposto).
+#
+# Fluxo: entra na Lista, inicia a compra pela primeira vez (sem rascunho
+# aberto ainda — vai direto, sem painel de decisão), marca um item, sai sem
+# fechar, volta à Lista, confirma a faixa "Compra em andamento" e escolhe
+# "Continuar compra" no painel — a marcação anterior precisa sobreviver.
+- launchApp
+- assertVisible: "Despensa"
+- tapOn: "Lista"
+- tapOn:
+    text: "Iniciar compra \\(\\d+\\)"
+- scrollUntilVisible:
+    element: "Feijão, 2 pacotes, sem preço"
+    direction: DOWN
+    timeout: 15000
+    speed: 40
+- tapOn: "Feijão, 2 pacotes, sem preço"
+- assertVisible:
+    text: "Feijão, 2 pacotes, sem preço"
+    checked: true
+- tapOn: "Voltar"
+- tapOn: "Sair"
+- assertVisible: "Lista"
+- assertVisible:
+    text: "Compra em andamento.*"
+- tapOn:
+    text: "Iniciar compra \\(\\d+\\)"
+- assertVisible: "Continuar compra"
+- assertVisible: "Começar nova lista"
+- tapOn: "Continuar compra"
+- scrollUntilVisible:
+    element: "Feijão, 2 pacotes, sem preço"
+    direction: DOWN
+    timeout: 15000
+    speed: 40
+- assertVisible:
+    text: "Feijão, 2 pacotes, sem preço"
+    checked: true

@@ -3,6 +3,7 @@ import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Keyboard, Pressable, ScrollView, View } from 'react-native';
 
+import { useAvisoCompraStore } from '@/application/compra/aviso-compra-store';
 import { ProdutoNaDespensa, useProdutos } from '@/application/estoque/use-produtos';
 import { useCategorias } from '@/application/estoque/use-categorias';
 import { useDarBaixa } from '@/application/estoque/use-dar-baixa';
@@ -81,6 +82,13 @@ export default function Despensa() {
   const [busca, setBusca] = useState('');
   const [buscaAberta, setBuscaAberta] = useState(false);
   const [itemDoTeclado, setItemDoTeclado] = useState<ProdutoNaDespensa | null>(null);
+  // Compra fechada navega direto pra cá (achado de QA: esperar o toast sumir
+  // na tela de Compra travava quem só quer sair) — o aviso chega pela store
+  // global: a aba Despensa já costuma estar montada, então um parâmetro de
+  // rota (como o `?filtro=` abaixo, que funciona por vir de uma tela fora
+  // do grupo de abas) não seria entregue a ela.
+  const avisoDaCompra = useAvisoCompraStore((estado) => estado.mensagem);
+  const limparAvisoDaCompra = useAvisoCompraStore((estado) => estado.limpar);
 
   useEffect(() => {
     // Sincroniza com um sistema externo (a rota) — não deriva de outro
@@ -369,6 +377,8 @@ export default function Despensa() {
           }
         />
       ) : null}
+
+      {avisoDaCompra ? <Toast mensagem={avisoDaCompra} onFim={limparAvisoDaCompra} /> : null}
 
       {itemDoTeclado ? (
         <TecladoQuantidade

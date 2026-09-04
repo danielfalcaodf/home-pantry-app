@@ -1,4 +1,4 @@
-import { and, eq, sql } from 'drizzle-orm';
+import { and, eq, inArray, sql } from 'drizzle-orm';
 
 import { Compra, CompraItem, StatusCompra } from '../../domain/compra/compra';
 import { EfeitosFinalizacao, GastoDoMes } from '../../domain/compra/compra.rules';
@@ -9,7 +9,9 @@ import {
   CompraDoHistorico,
   CompraRepository,
   EdicaoItemCompra,
+  ErroAoRecomecarCompra,
   ItemComProduto,
+  NovaCompraComItens,
   NovoItemCompra,
 } from '../../ports/compra.repository';
 import { gerarId } from '../../shared/id';
@@ -133,6 +135,46 @@ export class SQLiteCompraRepository implements CompraRepository {
     return itemParaDominio(linha);
   }
 
+  async adicionarItens(
+    compraId: string,
+    itens: readonly NovoItemCompra[],
+  ): Promise<readonly CompraItem[]> {
+    if (itens.length === 0) {
+      return [];
+    }
+    return this.db.transaction((tx) => {
+      const ordemBase =
+        (tx
+          .select({ maxOrdem: sql<number>`COALESCE(MAX(${tabelaCompraItem.ordem}), -1)` })
+          .from(tabelaCompraItem)
+          .where(eq(tabelaCompraItem.compraId, compraId))
+          .get()?.maxOrdem ?? -1) + 1;
+      const ids = itens.map(() => gerarId());
+      for (const [indice, item] of itens.entries()) {
+        tx.insert(tabelaCompraItem)
+          .values({
+            id: ids[indice],
+            compraId,
+            produtoId: item.produtoId ?? null,
+            nomeAvulso: item.nomeAvulso ?? null,
+            unidade: item.unidade,
+            quantidadePlanejada: item.quantidadePlanejada,
+            valorEstimadoUnit: item.valorEstimadoUnit ?? 0,
+            ordem: item.ordem ?? ordemBase + indice,
+            excluido: item.excluido ?? false,
+          })
+          .run();
+      }
+      const linhas = tx
+        .select()
+        .from(tabelaCompraItem)
+        .where(inArray(tabelaCompraItem.id, ids))
+        .all() as LinhaItem[];
+      const porId = new Map(linhas.map((linha) => [linha.id, linha]));
+      return ids.map((id) => itemParaDominio(porId.get(id) as LinhaItem));
+    });
+  }
+
   async editarItem(itemId: string, dados: EdicaoItemCompra): Promise<void> {
     this.db
       .update(tabelaCompraItem)
@@ -190,6 +232,65 @@ export class SQLiteCompraRepository implements CompraRepository {
       .where(eq(tabelaCompra.id, compraId))
       .get() as LinhaCompra;
     return sucesso(compraParaDominio(cancelada));
+  }
+
+
+  async recomecar(
+    compraId: string,
+    novaCompra: NovaCompraComItens,
+  ): Promise<Result<Compra, ErroAoRecomecarCompra>> {
+    return this.db.transaction((tx): Result<Compra, ErroAoRecomecarCompra> => {
+      const atual = tx
+        .select()
+        .from(tabelaCompra)
+        .where(eq(tabelaCompra.id, compraId))
+        .get() as LinhaCompra | undefined;
+      if (!atual) {
+        return falha('nao_encontrada');
+      }
+      if (atual.status !== 'aberta') {
+        return falha('nao_esta_aberta');
+      }
+
+      const id = gerarId(() => novaCompra.criadaEm);
+      tx.update(tabelaCompra)
+        .set({ status: 'cancelada', atualizadoEm: novaCompra.criadaEm, syncStatus: 'pendente' })
+        .where(eq(tabelaCompra.id, compraId))
+        .run();
+
+      tx.insert(tabelaCompra)
+        .values({
+          id,
+          casaId: novaCompra.casaId,
+          usuarioId: novaCompra.usuarioId,
+          criadaEm: novaCompra.criadaEm,
+          atualizadoEm: novaCompra.criadaEm,
+        })
+        .run();
+
+      for (const [ordem, item] of novaCompra.itens.entries()) {
+        tx.insert(tabelaCompraItem)
+          .values({
+            id: gerarId(() => novaCompra.criadaEm),
+            compraId: id,
+            produtoId: item.produtoId ?? null,
+            nomeAvulso: item.nomeAvulso ?? null,
+            unidade: item.unidade,
+            quantidadePlanejada: item.quantidadePlanejada,
+            valorEstimadoUnit: item.valorEstimadoUnit ?? 0,
+            ordem: item.ordem ?? ordem,
+            excluido: item.excluido ?? false,
+          })
+          .run();
+      }
+
+      const nova = tx
+        .select()
+        .from(tabelaCompra)
+        .where(eq(tabelaCompra.id, id))
+        .get() as LinhaCompra;
+      return sucesso(compraParaDominio(nova));
+    });
   }
 
   // Uma única consulta com junção EXTERNA: item avulso tem produto NULL e

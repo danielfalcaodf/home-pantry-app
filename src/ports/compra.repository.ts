@@ -19,6 +19,15 @@ export type NovoItemCompra = {
   excluido?: boolean;
 };
 
+export type NovaCompraComItens = {
+  casaId: string;
+  usuarioId: string;
+  criadaEm: number;
+  itens: readonly NovoItemCompra[];
+};
+
+export type ErroAoRecomecarCompra = 'nao_encontrada' | 'nao_esta_aberta' | 'falha_ao_criar';
+
 export type EdicaoItemCompra = Partial<
   Pick<
     CompraItem,
@@ -53,6 +62,10 @@ export interface CompraRepository {
   /** Qualquer status — o detalhe de uma compra finalizada ou cancelada usa este método. */
   obterPorId(compraId: string): Promise<Compra | null>;
   adicionarItem(compraId: string, item: NovoItemCompra): Promise<CompraItem>;
+  /** Insere todos os itens em uma única transação (evita N idas ao banco ao
+   *  materializar a lista inteira — achado de QA: "Iniciar compra" com 40
+   *  itens perceptivelmente lento por inserir um a um). */
+  adicionarItens(compraId: string, itens: readonly NovoItemCompra[]): Promise<readonly CompraItem[]>;
   editarItem(itemId: string, dados: EdicaoItemCompra): Promise<void>;
   removerItem(itemId: string): Promise<void>;
   listarItens(compraId: string): Promise<ItemComProduto[]>;
@@ -65,6 +78,11 @@ export interface CompraRepository {
     compraId: string,
     canceladaEm: number,
   ): Promise<Result<Compra, 'nao_encontrada' | 'nao_esta_aberta'>>;
+  /** Cancela a aberta e materializa a substituta na mesma transação. */
+  recomecar(
+    compraId: string,
+    novaCompra: NovaCompraComItens,
+  ): Promise<Result<Compra, ErroAoRecomecarCompra>>;
   /**
    * Aplica os efeitos calculados pelo domínio em UMA transação: reposições,
    * movimentos, atualizações de preço confirmadas e a mudança de status.

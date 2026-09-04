@@ -9,6 +9,8 @@ import { useListaDeCompras } from '@/application/lista/use-lista-compras';
 import { usePreferenciaDeAgrupamento } from '@/application/lista/use-preferencia-agrupamento';
 import { useRemoverItemDaLista } from '@/application/lista/use-remover-item-lista';
 import { useIniciarCompra } from '@/application/compra/use-iniciar-compra';
+import { useRecomecarCompra } from '@/application/compra/use-recomecar-compra';
+import { useResumoCompraAberta } from '@/application/compra/use-resumo-compra-aberta';
 import { useEditarProduto } from '@/application/estoque/use-editar-produto';
 import { DadosDoAvulso, ItemDaLista } from '@/domain/lista/lista';
 import { totalDaListaDeCompras } from '@/domain/lista/lista.rules';
@@ -19,6 +21,7 @@ import { ChipEstado } from '@/presentation/components/chip-estado';
 import { EstadoVazio } from '@/presentation/components/estado-vazio';
 import { IconeSvg } from '@/presentation/components/icone-svg';
 import { ItemLista } from '@/presentation/components/item-lista';
+import { PainelInferior } from '@/presentation/components/painel-inferior';
 import { RodapeTotal } from '@/presentation/components/rodape-total';
 import { SheetAvulso } from '@/presentation/components/sheet-avulso';
 import { SheetPrecoProduto } from '@/presentation/components/sheet-preco-produto';
@@ -40,9 +43,13 @@ export default function Lista() {
   const { ultimaRemocao, remover, removerAvulso, desfazer, limpar, reativar } =
     useRemoverItemDaLista();
   const { iniciando, iniciar } = useIniciarCompra();
+  const { resumo: compraAberta } = useResumoCompraAberta();
+  const { recomecando, recomecar } = useRecomecarCompra();
   const { editar: editarProduto } = useEditarProduto();
 
   const [sheetAberta, setSheetAberta] = useState(false);
+  const [painelCompraAbertaAberto, setPainelCompraAbertaAberto] = useState(false);
+  const [confirmarDescarte, setConfirmarDescarte] = useState(false);
   const [desativadosExpandido, setDesativadosExpandido] = useState(false);
   const [avulsoEmEdicao, setAvulsoEmEdicao] = useState<Extract<ItemDaLista, { tipo: 'avulso' }> | null>(
     null,
@@ -105,8 +112,44 @@ export default function Lista() {
   }
 
   async function iniciarCompra() {
+    if (compraAberta) {
+      setPainelCompraAbertaAberto(true);
+      return;
+    }
     const compraId = await iniciar(itens);
     router.push(`/compra/${compraId}`);
+  }
+
+  async function continuarCompra() {
+    if (!compraAberta) {
+      return;
+    }
+    setPainelCompraAbertaAberto(false);
+    // Reutiliza `iniciar()` (não abre outra compra: `obterOuAbrirCompra`
+    // devolve a mesma aberta) para sincronizar `valorEstimadoUnit` de itens
+    // ainda não comprados, mesma regra de "Iniciar compra" (spec modo-compra,
+    // cenário "Preço editado depois da materialização é sincronizado ao
+    // reabrir a compra").
+    const compraId = await iniciar(itens);
+    router.push(`/compra/${compraId}`);
+  }
+
+  function comecarNovaLista() {
+    if (compraAberta?.possuiProgresso) {
+      setPainelCompraAbertaAberto(false);
+      setConfirmarDescarte(true);
+      return;
+    }
+    void recomecarESeguir();
+  }
+
+  async function recomecarESeguir() {
+    const resultado = await recomecar(itens);
+    setPainelCompraAbertaAberto(false);
+    setConfirmarDescarte(false);
+    if (resultado.ok) {
+      router.push(`/compra/${resultado.compraId}`);
+    }
   }
 
   const listaVazia = !carregando && itens.length === 0;
@@ -175,11 +218,24 @@ export default function Lista() {
             contagemSemPreco={total.contagemSemPreco}
           />
 
+          {compraAberta ? (
+            <View
+              style={{
+                paddingHorizontal: espaco.lg,
+                paddingBottom: espaco.sm,
+              }}
+            >
+              <Texto papel="label" tom="secondary">
+                {`Compra em andamento · ${compraAberta.marcados} de ${compraAberta.total}`}
+              </Texto>
+            </View>
+          ) : null}
+
           <View style={{ paddingHorizontal: espaco.lg, paddingBottom: espaco.md }}>
             <Botao
               titulo={`Iniciar compra (${total.contagemItens})`}
               onPress={() => void iniciarCompra()}
-              disabled={iniciando}
+              disabled={iniciando || recomecando}
             />
           </View>
 
@@ -318,6 +374,42 @@ export default function Lista() {
           onFim={limpar}
         />
       ) : null}
+
+      <PainelInferior
+        visivel={painelCompraAbertaAberto}
+        onFechar={() => setPainelCompraAbertaAberto(false)}
+      >
+        <View style={{ padding: espaco.lg, gap: espaco.md }}>
+          <Texto papel="display.sm">Compra em andamento</Texto>
+          <Texto papel="label" tom="secondary">
+            {compraAberta
+              ? `${compraAberta.marcados} de ${compraAberta.total} itens já anotados nesse rascunho.`
+              : ''}
+          </Texto>
+          <Botao titulo="Continuar compra" onPress={continuarCompra} />
+          <Botao titulo="Começar nova lista" variante="secundario" onPress={comecarNovaLista} />
+          <Botao
+            titulo="Cancelar"
+            variante="secundario"
+            onPress={() => setPainelCompraAbertaAberto(false)}
+          />
+        </View>
+      </PainelInferior>
+
+      <PainelInferior visivel={confirmarDescarte} onFechar={() => setConfirmarDescarte(false)}>
+        <View style={{ padding: espaco.lg, gap: espaco.md }}>
+          <Texto papel="display.sm">Começar nova lista?</Texto>
+          <Texto papel="label" tom="secondary">
+            O rascunho atual não será aplicado ao estoque. A nova compra usa a lista de agora.
+          </Texto>
+          <Botao titulo="Começar nova lista" onPress={() => void recomecarESeguir()} />
+          <Botao
+            titulo="Manter rascunho"
+            variante="secundario"
+            onPress={() => setConfirmarDescarte(false)}
+          />
+        </View>
+      </PainelInferior>
     </TelaBase>
   );
 }

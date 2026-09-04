@@ -1,8 +1,9 @@
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react-native';
 import { ReactNode } from 'react';
 import * as mockReact from 'react';
 import { Alert } from 'react-native';
 
+import { useAvisoCompraStore } from '@/application/compra/aviso-compra-store';
 import { ThemeProvider } from '@/presentation/theme/provider';
 import ModoCompra from './[id]';
 
@@ -12,6 +13,7 @@ const mockReplace = jest.fn();
 const mockUseKeepAwake = jest.fn();
 const mockFinalizar = jest.fn();
 const mockCancelar = jest.fn();
+const mockDivergencias = jest.fn(async () => [] as unknown[]);
 
 jest.mock('expo-router', () => ({
   router: { push: (...a: unknown[]) => mockPush(...a), replace: (...a: unknown[]) => mockReplace(...a) },
@@ -26,6 +28,8 @@ jest.mock('expo-keep-awake', () => ({
 jest.mock('@/application/lista/use-preferencia-agrupamento', () => ({
   usePreferenciaDeAgrupamento: () => ({ agrupado: true, alternar: jest.fn() }),
 }));
+
+let mockCarregando = false;
 
 let mockItensIniciais: {
   item: {
@@ -70,10 +74,11 @@ jest.mock('@/application/compra/use-modo-compra', () => ({
     );
     return {
       itens,
-      carregando: false,
+      carregando: mockCarregando,
       marcar,
       desmarcar,
       ajustarQuantidade: async () => {},
+      ajustarQuantidadeRapida: async () => {},
       ajustarPreco: async () => {},
       responderAtualizarPreco: async () => {},
     };
@@ -81,7 +86,7 @@ jest.mock('@/application/compra/use-modo-compra', () => ({
 }));
 
 jest.mock('@/application/compra/use-finalizar-compra', () => ({
-  useFinalizarCompra: () => ({ finalizando: false, finalizar: mockFinalizar }),
+  useFinalizarCompra: () => ({ finalizando: false, divergencias: mockDivergencias, finalizar: mockFinalizar }),
 }));
 
 jest.mock('@/application/compra/use-cancelar-compra', () => ({
@@ -122,6 +127,8 @@ describe('ModoCompra (app/compra/[id].tsx)', () => {
     mockUseKeepAwake.mockClear();
     mockFinalizar.mockReset();
     mockCancelar.mockReset();
+    mockCarregando = false;
+    useAvisoCompraStore.getState().limpar();
     jest.spyOn(Alert, 'alert').mockImplementation(() => {});
   });
 
@@ -135,6 +142,27 @@ describe('ModoCompra (app/compra/[id].tsx)', () => {
     mockItensIniciais = [itemFake('i1', 'Arroz')];
     await comTema(<ModoCompra />);
     expect(mockUseKeepAwake).toHaveBeenCalled();
+  });
+
+  // Achado de QA: a tela ficava totalmente em branco (`return null`) enquanto
+  // `carregando` era true — crítico logo após "Começar nova lista", quando a
+  // navegação chega antes do primeiro carregamento da compra recém-criada.
+  it('não fica em branco enquanto os itens ainda carregam — mostra a estrutura da tela e um aviso de carregamento', async () => {
+    mockCarregando = true;
+    mockItensIniciais = [];
+    await comTema(<ModoCompra />);
+    expect(screen.getByText('Compra')).toBeTruthy();
+    expect(
+      screen.getByText('Toque em cada item para marcar. Se sair, a compra continua aberta com o que você já marcou.'),
+    ).toBeTruthy();
+    expect(screen.getByText('Preparando sua compra…')).toBeTruthy();
+  });
+
+  it('item já no piso de quantidade (1 un) chega com o controle de diminuir desabilitado', async () => {
+    mockItensIniciais = [itemFake('i1', 'Arroz')];
+    await comTema(<ModoCompra />);
+    const botaoDiminuir = screen.getByRole('button', { name: 'Diminuir quantidade de Arroz' });
+    expect(botaoDiminuir.props.accessibilityState.disabled).toBe(true);
   });
 
   // ACHADO-035 (task 5.1): marcar/ajustar não navega — tela única (D3).
@@ -196,10 +224,13 @@ describe('ModoCompra (app/compra/[id].tsx)', () => {
     expect(mockBack).toHaveBeenCalledTimes(1);
   });
 
-  // ACHADO-035 (tasks 5.4/5.5): mensagem em linguagem do usuário e retorno
-  // à despensa após o toast de sucesso terminar.
-  it('fechar a compra mostra "Você repôs N itens" e volta à despensa após o toast', async () => {
-    jest.useFakeTimers();
+  // ACHADO-035 (tasks 5.4/5.5): mensagem em linguagem do usuário.
+  // Achado de QA: esperar o toast sumir (5s) pra só então voltar à Despensa
+  // travava quem já fechou a compra e quer seguir. Navega na hora — o toast
+  // local não teria tempo de aparecer (a tela desmonta com a navegação) —
+  // e a mensagem viaja pela store global (`useAvisoCompraStore`) pra
+  // aparecer já na Despensa, que costuma continuar montada por trás.
+  it('fechar a compra navega pra despensa na hora, levando "Você repôs N itens" pela store global', async () => {
     mockItensIniciais = [itemFake('i1', 'Arroz', true)];
     mockFinalizar.mockResolvedValue({ ok: true, itensRepostos: 2 });
     await comTema(<ModoCompra />);
@@ -207,14 +238,8 @@ describe('ModoCompra (app/compra/[id].tsx)', () => {
     await act(async () => {
       fireEvent.press(screen.getByLabelText('Fechar compra'));
     });
-    await waitFor(() => expect(screen.getByText('Você repôs 2 itens')).toBeTruthy());
-    expect(mockReplace).not.toHaveBeenCalled();
-
-    await act(async () => {
-      jest.advanceTimersByTime(5000);
-    });
-    expect(mockReplace).toHaveBeenCalledWith('/');
-    jest.useRealTimers();
+    await waitFor(() => expect(mockReplace).toHaveBeenCalledWith('/'));
+    expect(useAvisoCompraStore.getState().mensagem).toBe('Você repôs 2 itens');
   });
 
   it('fechar a compra com 1 item reposto usa singular: "Você repôs 1 item"', async () => {
@@ -225,7 +250,9 @@ describe('ModoCompra (app/compra/[id].tsx)', () => {
     await act(async () => {
       fireEvent.press(screen.getByLabelText('Fechar compra'));
     });
-    await waitFor(() => expect(screen.getByText('Você repôs 1 item')).toBeTruthy());
+    await waitFor(() =>
+      expect(useAvisoCompraStore.getState().mensagem).toBe('Você repôs 1 item'),
+    );
   });
 
   // ACHADO-052 (task 7.3): RodapeCompra aparece imediatamente acima do botão
@@ -240,5 +267,155 @@ describe('ModoCompra (app/compra/[id].tsx)', () => {
 
     expect(indiceRodape).toBeGreaterThan(-1);
     expect(indiceBotao).toBeGreaterThan(indiceRodape);
+  });
+});
+
+describe('ModoCompra — revisão agrupada de preço no fechamento', () => {
+  beforeEach(() => {
+    mockFinalizar.mockReset();
+    mockFinalizar.mockResolvedValue({ ok: true, itensRepostos: 1 });
+    mockDivergencias.mockReset();
+    mockDivergencias.mockResolvedValue([]);
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  it('sem divergência de preço, fecha direto sem mostrar revisão', async () => {
+    mockItensIniciais = [itemFake('i1', 'Arroz', true)];
+    mockDivergencias.mockResolvedValue([]);
+    await comTema(<ModoCompra />);
+
+    await act(async () => {
+      fireEvent.press(screen.getByLabelText('Fechar compra'));
+    });
+
+    await waitFor(() => expect(mockFinalizar).toHaveBeenCalledTimes(1));
+    expect(screen.queryByText(/preços diferentes/)).toBeNull();
+  });
+
+  it('com divergência, mostra a revisão agrupada em vez de fechar direto', async () => {
+    mockItensIniciais = [itemFake('i1', 'Arroz', true)];
+    mockDivergencias.mockResolvedValue([
+      { itemId: 'i1', produtoId: 'p-i1', nome: 'Arroz', precoSalvo: 500, precoPago: 700, primeiroPreco: false },
+    ]);
+    await comTema(<ModoCompra />);
+
+    await act(async () => {
+      fireEvent.press(screen.getByLabelText('Fechar compra'));
+    });
+
+    await waitFor(() => expect(screen.getByText(/^1 preço diferente$/)).toBeTruthy());
+    expect(mockFinalizar).not.toHaveBeenCalled();
+  });
+
+  it('"Atualizar N" confirma o fechamento com todos os divergentes selecionados', async () => {
+    mockItensIniciais = [itemFake('i1', 'Arroz', true)];
+    mockDivergencias.mockResolvedValue([
+      { itemId: 'i1', produtoId: 'p-i1', nome: 'Arroz', precoSalvo: 500, precoPago: 700, primeiroPreco: false },
+    ]);
+    await comTema(<ModoCompra />);
+
+    await act(async () => {
+      fireEvent.press(screen.getByLabelText('Fechar compra'));
+    });
+    await waitFor(() => expect(screen.getByText(/^1 preço diferente$/)).toBeTruthy());
+
+    await act(async () => {
+      fireEvent.press(screen.getByText('Atualizar 1'));
+    });
+
+    await waitFor(() => expect(mockFinalizar).toHaveBeenCalledTimes(1));
+  });
+
+  it('"Manter preços salvos" confirma o fechamento sem selecionar nenhum', async () => {
+    mockItensIniciais = [itemFake('i1', 'Arroz', true)];
+    mockDivergencias.mockResolvedValue([
+      { itemId: 'i1', produtoId: 'p-i1', nome: 'Arroz', precoSalvo: 500, precoPago: 700, primeiroPreco: false },
+    ]);
+    await comTema(<ModoCompra />);
+
+    await act(async () => {
+      fireEvent.press(screen.getByLabelText('Fechar compra'));
+    });
+    await waitFor(() => expect(screen.getByText(/^1 preço diferente$/)).toBeTruthy());
+
+    await act(async () => {
+      fireEvent.press(screen.getByText('Manter preços salvos'));
+    });
+
+    await waitFor(() => expect(mockFinalizar).toHaveBeenCalledTimes(1));
+  });
+
+  it('"Escolher quais atualizar" permite selecionar exceções por produto', async () => {
+    mockItensIniciais = [itemFake('i1', 'Arroz', true)];
+    mockDivergencias.mockResolvedValue([
+      { itemId: 'i1', produtoId: 'p-i1', nome: 'Arroz', precoSalvo: 500, precoPago: 700, primeiroPreco: false },
+      { itemId: 'i2', produtoId: 'p-i2', nome: 'Feijão', precoSalvo: 400, precoPago: 450, primeiroPreco: false },
+    ]);
+    await comTema(<ModoCompra />);
+
+    await act(async () => {
+      fireEvent.press(screen.getByLabelText('Fechar compra'));
+    });
+    await waitFor(() => expect(screen.getByText(/^2 preços diferentes$/)).toBeTruthy());
+
+    await act(async () => {
+      fireEvent.press(screen.getByText('Escolher quais atualizar'));
+    });
+    // Achado de QA: os dois itens vinham selecionados por padrão, mas sem
+    // NENHUM indicador visual — usuário não tinha como saber o que estava
+    // marcado só olhando a lista, só pelo contador no botão do rodapé.
+    await waitFor(() => expect(screen.getByRole('checkbox', { name: /Feijão/ })).toBeTruthy());
+    expect(within(screen.getByRole('checkbox', { name: /Feijão/ })).getByText('✓')).toBeTruthy();
+
+    await act(async () => {
+      fireEvent.press(screen.getByRole('checkbox', { name: /Feijão/ }));
+    });
+    await waitFor(() => expect(screen.getByLabelText('Confirmar 1 selecionado')).toBeTruthy());
+    expect(within(screen.getByRole('checkbox', { name: /Feijão/ })).queryByText('✓')).toBeNull();
+
+    await act(async () => {
+      fireEvent.press(screen.getByLabelText('Confirmar 1 selecionado'));
+    });
+
+    await waitFor(() => expect(mockFinalizar).toHaveBeenCalledTimes(1));
+  });
+
+  it('produto sem preço salvo mostra "sem preço salvo" na revisão', async () => {
+    mockItensIniciais = [itemFake('i1', 'Feijão', true)];
+    mockDivergencias.mockResolvedValue([
+      { itemId: 'i1', produtoId: 'p-i1', nome: 'Feijão', precoSalvo: 0, precoPago: 450, primeiroPreco: true },
+    ]);
+    await comTema(<ModoCompra />);
+
+    await act(async () => {
+      fireEvent.press(screen.getByLabelText('Fechar compra'));
+    });
+    await waitFor(() => expect(screen.getByText(/^1 preço diferente$/)).toBeTruthy());
+
+    await act(async () => {
+      fireEvent.press(screen.getByText('Escolher quais atualizar'));
+    });
+
+    await waitFor(() => expect(screen.getByText(/Sem preço salvo/)).toBeTruthy());
+  });
+
+  it('fechar a revisão sem confirmar preserva a compra aberta, sem chamar finalizar', async () => {
+    mockItensIniciais = [itemFake('i1', 'Arroz', true)];
+    mockDivergencias.mockResolvedValue([
+      { itemId: 'i1', produtoId: 'p-i1', nome: 'Arroz', precoSalvo: 500, precoPago: 700, primeiroPreco: false },
+    ]);
+    await comTema(<ModoCompra />);
+
+    await act(async () => {
+      fireEvent.press(screen.getByLabelText('Fechar compra'));
+    });
+    await waitFor(() => expect(screen.getByText(/^1 preço diferente$/)).toBeTruthy());
+
+    fireEvent.press(screen.getByLabelText('Fechar'));
+
+    expect(mockFinalizar).not.toHaveBeenCalled();
   });
 });

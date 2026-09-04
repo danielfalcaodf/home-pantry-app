@@ -80,8 +80,20 @@ const mockUseRemoverItemDaLista = jest.fn(() => ({
 jest.mock('@/application/lista/use-remover-item-lista', () => ({
   useRemoverItemDaLista: () => mockUseRemoverItemDaLista(),
 }));
+const mockIniciar = jest.fn().mockResolvedValue('compra-1');
 jest.mock('@/application/compra/use-iniciar-compra', () => ({
-  useIniciarCompra: () => ({ iniciando: false, iniciar: jest.fn() }),
+  useIniciarCompra: () => ({ iniciando: false, iniciar: mockIniciar }),
+}));
+const mockUseResumoCompraAberta = jest.fn(() => ({
+  resumo: null as { compraId: string; marcados: number; total: number; possuiProgresso: boolean } | null,
+  carregando: false,
+}));
+jest.mock('@/application/compra/use-resumo-compra-aberta', () => ({
+  useResumoCompraAberta: () => mockUseResumoCompraAberta(),
+}));
+const mockRecomecar = jest.fn().mockResolvedValue({ ok: true, compraId: 'compra-nova' });
+jest.mock('@/application/compra/use-recomecar-compra', () => ({
+  useRecomecarCompra: () => ({ recomecando: false, recomecar: mockRecomecar }),
 }));
 const mockEditarProduto = jest.fn().mockResolvedValue({ ok: true });
 jest.mock('@/application/estoque/use-editar-produto', () => ({
@@ -320,5 +332,98 @@ describe('Lista — seção de desativados (exclusão é temporária, não some 
     expect(cabecalho).toBeTruthy();
     fireEvent.press(cabecalho);
     await waitFor(() => expect(screen.getByText('Manteiga')).toBeTruthy());
+  });
+});
+
+describe('Lista — compra em andamento (change melhorias-usabilidade-modo-compra)', () => {
+  afterEach(() => {
+    mockUseResumoCompraAberta.mockReset();
+    mockUseResumoCompraAberta.mockReturnValue({ resumo: null, carregando: false });
+    mockRecomecar.mockClear();
+  });
+
+  it('sem compra aberta, não mostra a faixa de progresso', async () => {
+    mockUseResumoCompraAberta.mockReturnValue({ resumo: null, carregando: false });
+
+    await comTema(<Lista />);
+
+    expect(screen.queryByText(/Compra em andamento/)).toBeNull();
+  });
+
+  it('com compra aberta, mostra a faixa persistente com o progresso', async () => {
+    mockUseResumoCompraAberta.mockReturnValue({
+      resumo: { compraId: 'compra-1', marcados: 3, total: 8, possuiProgresso: true },
+      carregando: false,
+    });
+
+    await comTema(<Lista />);
+
+    expect(screen.getByText(/Compra em andamento/)).toBeTruthy();
+    expect(screen.getByText(/3 de 8/)).toBeTruthy();
+  });
+
+  it('tocar em "Iniciar compra" com rascunho aberto abre o painel de decisão em vez de navegar direto', async () => {
+    mockUseResumoCompraAberta.mockReturnValue({
+      resumo: { compraId: 'compra-1', marcados: 0, total: 3, possuiProgresso: false },
+      carregando: false,
+    });
+
+    await comTema(<Lista />);
+    fireEvent.press(screen.getByText(/Iniciar compra/));
+
+    await waitFor(() => expect(screen.getByText('Continuar compra')).toBeTruthy());
+    expect(screen.getByText('Começar nova lista')).toBeTruthy();
+  });
+
+  it('"Continuar compra" sincroniza preços da compra aberta (não cancela nem recria)', async () => {
+    mockUseResumoCompraAberta.mockReturnValue({
+      resumo: { compraId: 'compra-1', marcados: 0, total: 3, possuiProgresso: false },
+      carregando: false,
+    });
+
+    await comTema(<Lista />);
+    fireEvent.press(screen.getByText(/Iniciar compra/));
+    await waitFor(() => expect(screen.getByText('Continuar compra')).toBeTruthy());
+    fireEvent.press(screen.getByText('Continuar compra'));
+
+    // "Continuar compra" reutiliza `iniciar()` — que resolve para a MESMA
+    // compra aberta via `obterOuAbrirCompra` — para sincronizar
+    // `valorEstimadoUnit` de itens ainda não comprados quando o preço do
+    // produto mudou na Lista/Despensa depois da materialização (regressão
+    // real: preço editado ficava congelado ao continuar a compra).
+    await waitFor(() => expect(mockIniciar).toHaveBeenCalledWith(mockItens));
+    expect(mockRecomecar).not.toHaveBeenCalled();
+  });
+
+  it('"Começar nova lista" sem progresso recomeça direto, sem pedir confirmação', async () => {
+    mockUseResumoCompraAberta.mockReturnValue({
+      resumo: { compraId: 'compra-1', marcados: 0, total: 3, possuiProgresso: false },
+      carregando: false,
+    });
+
+    await comTema(<Lista />);
+    fireEvent.press(screen.getByText(/Iniciar compra/));
+    await waitFor(() => expect(screen.getByText('Começar nova lista')).toBeTruthy());
+    fireEvent.press(screen.getByText('Começar nova lista'));
+
+    await waitFor(() => expect(mockRecomecar).toHaveBeenCalledTimes(1));
+  });
+
+  it('"Começar nova lista" com progresso exige confirmação antes de recomeçar', async () => {
+    mockUseResumoCompraAberta.mockReturnValue({
+      resumo: { compraId: 'compra-1', marcados: 2, total: 3, possuiProgresso: true },
+      carregando: false,
+    });
+
+    await comTema(<Lista />);
+    fireEvent.press(screen.getByText(/Iniciar compra/));
+    await waitFor(() => expect(screen.getByText('Começar nova lista')).toBeTruthy());
+    fireEvent.press(screen.getByText('Começar nova lista'));
+
+    expect(mockRecomecar).not.toHaveBeenCalled();
+    await waitFor(() => expect(screen.getByText(/rascunho/i)).toBeTruthy());
+    // Achado de QA: os dois painéis apareciam sobrepostos por um frame —
+    // o painel de decisão precisa fechar ao abrir o de confirmação.
+    expect(screen.queryByText('Compra em andamento')).toBeNull();
   });
 });

@@ -1,13 +1,14 @@
 import { Pressable, View } from 'react-native';
 
 import { CompraItem } from '../../domain/compra/compra';
-import { formatarBRL } from '../../domain/shared/dinheiro';
+import { Centavos, formatarBRL } from '../../domain/shared/dinheiro';
 import { formatarQuantidade } from '../../domain/shared/quantidade';
 import { ALVO_TOQUE_MINIMO, espaco, raio } from '../theme/espaco';
 import { icones } from '../theme/icones';
 import { useTheme } from '../theme/provider';
-import { ChipEstado } from './chip-estado';
+import { BotaoReporRapido } from './botao-repor-rapido';
 import { IconeSvg } from './icone-svg';
+import { StepperConsumo } from './stepper-consumo';
 import { Texto } from './texto';
 
 const LADO_MARCACAO = 28;
@@ -24,10 +25,16 @@ export type LinhaDeCompra = {
 
 export type ItemCompraProps = {
   linha: LinhaDeCompra;
+  /** Custo da linha inteira (quantidade × preço unitário) — nunca o preço
+   *  por unidade sozinho: achado de QA, "2 caixas, R$33,99" lia como se
+   *  33,99 fosse o total, quando era só o valor de uma unidade. */
+  custoTotal: Centavos;
   onMarcar: () => void;
   onDesmarcar: () => void;
   onAjustar: () => void;
-  onResponderPreco: (resposta: boolean) => void;
+  onDiminuirQuantidade?: () => void;
+  onAumentarQuantidade?: () => void;
+  podeDiminuirQuantidade?: boolean;
 };
 
 /**
@@ -36,7 +43,16 @@ export type ItemCompraProps = {
  * você anda pelo mercado". A pergunta de preço é embutida na linha, nunca um
  * diálogo modal (D4) — não pode travar a marcação do próximo item.
  */
-export function ItemCompra({ linha, onMarcar, onDesmarcar, onAjustar, onResponderPreco }: ItemCompraProps) {
+export function ItemCompra({
+  linha,
+  custoTotal,
+  onMarcar,
+  onDesmarcar,
+  onAjustar,
+  onDiminuirQuantidade,
+  onAumentarQuantidade,
+  podeDiminuirQuantidade = true,
+}: ItemCompraProps) {
   const tema = useTheme();
   const { item, produto } = linha;
   const nome = item.nomeAvulso ?? produto?.nome ?? '';
@@ -45,16 +61,26 @@ export function ItemCompra({ linha, onMarcar, onDesmarcar, onAjustar, onResponde
   const semPreco = precoPorUnidade <= 0;
 
   return (
-    <View style={{ borderBottomWidth: 1, borderBottomColor: tema.line.hairline }}>
+    <View
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        minHeight: ALVO_TOQUE_MINIMO,
+        borderBottomWidth: 1,
+        borderBottomColor: tema.line.hairline,
+        paddingRight: espaco.sm,
+      }}
+    >
       <Pressable
         onPress={() => (item.comprado ? onDesmarcar() : onMarcar())}
         onLongPress={onAjustar}
         accessibilityRole="checkbox"
         accessibilityState={{ checked: item.comprado }}
         accessibilityLabel={`${nome}, ${formatarQuantidade(quantidade, item.unidade)}${
-          semPreco ? ', sem preço' : `, ${formatarBRL(precoPorUnidade)}`
+          semPreco ? ', sem preço' : `, ${formatarBRL(custoTotal)}`
         }`}
         style={{
+          flex: 1,
           minHeight: ALVO_TOQUE_MINIMO,
           flexDirection: 'row',
           alignItems: 'center',
@@ -102,63 +128,51 @@ export function ItemCompra({ linha, onMarcar, onDesmarcar, onAjustar, onResponde
           >
             {nome}
           </Texto>
-          <Texto papel="label" tom="secondary">
-            {formatarQuantidade(quantidade, item.unidade)}
-          </Texto>
-        </View>
-
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: espaco.xs }}>
-          <View style={{ minWidth: 88, alignItems: 'flex-end' }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: espaco.sm }}>
+            <Texto papel="label" tom="secondary">
+              {formatarQuantidade(quantidade, item.unidade)}
+            </Texto>
             {semPreco ? (
               <Texto papel="label" tom="secondary">
                 sem preço
               </Texto>
             ) : (
               <Texto papel="data.md" tom={item.comprado ? 'secondary' : 'primary'}>
-                {formatarBRL(precoPorUnidade)}
+                {formatarBRL(custoTotal)}
               </Texto>
             )}
           </View>
-          {/* Caminho visível para o mesmo ajuste do toque longo (mesmo
-              padrão já resolvido em produto/[id].tsx) — gesto invisível não
-              pode ser o único acesso (correcao-acabamento-header-stepper-e-affordance,
-              achado 4). Pressable aninhado: o toque aqui não propaga para o
-              onPress/onLongPress do Pressable pai. */}
-          <Pressable
-            testID="icone-ajustar"
-            onPress={onAjustar}
-            accessibilityRole="button"
-            accessibilityLabel={`Ajustar quantidade e preço de ${nome}`}
-            hitSlop={8}
-            style={{
-              minWidth: ALVO_TOQUE_MINIMO,
-              minHeight: ALVO_TOQUE_MINIMO,
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <IconeSvg path={icones.ajustar} cor={tema.text.secondary} tamanho={16} />
-          </Pressable>
         </View>
       </Pressable>
 
-      {item.comprado && linha.divergePreco ? (
-        <View
+      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+        <StepperConsumo
+          rotuloAcessivel={`Diminuir quantidade de ${nome}`}
+          desabilitado={!podeDiminuirQuantidade}
+          onRegistrar={onDiminuirQuantidade ?? (() => {})}
+          onAbrirTeclado={onAjustar}
+        />
+        <BotaoReporRapido
+          rotuloAcessivel={`Aumentar quantidade de ${nome}`}
+          onRegistrar={onAumentarQuantidade ?? (() => {})}
+          onAbrirTeclado={onAjustar}
+        />
+        <Pressable
+          testID="icone-ajustar"
+          onPress={onAjustar}
+          accessibilityRole="button"
+          accessibilityLabel={`Ajustar quantidade e preço de ${nome}`}
+          hitSlop={8}
           style={{
-            flexDirection: 'row',
+            minWidth: ALVO_TOQUE_MINIMO,
+            minHeight: ALVO_TOQUE_MINIMO,
             alignItems: 'center',
-            gap: espaco.sm,
-            paddingHorizontal: espaco.lg,
-            paddingBottom: espaco.md,
+            justifyContent: 'center',
           }}
         >
-          <Texto papel="label" tom="secondary" style={{ flex: 1 }}>
-            Atualizar o preço de {nome} para {formatarBRL(precoPorUnidade)}?
-          </Texto>
-          <ChipEstado rotulo="Sim" ativo={item.atualizarPreco === true} onPress={() => onResponderPreco(true)} />
-          <ChipEstado rotulo="Não" ativo={item.atualizarPreco === false} onPress={() => onResponderPreco(false)} />
-        </View>
-      ) : null}
+          <IconeSvg path={icones.ajustar} cor={tema.text.secondary} tamanho={16} />
+        </Pressable>
+      </View>
     </View>
   );
 }

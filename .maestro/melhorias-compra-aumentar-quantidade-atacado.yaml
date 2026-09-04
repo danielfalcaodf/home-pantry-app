@@ -1,0 +1,43 @@
+appId: com.danielfalcaodf.repor
+---
+# Ajuste rápido de quantidade no atacado (change
+# melhorias-usabilidade-modo-compra, task 1.5, cenários "Aumentar
+# rapidamente a quantidade planejada" e "Aumentar quantidade já marcada" da
+# spec modo-compra).
+#
+# Efeito colateral real, irreversível pela UI: fecha a compra com "Açúcar"
+# marcado e quantidade aumentada por atacado (3 kg em vez de 1 kg planejado),
+# repondo o produto.
+- launchApp
+- assertVisible: "Despensa"
+- tapOn: "Lista"
+- tapOn:
+    text: "Iniciar compra \\(\\d+\\)"
+- scrollUntilVisible:
+    element: "Açúcar, 1 kg, sem preço"
+    direction: DOWN
+    timeout: 15000
+    speed: 40
+- assertVisible: "Açúcar, 1 kg, sem preço"
+- tapOn: "Aumentar quantidade de Açúcar"
+- assertVisible: "Açúcar, 1,1 kg, sem preço"
+- tapOn: "Aumentar quantidade de Açúcar"
+- assertVisible: "Açúcar, 1,2 kg, sem preço"
+- tapOn: "Açúcar, 1,2 kg, sem preço"
+- assertVisible:
+    text: "Açúcar, 1,2 kg, sem preço"
+    checked: true
+- tapOn: "Aumentar quantidade de Açúcar"
+- assertVisible:
+    text: "Açúcar, 1,3 kg, sem preço"
+    checked: true
+- tapOn: "Fechar compra"
+- assertVisible: "Despensa"
+- tapOn: "Tudo"
+- scrollUntilVisible:
+    element: "Açúcar"
+    direction: DOWN
+    timeout: 15000
+    speed: 40
+- assertVisible: "Açúcar"
+- assertVisible: "1,3 de 1 kg"

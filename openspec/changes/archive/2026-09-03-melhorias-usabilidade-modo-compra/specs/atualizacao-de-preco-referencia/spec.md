@@ -1,8 +1,5 @@
-# atualizacao-de-preco-referencia Specification
+## MODIFIED Requirements
 
-## Purpose
-TBD - created by archiving change modo-compra-e-fechamento. Update Purpose after archive.
-## Requirements
 ### Requirement: Divergência de preço é detectada e revisada no fechamento
 
 Quando o valor pago por unidade diferir do valor unitário cadastrado do produto, o app SHALL
@@ -82,12 +79,3 @@ de manter os preços salvos SHALL preservar o valor cadastrado.
 
 - **WHEN** o fechamento falha
 - **THEN** nenhum valor unitário de produto foi alterado
-
-### Requirement: Item avulso não tem preço de referência
-
-Itens avulsos SHALL ser tratados como sem preço de referência, e NÃO devem gerar pergunta de atualização de preço, pois não correspondem a nenhum produto cadastrado.
-
-#### Scenario: Avulso sem pergunta
-
-- **WHEN** um item avulso marcado tem preço pago informado
-- **THEN** nenhuma pergunta de atualização de preço de referência é feita

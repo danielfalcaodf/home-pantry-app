@@ -167,6 +167,34 @@ describe('useFinalizarCompra', () => {
   });
 });
 
+describe('revisão agrupada de preço', () => {
+  it('expõe apenas divergências marcadas com produto antes de fechar', async () => {
+    const { produtos, compras, compraId, item1, item2, avulso } = await prepararCompra();
+    await compras.editarItem(item1.id, {
+      comprado: true,
+      quantidadeComprada: milesimos(2000),
+      valorPagoUnitario: centavos(950),
+    });
+    await compras.editarItem(item2.id, {
+      comprado: true,
+      quantidadeComprada: milesimos(1000),
+      valorPagoUnitario: centavos(700),
+    });
+    await compras.editarItem(avulso.id, {
+      comprado: true,
+      quantidadeComprada: milesimos(1000),
+      valorPagoUnitario: centavos(300),
+    });
+    const { result } = await renderHook(() => useFinalizarCompra(compras, produtos));
+
+    await act(async () => {
+      expect(await result.current.divergencias(compraId)).toEqual([
+        expect.objectContaining({ itemId: item1.id, produtoId: 'p1', primeiroPreco: false }),
+      ]);
+    });
+  });
+});
+
 describe('atualização de preço de referência no fechamento', () => {
   it('confirmação (atualizarPreco true) atualiza o valor unitário do produto', async () => {
     const { produtos, compras, compraId, item1 } = await prepararCompra();

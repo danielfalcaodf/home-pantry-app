@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import { divergenciaDePreco } from '../../domain/compra/compra.rules';
+import { ajustarQuantidadeRapida as calcularQuantidadeRapida } from '../../domain/compra/quantidade-compra.rules';
 import { Centavos } from '../../domain/shared/dinheiro';
 import { Milesimos } from '../../domain/shared/quantidade';
 import { observadorDoBanco } from '../../composicao/observador';
@@ -28,6 +29,7 @@ export type EstadoModoCompra = {
   marcar: (item: ItemComProduto) => Promise<void>;
   desmarcar: (itemId: string) => Promise<void>;
   ajustarQuantidade: (itemId: string, quantidadeComprada: Milesimos) => Promise<void>;
+  ajustarQuantidadeRapida: (itemId: string, direcao: -1 | 1) => Promise<void>;
   ajustarPreco: (itemId: string, valorPagoUnitario: Centavos | null) => Promise<void>;
   responderAtualizarPreco: (itemId: string, resposta: boolean) => Promise<void>;
 };
@@ -96,7 +98,7 @@ export function useModoCompra(
 
   const desmarcar = useCallback(
     async (itemId: string) => {
-      await compras.editarItem(itemId, { comprado: false });
+      await compras.editarItem(itemId, { comprado: false, atualizarPreco: null });
     },
     [compras],
   );
@@ -106,6 +108,20 @@ export function useModoCompra(
       await compras.editarItem(itemId, { quantidadeComprada });
     },
     [compras],
+  );
+
+  const ajustarQuantidadeRapida = useCallback(
+    async (itemId: string, direcao: -1 | 1) => {
+      const item = itens.find((linha) => linha.item.id === itemId)?.item;
+      if (!item) {
+        return;
+      }
+      const atual = item.quantidadeComprada ?? item.quantidadePlanejada;
+      await compras.editarItem(itemId, {
+        quantidadeComprada: calcularQuantidadeRapida(atual, item.unidade, direcao),
+      });
+    },
+    [compras, itens],
   );
 
   const ajustarPreco = useCallback(
@@ -122,5 +138,14 @@ export function useModoCompra(
     [compras],
   );
 
-  return { itens, carregando, marcar, desmarcar, ajustarQuantidade, ajustarPreco, responderAtualizarPreco };
+  return {
+    itens,
+    carregando,
+    marcar,
+    desmarcar,
+    ajustarQuantidade,
+    ajustarQuantidadeRapida,
+    ajustarPreco,
+    responderAtualizarPreco,
+  };
 }

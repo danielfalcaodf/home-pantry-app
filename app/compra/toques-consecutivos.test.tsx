@@ -3,6 +3,7 @@ import { act, cleanup, fireEvent, render, renderHook, screen, waitFor } from '@t
 import { ItemDaCompra, useModoCompra } from '@/application/compra/use-modo-compra';
 import { ObservadorFalso, produtoFalso, ProdutoRepositorioFalso } from '@/application/estoque/teste/repositorio-falso';
 import { CompraRepositorioFalso } from '@/application/lista/teste/repositorio-compra-falso';
+import { multiplicarQuantidadePorPreco } from '@/domain/shared/dinheiro';
 import { milesimos } from '@/domain/shared/quantidade';
 import { ItemCompra } from '@/presentation/components/item-compra';
 import { ThemeProvider } from '@/presentation/theme/provider';
@@ -21,10 +22,13 @@ function ListaDeTeste({ itens, marcar }: { itens: ItemDaCompra[]; marcar: (item:
         <ItemCompra
           key={linha.item.id}
           linha={linha}
+          custoTotal={multiplicarQuantidadePorPreco(
+            linha.item.quantidadeComprada ?? linha.item.quantidadePlanejada,
+            linha.item.valorPagoUnitario ?? linha.item.valorEstimadoUnit,
+          )}
           onMarcar={() => marcar(linha)}
           onDesmarcar={() => {}}
           onAjustar={() => {}}
-          onResponderPreco={() => {}}
         />
       ))}
     </>
