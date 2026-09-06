@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { divergenciaDePreco } from '../../domain/compra/compra.rules';
 import { ajustarQuantidadeRapida as calcularQuantidadeRapida } from '../../domain/compra/quantidade-compra.rules';
+import { derivarComPacotes, FatorConversao } from '../../domain/produto/conversao-embalagem.rules';
 import { Centavos } from '../../domain/shared/dinheiro';
 import { Milesimos } from '../../domain/shared/quantidade';
 import { observadorDoBanco } from '../../composicao/observador';
@@ -31,6 +32,19 @@ export type EstadoModoCompra = {
   ajustarQuantidade: (itemId: string, quantidadeComprada: Milesimos) => Promise<void>;
   ajustarQuantidadeRapida: (itemId: string, direcao: -1 | 1) => Promise<void>;
   ajustarPreco: (itemId: string, valorPagoUnitario: Centavos | null) => Promise<void>;
+  /**
+   * Ajuste detalhado para item cujo produto tem fator de conversão
+   * cadastrado (spec modo-compra): substitui quantidade/preço por unidade
+   * por pacotes + tamanho real do pacote + valor total pago. O tamanho real
+   * pode divergir do fator cadastrado no produto — só é rastreado no item,
+   * nunca retroalimenta o cadastro.
+   */
+  ajustarComPacotes: (
+    itemId: string,
+    pacotes: number,
+    tamanhoPacote: FatorConversao,
+    valorTotalPago: Centavos,
+  ) => Promise<void>;
   responderAtualizarPreco: (itemId: string, resposta: boolean) => Promise<void>;
 };
 
@@ -112,13 +126,18 @@ export function useModoCompra(
 
   const ajustarQuantidadeRapida = useCallback(
     async (itemId: string, direcao: -1 | 1) => {
-      const item = itens.find((linha) => linha.item.id === itemId)?.item;
-      if (!item) {
+      const linha = itens.find((linha) => linha.item.id === itemId);
+      if (!linha) {
         return;
       }
+      const { item, produto } = linha;
       const atual = item.quantidadeComprada ?? item.quantidadePlanejada;
+      // Prioriza o tamanho de pacote já confirmado nesta compra (mercado
+      // pode divergir do cadastrado) sobre o fator cadastrado no produto —
+      // mesma precedência do ajuste detalhado (design.md).
+      const fator = item.fatorUsadoNaCompra ?? produto?.fatorConversaoEmbalagem ?? null;
       await compras.editarItem(itemId, {
-        quantidadeComprada: calcularQuantidadeRapida(atual, item.unidade, direcao),
+        quantidadeComprada: calcularQuantidadeRapida(atual, item.unidade, direcao, fator),
       });
     },
     [compras, itens],
@@ -127,6 +146,28 @@ export function useModoCompra(
   const ajustarPreco = useCallback(
     async (itemId: string, valorPagoUnitario: Centavos | null) => {
       await compras.editarItem(itemId, { valorPagoUnitario });
+    },
+    [compras],
+  );
+
+  const ajustarComPacotes = useCallback(
+    async (
+      itemId: string,
+      pacotes: number,
+      tamanhoPacote: FatorConversao,
+      valorTotalPago: Centavos,
+    ) => {
+      const { quantidadeComprada, valorPagoUnitario } = derivarComPacotes(
+        pacotes,
+        tamanhoPacote,
+        valorTotalPago,
+      );
+      await compras.editarItem(itemId, {
+        quantidadeComprada,
+        valorPagoUnitario,
+        quantidadePacotes: pacotes,
+        fatorUsadoNaCompra: tamanhoPacote,
+      });
     },
     [compras],
   );
@@ -146,6 +187,7 @@ export function useModoCompra(
     ajustarQuantidade,
     ajustarQuantidadeRapida,
     ajustarPreco,
+    ajustarComPacotes,
     responderAtualizarPreco,
   };
 }

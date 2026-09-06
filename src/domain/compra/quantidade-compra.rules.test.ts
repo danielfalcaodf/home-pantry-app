@@ -1,3 +1,4 @@
+import { fatorConversao } from '../produto/conversao-embalagem.rules';
 import { milesimos } from '../shared/quantidade';
 
 import { ajustarQuantidadeRapida, passoRapido } from './quantidade-compra.rules';
@@ -13,6 +14,15 @@ describe('passoRapido', () => {
     ['ml', 100000],
   ] as const)('%s tem passo de %i milésimos', (unidade, esperado) => {
     expect(passoRapido(unidade)).toBe(esperado);
+  });
+
+  it('com fator, o passo vira o fator inteiro de unidades, ignorando a unidade', () => {
+    expect(passoRapido('un', fatorConversao(6))).toBe(6000);
+  });
+
+  it('fator null/undefined mantém o passo por unidade de sempre', () => {
+    expect(passoRapido('un', null)).toBe(1000);
+    expect(passoRapido('un', undefined)).toBe(1000);
   });
 });
 
@@ -46,5 +56,17 @@ describe('ajustarQuantidadeRapida', () => {
 
   it.each(['g', 'ml'] as const)('%s nunca reduz abaixo de 100 (100 000 milésimos)', (unidade) => {
     expect(ajustarQuantidadeRapida(milesimos(100000), unidade, -1)).toBe(100000);
+  });
+
+  it('com fator, "+" incrementa pelo fator inteiro, nunca por 1 unidade', () => {
+    expect(ajustarQuantidadeRapida(milesimos(6000), 'un', 1, fatorConversao(6))).toBe(12000);
+  });
+
+  it('com fator, "-" nunca desce abaixo de 1 pacote inteiro', () => {
+    expect(ajustarQuantidadeRapida(milesimos(6000), 'un', -1, fatorConversao(6))).toBe(6000);
+  });
+
+  it('sem fator (produto comum), mantém o passo por unidade mesmo quando o fator é explicitamente null', () => {
+    expect(ajustarQuantidadeRapida(milesimos(2000), 'un', 1, null)).toBe(3000);
   });
 });

@@ -1,9 +1,11 @@
+import { fatorConversao } from './conversao-embalagem.rules';
 import { centavos } from '../shared/dinheiro';
 import { milesimos } from '../shared/quantidade';
 import { Unidade } from '../shared/unidade';
 import {
   alturaDoNivel,
   custoReposicao,
+  detalheDaQuantidadeAComprar,
   emFalta,
   estadoDoItem,
   quantidadeAComprar,
@@ -17,12 +19,15 @@ function dados(
   necessaria: number,
   unidade: Unidade = 'un',
   valorUnitario = 0,
+  fatorConversaoEmbalagem: number | null = null,
 ) {
   return {
     unidade,
     quantidadeAtual: milesimos(atual),
     quantidadeNecessaria: milesimos(necessaria),
     valorUnitario: centavos(valorUnitario),
+    fatorConversaoEmbalagem:
+      fatorConversaoEmbalagem === null ? null : fatorConversao(fatorConversaoEmbalagem),
   };
 }
 
@@ -67,6 +72,36 @@ describe('quantidadeAComprar', () => {
 
   it('item zerado compra o necessário inteiro', () => {
     expect(quantidadeAComprar(dados(0, 3000, 'un'))).toBe(3000);
+  });
+
+  it('produto com fator arredonda para o múltiplo do pacote', () => {
+    expect(quantidadeAComprar(dados(6000, 12000, 'un', 0, 12))).toBe(12000);
+  });
+});
+
+describe('detalheDaQuantidadeAComprar', () => {
+  it('produto sem fator não indica pacotes nem excedente', () => {
+    expect(detalheDaQuantidadeAComprar(dados(2500, 3000, 'pacote'))).toEqual({
+      quantidade: 1000,
+      pacotes: null,
+      excedente: 0,
+    });
+  });
+
+  it('produto com fator indica pacotes e excedente', () => {
+    expect(detalheDaQuantidadeAComprar(dados(6000, 12000, 'un', 0, 12))).toEqual({
+      quantidade: 12000,
+      pacotes: 1,
+      excedente: 6000,
+    });
+  });
+
+  it('falta exata em múltiplo do fator não gera excedente', () => {
+    expect(detalheDaQuantidadeAComprar(dados(0, 12000, 'un', 0, 12))).toEqual({
+      quantidade: 12000,
+      pacotes: 1,
+      excedente: 0,
+    });
   });
 });
 

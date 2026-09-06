@@ -14,6 +14,7 @@ jest.mock('./migrations/migrations', () => ({
 jest.mock('./client', () => ({ NOME_ARQUIVO_DB: 'estoque.db' }));
 
 let mockOriginalExists = true;
+let mockDestinosExistentes = new Set<string>();
 let mockListResult: unknown[] = [];
 const mockCopy = jest.fn();
 const mockDelete = jest.fn();
@@ -25,13 +26,14 @@ jest.mock('expo-file-system', () => {
       this.name = name ?? String(_parent);
     }
     get exists() {
-      return mockOriginalExists;
+      return this.name === 'estoque.db' ? mockOriginalExists : mockDestinosExistentes.has(this.name);
     }
     copy(destino: unknown) {
       mockCopy(this.name, (destino as { name: string }).name);
     }
     delete() {
       mockDelete(this.name);
+      mockDestinosExistentes.delete(this.name);
     }
   }
   class MockDirectory {
@@ -66,6 +68,7 @@ function arquivo(nome: string): File {
 describe('fazerBackupSeMigrationPendente', () => {
   beforeEach(() => {
     mockOriginalExists = true;
+    mockDestinosExistentes = new Set();
     mockListResult = [];
     mockCopy.mockClear();
     mockDelete.mockClear();
@@ -121,5 +124,19 @@ describe('fazerBackupSeMigrationPendente', () => {
     fazerBackupSeMigrationPendente(sqliteFake(2));
 
     expect(mockCopy).not.toHaveBeenCalled();
+  });
+
+  // Bug real: uma tentativa anterior interrompida antes de aplicar a
+  // migration (crash, Fast Refresh em dev) deixa a cópia da mesma versão
+  // para trás — `File.copy` lançaria "Destination already exists" e travaria
+  // toda tentativa seguinte no mesmo erro, sem nunca chegar a aplicar a
+  // migration.
+  it('sobrescreve a cópia se já existir uma da mesma versão (retomada após interrupção)', () => {
+    mockDestinosExistentes.add('estoque.pre-v2.db');
+
+    fazerBackupSeMigrationPendente(sqliteFake(2));
+
+    expect(mockDelete).toHaveBeenCalledWith('estoque.pre-v2.db');
+    expect(mockCopy).toHaveBeenCalledWith('estoque.db', 'estoque.pre-v2.db');
   });
 });

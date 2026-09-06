@@ -14,6 +14,7 @@ const mockUseKeepAwake = jest.fn();
 const mockFinalizar = jest.fn();
 const mockCancelar = jest.fn();
 const mockDivergencias = jest.fn(async () => [] as unknown[]);
+const mockResponderAtualizarPreco = jest.fn(async () => {});
 
 jest.mock('expo-router', () => ({
   router: { push: (...a: unknown[]) => mockPush(...a), replace: (...a: unknown[]) => mockReplace(...a) },
@@ -46,8 +47,9 @@ let mockItensIniciais: {
     ordem: number;
     excluido: boolean;
     atualizarPreco: boolean | null;
+    fatorUsadoNaCompra?: number | null;
   };
-  produto: { nome: string } | null;
+  produto: { nome: string; fatorConversaoEmbalagem?: number | null; valorReferenciaEmbalagem?: number | null } | null;
   divergePreco: boolean;
 }[] = [];
 
@@ -80,7 +82,7 @@ jest.mock('@/application/compra/use-modo-compra', () => ({
       ajustarQuantidade: async () => {},
       ajustarQuantidadeRapida: async () => {},
       ajustarPreco: async () => {},
-      responderAtualizarPreco: async () => {},
+      responderAtualizarPreco: mockResponderAtualizarPreco,
     };
   },
 }));
@@ -111,6 +113,31 @@ function itemFake(id: string, nome: string, comprado = false) {
       atualizarPreco: null,
     },
     produto: { nome },
+    divergePreco: false,
+  };
+}
+
+// Produto com fator de conversão cadastrado (change conversao-unidade-de-compra):
+// planejado já como 1 pacote inteiro (6 unidades), preço estimado do pacote.
+function itemComFatorFake(id: string, nome: string, fatorCadastrado: number, fatorUsadoNaCompra: number | null = null) {
+  return {
+    item: {
+      id,
+      compraId: 'compra-1',
+      produtoId: `p-${id}`,
+      nomeAvulso: null,
+      unidade: 'un' as const,
+      quantidadePlanejada: fatorCadastrado * 1000,
+      quantidadeComprada: null as number | null,
+      valorEstimadoUnit: 167,
+      valorPagoUnitario: null,
+      comprado: false,
+      ordem: 0,
+      excluido: false,
+      atualizarPreco: null,
+      fatorUsadoNaCompra,
+    },
+    produto: { nome, fatorConversaoEmbalagem: fatorCadastrado, valorReferenciaEmbalagem: 1000 },
     divergePreco: false,
   };
 }
@@ -162,6 +189,37 @@ describe('ModoCompra (app/compra/[id].tsx)', () => {
     mockItensIniciais = [itemFake('i1', 'Arroz')];
     await comTema(<ModoCompra />);
     const botaoDiminuir = screen.getByRole('button', { name: 'Diminuir quantidade de Arroz' });
+    expect(botaoDiminuir.props.accessibilityState.disabled).toBe(true);
+  });
+
+  // Achado pós-exploração (change conversao-unidade-de-compra, 2026-09-05):
+  // produto com fator só pode ser comprado em pacotes inteiros — o piso do
+  // passo rápido precisa ser 1 pacote, não 1 unidade.
+  it('produto com fator: piso do passo rápido é 1 pacote inteiro (fator), não 1 unidade', async () => {
+    mockItensIniciais = [itemComFatorFake('i1', 'Papel higiênico', 6)];
+    await comTema(<ModoCompra />);
+    const botaoDiminuir = screen.getByRole('button', { name: 'Diminuir quantidade de Papel higiênico' });
+    expect(botaoDiminuir.props.accessibilityState.disabled).toBe(true);
+  });
+
+  it('produto com fator: acima de 1 pacote, o controle de diminuir fica habilitado', async () => {
+    const item = itemComFatorFake('i1', 'Papel higiênico', 6);
+    item.item.quantidadeComprada = 12000; // 2 pacotes
+    mockItensIniciais = [item];
+    await comTema(<ModoCompra />);
+    const botaoDiminuir = screen.getByRole('button', { name: 'Diminuir quantidade de Papel higiênico' });
+    expect(botaoDiminuir.props.accessibilityState.disabled).toBe(false);
+  });
+
+  it('produto com fator: piso usa o tamanho de pacote já confirmado nesta compra, não o cadastrado', async () => {
+    // Cadastrado 6, mas confirmado 8 no ajuste detalhado — 8000 é 1 pacote
+    // confirmado (piso), não múltiplo de 6, então o piso ingênuo (6000)
+    // deixaria "diminuir" habilitado erradamente.
+    const item = itemComFatorFake('i1', 'Papel higiênico', 6, 8);
+    item.item.quantidadeComprada = 8000;
+    mockItensIniciais = [item];
+    await comTema(<ModoCompra />);
+    const botaoDiminuir = screen.getByRole('button', { name: 'Diminuir quantidade de Papel higiênico' });
     expect(botaoDiminuir.props.accessibilityState.disabled).toBe(true);
   });
 
@@ -276,6 +334,7 @@ describe('ModoCompra — revisão agrupada de preço no fechamento', () => {
     mockFinalizar.mockResolvedValue({ ok: true, itensRepostos: 1 });
     mockDivergencias.mockReset();
     mockDivergencias.mockResolvedValue([]);
+    mockResponderAtualizarPreco.mockClear();
   });
 
   afterEach(() => {
@@ -327,9 +386,10 @@ describe('ModoCompra — revisão agrupada de preço no fechamento', () => {
     });
 
     await waitFor(() => expect(mockFinalizar).toHaveBeenCalledTimes(1));
+    expect(mockResponderAtualizarPreco).toHaveBeenCalledWith('i1', true);
   });
 
-  it('"Manter preços salvos" confirma o fechamento sem selecionar nenhum', async () => {
+  it('"Manter preços salvos" mantém o preço salvo — nunca chama responderAtualizarPreco com true (achado do E2E, task 9.3/10.1: setState não propaga antes do fechamento)', async () => {
     mockItensIniciais = [itemFake('i1', 'Arroz', true)];
     mockDivergencias.mockResolvedValue([
       { itemId: 'i1', produtoId: 'p-i1', nome: 'Arroz', precoSalvo: 500, precoPago: 700, primeiroPreco: false },
@@ -346,6 +406,29 @@ describe('ModoCompra — revisão agrupada de preço no fechamento', () => {
     });
 
     await waitFor(() => expect(mockFinalizar).toHaveBeenCalledTimes(1));
+    expect(mockResponderAtualizarPreco).toHaveBeenCalledWith('i1', false);
+  });
+
+  it('"Manter preços salvos" com múltiplos itens divergentes mantém todos, mesmo produto com fator de conversão de embalagem', async () => {
+    mockItensIniciais = [itemFake('i1', 'Arroz', true), itemFake('i2', 'Papel higiênico', true)];
+    mockDivergencias.mockResolvedValue([
+      { itemId: 'i1', produtoId: 'p-i1', nome: 'Arroz', precoSalvo: 500, precoPago: 700, primeiroPreco: false },
+      { itemId: 'i2', produtoId: 'p-i2', nome: 'Papel higiênico', precoSalvo: 300, precoPago: 150, primeiroPreco: false },
+    ]);
+    await comTema(<ModoCompra />);
+
+    await act(async () => {
+      fireEvent.press(screen.getByLabelText('Fechar compra'));
+    });
+    await waitFor(() => expect(screen.getByText(/^2 preços diferentes$/)).toBeTruthy());
+
+    await act(async () => {
+      fireEvent.press(screen.getByText('Manter preços salvos'));
+    });
+
+    await waitFor(() => expect(mockFinalizar).toHaveBeenCalledTimes(1));
+    expect(mockResponderAtualizarPreco).toHaveBeenCalledWith('i1', false);
+    expect(mockResponderAtualizarPreco).toHaveBeenCalledWith('i2', false);
   });
 
   it('"Escolher quais atualizar" permite selecionar exceções por produto', async () => {
@@ -381,6 +464,8 @@ describe('ModoCompra — revisão agrupada de preço no fechamento', () => {
     });
 
     await waitFor(() => expect(mockFinalizar).toHaveBeenCalledTimes(1));
+    expect(mockResponderAtualizarPreco).toHaveBeenCalledWith('i1', true);
+    expect(mockResponderAtualizarPreco).toHaveBeenCalledWith('i2', false);
   });
 
   it('produto sem preço salvo mostra "sem preço salvo" na revisão', async () => {

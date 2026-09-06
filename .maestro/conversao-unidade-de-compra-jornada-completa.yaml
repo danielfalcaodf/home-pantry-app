@@ -1,0 +1,171 @@
+appId: com.danielfalcaodf.repor
+---
+# Change `conversao-unidade-de-compra` (task 9.3) — jornada completa do fator
+# de conversão de embalagem: cadastro com "Vem em pacote fechado?" → lista de
+# compras arredondando para pacotes com excedente convidativo → Modo Compra
+# com ajuste detalhado (pacotes/tamanho/valor total) usando um tamanho de
+# pacote DIFERENTE do cadastrado → fechamento → confirma que o estoque final
+# reflete o que foi realmente comprado (pacotes × fator usado NA COMPRA) e
+# que o fator CADASTRADO no produto não mudou.
+#
+# Números escolhidos: fator cadastrado 6, valor do pacote R$18,00, quantidade
+# necessária 13 (não múltiplo de 6) para forçar tanto "faltando" quanto
+# excedente ("dá para X") na lista. Na compra, o pacote encontrado no mercado
+# tem 8 unidades (não 6) — 2 pacotes de 8 = 16 unidades repostas.
+#
+# Efeito colateral real, permanente: cria "Item Teste QA Pacote" na despensa
+# do dispositivo de teste (categoria "Sem categoria", un, necessária 13,
+# fator de conversão 6), fecha uma compra real repondo 16 unidades. Fica
+# "Cheio" (16 de 13 un) ao final. Remover manualmente se for repetir o flow.
+
+- launchApp
+- assertVisible: "Despensa"
+# ambiente: bolha flutuante "Tools" do Expo dev-client sobrepõe os ícones do topo
+- swipe:
+    start: "970, 173"
+    end: "540, 700"
+    duration: 600
+
+# --- Cadastro com fator de conversão de embalagem -----------------------
+- tapOn: "Adicionar produto"
+- assertVisible: "Novo produto"
+- tapOn: "O que é"
+- inputText: "Item Teste QA Pacote"
+- hideKeyboard
+- tapOn: "un"
+- tapOn: "Quanto quero ter em casa"
+- inputText: "13"
+- hideKeyboard
+- tapOn: "Mais opções"
+- assertVisible: "Vem em pacote fechado?"
+- assertVisible: "Quanto costuma custar"
+- tapOn: "Sim"
+- assertNotVisible: "Quanto costuma custar"
+- assertVisible: "Quantas unidades vêm no pacote?"
+- tapOn: "Quantas unidades vêm no pacote?"
+- inputText: "6"
+- hideKeyboard
+- scrollUntilVisible:
+    element: "Quanto custa o pacote?"
+    direction: DOWN
+    speed: 40
+    timeout: 15000
+- tapOn: "Quanto custa o pacote?"
+- inputText: "18,00"
+- hideKeyboard
+- scrollUntilVisible:
+    element: "Adicionar à despensa"
+    direction: DOWN
+    speed: 40
+    timeout: 20000
+- tapOn: "Adicionar à despensa"
+- assertVisible: "Despensa"
+- scrollUntilVisible:
+    element: "Item Teste QA Pacote, 0 de 13 un, Acabou"
+    direction: DOWN
+    speed: 60
+    timeout: 30000
+- assertVisible: "Item Teste QA Pacote, 0 de 13 un, Acabou"
+
+# --- Lista de compras: pacotes + excedente convidativo -------------------
+- tapOn: "Lista"
+- scrollUntilVisible:
+    element: "Item Teste QA Pacote"
+    direction: DOWN
+    speed: 60
+    timeout: 20000
+- assertVisible: "Item Teste QA Pacote"
+# falta 13, fator 6 → ceil(13/6) = 3 pacotes = 18 unidades (excedente 5)
+- assertVisible: "compre 3 pacotes"
+- assertVisible: "(dá para 18)"
+
+# --- Modo compra: ajuste detalhado com tamanho de pacote diferente -------
+- tapOn:
+    text: "Iniciar compra \\(\\d+\\)"
+# ambiente: pode existir um rascunho de compra aberto de uma sessão de QA
+# anterior sem o nosso item — descarta e começa do zero pra garantir que o
+# item de teste apareça no Modo Compra.
+- runFlow:
+    when:
+      visible: "Continuar compra"
+    commands:
+      - tapOn: "Começar nova lista"
+      - runFlow:
+          when:
+            visible: "Começar nova lista"
+          commands:
+            - tapOn: "Começar nova lista"
+- assertVisible: "Compra"
+- scrollUntilVisible:
+    element: "Ajustar quantidade e preço de Item Teste QA Pacote"
+    direction: DOWN
+    speed: 40
+    timeout: 20000
+- tapOn: "Ajustar quantidade e preço de Item Teste QA Pacote"
+- assertVisible: "Item Teste QA Pacote"
+- assertVisible: "Quantos pacotes"
+- assertVisible: "Unidades no pacote"
+- tapOn: "Quantos pacotes"
+- eraseText: 1
+- inputText: "2"
+- tapOn: "Unidades no pacote"
+- eraseText: 1
+- inputText: "8"
+- tapOn: "Valor total pago"
+- inputText: "24,00"
+- hideKeyboard
+- tapOn: "Salvar"
+# 2 pacotes de 8 = 16 unidades, R$24,00 no total — pacote diferente do
+# cadastrado (6), mas isso não deve alterar o cadastro do produto.
+- assertVisible:
+    text: "Item Teste QA Pacote, 16 un, R\\$ 24,00"
+- tapOn:
+    text: "Item Teste QA Pacote, 16 un, R\\$ 24,00"
+- assertVisible:
+    text: "Item Teste QA Pacote, 16 un, R\\$ 24,00"
+    checked: true
+- tapOn: "Fechar compra"
+# preço pago por unidade (R$1,50, derivado de 24/16) diverge do valor de
+# referência cadastrado (R$3,00, derivado de 18/6) — deságua no fluxo de
+# revisão de preço já existente (design.md). Mantém o preço salvo: o objetivo
+# aqui é provar que o FATOR de conversão do cadastro não muda, não testar a
+# revisão de preço em si (já coberta por outra capability).
+- waitForAnimationToEnd:
+    timeout: 3000
+- runFlow:
+    when:
+      visible: "Manter preços salvos"
+    commands:
+      - tapOn: "Manter preços salvos"
+- assertVisible: "Despensa"
+
+# --- Estoque final reflete a compra real (16 un), não o planejado (18) ---
+- scrollUntilVisible:
+    element: "Item Teste QA Pacote, 16 de 13 un, Cheio"
+    direction: DOWN
+    speed: 60
+    timeout: 30000
+- assertVisible: "Item Teste QA Pacote, 16 de 13 un, Cheio"
+
+# --- Cadastro do produto mantém o fator ORIGINAL (6), não o usado (8) ----
+- tapOn: "Buscar"
+- inputText: "Item Teste QA Pacote"
+- hideKeyboard
+- tapOn: "Item Teste QA Pacote, 16 de 13 un, Cheio"
+- scrollUntilVisible:
+    element: "Mais opções"
+    direction: DOWN
+    speed: 40
+    timeout: 15000
+- tapOn: "Mais opções"
+- scrollUntilVisible:
+    element: "Vem em pacote fechado?"
+    direction: DOWN
+    speed: 40
+    timeout: 20000
+- assertVisible:
+    text: "Sim"
+    selected: true
+- assertVisible: "Quantas unidades vêm no pacote?"
+- assertVisible:
+    text: "^6$"

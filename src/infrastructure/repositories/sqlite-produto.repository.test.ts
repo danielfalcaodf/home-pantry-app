@@ -149,6 +149,32 @@ describe('edição e remoção lógica', () => {
     });
   });
 
+  it('grava e lê o fator de conversão e o valor de referência do pacote', async () => {
+    const { repo, casaId, usuarioId } = montar();
+    const resultado = validarCadastroProduto({
+      nome: 'Papel higiênico',
+      unidade: 'un',
+      quantidadeNecessaria: 12,
+      fatorConversaoEmbalagem: 12,
+      valorReferenciaEmbalagem: 12.9,
+    });
+    if (!resultado.ok) {
+      throw new Error('fixture inválida');
+    }
+    const criado = await repo.criar(casaId, usuarioId, resultado.valor);
+    if (!criado.ok) {
+      throw new Error('setup');
+    }
+
+    expect(criado.valor.fatorConversaoEmbalagem).toBe(12);
+    expect(criado.valor.valorReferenciaEmbalagem).toBe(1290);
+    expect(criado.valor.valorUnitario).toBe(108);
+
+    const relido = await repo.obterPorId(criado.valor.id);
+    expect(relido?.fatorConversaoEmbalagem).toBe(12);
+    expect(relido?.valorReferenciaEmbalagem).toBe(1290);
+  });
+
   it('editar produto inexistente retorna nao_encontrado', async () => {
     const { repo } = montar();
     const resultado = await repo.editar('fantasma', { nome: 'X' });
@@ -191,6 +217,8 @@ describe('consultas de leitura', () => {
       valorUnitario: expect.any(Number),
       marcaPreferida: null,
       observacao: null,
+      fatorConversaoEmbalagem: null,
+      valorReferenciaEmbalagem: null,
       ativo: true,
       criadoEm: expect.any(Number),
       atualizadoEm: expect.any(Number),

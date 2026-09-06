@@ -29,6 +29,13 @@
       "when": 1785714583122,
       "tag": "0003_compra_item_atualizar_preco",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1788497677089,
+      "tag": "0004_conversao-unidade-de-compra",
+      "breakpoints": true
     }
   ]
 }

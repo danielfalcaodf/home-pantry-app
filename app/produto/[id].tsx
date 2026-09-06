@@ -15,6 +15,7 @@ import {
 import { useReporPontual } from '@/application/estoque/use-repor-pontual';
 import { useResumoHistoricoRecente } from '@/application/estoque/use-resumo-historico';
 import { normalizarCategoria } from '@/domain/produto/categoria';
+import { validarFatorConversao, valorUnitarioDoPacote } from '@/domain/produto/conversao-embalagem.rules';
 import { passoDoStepper } from '@/domain/produto/estoque.rules';
 import { centavos, formatarBRL } from '@/domain/shared/dinheiro';
 import { deDecimal, formatarNumero, paraDecimal } from '@/domain/shared/quantidade';
@@ -59,6 +60,12 @@ function valoresDoItem(item: ProdutoNaDespensa): ValoresDoProduto {
     categoria: produto.categoria ?? '',
     marcaPreferida: produto.marcaPreferida ?? '',
     observacao: produto.observacao ?? '',
+    fatorConversaoEmbalagem:
+      produto.fatorConversaoEmbalagem !== null ? String(produto.fatorConversaoEmbalagem) : '',
+    valorReferenciaEmbalagem:
+      produto.valorReferenciaEmbalagem !== null
+        ? (produto.valorReferenciaEmbalagem / 100).toFixed(2).replace('.', ',')
+        : '',
   };
 }
 
@@ -153,14 +160,34 @@ function Detalhe({ id, item }: { id: string; item: ProdutoNaDespensa }) {
       setErros({ valorUnitario: `Valor muito alto — no máximo ${LIMITE_SANIDADE_VALOR}` });
       return;
     }
+    const fatorInformado = valores.fatorConversaoEmbalagem
+      ? Number(valores.fatorConversaoEmbalagem.replace(',', '.'))
+      : null;
+    const fatorValidado = validarFatorConversao(valores.unidade, fatorInformado);
+    if (!fatorValidado.ok) {
+      setErros({ fatorConversaoEmbalagem: fatorValidado.erro.mensagem });
+      return;
+    }
+    const fatorConversaoEmbalagem = fatorValidado.valor;
+    const valorReferenciaEmbalagem =
+      fatorConversaoEmbalagem === null || valores.valorReferenciaEmbalagem === ''
+        ? null
+        : centavos(Math.round(Number(valores.valorReferenciaEmbalagem.replace(',', '.')) * 100));
+    const valorUnitarioFinal =
+      fatorConversaoEmbalagem !== null && valorReferenciaEmbalagem !== null
+        ? valorUnitarioDoPacote(valorReferenciaEmbalagem, fatorConversaoEmbalagem)
+        : centavos(preco);
+
     const resultado = await editar(id, {
       nome: valores.nome.trim(),
       unidade: valores.unidade,
       quantidadeNecessaria: deDecimal(quantidade),
-      valorUnitario: centavos(preco),
+      valorUnitario: valorUnitarioFinal,
       categoria: normalizarCategoria(valores.categoria),
       marcaPreferida: valores.marcaPreferida || null,
       observacao: valores.observacao || null,
+      fatorConversaoEmbalagem,
+      valorReferenciaEmbalagem,
     });
     if (!resultado.ok) {
       setErros({ [resultado.erro.campo]: resultado.erro.mensagem });

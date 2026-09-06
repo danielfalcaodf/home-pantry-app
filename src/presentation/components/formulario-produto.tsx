@@ -2,7 +2,7 @@ import { ReactNode, useRef, useState } from 'react';
 import { Pressable, ScrollView, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { UNIDADES, Unidade } from '../../domain/shared/unidade';
+import { ehIndivisivel, UNIDADES, Unidade } from '../../domain/shared/unidade';
 import { ALVO_TOQUE_MINIMO, espaco } from '../theme/espaco';
 import { useTheme } from '../theme/provider';
 import { Botao } from './botao';
@@ -23,6 +23,9 @@ export type ValoresDoProduto = {
   categoria: string;
   marcaPreferida: string;
   observacao: string;
+  /** Só usados quando `unidade` é indivisível (`un`, `pacote`, `caixa`). */
+  fatorConversaoEmbalagem: string;
+  valorReferenciaEmbalagem: string;
 };
 
 /** Teto de sanidade de UI (não é regra de domínio) — evita erro de digitação
@@ -40,6 +43,8 @@ export const VALORES_INICIAIS: ValoresDoProduto = {
   categoria: '',
   marcaPreferida: '',
   observacao: '',
+  fatorConversaoEmbalagem: '',
+  valorReferenciaEmbalagem: '',
 };
 
 export type FormularioProdutoProps = {
@@ -100,6 +105,11 @@ export function FormularioProduto({
   const insets = useSafeAreaInsets();
   const [maisOpcoes, setMaisOpcoes] = useState(false);
   const [categoriaFocada, setCategoriaFocada] = useState(false);
+  // Chip "Vem em pacote fechado?" — unidade indivisível não implica pacote
+  // (sabonete vs. papel higiênico, ambos `un`); default deriva de já haver
+  // fator cadastrado (edição), nunca da unidade sozinha (design.md, decisão
+  // 2026-09-05).
+  const [pacoteFechado, setPacoteFechado] = useState(() => valores.fatorConversaoEmbalagem !== '');
   const scrollRef = useRef<ScrollView>(null);
   const marcadorMaisOpcoesRef = useRef<View>(null);
   const primeiroCampoExtraRef = useRef<TextInput>(null);
@@ -140,6 +150,12 @@ export function FormularioProduto({
 
   const definir = (campo: keyof ValoresDoProduto) => (texto: string) =>
     aoMudar({ ...valores, [campo]: texto });
+
+  // `pacote`/`caixa` já SÃO a unidade de embalagem escolhida — perguntar
+  // "vem em pacote fechado?" seria redundante (design.md, decisão
+  // "só para unidade `un`", 2026-09-05). Só `un` usa o chip.
+  const embalagemObrigatoria = valores.unidade === 'pacote' || valores.unidade === 'caixa';
+  const mostrarCamposEmbalagem = embalagemObrigatoria || (valores.unidade === 'un' && pacoteFechado);
 
   // Sem texto digitado (mas em foco), mostra tudo que já existe — a pessoa
   // não precisa adivinhar uma categoria pra descobrir que ela já existe.
@@ -210,7 +226,23 @@ export function FormularioProduto({
               key={unidade}
               rotulo={unidade}
               ativo={valores.unidade === unidade}
-              onPress={() => aoMudar({ ...valores, unidade })}
+              onPress={() => {
+                if (!ehIndivisivel(unidade)) {
+                  // Trocar para unidade divisível descarta a embalagem e o
+                  // controle (spec cadastro-de-produto): não faz sentido pra
+                  // unidade que não vem em pacote fechado.
+                  setPacoteFechado(false);
+                  aoMudar({ ...valores, unidade, fatorConversaoEmbalagem: '', valorReferenciaEmbalagem: '' });
+                  return;
+                }
+                if (unidade === 'un') {
+                  // Recalcula a partir do fator já digitado (ex.: usuário ia
+                  // e voltava entre "un" e "pacote"/"caixa" com embalagem já
+                  // preenchida) — não pode ficar preso ao valor do mount.
+                  setPacoteFechado(valores.fatorConversaoEmbalagem !== '');
+                }
+                aoMudar({ ...valores, unidade });
+              }}
             />
           ))}
         </View>
@@ -263,17 +295,61 @@ export function FormularioProduto({
               onBlur={registrarDesfoque}
             />
           ) : null}
-          <CampoTexto
-            rotulo="Quanto costuma custar"
-            value={valores.valorUnitario}
-            onChangeText={definir('valorUnitario')}
-            erro={erros.valorUnitario}
-            keyboardType="decimal-pad"
-            tipo="dinheiro"
-            ref={quantidadeAtualEditavel ? undefined : primeiroCampoExtraRef}
-            onFocus={registrarFoco}
-            onBlur={registrarDesfoque}
-          />
+          {valores.unidade === 'un' ? (
+            <View style={{ gap: espaco.sm }}>
+              <Texto papel="label" tom="secondary">
+                Vem em pacote fechado?
+              </Texto>
+              <View style={{ flexDirection: 'row', gap: espaco.sm }}>
+                <ChipEstado
+                  rotulo="Não"
+                  ativo={!pacoteFechado}
+                  onPress={() => {
+                    setPacoteFechado(false);
+                    aoMudar({ ...valores, fatorConversaoEmbalagem: '', valorReferenciaEmbalagem: '' });
+                  }}
+                />
+                <ChipEstado rotulo="Sim" ativo={pacoteFechado} onPress={() => setPacoteFechado(true)} />
+              </View>
+            </View>
+          ) : null}
+          {mostrarCamposEmbalagem ? null : (
+            <CampoTexto
+              rotulo="Quanto costuma custar"
+              value={valores.valorUnitario}
+              onChangeText={definir('valorUnitario')}
+              erro={erros.valorUnitario}
+              keyboardType="decimal-pad"
+              tipo="dinheiro"
+              ref={quantidadeAtualEditavel ? undefined : primeiroCampoExtraRef}
+              onFocus={registrarFoco}
+              onBlur={registrarDesfoque}
+            />
+          )}
+          {mostrarCamposEmbalagem ? (
+            <View style={{ gap: espaco.lg }}>
+              <CampoTexto
+                rotulo="Quantas unidades vêm no pacote?"
+                value={valores.fatorConversaoEmbalagem}
+                onChangeText={definir('fatorConversaoEmbalagem')}
+                erro={erros.fatorConversaoEmbalagem}
+                keyboardType="number-pad"
+                tipo="quantidade"
+                ref={quantidadeAtualEditavel ? undefined : primeiroCampoExtraRef}
+                onFocus={registrarFoco}
+                onBlur={registrarDesfoque}
+              />
+              <CampoTexto
+                rotulo="Quanto custa o pacote?"
+                value={valores.valorReferenciaEmbalagem}
+                onChangeText={definir('valorReferenciaEmbalagem')}
+                keyboardType="decimal-pad"
+                tipo="dinheiro"
+                onFocus={registrarFoco}
+                onBlur={registrarDesfoque}
+              />
+            </View>
+          ) : null}
           <View style={{ gap: espaco.sm }}>
             <CampoTexto
               rotulo="Onde guardo"

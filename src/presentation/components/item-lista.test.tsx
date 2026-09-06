@@ -24,6 +24,8 @@ function produto(sobrescreve: Partial<Extract<ItemDaLista, { tipo: 'produto' }>>
     valorUnitario: centavos(890),
     custo: centavos(890),
     semPreco: false,
+    pacotes: null,
+    quantidadeFinalEstimada: null,
     ...sobrescreve,
   };
 }
@@ -75,6 +77,24 @@ describe('ItemLista', () => {
 
     expect(screen.getByText('R$ 8,90')).toBeTruthy();
     expect(screen.queryByText('sem preço')).toBeNull();
+  });
+
+  it('produto com excedente exibe "compre N pacotes" e "(dá para X)" em linhas separadas, sem esconder o nome', async () => {
+    await comTema(
+      <ItemLista
+        item={produto({
+          nome: 'Papel higiênico',
+          pacotes: 1,
+          quantidadeFinalEstimada: milesimos(7000),
+        })}
+        categoria="Limpeza"
+        onRemover={jest.fn()}
+      />,
+    );
+
+    expect(screen.getByText('Papel higiênico')).toBeTruthy();
+    expect(screen.getByText('compre 1 pacote')).toBeTruthy();
+    expect(screen.getByText('(dá para 7)')).toBeTruthy();
   });
 
   it('remover chama onRemover ao tocar', async () => {

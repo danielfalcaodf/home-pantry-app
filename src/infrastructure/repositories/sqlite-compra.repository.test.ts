@@ -1,4 +1,5 @@
 import { efeitosDaFinalizacao } from '../../domain/compra/compra.rules';
+import { fatorConversao } from '../../domain/produto/conversao-embalagem.rules';
 import { validarCadastroProduto } from '../../domain/produto/validacao';
 import { centavos } from '../../domain/shared/dinheiro';
 import { milesimos } from '../../domain/shared/quantidade';
@@ -426,6 +427,72 @@ describe('finalização', () => {
 
     // banco coerente após a finalização
     expect(await ctx.movimentos.reconciliar(ctx.casaId)).toHaveLength(0);
+  });
+
+  it('finalização de item com pacotes aplica o preço derivado na mesma transação (change conversao-unidade-de-compra)', async () => {
+    const ctx = await montar();
+    const dados = validarCadastroProduto({
+      nome: 'Papel higiênico',
+      unidade: 'un',
+      quantidadeNecessaria: 12,
+      quantidadeAtual: 0,
+      fatorConversaoEmbalagem: 12,
+      valorReferenciaEmbalagem: 12,
+    });
+    if (!dados.ok) {
+      throw new Error('setup');
+    }
+    const criado = await ctx.produtos.criar(ctx.casaId, ctx.usuarioId, dados.valor);
+    if (!criado.ok) {
+      throw new Error('setup');
+    }
+    const produto = criado.valor;
+    expect(produto.valorUnitario).toBe(100); // 1200/12
+
+    const compra = await ctx.compras.abrir(ctx.casaId, ctx.usuarioId, clock.agora());
+    if (!compra.ok) {
+      throw new Error('setup');
+    }
+    const item = await ctx.compras.adicionarItem(compra.valor.id, {
+      produtoId: produto.id,
+      unidade: 'un',
+      quantidadePlanejada: milesimos(12000),
+    });
+
+    // Mercado tinha pacote de 16, não 12 — grava a rastreabilidade e o preço
+    // derivado (1600/16 = 100/un), sem alterar o fator cadastrado no produto.
+    await ctx.compras.editarItem(item.id, {
+      comprado: true,
+      quantidadeComprada: milesimos(16000),
+      quantidadePacotes: 1,
+      fatorUsadoNaCompra: fatorConversao(16),
+      valorPagoUnitario: centavos(100),
+    });
+
+    const relido = (await ctx.compras.listarItens(compra.valor.id))[0];
+    expect(relido.item.quantidadePacotes).toBe(1);
+    expect(relido.item.fatorUsadoNaCompra).toBe(16);
+    expect(relido.produto?.fatorConversaoEmbalagem).toBe(12);
+
+    const itensAtuais = (await ctx.compras.listarItens(compra.valor.id)).map((i) => i.item);
+    const produtosAtuais = await ctx.produtos.listarDespensa(ctx.casaId);
+    const efeitos = efeitosDaFinalizacao(itensAtuais, produtosAtuais, new Set());
+    if (!efeitos.ok) {
+      throw new Error('setup: efeitos inválidos');
+    }
+    const finalizada = await ctx.compras.finalizar(
+      compra.valor.id,
+      efeitos.valor,
+      ctx.usuarioId,
+      clock.agora() + 1000,
+    );
+    expect(finalizada.ok).toBe(true);
+
+    const produtoDepois = await ctx.produtos.obterPorId(produto.id);
+    expect(produtoDepois?.quantidadeAtual).toBe(16000);
+    // Divergência de tamanho de pacote nunca retroalimenta o cadastro.
+    expect(produtoDepois?.fatorConversaoEmbalagem).toBe(12);
+    expect(produtoDepois?.valorUnitario).toBe(100); // sem divergência de preço aqui
   });
 
   it('falha no meio: nada muda e a compra continua aberta', async () => {

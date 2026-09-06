@@ -2,6 +2,7 @@ import { and, eq, inArray, sql } from 'drizzle-orm';
 
 import { Compra, CompraItem, StatusCompra } from '../../domain/compra/compra';
 import { EfeitosFinalizacao, GastoDoMes } from '../../domain/compra/compra.rules';
+import { fatorConversao } from '../../domain/produto/conversao-embalagem.rules';
 import { centavos } from '../../domain/shared/dinheiro';
 import { milesimos } from '../../domain/shared/quantidade';
 import { Unidade } from '../../domain/shared/unidade';
@@ -54,6 +55,9 @@ function itemParaDominio(linha: LinhaItem): CompraItem {
     valorEstimadoUnit: centavos(linha.valorEstimadoUnit),
     valorPagoUnitario:
       linha.valorPagoUnitario === null ? null : centavos(linha.valorPagoUnitario),
+    quantidadePacotes: linha.quantidadePacotes,
+    fatorUsadoNaCompra:
+      linha.fatorUsadoNaCompra === null ? null : fatorConversao(linha.fatorUsadoNaCompra),
     comprado: linha.comprado,
     ordem: linha.ordem,
     excluido: linha.excluido,
@@ -193,6 +197,12 @@ export class SQLiteCompraRepository implements CompraRepository {
         ...(dados.valorPagoUnitario !== undefined && {
           valorPagoUnitario: dados.valorPagoUnitario,
         }),
+        ...(dados.quantidadePacotes !== undefined && {
+          quantidadePacotes: dados.quantidadePacotes,
+        }),
+        ...(dados.fatorUsadoNaCompra !== undefined && {
+          fatorUsadoNaCompra: dados.fatorUsadoNaCompra,
+        }),
         ...(dados.comprado !== undefined && { comprado: dados.comprado }),
         ...(dados.ordem !== undefined && { ordem: dados.ordem }),
         ...(dados.atualizarPreco !== undefined && { atualizarPreco: dados.atualizarPreco }),
@@ -304,6 +314,8 @@ export class SQLiteCompraRepository implements CompraRepository {
         produtoCategoria: tabelaProduto.categoria,
         produtoUnidade: tabelaProduto.unidade,
         produtoValorUnitario: tabelaProduto.valorUnitario,
+        produtoFatorConversaoEmbalagem: tabelaProduto.fatorConversaoEmbalagem,
+        produtoValorReferenciaEmbalagem: tabelaProduto.valorReferenciaEmbalagem,
       })
       .from(tabelaCompraItem)
       .leftJoin(tabelaProduto, eq(tabelaCompraItem.produtoId, tabelaProduto.id))
@@ -321,6 +333,14 @@ export class SQLiteCompraRepository implements CompraRepository {
               categoria: linha.produtoCategoria,
               unidade: linha.produtoUnidade as Unidade,
               valorUnitario: centavos(linha.produtoValorUnitario as number),
+              fatorConversaoEmbalagem:
+                linha.produtoFatorConversaoEmbalagem === null
+                  ? null
+                  : fatorConversao(linha.produtoFatorConversaoEmbalagem),
+              valorReferenciaEmbalagem:
+                linha.produtoValorReferenciaEmbalagem === null
+                  ? null
+                  : centavos(linha.produtoValorReferenciaEmbalagem),
             },
     }));
   }

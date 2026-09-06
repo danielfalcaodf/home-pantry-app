@@ -1,0 +1,111 @@
+appId: com.danielfalcaodf.repor
+---
+# Change `conversao-unidade-de-compra` (task 9.4) — regressão: produto de
+# unidade indivisível SEM fator de conversão (ex.: sabonete, mantém "Não" no
+# controle "Vem em pacote fechado?") segue o fluxo de compra idêntico ao que
+# já existia antes desta change — preço/quantidade por unidade direto, sem
+# nenhuma menção a pacotes em nenhuma tela.
+#
+# Efeito colateral real, permanente: cria "Item Teste QA Sem Pacote" na
+# despensa do dispositivo de teste (un, necessária 3, sem fator), fecha uma
+# compra real repondo 3 un a R$5,00/un. Fica "Cheio" (3 de 3 un) ao final.
+
+- launchApp
+- assertVisible: "Despensa"
+# ambiente: bolha flutuante "Tools" do Expo dev-client sobrepõe os ícones do topo
+- swipe:
+    start: "970, 173"
+    end: "540, 700"
+    duration: 600
+
+# --- Cadastro comum, sem embalagem (chip "Não", default) -----------------
+- tapOn: "Adicionar produto"
+- assertVisible: "Novo produto"
+- tapOn: "O que é"
+- inputText: "Item Teste QA Sem Pacote"
+- hideKeyboard
+- tapOn: "un"
+- tapOn: "Quanto quero ter em casa"
+- inputText: "3"
+- hideKeyboard
+- tapOn: "Mais opções"
+- assertVisible:
+    text: "Não"
+    selected: true
+- assertVisible: "Quanto costuma custar"
+- assertNotVisible: "Quantas unidades vêm no pacote?"
+- assertNotVisible: "Quanto custa o pacote?"
+- tapOn: "Quanto costuma custar"
+- inputText: "5,00"
+- hideKeyboard
+- scrollUntilVisible:
+    element: "Adicionar à despensa"
+    direction: DOWN
+    speed: 40
+    timeout: 20000
+- tapOn: "Adicionar à despensa"
+- assertVisible: "Despensa"
+- scrollUntilVisible:
+    element: "Item Teste QA Sem Pacote, 0 de 3 un, Acabou"
+    direction: DOWN
+    speed: 60
+    timeout: 30000
+- assertVisible: "Item Teste QA Sem Pacote, 0 de 3 un, Acabou"
+
+# --- Lista de compras: comportamento de sempre, sem "pacote" -------------
+- tapOn: "Lista"
+- scrollUntilVisible:
+    element: "Item Teste QA Sem Pacote"
+    direction: DOWN
+    speed: 60
+    timeout: 20000
+- assertVisible: "Item Teste QA Sem Pacote"
+# comportamento de sempre: quantidade/preço direto, nenhuma menção a
+# "pacote"/"compre N pacotes"/"dá para" nesta linha (só ItemLista.tsx sem
+# fator renderiza o texto simples "3 un" — checagem escopada à própria
+# linha, não à tela inteira, pra não colidir com outro item de fator que
+# porventura já exista no dispositivo).
+- assertVisible: "3 un"
+- assertVisible: "R$ 15,00"
+
+# --- Modo compra: ajuste direto de quantidade/preço, sem perguntar pacote -
+- tapOn:
+    text: "Iniciar compra \\(\\d+\\)"
+# ambiente: pode existir um rascunho de compra aberto de uma sessão de QA
+# anterior sem o nosso item — descarta e começa do zero.
+- runFlow:
+    when:
+      visible: "Continuar compra"
+    commands:
+      - tapOn: "Começar nova lista"
+      - runFlow:
+          when:
+            visible: "Começar nova lista"
+          commands:
+            - tapOn: "Começar nova lista"
+- assertVisible: "Compra"
+- scrollUntilVisible:
+    element: "Ajustar quantidade e preço de Item Teste QA Sem Pacote"
+    direction: DOWN
+    speed: 40
+    timeout: 20000
+- tapOn: "Ajustar quantidade e preço de Item Teste QA Sem Pacote"
+- assertVisible: "Item Teste QA Sem Pacote"
+- assertVisible: "Quantidade (un)"
+- assertVisible: "Preço pago (opcional)"
+- assertNotVisible: "Quantos pacotes"
+- assertNotVisible: "Unidades no pacote"
+- tapOn: "Salvar"
+- tapOn:
+    text: "Item Teste QA Sem Pacote, 3 un, R\\$ 15,00"
+- assertVisible:
+    text: "Item Teste QA Sem Pacote, 3 un, R\\$ 15,00"
+    checked: true
+- tapOn: "Fechar compra"
+- assertVisible: "Despensa"
+- scrollUntilVisible:
+    element: "Item Teste QA Sem Pacote, 3 de 3 un, Cheio"
+    direction: DOWN
+    speed: 60
+    timeout: 30000
+- assertVisible: "Item Teste QA Sem Pacote, 3 de 3 un, Cheio"

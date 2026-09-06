@@ -38,3 +38,11 @@ export function converterValorBruto(bruto: number): Centavos {
 export function multiplicarQuantidadePorPreco(quantidade: Milesimos, preco: Centavos): Centavos {
   return converterValorBruto(quantidade * preco);
 }
+
+// Divide um total em centavos por N partes iguais, arredondando ao centavo
+// mais próximo — usada por conversao-embalagem.rules para derivar preço por
+// unidade a partir de valor de pacote (não é a divisão milésimos·centavos
+// acima, que resolve uma grandeza diferente).
+export function dividirIgualmente(total: Centavos, partes: number): Centavos {
+  return centavos(Math.round(total / partes));
+}

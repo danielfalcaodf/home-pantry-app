@@ -27,10 +27,31 @@ export type UsuarioBackup = {
 // Versão de schema do backup: acompanha o número de migrations aplicadas
 // (design D3 / "Open Questions" — resolvida: a forma do backup deriva do
 // schema do banco). Migrations atuais: 0000_init, 0001_configuracao,
-// 0002_compra_item_exclusao, 0003_compra_item_atualizar_preco → 4 aplicadas.
-// Toda migration futura que mude a FORMA dos dados exportados soma 1 aqui e
-// ganha uma entrada em `CONVERSORES`.
-export const VERSAO_SCHEMA_BACKUP_ATUAL = 4;
+// 0002_compra_item_exclusao, 0003_compra_item_atualizar_preco,
+// 0004_conversao-unidade-de-compra → 5 aplicadas. Toda migration futura que
+// mude a FORMA dos dados exportados soma 1 aqui e ganha uma entrada em
+// `CONVERSORES`.
+export const VERSAO_SCHEMA_BACKUP_ATUAL = 5;
+
+// v4 → v5 (change conversao-unidade-de-compra): produto e item de compra
+// ganharam campos opcionais novos. Um backup v4 nunca os teve — preencher
+// com `null` é o mesmo estado de "sem embalagem cadastrada" que um produto
+// já existente ganha depois da migration (comportamento inalterado).
+function converterV4ParaV5(arquivo: ArquivoBackup): ArquivoBackup {
+  return {
+    ...arquivo,
+    produtos: arquivo.produtos.map((produto) => ({
+      ...produto,
+      fatorConversaoEmbalagem: produto.fatorConversaoEmbalagem ?? null,
+      valorReferenciaEmbalagem: produto.valorReferenciaEmbalagem ?? null,
+    })),
+    itensCompra: arquivo.itensCompra.map((item) => ({
+      ...item,
+      quantidadePacotes: item.quantidadePacotes ?? null,
+      fatorUsadoNaCompra: item.fatorUsadoNaCompra ?? null,
+    })),
+  };
+}
 
 // Formato do arquivo de backup (design D1): JSON, não cópia do banco — os
 // registros são as formas de domínio já existentes, em unidades internas
@@ -89,7 +110,7 @@ export function validarBackup(dado: unknown): Result<ArquivoBackup, ErroValidaca
 // Só existe a versão corrente até aqui, então a conversão é identidade —
 // cresce a cada migration futura que altere o formato do backup.
 type Conversor = (arquivo: ArquivoBackup) => ArquivoBackup;
-const CONVERSORES: Record<number, Conversor> = {};
+const CONVERSORES: Record<number, Conversor> = { 4: converterV4ParaV5 };
 
 export function converterParaVersaoAtual(arquivo: ArquivoBackup): ArquivoBackup {
   let atual = arquivo;

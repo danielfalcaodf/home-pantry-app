@@ -1,4 +1,5 @@
 import { CompraItem } from '../compra/compra';
+import { fatorConversao } from '../produto/conversao-embalagem.rules';
 import { FaltanteBruto } from '../produto/produto';
 import { centavos } from '../shared/dinheiro';
 import { milesimos } from '../shared/quantidade';
@@ -14,6 +15,8 @@ function faltante(sobrescreve: Partial<FaltanteBruto> = {}): FaltanteBruto {
     quantidadeAtual: milesimos(0),
     quantidadeNecessaria: milesimos(3000),
     faltaBruta: milesimos(3000),
+    fatorConversaoEmbalagem: null,
+    valorReferenciaEmbalagem: null,
     ...sobrescreve,
   };
 }
@@ -29,6 +32,8 @@ function avulso(sobrescreve: Partial<CompraItem> = {}): CompraItem {
     quantidadeComprada: null,
     valorEstimadoUnit: centavos(0),
     valorPagoUnitario: null,
+    quantidadePacotes: null,
+    fatorUsadoNaCompra: null,
     comprado: false,
     ordem: 0,
     excluido: false,
@@ -66,6 +71,67 @@ describe('itemDeFaltante', () => {
     const item = itemDeFaltante(faltante({ valorUnitario: centavos(0) }));
     expect(item.semPreco).toBe(true);
     expect(item.custo).toBe(0);
+  });
+
+  it('produto com fator de conversão exibe pacotes e excedente estimado', () => {
+    const item = itemDeFaltante(
+      faltante({
+        unidade: 'un',
+        quantidadeAtual: milesimos(6000),
+        quantidadeNecessaria: milesimos(12000),
+        fatorConversaoEmbalagem: fatorConversao(12),
+      }),
+    );
+    if (item.tipo !== 'produto') {
+      throw new Error('esperado item de produto');
+    }
+    expect(item.pacotes).toBe(1);
+    expect(item.quantidadeAComprar).toBe(12000);
+    expect(item.quantidadeFinalEstimada).toBe(18000); // 6 + 12
+  });
+
+  it('produto com fator de conversão sem excedente não indica quantidade final', () => {
+    const item = itemDeFaltante(
+      faltante({
+        unidade: 'un',
+        quantidadeAtual: milesimos(0),
+        quantidadeNecessaria: milesimos(12000),
+        fatorConversaoEmbalagem: fatorConversao(12),
+      }),
+    );
+    if (item.tipo !== 'produto') {
+      throw new Error('esperado item de produto');
+    }
+    expect(item.pacotes).toBe(1);
+    expect(item.quantidadeFinalEstimada).toBeNull();
+  });
+
+  it('produto com embalagem usa o preço do pacote, não a multiplicação do valor unitário arredondado (achado em produção: pacote de 6 a R$10,00 não pode virar R$10,02)', () => {
+    const item = itemDeFaltante(
+      faltante({
+        unidade: 'un',
+        quantidadeAtual: milesimos(0),
+        quantidadeNecessaria: milesimos(6000),
+        fatorConversaoEmbalagem: fatorConversao(6),
+        valorReferenciaEmbalagem: centavos(1000),
+        valorUnitario: centavos(167), // 1000/6 arredondado — não pode ser usado pro custo total
+      }),
+    );
+    if (item.tipo !== 'produto') {
+      throw new Error('esperado item de produto');
+    }
+    expect(item.pacotes).toBe(1);
+    expect(item.custo).toBe(1000);
+    expect(item.semPreco).toBe(false);
+  });
+
+  it('produto sem fator não indica pacotes', () => {
+    const item = itemDeFaltante(faltante());
+    if (item.tipo !== 'produto') {
+      throw new Error('esperado item de produto');
+    }
+    expect(item.pacotes).toBeNull();
+    expect(item.quantidadeFinalEstimada).toBeNull();
   });
 });
 

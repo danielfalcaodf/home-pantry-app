@@ -1,5 +1,6 @@
 import { act, cleanup, renderHook, waitFor } from '@testing-library/react-native';
 
+import { fatorConversao } from '../../domain/produto/conversao-embalagem.rules';
 import { centavos } from '../../domain/shared/dinheiro';
 import { milesimos } from '../../domain/shared/quantidade';
 import { ObservadorFalso, produtoFalso, ProdutoRepositorioFalso } from '../estoque/teste/repositorio-falso';
@@ -305,4 +306,225 @@ describe('useModoCompra', () => {
   // — teste dedicado em app/compra/toques-consecutivos.test.tsx, pois
   // renderizar `ItemCompra` (presentation/) aqui violaria a regra de
   // dependência application/ → presentation/ (CLAUDE.md).
+
+  describe('ajuste rápido com fator de conversão (achado pós-exploração, 2026-09-05)', () => {
+    it('"+" anda pelo fator cadastrado do produto, não por 1 unidade', async () => {
+      const produtos = new ProdutoRepositorioFalso([
+        produtoFalso({ id: 'p1', nome: 'Papel higiênico', fatorConversaoEmbalagem: fatorConversao(6) }),
+      ]);
+      const compras = new CompraRepositorioFalso(produtos);
+      const aberta = await compras.abrir('casa-teste', 'usuario-teste', 1000);
+      if (!aberta.ok) {
+        throw new Error('setup');
+      }
+      const item = await compras.adicionarItem(aberta.valor.id, {
+        produtoId: 'p1',
+        unidade: 'un',
+        quantidadePlanejada: milesimos(6000),
+      });
+      const observador = new ObservadorFalso();
+      const { result } = await renderHook(() => useModoCompra(aberta.valor.id, compras, observador));
+      await waitFor(() => expect(result.current.carregando).toBe(false));
+
+      await act(async () => {
+        await result.current.ajustarQuantidadeRapida(item.id, 1);
+        observador.notificar();
+      });
+
+      await waitFor(() => expect(result.current.itens[0].item.quantidadeComprada).toBe(12000));
+    });
+
+    it('"-" não desce abaixo de 1 pacote inteiro', async () => {
+      const produtos = new ProdutoRepositorioFalso([
+        produtoFalso({ id: 'p1', nome: 'Papel higiênico', fatorConversaoEmbalagem: fatorConversao(6) }),
+      ]);
+      const compras = new CompraRepositorioFalso(produtos);
+      const aberta = await compras.abrir('casa-teste', 'usuario-teste', 1000);
+      if (!aberta.ok) {
+        throw new Error('setup');
+      }
+      const item = await compras.adicionarItem(aberta.valor.id, {
+        produtoId: 'p1',
+        unidade: 'un',
+        quantidadePlanejada: milesimos(6000),
+      });
+      const observador = new ObservadorFalso();
+      const { result } = await renderHook(() => useModoCompra(aberta.valor.id, compras, observador));
+      await waitFor(() => expect(result.current.carregando).toBe(false));
+
+      await act(async () => {
+        await result.current.ajustarQuantidadeRapida(item.id, -1);
+        observador.notificar();
+      });
+
+      await waitFor(() => expect(result.current.itens[0].item.quantidadeComprada).toBe(6000));
+    });
+
+    it('usa o tamanho de pacote já confirmado nesta compra, não o cadastrado', async () => {
+      const produtos = new ProdutoRepositorioFalso([
+        produtoFalso({ id: 'p1', nome: 'Papel higiênico', fatorConversaoEmbalagem: fatorConversao(12) }),
+      ]);
+      const compras = new CompraRepositorioFalso(produtos);
+      const aberta = await compras.abrir('casa-teste', 'usuario-teste', 1000);
+      if (!aberta.ok) {
+        throw new Error('setup');
+      }
+      const item = await compras.adicionarItem(aberta.valor.id, {
+        produtoId: 'p1',
+        unidade: 'un',
+        quantidadePlanejada: milesimos(12000),
+      });
+      const observador = new ObservadorFalso();
+      const { result } = await renderHook(() => useModoCompra(aberta.valor.id, compras, observador));
+      await waitFor(() => expect(result.current.carregando).toBe(false));
+
+      await act(async () => {
+        // Mercado tinha pacote de 16, não 12 — confirmado no ajuste detalhado.
+        await result.current.ajustarComPacotes(item.id, 1, fatorConversao(16), centavos(1600));
+        observador.notificar();
+      });
+      await waitFor(() => expect(result.current.itens[0].item.fatorUsadoNaCompra).toBe(16));
+
+      await act(async () => {
+        await result.current.ajustarQuantidadeRapida(item.id, 1);
+        observador.notificar();
+      });
+
+      // 16 (confirmado) + 16, não 16 + 12 (cadastrado).
+      await waitFor(() => expect(result.current.itens[0].item.quantidadeComprada).toBe(32000));
+    });
+
+    it('produto sem fator mantém o passo por unidade de sempre', async () => {
+      const { compras, compraId, item, observador } = await montarCompraComItem();
+      const { result } = await renderHook(() => useModoCompra(compraId, compras, observador));
+      await waitFor(() => expect(result.current.carregando).toBe(false));
+
+      await act(async () => {
+        await result.current.ajustarQuantidadeRapida(item.id, 1);
+        observador.notificar();
+      });
+
+      await waitFor(() => expect(result.current.itens[0].item.quantidadeComprada).toBe(3000));
+    });
+  });
+
+  describe('ajustarComPacotes (change conversao-unidade-de-compra)', () => {
+    it('deriva quantidade comprada e preço por unidade a partir de pacotes', async () => {
+      const produtos = new ProdutoRepositorioFalso([
+        produtoFalso({
+          id: 'p1',
+          nome: 'Papel higiênico',
+          fatorConversaoEmbalagem: fatorConversao(12),
+          valorUnitario: centavos(100),
+        }),
+      ]);
+      const compras = new CompraRepositorioFalso(produtos);
+      const aberta = await compras.abrir('casa-teste', 'usuario-teste', 1000);
+      if (!aberta.ok) {
+        throw new Error('setup');
+      }
+      const item = await compras.adicionarItem(aberta.valor.id, {
+        produtoId: 'p1',
+        unidade: 'un',
+        quantidadePlanejada: milesimos(12000),
+      });
+      const observador = new ObservadorFalso();
+      const { result } = await renderHook(() => useModoCompra(aberta.valor.id, compras, observador));
+      await waitFor(() => expect(result.current.carregando).toBe(false));
+
+      await act(async () => {
+        await result.current.ajustarComPacotes(item.id, 1, fatorConversao(12), centavos(1290));
+        observador.notificar();
+      });
+
+      await waitFor(() => expect(result.current.itens[0].item.quantidadeComprada).toBe(12000));
+      expect(result.current.itens[0].item.valorPagoUnitario).toBe(108);
+      expect(result.current.itens[0].item.quantidadePacotes).toBe(1);
+      expect(result.current.itens[0].item.fatorUsadoNaCompra).toBe(12);
+    });
+
+    it('tamanho de pacote diferente do cadastrado no mercado não altera o fator do produto', async () => {
+      const produtos = new ProdutoRepositorioFalso([
+        produtoFalso({
+          id: 'p1',
+          nome: 'Papel higiênico',
+          fatorConversaoEmbalagem: fatorConversao(12),
+          valorUnitario: centavos(100),
+        }),
+      ]);
+      const compras = new CompraRepositorioFalso(produtos);
+      const aberta = await compras.abrir('casa-teste', 'usuario-teste', 1000);
+      if (!aberta.ok) {
+        throw new Error('setup');
+      }
+      const item = await compras.adicionarItem(aberta.valor.id, {
+        produtoId: 'p1',
+        unidade: 'un',
+        quantidadePlanejada: milesimos(12000),
+      });
+      const observador = new ObservadorFalso();
+      const { result } = await renderHook(() => useModoCompra(aberta.valor.id, compras, observador));
+      await waitFor(() => expect(result.current.carregando).toBe(false));
+
+      await act(async () => {
+        // Mercado tinha pacote de 16, não 12.
+        await result.current.ajustarComPacotes(item.id, 1, fatorConversao(16), centavos(1600));
+        observador.notificar();
+      });
+
+      await waitFor(() => expect(result.current.itens[0].item.quantidadeComprada).toBe(16000));
+      expect(result.current.itens[0].item.valorPagoUnitario).toBe(100);
+      expect(result.current.itens[0].item.fatorUsadoNaCompra).toBe(16);
+      expect(produtos.produtos[0].fatorConversaoEmbalagem).toBe(12); // cadastro intocado
+    });
+
+    it('preço derivado de pacotes que diverge do cadastrado aciona a mesma revisão existente', async () => {
+      const produtos = new ProdutoRepositorioFalso([
+        produtoFalso({
+          id: 'p1',
+          nome: 'Papel higiênico',
+          fatorConversaoEmbalagem: fatorConversao(12),
+          valorUnitario: centavos(100),
+        }),
+      ]);
+      const compras = new CompraRepositorioFalso(produtos);
+      const aberta = await compras.abrir('casa-teste', 'usuario-teste', 1000);
+      if (!aberta.ok) {
+        throw new Error('setup');
+      }
+      const item = await compras.adicionarItem(aberta.valor.id, {
+        produtoId: 'p1',
+        unidade: 'un',
+        quantidadePlanejada: milesimos(12000),
+      });
+      const observador = new ObservadorFalso();
+      const { result } = await renderHook(() => useModoCompra(aberta.valor.id, compras, observador));
+      await waitFor(() => expect(result.current.carregando).toBe(false));
+
+      await act(async () => {
+        // 1290/12 = 108, diverge do valorUnitario cadastrado (100).
+        await result.current.ajustarComPacotes(item.id, 1, fatorConversao(12), centavos(1290));
+        observador.notificar();
+      });
+
+      await waitFor(() => expect(result.current.itens[0].item.valorPagoUnitario).toBe(108));
+      expect(result.current.itens[0].divergePreco).toBe(true);
+    });
+
+    it('produto sem fator mantém o fluxo existente de quantidade/preço por unidade', async () => {
+      const { compras, compraId, item, observador } = await montarCompraComItem();
+      const { result } = await renderHook(() => useModoCompra(compraId, compras, observador));
+      await waitFor(() => expect(result.current.carregando).toBe(false));
+
+      await act(async () => {
+        await result.current.ajustarQuantidade(item.id, milesimos(1500));
+        await result.current.ajustarPreco(item.id, centavos(700));
+        observador.notificar();
+      });
+
+      await waitFor(() => expect(result.current.itens[0].item.quantidadeComprada).toBe(1500));
+      expect(result.current.itens[0].item.quantidadePacotes).toBeNull();
+      expect(result.current.itens[0].item.fatorUsadoNaCompra).toBeNull();
+    });
+  });
 });

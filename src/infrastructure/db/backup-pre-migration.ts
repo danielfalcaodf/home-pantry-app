@@ -41,7 +41,15 @@ export function fazerBackupSeMigrationPendente(sqlite: SqliteBruto): void {
   if (!original.exists) {
     return;
   }
-  original.copy(new File(diretorio, `estoque.pre-v${aplicadas}.db`));
+  const destino = new File(diretorio, `estoque.pre-v${aplicadas}.db`);
+  // `File.copy` lança se o destino já existe — uma tentativa anterior
+  // interrompida antes de aplicar a migration (crash, Fast Refresh em dev)
+  // deixa essa cópia para trás e travaria toda tentativa seguinte no mesmo
+  // erro. A cópia é do mesmo `aplicadas`, então sobrescrever é seguro.
+  if (destino.exists) {
+    destino.delete();
+  }
+  original.copy(destino);
 
   const copias = diretorio
     .list()

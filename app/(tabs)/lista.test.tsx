@@ -21,6 +21,8 @@ const mockItens = [
     valorUnitario: 500,
     custo: 500,
     semPreco: false,
+    pacotes: null,
+    quantidadeFinalEstimada: null,
   },
   {
     tipo: 'produto' as const,
@@ -32,6 +34,8 @@ const mockItens = [
     valorUnitario: 0,
     custo: 0,
     semPreco: true,
+    pacotes: null,
+    quantidadeFinalEstimada: null,
   },
   {
     tipo: 'avulso' as const,

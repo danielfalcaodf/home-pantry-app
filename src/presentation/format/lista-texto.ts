@@ -1,12 +1,15 @@
 import { ItemDaLista, TotalDaListaDeCompras } from '../../domain/lista/lista';
 import { formatarBRL } from '../../domain/shared/dinheiro';
-import { formatarQuantidade } from '../../domain/shared/quantidade';
 import { agruparListaPorCategoria } from './agrupar-lista';
+import { textoExcedente, textoQuantidadeAComprar } from './quantidade-a-comprar';
 
 const CABECALHO = 'Lista de compras';
 
 function linhaDoItem(item: ItemDaLista): string {
-  const quantidade = formatarQuantidade(item.quantidadeAComprar, item.unidade);
+  const excedente = textoExcedente(item);
+  const quantidade = excedente
+    ? `${textoQuantidadeAComprar(item)} (${excedente})`
+    : textoQuantidadeAComprar(item);
   const preco = item.semPreco ? 'sem preço' : formatarBRL(item.custo);
   const nome = item.tipo === 'avulso' ? `${item.nome} (avulso)` : item.nome;
   return `- ${nome} — ${quantidade} — ${preco}`;

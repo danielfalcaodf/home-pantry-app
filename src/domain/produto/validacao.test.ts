@@ -18,6 +18,8 @@ describe('validarCadastroProduto', () => {
         categoria: null,
         marcaPreferida: null,
         observacao: null,
+        fatorConversaoEmbalagem: null,
+        valorReferenciaEmbalagem: null,
       });
     }
   });
@@ -93,6 +95,48 @@ describe('validarCadastroProduto', () => {
     expect(resultado.ok).toBe(true);
     if (resultado.ok) {
       expect(resultado.valor.categoria).toBe('Limpeza pesada');
+    }
+  });
+
+  it('fator e valor do pacote derivam o valor unitário sem exigir digitação direta', () => {
+    const resultado = validarCadastroProduto({
+      nome: 'Papel higiênico',
+      unidade: 'un',
+      quantidadeNecessaria: 12,
+      fatorConversaoEmbalagem: 12,
+      valorReferenciaEmbalagem: 12.9,
+    });
+    expect(resultado.ok).toBe(true);
+    if (resultado.ok) {
+      expect(resultado.valor.fatorConversaoEmbalagem).toBe(12);
+      expect(resultado.valor.valorReferenciaEmbalagem).toBe(1290);
+      expect(resultado.valor.valorUnitario).toBe(108);
+    }
+  });
+
+  it('fator de conversão em unidade divisível é rejeitado', () => {
+    const resultado = validarCadastroProduto({
+      nome: 'Arroz',
+      unidade: 'kg',
+      quantidadeNecessaria: 5,
+      fatorConversaoEmbalagem: 6,
+    });
+    expect(resultado.ok).toBe(false);
+    if (!resultado.ok) {
+      expect(resultado.erro.campo).toBe('fatorConversaoEmbalagem');
+    }
+  });
+
+  it('cadastro sem embalagem continua igual a hoje', () => {
+    const resultado = validarCadastroProduto({
+      nome: 'Sabonete',
+      unidade: 'un',
+      quantidadeNecessaria: 3,
+    });
+    expect(resultado.ok).toBe(true);
+    if (resultado.ok) {
+      expect(resultado.valor.fatorConversaoEmbalagem).toBeNull();
+      expect(resultado.valor.valorReferenciaEmbalagem).toBeNull();
     }
   });
 });

@@ -26,6 +26,8 @@ function item(sobrescreve: Partial<CompraItem> = {}): CompraItem {
     quantidadeComprada: null,
     valorEstimadoUnit: centavos(0),
     valorPagoUnitario: null,
+    quantidadePacotes: null,
+    fatorUsadoNaCompra: null,
     comprado: false,
     ordem: 0,
     excluido: false,
@@ -47,6 +49,8 @@ function produto(sobrescreve: Partial<Produto> = {}): Produto {
     valorUnitario: centavos(0),
     marcaPreferida: null,
     observacao: null,
+    fatorConversaoEmbalagem: null,
+    valorReferenciaEmbalagem: null,
     ativo: true,
     criadoEm: 0,
     atualizadoEm: 0,
@@ -148,6 +152,17 @@ describe('divergenciaDePreco', () => {
   it('item sem preço pago não sinaliza', () => {
     const p = produto({ valorUnitario: centavos(890) });
     expect(divergenciaDePreco(comprado(p.id, 1000, null), p)).toBe(false);
+  });
+
+  it('preço derivado de pacotes que diverge aciona a mesma detecção existente', () => {
+    // 1 pacote de 12, pago 1290 → derivado 108/un (ver conversao-embalagem.rules)
+    const p = produto({ valorUnitario: centavos(100) });
+    expect(divergenciaDePreco(comprado(p.id, 12000, 108), p)).toBe(true);
+  });
+
+  it('preço derivado de pacotes igual ao cadastrado não sinaliza', () => {
+    const p = produto({ valorUnitario: centavos(108) });
+    expect(divergenciaDePreco(comprado(p.id, 12000, 108), p)).toBe(false);
   });
 });
 

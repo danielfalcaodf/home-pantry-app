@@ -1,0 +1,156 @@
+appId: com.danielfalcaodf.repor
+---
+# Change `conversao-unidade-de-compra` (task 9.5) — screenshots das telas
+# novas (formulário com campos de embalagem, item da lista com "dá para X",
+# sheet de ajuste do Modo Compra com campos de pacote) nos dois temas
+# (Despensa/escuro e Porcelana/claro), pra checagem visual best-effort de
+# que nenhum componente novo usa cor fora dos tokens de
+# `presentation/theme/tokens.ts` (os componentes novos reaproveitam
+# CampoTexto/Texto/ChipEstado já usados em todo o app, então não é esperada
+# nenhuma cor "estranha" — esta é uma confirmação visual, não leitura de
+# código).
+#
+# Pré-requisito: rodar `conversao-unidade-de-compra-jornada-completa.yaml`
+# antes (ou ter algum produto com fator de conversão cadastrado e faltando
+# na lista) para os prints de lista/sheet mostrarem os campos novos. Se não
+# houver produto com fator faltando, os prints de formulário ainda cobrem o
+# essencial (campos de embalagem no cadastro).
+#
+# Efeito colateral real: cria "Item Teste QA Screenshot" (un, fator 4, valor
+# do pacote R$8,00, necessária 10) para garantir que ao menos um item com
+# excedente apareça na lista para o print, em ambos os temas. Troca o tema
+# para Claro e volta para Escuro antes de terminar (mesmo padrão de
+# troca-de-tema.yaml), deixando o dispositivo como foi encontrado.
+
+- launchApp
+- assertVisible: "Despensa"
+# ambiente: bolha flutuante "Tools" do Expo dev-client sobrepõe os ícones do topo
+- swipe:
+    start: "970, 173"
+    end: "540, 700"
+    duration: 600
+
+# --- Produto de apoio para os prints da lista/sheet -----------------------
+- tapOn: "Adicionar produto"
+- assertVisible: "Novo produto"
+- tapOn: "O que é"
+- inputText: "Item Teste QA Screenshot"
+- hideKeyboard
+- tapOn: "un"
+- tapOn: "Quanto quero ter em casa"
+- inputText: "10"
+- hideKeyboard
+- tapOn: "Mais opções"
+- tapOn: "Sim"
+- tapOn: "Quantas unidades vêm no pacote?"
+- inputText: "4"
+- hideKeyboard
+- scrollUntilVisible:
+    element: "Quanto custa o pacote?"
+    direction: DOWN
+    speed: 40
+    timeout: 15000
+- tapOn: "Quanto custa o pacote?"
+- inputText: "8,00"
+- hideKeyboard
+- takeScreenshot: embalagem-formulario-escuro
+- scrollUntilVisible:
+    element: "Adicionar à despensa"
+    direction: DOWN
+    speed: 40
+    timeout: 20000
+- tapOn: "Adicionar à despensa"
+- assertVisible: "Despensa"
+
+- tapOn: "Lista"
+- scrollUntilVisible:
+    element: "Item Teste QA Screenshot"
+    direction: DOWN
+    speed: 60
+    timeout: 20000
+- assertVisible: "compre 3 pacotes"
+- takeScreenshot: embalagem-lista-excedente-escuro
+
+- tapOn:
+    text: "Iniciar compra \\(\\d+\\)"
+- scrollUntilVisible:
+    element: "Ajustar quantidade e preço de Item Teste QA Screenshot"
+    direction: DOWN
+    speed: 40
+    timeout: 20000
+- tapOn: "Ajustar quantidade e preço de Item Teste QA Screenshot"
+- assertVisible: "Quantos pacotes"
+- takeScreenshot: embalagem-sheet-ajuste-escuro
+- tapOn: "Fechar"
+
+- tapOn: "Cancelar compra"
+- runFlow:
+    when:
+      visible: "Cancelar esta compra?"
+    commands:
+      - tapOn: "Cancelar compra"
+- assertVisible: "Despensa"
+
+# --- Troca para o tema Claro (Porcelana) e repete os prints ---------------
+- tapOn: "Configurações"
+- assertVisible: "Configurações"
+- tapOn: "Tema Claro"
+- assertVisible:
+    text: "Tema Claro"
+    selected: true
+
+- tapOn: "Despensa"
+- tapOn: "Buscar"
+- inputText: "Item Teste QA Screenshot"
+- hideKeyboard
+- tapOn: "Item Teste QA Screenshot, 0 de 10 un, Acabou"
+- scrollUntilVisible:
+    element: "Mais opções"
+    direction: DOWN
+    speed: 40
+    timeout: 15000
+- tapOn: "Mais opções"
+- scrollUntilVisible:
+    element: "Vem em pacote fechado?"
+    direction: DOWN
+    speed: 40
+    timeout: 20000
+- takeScreenshot: embalagem-formulario-claro
+- back
+- assertVisible: "Despensa"
+
+- tapOn: "Lista"
+- scrollUntilVisible:
+    element: "Item Teste QA Screenshot"
+    direction: DOWN
+    speed: 60
+    timeout: 20000
+- assertVisible: "compre 3 pacotes"
+- takeScreenshot: embalagem-lista-excedente-claro
+
+- tapOn:
+    text: "Iniciar compra \\(\\d+\\)"
+- scrollUntilVisible:
+    element: "Ajustar quantidade e preço de Item Teste QA Screenshot"
+    direction: DOWN
+    speed: 40
+    timeout: 20000
+- tapOn: "Ajustar quantidade e preço de Item Teste QA Screenshot"
+- assertVisible: "Quantos pacotes"
+- takeScreenshot: embalagem-sheet-ajuste-claro
+- tapOn: "Fechar"
+
+- tapOn: "Cancelar compra"
+- runFlow:
+    when:
+      visible: "Cancelar esta compra?"
+    commands:
+      - tapOn: "Cancelar compra"
+- assertVisible: "Despensa"
+
+# --- Devolve o dispositivo de teste ao tema em que foi encontrado (Escuro)
+- tapOn: "Configurações"
+- tapOn: "Tema Escuro"
+- assertVisible:
+    text: "Tema Escuro"
+    selected: true

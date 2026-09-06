@@ -30,6 +30,8 @@ function itemBase(sobrescreve: Partial<CompraItem> = {}): CompraItem {
     quantidadeComprada: null,
     valorEstimadoUnit: centavos(890),
     valorPagoUnitario: null,
+    quantidadePacotes: null,
+    fatorUsadoNaCompra: null,
     comprado: false,
     ordem: 0,
     excluido: false,
@@ -41,7 +43,15 @@ function itemBase(sobrescreve: Partial<CompraItem> = {}): CompraItem {
 function linhaBase(sobrescreve: Partial<ItemDaCompra> = {}): ItemDaCompra {
   return {
     item: itemBase(),
-    produto: { id: 'p1', nome: 'Arroz', categoria: 'Grãos', unidade: 'un', valorUnitario: centavos(890) },
+    produto: {
+      id: 'p1',
+      nome: 'Arroz',
+      categoria: 'Grãos',
+      unidade: 'un',
+      valorUnitario: centavos(890),
+      fatorConversaoEmbalagem: null,
+      valorReferenciaEmbalagem: null,
+    },
     divergePreco: false,
     ...sobrescreve,
   };

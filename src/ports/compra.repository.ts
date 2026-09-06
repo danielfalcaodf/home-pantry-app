@@ -37,6 +37,8 @@ export type EdicaoItemCompra = Partial<
     | 'quantidadeComprada'
     | 'valorEstimadoUnit'
     | 'valorPagoUnitario'
+    | 'quantidadePacotes'
+    | 'fatorUsadoNaCompra'
     | 'comprado'
     | 'ordem'
     | 'atualizarPreco'
@@ -48,7 +50,16 @@ export type EdicaoItemCompra = Partial<
 // única consulta — item avulso vem com produto null (DATABASE §6.7).
 export type ItemComProduto = {
   item: CompraItem;
-  produto: Pick<Produto, 'id' | 'nome' | 'categoria' | 'unidade' | 'valorUnitario'> | null;
+  produto: Pick<
+    Produto,
+    | 'id'
+    | 'nome'
+    | 'categoria'
+    | 'unidade'
+    | 'valorUnitario'
+    | 'fatorConversaoEmbalagem'
+    | 'valorReferenciaEmbalagem'
+  > | null;
 };
 
 // A contagem de itens comprados vem de uma junção agregada em uma única

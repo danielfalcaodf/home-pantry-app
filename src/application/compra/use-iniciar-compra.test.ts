@@ -25,6 +25,8 @@ function faltante(sobrescreve: Partial<FaltanteBruto> = {}): FaltanteBruto {
     quantidadeAtual: milesimos(500),
     quantidadeNecessaria: milesimos(2000),
     faltaBruta: milesimos(1500),
+    fatorConversaoEmbalagem: null,
+    valorReferenciaEmbalagem: null,
     ...sobrescreve,
   };
 }

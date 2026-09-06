@@ -68,6 +68,8 @@ export class CompraRepositorioFalso implements CompraRepository {
       quantidadeComprada: null,
       valorEstimadoUnit: item.valorEstimadoUnit ?? centavos(0),
       valorPagoUnitario: null,
+      quantidadePacotes: null,
+      fatorUsadoNaCompra: null,
       comprado: false,
       ordem,
       excluido: item.excluido ?? false,
@@ -173,6 +175,8 @@ export class CompraRepositorioFalso implements CompraRepository {
                   categoria: produto.categoria,
                   unidade: produto.unidade,
                   valorUnitario: produto.valorUnitario,
+                  fatorConversaoEmbalagem: produto.fatorConversaoEmbalagem,
+                  valorReferenciaEmbalagem: produto.valorReferenciaEmbalagem,
                 },
         };
       });

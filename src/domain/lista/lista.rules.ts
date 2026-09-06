@@ -1,21 +1,28 @@
 import { CompraItem } from '../compra/compra';
 import { FaltanteBruto } from '../produto/produto';
 import { centavos, multiplicarQuantidadePorPreco } from '../shared/dinheiro';
-import { custoReposicao, quantidadeAComprar } from '../produto/estoque.rules';
+import { custoReposicao, detalheDaQuantidadeAComprar } from '../produto/estoque.rules';
+import { milesimos } from '../shared/quantidade';
 import { ItemDaLista, TotalDaListaDeCompras } from './lista';
 
 export function itemDeFaltante(faltante: FaltanteBruto): ItemDaLista {
   const { custo, semPreco } = custoReposicao(faltante);
+  const detalhe = detalheDaQuantidadeAComprar(faltante);
   return {
     tipo: 'produto',
     produtoId: faltante.id,
     nome: faltante.nome,
     categoria: faltante.categoria,
     unidade: faltante.unidade,
-    quantidadeAComprar: quantidadeAComprar(faltante),
+    quantidadeAComprar: detalhe.quantidade,
     valorUnitario: faltante.valorUnitario,
     custo,
     semPreco,
+    pacotes: detalhe.pacotes,
+    quantidadeFinalEstimada:
+      detalhe.pacotes !== null && detalhe.excedente > 0
+        ? milesimos(faltante.quantidadeAtual + detalhe.quantidade)
+        : null,
   };
 }
 
