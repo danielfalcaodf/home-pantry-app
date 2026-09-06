@@ -20,6 +20,15 @@ export type SheetAjusteCompraProps = {
   precoInicial: number | null;
   onFechar: () => void;
   onSalvar: (dados: { quantidade: number; preco: number | null }) => void;
+  /**
+   * Presente (não nulo) quando o produto tem fator de conversão cadastrado
+   * (change conversao-unidade-de-compra) — troca os campos de
+   * quantidade/preço por unidade pelos de pacotes: quantos pacotes, quantas
+   * unidades tem o pacote encontrado no mercado (pré-preenchido com este
+   * valor, mas editável) e quanto foi pago no total.
+   */
+  fatorConversaoEmbalagem?: number | null;
+  onSalvarPacotes?: (dados: { pacotes: number; tamanhoPacote: number; valorTotal: number }) => void;
 };
 
 /**
@@ -35,21 +44,37 @@ export function SheetAjusteCompra({
   precoInicial,
   onFechar,
   onSalvar,
+  fatorConversaoEmbalagem = null,
+  onSalvarPacotes,
 }: SheetAjusteCompraProps) {
   const tema = useTheme();
   const campoQuantidadeRef = useRef<TextInput>(null);
+  const campoPacotesRef = useRef<TextInput>(null);
   const [quantidade, setQuantidade] = useState(String(quantidadeInicial).replace('.', ','));
   // Duas casas sempre — é o formato que a máscara de dinheiro espera pra
   // reconhecer o valor semeado (CampoTexto extrai dígitos do que está aqui).
   const [preco, setPreco] = useState(precoInicial !== null ? precoInicial.toFixed(2).replace('.', ',') : '');
+  const [pacotes, setPacotes] = useState('1');
+  const [tamanhoPacote, setTamanhoPacote] = useState(String(fatorConversaoEmbalagem ?? ''));
+  const [valorTotal, setValorTotal] = useState('');
   const [erroQuantidade, setErroQuantidade] = useState<string | undefined>(undefined);
+  const [erroPacotes, setErroPacotes] = useState<string | undefined>(undefined);
+  const [erroTamanhoPacote, setErroTamanhoPacote] = useState<string | undefined>(undefined);
+
+  const temEmbalagem = fatorConversaoEmbalagem !== null;
 
   function fechar() {
     setErroQuantidade(undefined);
+    setErroPacotes(undefined);
+    setErroTamanhoPacote(undefined);
     onFechar();
   }
 
   function salvar() {
+    if (temEmbalagem) {
+      salvarPacotes();
+      return;
+    }
     const quantidadeNumerica = Number(quantidade.replace(',', '.'));
     if (!(quantidadeNumerica > 0)) {
       setErroQuantidade('Diga quanto foi comprado');
@@ -66,11 +91,33 @@ export function SheetAjusteCompra({
     fechar();
   }
 
+  function salvarPacotes() {
+    const pacotesNumerico = Number(pacotes.replace(',', '.'));
+    if (!Number.isInteger(pacotesNumerico) || pacotesNumerico <= 0) {
+      setErroPacotes('Diga quantos pacotes você comprou');
+      return;
+    }
+    const tamanhoNumerico = Number(tamanhoPacote.replace(',', '.'));
+    if (!Number.isInteger(tamanhoNumerico) || tamanhoNumerico <= 0) {
+      setErroTamanhoPacote('Diga quantas unidades tem o pacote');
+      return;
+    }
+    const valorTotalNumerico = valorTotal.trim() === '' ? 0 : Number(valorTotal.replace(',', '.'));
+    onSalvarPacotes?.({
+      pacotes: pacotesNumerico,
+      tamanhoPacote: tamanhoNumerico,
+      valorTotal: valorTotalNumerico,
+    });
+    fechar();
+  }
+
   return (
     <PainelInferior
       visivel={visivel}
       onFechar={fechar}
-      onAberto={() => campoQuantidadeRef.current?.focus()}
+      onAberto={() =>
+        (temEmbalagem ? campoPacotesRef : campoQuantidadeRef).current?.focus()
+      }
       testID="evita-teclado-ajuste-compra"
       style={{ padding: espaco.xl, gap: espaco.lg }}
     >
@@ -91,28 +138,63 @@ export function SheetAjusteCompra({
           <IconeSvg path={icones.fechar} cor={tema.text.secondary} tamanho={20} />
         </Pressable>
       </View>
-      <View style={{ flexDirection: 'row', gap: espaco.md }}>
-        <View style={{ flex: 1 }}>
+      {temEmbalagem ? (
+        <>
+          <View style={{ flexDirection: 'row', gap: espaco.md }}>
+            <View style={{ flex: 1 }}>
+              <CampoTexto
+                ref={campoPacotesRef}
+                rotulo="Quantos pacotes"
+                value={pacotes}
+                onChangeText={setPacotes}
+                keyboardType="number-pad"
+                erro={erroPacotes}
+                tipo="quantidade"
+              />
+            </View>
+            <View style={{ flex: 1 }}>
+              <CampoTexto
+                rotulo="Unidades no pacote"
+                value={tamanhoPacote}
+                onChangeText={setTamanhoPacote}
+                keyboardType="number-pad"
+                erro={erroTamanhoPacote}
+                tipo="quantidade"
+              />
+            </View>
+          </View>
           <CampoTexto
-            ref={campoQuantidadeRef}
-            rotulo={`Quantidade (${rotuloDaUnidade(unidade, true)})`}
-            value={quantidade}
-            onChangeText={setQuantidade}
-            keyboardType="decimal-pad"
-            erro={erroQuantidade}
-            tipo="quantidade"
-          />
-        </View>
-        <View style={{ flex: 1 }}>
-          <CampoTexto
-            rotulo="Preço pago (opcional)"
-            value={preco}
-            onChangeText={setPreco}
+            rotulo="Valor total pago"
+            value={valorTotal}
+            onChangeText={setValorTotal}
             keyboardType="decimal-pad"
             tipo="dinheiro"
           />
+        </>
+      ) : (
+        <View style={{ flexDirection: 'row', gap: espaco.md }}>
+          <View style={{ flex: 1 }}>
+            <CampoTexto
+              ref={campoQuantidadeRef}
+              rotulo={`Quantidade (${rotuloDaUnidade(unidade, true)})`}
+              value={quantidade}
+              onChangeText={setQuantidade}
+              keyboardType="decimal-pad"
+              erro={erroQuantidade}
+              tipo="quantidade"
+            />
+          </View>
+          <View style={{ flex: 1 }}>
+            <CampoTexto
+              rotulo="Preço pago (opcional)"
+              value={preco}
+              onChangeText={setPreco}
+              keyboardType="decimal-pad"
+              tipo="dinheiro"
+            />
+          </View>
         </View>
-      </View>
+      )}
       <Botao titulo="Salvar" onPress={salvar} />
     </PainelInferior>
   );

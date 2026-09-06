@@ -1,3 +1,4 @@
+import { FatorConversao } from './conversao-embalagem.rules';
 import { Centavos } from '../shared/dinheiro';
 import { Milesimos } from '../shared/quantidade';
 import { Unidade } from '../shared/unidade';
@@ -16,6 +17,10 @@ export type Produto = {
   valorUnitario: Centavos;
   marcaPreferida: string | null;
   observacao: string | null;
+  /** Opcional, só para unidade indivisível (change conversao-unidade-de-compra). */
+  fatorConversaoEmbalagem: FatorConversao | null;
+  /** centavos, valor de referência do pacote fechado. */
+  valorReferenciaEmbalagem: Centavos | null;
   ativo: boolean;
   criadoEm: number;
   atualizadoEm: number;
@@ -37,4 +42,6 @@ export type FaltanteBruto = {
   quantidadeAtual: Milesimos;
   quantidadeNecessaria: Milesimos;
   faltaBruta: Milesimos;
+  fatorConversaoEmbalagem: FatorConversao | null;
+  valorReferenciaEmbalagem: Centavos | null;
 };

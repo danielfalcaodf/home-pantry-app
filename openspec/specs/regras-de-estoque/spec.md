@@ -28,7 +28,11 @@ O domínio SHALL classificar cada produto em exatamente um de três estados: **c
 
 ### Requirement: Quantidade a comprar
 
-O domínio SHALL calcular a quantidade a comprar como a diferença entre a necessária e a atual, nunca negativa, e SHALL aplicar o arredondamento para cima quando a unidade for indivisível.
+O domínio SHALL calcular a quantidade a comprar como a diferença entre a necessária e a atual,
+nunca negativa, e SHALL aplicar o arredondamento para cima quando a unidade for indivisível.
+Quando o produto tiver fator de conversão de embalagem cadastrado, o arredondamento SHALL ser
+para o múltiplo do fator, não para 1 unidade, e o resultado SHALL indicar também o excedente de
+unidades que sobrará em estoque após a compra.
 
 #### Scenario: Falta simples em unidade divisível
 
@@ -49,6 +53,23 @@ O domínio SHALL calcular a quantidade a comprar como a diferença entre a neces
 
 - **WHEN** a quantidade atual é 0 e a necessária é 3000 na unidade unidade
 - **THEN** a quantidade a comprar é 3000 milésimos
+
+#### Scenario: Falta menor que um pacote arredonda para o fator
+
+- **WHEN** um produto com fator de conversão 12 tem 6 unidades faltando
+- **THEN** a quantidade a comprar é 12 unidades (1 pacote), com excedente de 6 unidades
+  sinalizado
+
+#### Scenario: Falta maior que um pacote arredonda para o múltiplo do fator
+
+- **WHEN** um produto com fator de conversão 12 tem 30 unidades faltando
+- **THEN** a quantidade a comprar é 36 unidades (3 pacotes), com excedente de 6 unidades
+  sinalizado
+
+#### Scenario: Falta exata em múltiplo do fator não gera excedente
+
+- **WHEN** um produto com fator de conversão 12 tem exatamente 12 unidades faltando
+- **THEN** a quantidade a comprar é 12 unidades, sem excedente
 
 ### Requirement: Custo de reposição e valor em estoque
 

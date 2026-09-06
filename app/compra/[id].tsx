@@ -11,6 +11,7 @@ import { ItemDaCompra, useModoCompra } from '@/application/compra/use-modo-compr
 import { usePreferenciaDeAgrupamento } from '@/application/lista/use-preferencia-agrupamento';
 import { totalPago } from '@/domain/compra/compra.rules';
 import { passoRapido } from '@/domain/compra/quantidade-compra.rules';
+import { custoEstimadoComFator, fatorConversao } from '@/domain/produto/conversao-embalagem.rules';
 import { centavos, formatarBRL, multiplicarQuantidadePorPreco } from '@/domain/shared/dinheiro';
 import { deDecimal, paraDecimal } from '@/domain/shared/quantidade';
 import { Botao } from '@/presentation/components/botao';
@@ -37,6 +38,30 @@ function categoriaDoItemDaCompra(linha: ItemDaCompra): string | null {
   return linha.produto?.categoria ?? null;
 }
 
+// Prioriza o tamanho de pacote já confirmado nesta compra (mercado pode
+// divergir do cadastrado) sobre o fator cadastrado no produto — mesma
+// precedência do ajuste detalhado e do passo rápido (design.md).
+function fatorDoItemDaCompra(linha: ItemDaCompra) {
+  return linha.item.fatorUsadoNaCompra ?? linha.produto?.fatorConversaoEmbalagem ?? null;
+}
+
+// Antes de marcar comprado, o custo é sempre estimativa (valorEstimadoUnit
+// já vem arredondado de `valorUnitarioDoPacote`) — multiplicar de volta pela
+// quantidade reintroduz o erro que a divisão tinha eliminado (achado em
+// produção: pacote de 6 a R$10,00 exibindo R$10,02). Com embalagem
+// cadastrada, calcula direto a partir do preço do pacote numa única conta.
+// Depois de marcado (`valorPagoUnitario` presente), o preço já é o que o
+// usuário informou na compra — mantém o cálculo por unidade de sempre.
+function custoTotalDoItemDaCompra(linha: ItemDaCompra): ReturnType<typeof multiplicarQuantidadePorPreco> {
+  const { item, produto } = linha;
+  const quantidade = item.quantidadeComprada ?? item.quantidadePlanejada;
+  const fator = fatorDoItemDaCompra(linha);
+  if (item.valorPagoUnitario === null && fator !== null && produto?.valorReferenciaEmbalagem != null) {
+    return custoEstimadoComFator(quantidade, fator, produto.valorReferenciaEmbalagem);
+  }
+  return multiplicarQuantidadePorPreco(quantidade, item.valorPagoUnitario ?? item.valorEstimadoUnit);
+}
+
 function chaveDoItemDaCompra(linha: ItemDaCompra): string {
   return linha.item.id;
 }
@@ -58,6 +83,7 @@ export default function ModoCompra() {
     ajustarQuantidade,
     ajustarQuantidadeRapida,
     ajustarPreco,
+    ajustarComPacotes,
     responderAtualizarPreco,
   } = useModoCompra(id);
   const { finalizando, divergencias, finalizar } = useFinalizarCompra();
@@ -119,10 +145,10 @@ export default function ModoCompra() {
     tratarResultadoDoFechamento(await finalizar(id));
   }
 
-  async function confirmarRevisao() {
+  async function confirmarRevisao(selecionados: ReadonlySet<string> = precosSelecionados) {
     await Promise.all(
       itensEmRevisao.map(({ itemId, produtoId }) =>
-        responderAtualizarPreco(itemId, precosSelecionados.has(produtoId)),
+        responderAtualizarPreco(itemId, selecionados.has(produtoId)),
       ),
     );
     setRevisaoAberta(false);
@@ -170,6 +196,18 @@ export default function ModoCompra() {
     void ajustarPreco(
       itemEmAjuste.item.id,
       dados.preco === null ? null : centavos(Math.round(dados.preco * 100)),
+    );
+  }
+
+  function salvarAjustePorPacotes(dados: { pacotes: number; tamanhoPacote: number; valorTotal: number }) {
+    if (!itemEmAjuste) {
+      return;
+    }
+    void ajustarComPacotes(
+      itemEmAjuste.item.id,
+      dados.pacotes,
+      fatorConversao(dados.tamanhoPacote),
+      centavos(Math.round(dados.valorTotal * 100)),
     );
   }
 
@@ -222,10 +260,7 @@ export default function ModoCompra() {
             <ItemCompra
               key={linha.chave}
               linha={linha.item}
-              custoTotal={multiplicarQuantidadePorPreco(
-                linha.item.item.quantidadeComprada ?? linha.item.item.quantidadePlanejada,
-                linha.item.item.valorPagoUnitario ?? linha.item.item.valorEstimadoUnit,
-              )}
+              custoTotal={custoTotalDoItemDaCompra(linha.item)}
               onMarcar={() => void marcar(linha.item)}
               onDesmarcar={() => void desmarcar(linha.item.item.id)}
               onAjustar={() => setItemEmAjuste(linha.item)}
@@ -233,7 +268,7 @@ export default function ModoCompra() {
               onAumentarQuantidade={() => void ajustarQuantidadeRapida(linha.item.item.id, 1)}
               podeDiminuirQuantidade={
                 (linha.item.item.quantidadeComprada ?? linha.item.item.quantidadePlanejada) >
-                passoRapido(linha.item.item.unidade)
+                passoRapido(linha.item.item.unidade, fatorDoItemDaCompra(linha.item))
               }
             />
           ),
@@ -267,8 +302,10 @@ export default function ModoCompra() {
           precoInicial={
             itemEmAjuste.item.valorPagoUnitario !== null ? itemEmAjuste.item.valorPagoUnitario / 100 : null
           }
+          fatorConversaoEmbalagem={itemEmAjuste.produto?.fatorConversaoEmbalagem ?? null}
           onFechar={() => setItemEmAjuste(null)}
           onSalvar={salvarAjuste}
+          onSalvarPacotes={salvarAjustePorPacotes}
         />
       ) : null}
 
@@ -343,18 +380,12 @@ export default function ModoCompra() {
             <View style={{ gap: espaco.sm }}>
               <Botao
                 titulo={`Atualizar ${itensEmRevisao.length}`}
-                onPress={() => {
-                  setPrecosSelecionados(new Set(itensEmRevisao.map(({ produtoId }) => produtoId)));
-                  void confirmarRevisao();
-                }}
+                onPress={() => void confirmarRevisao(new Set(itensEmRevisao.map(({ produtoId }) => produtoId)))}
               />
               <Botao
                 titulo="Manter preços salvos"
                 variante="secundario"
-                onPress={() => {
-                  setPrecosSelecionados(new Set());
-                  void confirmarRevisao();
-                }}
+                onPress={() => void confirmarRevisao(new Set())}
               />
               <Botao
                 titulo="Escolher quais atualizar"

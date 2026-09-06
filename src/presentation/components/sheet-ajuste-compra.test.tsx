@@ -159,4 +159,76 @@ describe('SheetAjusteCompra', () => {
     // o gatilho de foco na montagem foi removido).
     expect(screen.getByLabelText(/Quantidade/).props.autoFocus).toBeFalsy();
   });
+
+  describe('produto com fator de conversão (change conversao-unidade-de-compra)', () => {
+    it('pergunta pacotes, unidades por pacote (pré-preenchido) e valor total, em vez de quantidade/preço direto', async () => {
+      const onSalvarPacotes = jest.fn();
+      await comTema(
+        <SheetAjusteCompra
+          visivel
+          nome="Papel higiênico"
+          unidade="un"
+          quantidadeInicial={12}
+          precoInicial={null}
+          fatorConversaoEmbalagem={12}
+          onFechar={jest.fn()}
+          onSalvar={jest.fn()}
+          onSalvarPacotes={onSalvarPacotes}
+        />,
+      );
+
+      expect(screen.queryByLabelText(/^Quantidade/)).toBeNull();
+      expect(screen.getByLabelText('Unidades no pacote').props.value).toBe('12');
+
+      fireEvent.changeText(screen.getByLabelText('Unidades no pacote'), '16');
+      await waitFor(() => expect(screen.getByLabelText('Unidades no pacote').props.value).toBe('16'));
+      fireEvent.changeText(screen.getByLabelText('Valor total pago'), '16,00');
+      await waitFor(() => expect(screen.getByLabelText('Valor total pago').props.value).toBe('16,00'));
+      fireEvent.press(screen.getByRole('button', { name: 'Salvar' }));
+
+      expect(onSalvarPacotes).toHaveBeenCalledWith({ pacotes: 1, tamanhoPacote: 16, valorTotal: 16 });
+    });
+
+    it('pacotes zerado ou não inteiro é rejeitado com erro em texto', async () => {
+      const onSalvarPacotes = jest.fn();
+      await comTema(
+        <SheetAjusteCompra
+          visivel
+          nome="Papel higiênico"
+          unidade="un"
+          quantidadeInicial={12}
+          precoInicial={null}
+          fatorConversaoEmbalagem={12}
+          onFechar={jest.fn()}
+          onSalvar={jest.fn()}
+          onSalvarPacotes={onSalvarPacotes}
+        />,
+      );
+
+      fireEvent.changeText(screen.getByLabelText('Quantos pacotes'), '0');
+      await waitFor(() => expect(screen.getByLabelText('Quantos pacotes').props.value).toBe('0'));
+      fireEvent.press(screen.getByRole('button', { name: 'Salvar' }));
+
+      await waitFor(() => expect(screen.getByText('Diga quantos pacotes você comprou')).toBeTruthy());
+      expect(onSalvarPacotes).not.toHaveBeenCalled();
+    });
+
+    it('produto sem fator mantém o fluxo existente de quantidade/preço direto', async () => {
+      await comTema(
+        <SheetAjusteCompra
+          visivel
+          nome="Arroz"
+          unidade="un"
+          quantidadeInicial={2}
+          precoInicial={null}
+          fatorConversaoEmbalagem={null}
+          onFechar={jest.fn()}
+          onSalvar={jest.fn()}
+        />,
+      );
+
+      expect(screen.queryByLabelText('Unidades no pacote')).toBeNull();
+      expect(screen.getByLabelText(/^Quantidade/)).toBeTruthy();
+    });
+  });
 });

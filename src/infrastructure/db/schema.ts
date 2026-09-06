@@ -68,6 +68,12 @@ export const produto = sqliteTable(
     valorUnitario: integer('valor_unitario').notNull().default(0),
     marcaPreferida: text('marca_preferida'),
     observacao: text('observacao'),
+    // Conversão de embalagem (change conversao-unidade-de-compra): opcional,
+    // só usada quando a unidade é indivisível — validação fica no domínio,
+    // não em CHECK de SQL.
+    fatorConversaoEmbalagem: integer('fator_conversao_embalagem'),
+    /** centavos: valor de referência do pacote fechado */
+    valorReferenciaEmbalagem: integer('valor_referencia_embalagem'),
     ativo: integer('ativo', { mode: 'boolean' }).notNull().default(true),
     criadoEm: integer('criado_em').notNull(),
     atualizadoEm: integer('atualizado_em').notNull(),
@@ -96,6 +102,14 @@ export const produto = sqliteTable(
     check('ck_produto_qtd_atual', sql`${t.quantidadeAtual} >= 0`),
     check('ck_produto_qtd_nec', sql`${t.quantidadeNecessaria} > 0`),
     check('ck_produto_valor', sql`${t.valorUnitario} >= 0`),
+    check(
+      'ck_produto_fator_conversao',
+      sql`${t.fatorConversaoEmbalagem} IS NULL OR ${t.fatorConversaoEmbalagem} > 0`,
+    ),
+    check(
+      'ck_produto_valor_referencia_embalagem',
+      sql`${t.valorReferenciaEmbalagem} IS NULL OR ${t.valorReferenciaEmbalagem} >= 0`,
+    ),
     check('ck_produto_ativo', sql`${t.ativo} IN (0,1)`),
     check(
       'ck_produto_sync',
@@ -188,6 +202,11 @@ export const compraItem = sqliteTable(
     quantidadeComprada: integer('quantidade_comprada'),
     valorEstimadoUnit: integer('valor_estimado_unit').notNull().default(0),
     valorPagoUnitario: integer('valor_pago_unitario'),
+    // Rastreabilidade de compra em pacotes (change conversao-unidade-de-compra):
+    // preenchidos só quando o produto tem fator de conversão cadastrado.
+    // quantidadeComprada continua a fonte da verdade (= quantidadePacotes × fatorUsadoNaCompra).
+    quantidadePacotes: integer('quantidade_pacotes'),
+    fatorUsadoNaCompra: integer('fator_usado_na_compra'),
     comprado: integer('comprado', { mode: 'boolean' }).notNull().default(false),
     ordem: integer('ordem').notNull().default(0),
     // marca a exclusão de um faltante da lista derivada desta compra
@@ -214,6 +233,14 @@ export const compraItem = sqliteTable(
     check(
       'ck_compra_item_atualizar_preco',
       sql`${t.atualizarPreco} IS NULL OR ${t.atualizarPreco} IN (0,1)`,
+    ),
+    check(
+      'ck_compra_item_qtd_pacotes',
+      sql`${t.quantidadePacotes} IS NULL OR ${t.quantidadePacotes} > 0`,
+    ),
+    check(
+      'ck_compra_item_fator_usado',
+      sql`${t.fatorUsadoNaCompra} IS NULL OR ${t.fatorUsadoNaCompra} > 0`,
     ),
     // ou é um produto do estoque, ou é um avulso com nome
     check(

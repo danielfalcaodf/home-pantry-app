@@ -1,5 +1,6 @@
 import { and, eq, isNull, like, sql } from 'drizzle-orm';
 
+import { fatorConversao } from '../../domain/produto/conversao-embalagem.rules';
 import { normalizarCategoria } from '../../domain/produto/categoria';
 import { Produto } from '../../domain/produto/produto';
 import { ProdutoValidado } from '../../domain/produto/validacao';
@@ -36,6 +37,10 @@ function paraDominio(linha: LinhaProduto): Produto {
     valorUnitario: centavos(linha.valorUnitario),
     marcaPreferida: linha.marcaPreferida,
     observacao: linha.observacao,
+    fatorConversaoEmbalagem:
+      linha.fatorConversaoEmbalagem === null ? null : fatorConversao(linha.fatorConversaoEmbalagem),
+    valorReferenciaEmbalagem:
+      linha.valorReferenciaEmbalagem === null ? null : centavos(linha.valorReferenciaEmbalagem),
     ativo: linha.ativo,
     criadoEm: linha.criadoEm,
     atualizadoEm: linha.atualizadoEm,
@@ -79,6 +84,8 @@ export class SQLiteProdutoRepository implements ProdutoRepository {
             valorUnitario: dados.valorUnitario,
             marcaPreferida: dados.marcaPreferida,
             observacao: dados.observacao,
+            fatorConversaoEmbalagem: dados.fatorConversaoEmbalagem,
+            valorReferenciaEmbalagem: dados.valorReferenciaEmbalagem,
             criadoEm: agora,
             atualizadoEm: agora,
           })
@@ -135,6 +142,12 @@ export class SQLiteProdutoRepository implements ProdutoRepository {
           ...(dados.valorUnitario !== undefined && { valorUnitario: dados.valorUnitario }),
           ...(dados.marcaPreferida !== undefined && { marcaPreferida: dados.marcaPreferida }),
           ...(dados.observacao !== undefined && { observacao: dados.observacao }),
+          ...(dados.fatorConversaoEmbalagem !== undefined && {
+            fatorConversaoEmbalagem: dados.fatorConversaoEmbalagem,
+          }),
+          ...(dados.valorReferenciaEmbalagem !== undefined && {
+            valorReferenciaEmbalagem: dados.valorReferenciaEmbalagem,
+          }),
           atualizadoEm: this.clock.agora(),
           syncStatus: 'pendente' as const,
         })
@@ -188,6 +201,8 @@ export class SQLiteProdutoRepository implements ProdutoRepository {
         valorUnitario: tabelaProduto.valorUnitario,
         marcaPreferida: tabelaProduto.marcaPreferida,
         observacao: tabelaProduto.observacao,
+        fatorConversaoEmbalagem: tabelaProduto.fatorConversaoEmbalagem,
+        valorReferenciaEmbalagem: tabelaProduto.valorReferenciaEmbalagem,
         ativo: tabelaProduto.ativo,
         criadoEm: tabelaProduto.criadoEm,
         atualizadoEm: tabelaProduto.atualizadoEm,
@@ -223,6 +238,8 @@ export class SQLiteProdutoRepository implements ProdutoRepository {
         quantidadeAtual: tabelaProduto.quantidadeAtual,
         quantidadeNecessaria: tabelaProduto.quantidadeNecessaria,
         faltaBruta: sql<number>`${tabelaProduto.quantidadeNecessaria} - ${tabelaProduto.quantidadeAtual}`,
+        fatorConversaoEmbalagem: tabelaProduto.fatorConversaoEmbalagem,
+        valorReferenciaEmbalagem: tabelaProduto.valorReferenciaEmbalagem,
       })
       .from(tabelaProduto)
       .where(
@@ -245,6 +262,10 @@ export class SQLiteProdutoRepository implements ProdutoRepository {
       quantidadeAtual: milesimos(linha.quantidadeAtual),
       quantidadeNecessaria: milesimos(linha.quantidadeNecessaria),
       faltaBruta: milesimos(linha.faltaBruta),
+      fatorConversaoEmbalagem:
+        linha.fatorConversaoEmbalagem === null ? null : fatorConversao(linha.fatorConversaoEmbalagem),
+      valorReferenciaEmbalagem:
+        linha.valorReferenciaEmbalagem === null ? null : centavos(linha.valorReferenciaEmbalagem),
     }));
   }
 

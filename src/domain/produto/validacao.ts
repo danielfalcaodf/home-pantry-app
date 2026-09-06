@@ -1,5 +1,6 @@
 import { falha, Result, sucesso } from '../../shared/result';
 import { normalizarCategoria } from './categoria';
+import { FatorConversao, validarFatorConversao, valorUnitarioDoPacote } from './conversao-embalagem.rules';
 import { Centavos, centavos } from '../shared/dinheiro';
 import { deDecimal, Milesimos } from '../shared/quantidade';
 import { ehUnidade, Unidade } from '../shared/unidade';
@@ -13,6 +14,10 @@ export type EntradaCadastroProduto = {
   categoria?: string;
   marcaPreferida?: string;
   observacao?: string;
+  /** Quantas unidades vêm no pacote — só vale para unidade indivisível. */
+  fatorConversaoEmbalagem?: number;
+  /** Reais: valor de referência do pacote fechado. */
+  valorReferenciaEmbalagem?: number;
 };
 
 export type ProdutoValidado = {
@@ -24,10 +29,18 @@ export type ProdutoValidado = {
   categoria: string | null;
   marcaPreferida: string | null;
   observacao: string | null;
+  fatorConversaoEmbalagem: FatorConversao | null;
+  valorReferenciaEmbalagem: Centavos | null;
 };
 
 export type ErroValidacaoProduto = {
-  campo: 'nome' | 'unidade' | 'quantidadeNecessaria' | 'valorUnitario' | 'quantidadeAtual';
+  campo:
+    | 'nome'
+    | 'unidade'
+    | 'quantidadeNecessaria'
+    | 'valorUnitario'
+    | 'quantidadeAtual'
+    | 'fatorConversaoEmbalagem';
   mensagem: string;
 };
 
@@ -60,14 +73,33 @@ export function validarCadastroProduto(
     return falha({ campo: 'valorUnitario', mensagem: 'Preço não pode ser negativo' });
   }
 
+  const fatorValidado = validarFatorConversao(entrada.unidade, entrada.fatorConversaoEmbalagem);
+  if (!fatorValidado.ok) {
+    return falha({ campo: 'fatorConversaoEmbalagem', mensagem: fatorValidado.erro.mensagem });
+  }
+  const fatorConversaoEmbalagem = fatorValidado.valor;
+  const valorReferenciaEmbalagem =
+    fatorConversaoEmbalagem === null || entrada.valorReferenciaEmbalagem === undefined
+      ? null
+      : centavos(Math.max(entrada.valorReferenciaEmbalagem, 0) * 100);
+
+  // Preenchidos os dois campos de embalagem, o valor unitário é sempre
+  // derivado — nunca o digitado diretamente (spec cadastro-de-produto).
+  const valorUnitarioFinal =
+    fatorConversaoEmbalagem !== null && valorReferenciaEmbalagem !== null
+      ? valorUnitarioDoPacote(valorReferenciaEmbalagem, fatorConversaoEmbalagem)
+      : centavos(valorUnitario);
+
   return sucesso({
     nome,
     unidade: entrada.unidade,
     quantidadeNecessaria: deDecimal(entrada.quantidadeNecessaria),
     quantidadeAtual: deDecimal(quantidadeAtual),
-    valorUnitario: centavos(valorUnitario),
+    valorUnitario: valorUnitarioFinal,
     categoria: entrada.categoria === undefined ? null : normalizarCategoria(entrada.categoria),
     marcaPreferida: entrada.marcaPreferida?.trim() || null,
     observacao: entrada.observacao?.trim() || null,
+    fatorConversaoEmbalagem,
+    valorReferenciaEmbalagem,
   });
 }

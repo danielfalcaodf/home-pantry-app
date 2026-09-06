@@ -15,6 +15,15 @@ export type ItemListaProduto = {
   valorUnitario: Centavos;
   custo: Centavos;
   semPreco: boolean;
+  /** `null` quando o produto não tem fator de conversão de embalagem cadastrado. */
+  pacotes: number | null;
+  /**
+   * Quantidade final em estoque após a compra, só quando há excedente de
+   * pacote a comunicar (spec lista-derivada: "compre 1 pacote (dá para
+   * 18)") — `null` quando não há fator ou a compra bate exatamente na
+   * necessidade, sem excedente a mencionar.
+   */
+  quantidadeFinalEstimada: Milesimos | null;
 };
 
 export type ItemListaAvulso = {

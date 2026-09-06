@@ -28,6 +28,8 @@ export function produtoFalso(sobrescreve: Partial<Produto> = {}): Produto {
     valorUnitario: centavos(890),
     marcaPreferida: null,
     observacao: null,
+    fatorConversaoEmbalagem: null,
+    valorReferenciaEmbalagem: null,
     ativo: true,
     criadoEm: 0,
     atualizadoEm: 0,
@@ -67,6 +69,8 @@ export class ProdutoRepositorioFalso implements ProdutoRepository {
       quantidadeAtual: dados.quantidadeAtual,
       quantidadeNecessaria: dados.quantidadeNecessaria,
       valorUnitario: dados.valorUnitario,
+      fatorConversaoEmbalagem: dados.fatorConversaoEmbalagem,
+      valorReferenciaEmbalagem: dados.valorReferenciaEmbalagem,
     });
     this.produtos.push(criado);
     return sucesso(criado);
@@ -110,6 +114,8 @@ export class ProdutoRepositorioFalso implements ProdutoRepository {
         quantidadeAtual: p.quantidadeAtual,
         quantidadeNecessaria: p.quantidadeNecessaria,
         faltaBruta: milesimos(p.quantidadeNecessaria - p.quantidadeAtual),
+        fatorConversaoEmbalagem: p.fatorConversaoEmbalagem,
+        valorReferenciaEmbalagem: p.valorReferenciaEmbalagem,
       }))
       .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
   }

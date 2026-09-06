@@ -1,3 +1,4 @@
+import { FatorConversao } from '../produto/conversao-embalagem.rules';
 import { Milesimos, milesimos } from '../shared/quantidade';
 import { ehIndivisivel, Unidade } from '../shared/unidade';
 
@@ -6,7 +7,16 @@ import { ehIndivisivel, Unidade } from '../shared/unidade';
 // mede em kg/L quer andar em unidades inteiras, e quem mede em g/ml quer
 // andar de 100 em 100 (a granularidade que faz sentido pra cada grandeza,
 // não uma fração cega de "1000 milésimos").
-export function passoRapido(unidade: Unidade): Milesimos {
+//
+// Item com fator de conversão (achado pós-exploração, 2026-09-05, ver
+// design.md): o passo vira o fator inteiro de unidades, nunca 1 — uma
+// quantidade que não é múltiplo do fator não corresponde a nenhuma compra
+// possível no mercado (rompe a mesma regra que `quantidadeAComprarComFator`
+// já impõe na lista).
+export function passoRapido(unidade: Unidade, fator?: FatorConversao | null): Milesimos {
+  if (fator !== undefined && fator !== null) {
+    return milesimos(fator * 1000);
+  }
   if (ehIndivisivel(unidade)) {
     return milesimos(1000); // 1 unidade inteira (un, pacote, caixa)
   }
@@ -20,7 +30,8 @@ export function ajustarQuantidadeRapida(
   atual: Milesimos,
   unidade: Unidade,
   direcao: -1 | 1,
+  fator?: FatorConversao | null,
 ): Milesimos {
-  const passo = passoRapido(unidade);
+  const passo = passoRapido(unidade, fator);
   return milesimos(Math.max(passo, atual + passo * direcao));
 }

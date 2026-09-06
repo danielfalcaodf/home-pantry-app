@@ -25,6 +25,8 @@ function item(sobrescreve: Partial<CompraItem> = {}): CompraItem {
     quantidadeComprada: null,
     valorEstimadoUnit: centavos(0),
     valorPagoUnitario: null,
+    quantidadePacotes: null,
+    fatorUsadoNaCompra: null,
     comprado: false,
     ordem: 0,
     excluido: false,

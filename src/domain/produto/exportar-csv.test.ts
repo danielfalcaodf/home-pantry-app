@@ -15,6 +15,8 @@ function produto(sobrescreve: Partial<Produto> = {}): Produto {
     valorUnitario: centavos(1290),
     marcaPreferida: null,
     observacao: null,
+    fatorConversaoEmbalagem: null,
+    valorReferenciaEmbalagem: null,
     ativo: true,
     criadoEm: 0,
     atualizadoEm: 0,

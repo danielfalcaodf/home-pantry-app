@@ -38,6 +38,8 @@ const mockItem = {
     valorUnitario: 0,
     marcaPreferida: null,
     observacao: null,
+    fatorConversaoEmbalagem: null,
+    valorReferenciaEmbalagem: null,
   },
   estado: 'ok' as const,
   fracao: 1,

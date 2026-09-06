@@ -63,6 +63,13 @@ export default function NovoProduto() {
       setErros({ valorUnitario: `Valor muito alto — no máximo ${LIMITE_SANIDADE_VALOR}` });
       return;
     }
+    const fatorConversaoEmbalagem = valores.fatorConversaoEmbalagem
+      ? Number(valores.fatorConversaoEmbalagem.replace(',', '.'))
+      : undefined;
+    const valorReferenciaEmbalagem = valores.valorReferenciaEmbalagem
+      ? Number(valores.valorReferenciaEmbalagem.replace(',', '.'))
+      : undefined;
+
     const resultado = await cadastrar({
       nome: valores.nome,
       unidade: valores.unidade,
@@ -70,6 +77,8 @@ export default function NovoProduto() {
       quantidadeAtual,
       valorUnitario: valorUnitario !== undefined ? Math.round(valorUnitario * 100) : undefined,
       categoria: valores.categoria || undefined,
+      fatorConversaoEmbalagem,
+      valorReferenciaEmbalagem,
     });
 
     if (!resultado.ok) {

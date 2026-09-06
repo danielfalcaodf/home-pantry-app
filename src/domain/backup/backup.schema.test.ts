@@ -88,9 +88,58 @@ describe('converterParaVersaoAtual', () => {
   });
 
   it('marca a versão como atual mesmo sem conversor registrado para a versão antiga', () => {
-    const antigo = { ...arquivoValido(), versaoSchema: VERSAO_SCHEMA_BACKUP_ATUAL - 1 };
+    const antigo = { ...arquivoValido(), versaoSchema: VERSAO_SCHEMA_BACKUP_ATUAL - 2 };
     const convertido = converterParaVersaoAtual(antigo);
     expect(convertido.versaoSchema).toBe(VERSAO_SCHEMA_BACKUP_ATUAL);
+  });
+
+  it('v4 → v5 (change conversao-unidade-de-compra): preenche os campos novos de produto e item com null', () => {
+    const produtoSemEmbalagem = {
+      id: 'p1',
+      casaId: 'casa-1',
+      nome: 'Arroz',
+      categoria: null,
+      unidade: 'un',
+      quantidadeAtual: 0,
+      quantidadeNecessaria: 1000,
+      valorUnitario: 0,
+      marcaPreferida: null,
+      observacao: null,
+      ativo: true,
+      criadoEm: 0,
+      atualizadoEm: 0,
+      deletadoEm: null,
+      syncStatus: 'local',
+    };
+    const itemSemPacotes = {
+      id: 'item-1',
+      compraId: 'compra-1',
+      produtoId: 'p1',
+      nomeAvulso: null,
+      unidade: 'un',
+      quantidadePlanejada: 1000,
+      quantidadeComprada: null,
+      valorEstimadoUnit: 0,
+      valorPagoUnitario: null,
+      comprado: false,
+      ordem: 0,
+      excluido: false,
+      atualizarPreco: null,
+    };
+    const antigo = {
+      ...arquivoValido(),
+      versaoSchema: VERSAO_SCHEMA_BACKUP_ATUAL - 1,
+      produtos: [produtoSemEmbalagem],
+      itensCompra: [itemSemPacotes],
+    } as unknown as ArquivoBackup;
+
+    const convertido = converterParaVersaoAtual(antigo);
+
+    expect(convertido.versaoSchema).toBe(VERSAO_SCHEMA_BACKUP_ATUAL);
+    expect(convertido.produtos[0].fatorConversaoEmbalagem).toBeNull();
+    expect(convertido.produtos[0].valorReferenciaEmbalagem).toBeNull();
+    expect(convertido.itensCompra[0].quantidadePacotes).toBeNull();
+    expect(convertido.itensCompra[0].fatorUsadoNaCompra).toBeNull();
   });
 });
 

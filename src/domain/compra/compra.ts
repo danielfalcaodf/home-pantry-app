@@ -1,3 +1,4 @@
+import { FatorConversao } from '../produto/conversao-embalagem.rules';
 import { SyncStatus } from '../produto/produto';
 import { Centavos } from '../shared/dinheiro';
 import { Milesimos } from '../shared/quantidade';
@@ -30,6 +31,16 @@ export type CompraItem = {
   quantidadeComprada: Milesimos | null;
   valorEstimadoUnit: Centavos;
   valorPagoUnitario: Centavos | null;
+  /**
+   * Rastreabilidade de compra em pacotes (change conversao-unidade-de-compra):
+   * preenchidos só quando o produto tem fator de conversão cadastrado.
+   * `quantidadeComprada` continua a fonte da verdade, calculada como
+   * `quantidadePacotes × fatorUsadoNaCompra` — nunca duplicada.
+   */
+  quantidadePacotes: number | null;
+  /** Tamanho de pacote realmente usado nesta compra — pode divergir do
+   *  fator cadastrado no produto; a divergência nunca retroalimenta o cadastro. */
+  fatorUsadoNaCompra: FatorConversao | null;
   comprado: boolean;
   ordem: number;
   /**

@@ -2,8 +2,8 @@ import { Pressable, View } from 'react-native';
 
 import { ItemDaLista } from '../../domain/lista/lista';
 import { formatarBRL } from '../../domain/shared/dinheiro';
-import { formatarQuantidade } from '../../domain/shared/quantidade';
 import { ALVO_TOQUE_MINIMO, espaco } from '../theme/espaco';
+import { textoExcedente, textoQuantidadeAComprar } from '../format/quantidade-a-comprar';
 import { useTheme } from '../theme/provider';
 import { Texto } from './texto';
 
@@ -20,6 +20,7 @@ export type ItemListaProps = {
 export function ItemLista({ item, categoria, onRemover }: ItemListaProps) {
   const tema = useTheme();
   const nome = item.tipo === 'avulso' ? `+ ${item.nome}` : item.nome;
+  const excedente = textoExcedente(item);
 
   return (
     <View
@@ -48,9 +49,16 @@ export function ItemLista({ item, categoria, onRemover }: ItemListaProps) {
           </Texto>
         ) : null}
       </View>
-      <Texto papel="data.md" tom="secondary">
-        {formatarQuantidade(item.quantidadeAComprar, item.unidade)}
-      </Texto>
+      <View style={{ flexShrink: 1, alignItems: 'flex-end' }}>
+        <Texto papel="data.md" tom="secondary" numberOfLines={1}>
+          {textoQuantidadeAComprar(item)}
+        </Texto>
+        {excedente ? (
+          <Texto papel="label" tom="secondary" numberOfLines={1}>
+            ({excedente})
+          </Texto>
+        ) : null}
+      </View>
       <View style={{ minWidth: 88, alignItems: 'flex-end' }}>
         {item.semPreco ? (
           <Texto papel="label" tom="secondary">

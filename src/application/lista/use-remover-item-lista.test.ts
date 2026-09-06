@@ -24,6 +24,8 @@ const ITEM: ItemListaProduto = {
   valorUnitario: centavos(890),
   custo: centavos(1780),
   semPreco: false,
+  pacotes: null,
+  quantidadeFinalEstimada: null,
 };
 
 const AVULSO: ItemListaAvulso = {
