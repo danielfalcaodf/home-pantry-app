@@ -4,6 +4,19 @@ export type PreferenciaDeTema = 'automatico' | 'claro' | 'escuro';
 // parsing de "true"/"false".
 export type PreferenciaDeAgrupamento = 'agrupado' | 'continuo';
 
+// 6 modos em 3 pares critério × direção: nome (a-z / z-a), urgência
+// (acabou primeiro / cheio primeiro) e quantidade (menor / maior) —
+// `alfabetica` e `estado` mantêm os nomes originais da change (compat com o
+// default já persistido); os quatro sentidos restantes foram adicionados
+// depois (revisão de escopo para o menu de 6 opções).
+export type OrdenacaoDaDespensa =
+  | 'alfabetica'
+  | 'alfabeticaInversa'
+  | 'estado'
+  | 'estadoInverso'
+  | 'quantidade'
+  | 'quantidadeInversa';
+
 /** Sentinela: percorrer todas as categorias, não uma específica (task 3.1). */
 export const CONFERENCIA_TUDO = '*';
 
@@ -22,6 +35,7 @@ export type Configuracoes = {
   conferenciaCategoria: string;
   /** Índice do próximo item a conferir, como texto. */
   conferenciaIndice: string;
+  ordenacaoDaDespensa: OrdenacaoDaDespensa;
 };
 
 export const PADROES: Configuracoes = {
@@ -30,6 +44,7 @@ export const PADROES: Configuracoes = {
   ultimoBackupEm: '',
   conferenciaCategoria: '',
   conferenciaIndice: '0',
+  ordenacaoDaDespensa: 'alfabetica',
 };
 
 export interface ConfiguracaoRepository {

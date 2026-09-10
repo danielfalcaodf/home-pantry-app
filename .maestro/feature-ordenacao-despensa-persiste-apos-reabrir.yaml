@@ -1,0 +1,42 @@
+appId: com.danielfalcaodf.repor
+---
+# Change `ordenacao-alternavel-despensa` (ordem 9) — cenário 3/6 (7.3).
+#
+# O QUE ESTE FLOW PROVA: a preferência de ordenação escolhida (Menor
+# quantidade) sobrevive a fechar e reabrir o app — persistida por casa no
+# SQLite, mesmo mecanismo já usado para tema e modo corredor/agrupado.
+#
+# Reescrito para o menu de 6 opções (era um botão de alternância binária) —
+# executado no emulador em 2026-09-09.
+#
+# Efeito colateral real e permanente: deixa a preferência de ordenação da
+# casa em "Menor quantidade" ao final.
+
+- launchApp
+- assertVisible: "Despensa"
+# ambiente: bolha flutuante "Tools" do Expo dev-client sobrepõe os ícones do topo
+- swipe:
+    start: "970, 173"
+    end: "540, 700"
+    duration: 600
+
+# --- Garante o modo "Menor quantidade" ativo ------------------------------
+- runFlow:
+    when:
+      notVisible: "Ordenação: Menor quantidade"
+    commands:
+      - tapOn:
+          point: "828, 168"
+      - tapOn: "Menor quantidade"
+- assertVisible: "Ordenação: Menor quantidade"
+
+# --- Fecha e reabre o app (sem clearState: a preferência é dado real) ---
+- stopApp
+- launchApp:
+    stopApp: false
+- assertVisible: "Despensa"
+- swipe:
+    start: "970, 173"
+    end: "540, 700"
+    duration: 600
+- assertVisible: "Ordenação: Menor quantidade"

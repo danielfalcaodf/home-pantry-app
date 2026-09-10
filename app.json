@@ -37,7 +37,8 @@
         {
           "style": "light"
         }
-      ]
+      ],
+      "expo-asset"
     ],
     "experiments": {
       "typedRoutes": true

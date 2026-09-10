@@ -29,4 +29,15 @@ describe('configuração chave-valor', () => {
     expect(sqlite.prepare('SELECT COUNT(*) AS n FROM configuracao').get()).toEqual({ n: 1 });
     await expect(repo.ler(casaId, 'tema')).resolves.toBe('automatico');
   });
+
+  it('ordenacaoDaDespensa sem gravação prévia retorna o padrão alfabética', async () => {
+    const { repo, casaId } = montar();
+    await expect(repo.ler(casaId, 'ordenacaoDaDespensa')).resolves.toBe('alfabetica');
+  });
+
+  it('grava e lê a preferência de ordenacaoDaDespensa', async () => {
+    const { repo, casaId } = montar();
+    await repo.gravar(casaId, 'ordenacaoDaDespensa', 'estado');
+    await expect(repo.ler(casaId, 'ordenacaoDaDespensa')).resolves.toBe('estado');
+  });
 });

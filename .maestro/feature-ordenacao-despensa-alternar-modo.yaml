@@ -1,0 +1,88 @@
+appId: com.danielfalcaodf.repor
+---
+# Change `ordenacao-alternavel-despensa` (ordem 9) — cenário 2/? (8.15).
+#
+# O QUE ESTE FLOW PROVA: o menu de ordenação (não mais um botão de
+# alternância binária) abre com as 6 opções agrupadas em 3 pares e, ao
+# selecionar uma opção diferente, a lista reordena de fato — cobrindo o
+# par Nome (default) e o par Estado. Executado no emulador em 2026-09-09.
+#
+# Efeito colateral real e permanente: cria "QA Menu Nome Alfa" e
+# "QA Menu Nome Zulu" na despensa; deixa a preferência de ordenação da
+# casa em "Acabou primeiro" ao final.
+
+- launchApp
+- assertVisible: "Despensa"
+# ambiente: bolha flutuante "Tools" do Expo dev-client sobrepõe os ícones do topo
+- swipe:
+    start: "970, 173"
+    end: "540, 700"
+    duration: 600
+
+# --- Garante que o flow começa no modo Nome (A-Z) (default) --------------
+- runFlow:
+    when:
+      notVisible: "Ordenação: Nome (A-Z)"
+    commands:
+      - tapOn:
+          point: "828, 168"
+      - tapOn: "Nome (A-Z)"
+- assertVisible: "Ordenação: Nome (A-Z)"
+
+# --- Preparo: um item que fica "cheio" (Alfa) e outro que fica "acabou" -
+# --- (Zulu) — nomes escolhidos para que a ordem por nome e a ordem por
+# --- estado apontem para lados opostos, provando que o modo importa -----
+- runFlow:
+    when:
+      visible: "Cadastrar do zero"
+    commands:
+      - tapOn: "Cadastrar do zero"
+- runFlow:
+    when:
+      notVisible: "Novo produto"
+    commands:
+      - tapOn: "Adicionar produto"
+- assertVisible: "Novo produto"
+- tapOn: "O que é"
+- setClipboard: "QA Menu Nome Zulu"
+- pasteText
+- tapOn: "un"
+- tapOn: "Quanto quero ter em casa"
+- inputText: "1"
+- tapOn: "Adicionar à despensa"
+- assertVisible: "Despensa"
+
+- tapOn: "Adicionar produto"
+- assertVisible: "Novo produto"
+- tapOn: "O que é"
+- setClipboard: "QA Menu Nome Alfa"
+- pasteText
+- tapOn: "un"
+- tapOn: "Quanto quero ter em casa"
+- inputText: "1"
+- tapOn: "Adicionar à despensa"
+- assertVisible: "Despensa"
+
+- tapOn: "Repor 1 un de QA Menu Nome Alfa"
+- assertVisible:
+    text: ".*QA Menu Nome Alfa, 1 de 1 un, Cheio.*"
+
+# --- Modo Nome (A-Z): Alfa (A) antes de Zulu (Z) -------------------------
+- assertVisible:
+    text: ".*QA Menu Nome Zulu.*"
+    below:
+      text: ".*QA Menu Nome Alfa.*"
+
+# --- Abre o menu e seleciona "Acabou primeiro": crítico (Zulu) antes -----
+# --- de ok (Alfa) — reordenação real ao trocar de par no menu -----------
+- tapOn:
+    point: "828, 168"
+- assertVisible: "Nome (A-Z)"
+- assertVisible: "Menor quantidade"
+- tapOn: "Acabou primeiro"
+- assertVisible: "Ordenação: Acabou primeiro"
+- assertVisible:
+    text: ".*QA Menu Nome Alfa.*"
+    below:
+      text: ".*QA Menu Nome Zulu.*"
+- takeScreenshot: ordenacao-menu-alternancia-de-modo

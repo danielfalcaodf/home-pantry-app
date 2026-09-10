@@ -2,6 +2,7 @@ import { Produto } from '../../../domain/produto/produto';
 import { ProdutoValidado } from '../../../domain/produto/validacao';
 import { centavos } from '../../../domain/shared/dinheiro';
 import { Milesimos, milesimos } from '../../../domain/shared/quantidade';
+import { OrdenacaoDaDespensa } from '../../../ports/configuracao.repository';
 import { MovimentoRepository } from '../../../ports/movimento.repository';
 import { ObservadorDeMudancas } from '../../../ports/observador-de-mudancas';
 import {
@@ -96,10 +97,33 @@ export class ProdutoRepositorioFalso implements ProdutoRepository {
     }
   }
 
-  async listarDespensa(casaId: string): Promise<Produto[]> {
-    return this.produtos.filter(
+  async listarDespensa(
+    casaId: string,
+    modo: OrdenacaoDaDespensa = 'estado',
+  ): Promise<Produto[]> {
+    const filtrados = this.produtos.filter(
       (p) => p.casaId === casaId && p.ativo && p.deletadoEm === null,
     );
+    const nome = (a: Produto, b: Produto) => a.nome.localeCompare(b.nome, 'pt-BR');
+    const bucket = (p: Produto) =>
+      p.quantidadeAtual === 0 ? 0 : p.quantidadeAtual < p.quantidadeNecessaria ? 1 : 2;
+    const estado = (a: Produto, b: Produto) => {
+      const diferenca = bucket(a) - bucket(b);
+      return diferenca !== 0 ? diferenca : nome(a, b);
+    };
+    const quantidade = (a: Produto, b: Produto) => {
+      const diferenca = a.quantidadeAtual - b.quantidadeAtual;
+      return diferenca !== 0 ? diferenca : nome(a, b);
+    };
+    const comparador: Record<OrdenacaoDaDespensa, (a: Produto, b: Produto) => number> = {
+      alfabetica: nome,
+      alfabeticaInversa: (a, b) => -nome(a, b),
+      estado,
+      estadoInverso: (a, b) => -(bucket(a) - bucket(b)) || nome(a, b),
+      quantidade,
+      quantidadeInversa: (a, b) => -(a.quantidadeAtual - b.quantidadeAtual) || nome(a, b),
+    };
+    return [...filtrados].sort(comparador[modo]);
   }
 
   async listarFaltantes(casaId: string): Promise<FaltanteBruto[]> {

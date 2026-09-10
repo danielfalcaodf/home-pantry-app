@@ -1,7 +1,9 @@
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { FlashList } from '@shopify/flash-list';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Keyboard, Pressable, ScrollView, View } from 'react-native';
+import { Divider, Menu } from 'react-native-paper';
 
 import { useAvisoCompraStore } from '@/application/compra/aviso-compra-store';
 import { ProdutoNaDespensa, useProdutos } from '@/application/estoque/use-produtos';
@@ -9,6 +11,10 @@ import { useCategorias } from '@/application/estoque/use-categorias';
 import { useDarBaixa } from '@/application/estoque/use-dar-baixa';
 import { useDesfazerMovimento } from '@/application/estoque/use-desfazer-movimento';
 import { useReporPontual } from '@/application/estoque/use-repor-pontual';
+import {
+  OrdenacaoDaDespensa,
+  usePreferenciaDeOrdenacao,
+} from '@/application/lista/use-preferencia-ordenacao';
 import { deDecimal, paraDecimal } from '@/domain/shared/quantidade';
 import { passoDoStepper } from '@/domain/produto/estoque.rules';
 import { rotuloDaUnidade } from '@/domain/shared/unidade';
@@ -38,6 +44,40 @@ import { corDoEstado } from '@/presentation/theme/cor-do-estado';
 import { ALVO_TOQUE_MINIMO, espaco } from '@/presentation/theme/espaco';
 import { icones } from '@/presentation/theme/icones';
 import { useTheme } from '@/presentation/theme/provider';
+
+// 3 pares critério × direção, na ordem em que aparecem no menu: Nome
+// (default), Estado, Quantidade — rótulos simétricos por par, sem seta de
+// texto (ex.: "A → Z"), vocabulário reaproveitado dos chips de estado
+// (`Acabou`/`Cheio`, não "Completo"/"Vazio").
+const ROTULO_DA_ORDENACAO: Record<OrdenacaoDaDespensa, string> = {
+  alfabetica: 'Nome (A-Z)',
+  alfabeticaInversa: 'Nome (Z-A)',
+  estado: 'Acabou primeiro',
+  estadoInverso: 'Cheio primeiro',
+  quantidade: 'Menor quantidade',
+  quantidadeInversa: 'Maior quantidade',
+};
+
+// Ícones MaterialCommunityIcons (via react-native-paper, resolvidos pelo
+// @expo/vector-icons já embutido no Expo — sem fonte extra a instalar).
+// "gauge-empty"/"gauge-full" ecoam a metáfora de medidor do próprio app
+// ("linha d'água") em vez de setas de texto (ex.: "A → Z").
+const ICONE_DA_ORDENACAO: Record<OrdenacaoDaDespensa, string> = {
+  alfabetica: 'sort-alphabetical-ascending',
+  alfabeticaInversa: 'sort-alphabetical-descending',
+  estado: 'gauge-empty',
+  estadoInverso: 'gauge-full',
+  quantidade: 'sort-numeric-ascending',
+  quantidadeInversa: 'sort-numeric-descending',
+};
+
+// Agrupado em 3 pares — o menu insere um `Divider` (sem texto de cabeçalho)
+// entre cada par, não entre cada item.
+const GRUPOS_DE_ORDENACAO: OrdenacaoDaDespensa[][] = [
+  ['alfabetica', 'alfabeticaInversa'],
+  ['estado', 'estadoInverso'],
+  ['quantidade', 'quantidadeInversa'],
+];
 
 const FILTROS: { valor: FiltroEstado; rotulo: string }[] = [
   { valor: 'tudo', rotulo: 'Tudo' },
@@ -70,7 +110,9 @@ function convitePorFiltroVazio(filtro: FiltroEstado, categoria: string | null): 
 
 export default function Despensa() {
   const tema = useTheme();
-  const { itens, carregando } = useProdutos();
+  const { modo: modoDeOrdenacao, selecionar: selecionarOrdenacao } = usePreferenciaDeOrdenacao();
+  const [menuDeOrdenacaoAberto, setMenuDeOrdenacaoAberto] = useState(false);
+  const { itens, carregando } = useProdutos(undefined, undefined, modoDeOrdenacao);
   const categorias = useCategorias();
 
   // Filtro e busca são estado efêmero de tela (ADR-05) — nada global. A
@@ -228,6 +270,61 @@ export default function Despensa() {
                 cor={buscaAberta ? tema.action.azulejo : tema.text.secondary}
               />
             </Pressable>
+            <Menu
+              visible={menuDeOrdenacaoAberto}
+              onDismiss={() => setMenuDeOrdenacaoAberto(false)}
+              contentStyle={{ backgroundColor: tema.bg.surface }}
+              theme={{
+                colors: {
+                  onSurface: tema.text.primary,
+                  onSurfaceVariant: tema.text.secondary,
+                  primary: tema.action.azulejo,
+                },
+              }}
+              anchor={
+                <Pressable
+                  onPress={() => setMenuDeOrdenacaoAberto(true)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Ordenação: ${ROTULO_DA_ORDENACAO[modoDeOrdenacao]}`}
+                  hitSlop={8}
+                  style={{
+                    minWidth: ALVO_TOQUE_MINIMO,
+                    minHeight: ALVO_TOQUE_MINIMO,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Ionicons
+                    name="swap-vertical-outline"
+                    size={24}
+                    color={
+                      modoDeOrdenacao !== 'alfabetica' ? tema.action.azulejo : tema.text.secondary
+                    }
+                  />
+                </Pressable>
+              }
+            >
+              {GRUPOS_DE_ORDENACAO.map((grupo, indice) => (
+                <View key={grupo.join('-')}>
+                  {indice > 0 ? (
+                    <Divider style={{ backgroundColor: tema.line.hairline }} />
+                  ) : null}
+                  {grupo.map((opcao) => (
+                    <Menu.Item
+                      key={opcao}
+                      onPress={() => {
+                        setMenuDeOrdenacaoAberto(false);
+                        void selecionarOrdenacao(opcao);
+                      }}
+                      title={ROTULO_DA_ORDENACAO[opcao]}
+                      leadingIcon={ICONE_DA_ORDENACAO[opcao]}
+                      trailingIcon={modoDeOrdenacao === opcao ? 'check' : undefined}
+                      titleStyle={{ color: tema.text.primary }}
+                    />
+                  ))}
+                </View>
+              ))}
+            </Menu>
             <Pressable
               onPress={() => router.push('/produto/novo')}
               accessibilityRole="button"

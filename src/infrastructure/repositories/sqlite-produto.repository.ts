@@ -1,4 +1,4 @@
-import { and, eq, isNull, like, sql } from 'drizzle-orm';
+import { and, desc, eq, isNull, like, sql } from 'drizzle-orm';
 
 import { fatorConversao } from '../../domain/produto/conversao-embalagem.rules';
 import { normalizarCategoria } from '../../domain/produto/categoria';
@@ -7,6 +7,7 @@ import { ProdutoValidado } from '../../domain/produto/validacao';
 import { centavos } from '../../domain/shared/dinheiro';
 import { milesimos } from '../../domain/shared/quantidade';
 import { Unidade } from '../../domain/shared/unidade';
+import { OrdenacaoDaDespensa } from '../../ports/configuracao.repository';
 import { Clock } from '../../ports/clock';
 import {
   ComandoAjuste,
@@ -188,7 +189,21 @@ export class SQLiteProdutoRepository implements ProdutoRepository {
     });
   }
 
-  async listarDespensa(casaId: string): Promise<Produto[]> {
+  async listarDespensa(casaId: string, modo: OrdenacaoDaDespensa = 'estado'): Promise<Produto[]> {
+    const nomeNocase = sql`${tabelaProduto.nome} COLLATE NOCASE`;
+    const estadoCase = sql`CASE
+      WHEN ${tabelaProduto.quantidadeAtual} = 0 THEN 0
+      WHEN ${tabelaProduto.quantidadeAtual} < ${tabelaProduto.quantidadeNecessaria} THEN 1
+      ELSE 2
+    END`;
+    const orderBy = {
+      alfabetica: [nomeNocase],
+      alfabeticaInversa: [desc(nomeNocase)],
+      estado: [estadoCase, nomeNocase],
+      estadoInverso: [desc(estadoCase), nomeNocase],
+      quantidade: [tabelaProduto.quantidadeAtual, nomeNocase],
+      quantidadeInversa: [desc(tabelaProduto.quantidadeAtual), nomeNocase],
+    }[modo];
     const linhas = this.db
       .select({
         id: tabelaProduto.id,
@@ -213,14 +228,7 @@ export class SQLiteProdutoRepository implements ProdutoRepository {
       .where(
         and(eq(tabelaProduto.casaId, casaId), eq(tabelaProduto.ativo, true), naoRemovido),
       )
-      .orderBy(
-        sql`CASE
-          WHEN ${tabelaProduto.quantidadeAtual} = 0 THEN 0
-          WHEN ${tabelaProduto.quantidadeAtual} < ${tabelaProduto.quantidadeNecessaria} THEN 1
-          ELSE 2
-        END`,
-        sql`${tabelaProduto.nome} COLLATE NOCASE`,
-      )
+      .orderBy(...orderBy)
       .all();
     return linhas.map(paraDominio);
   }

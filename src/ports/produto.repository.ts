@@ -3,6 +3,7 @@ import { FaltanteBruto, Produto } from '../domain/produto/produto';
 import { ProdutoValidado } from '../domain/produto/validacao';
 import { Milesimos } from '../domain/shared/quantidade';
 import { Unidade } from '../domain/shared/unidade';
+import { OrdenacaoDaDespensa } from './configuracao.repository';
 import { Result } from '../shared/result';
 
 export type { FaltanteBruto } from '../domain/produto/produto';
@@ -62,7 +63,8 @@ export interface ProdutoRepository {
     dados: Partial<Omit<ProdutoValidado, 'quantidadeAtual'>>,
   ): Promise<Result<Produto, ErroEscritaProduto>>;
   removerLogicamente(id: string): Promise<void>;
-  listarDespensa(casaId: string): Promise<Produto[]>;
+  /** `modo` ausente/`undefined` mantém o comportamento por estado (compatibilidade). */
+  listarDespensa(casaId: string, modo?: OrdenacaoDaDespensa): Promise<Produto[]>;
   listarFaltantes(casaId: string): Promise<FaltanteBruto[]>;
   buscarPorNome(casaId: string, termo: string): Promise<Produto[]>;
   listarCategorias(casaId: string): Promise<string[]>;
