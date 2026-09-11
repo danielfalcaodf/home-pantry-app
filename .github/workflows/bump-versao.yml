@@ -1,38 +1,48 @@
-name: Bump de versão
+name: Bump de versão (PR)
 
-# Roda depois do merge (squash) de uma PR em develop — o commit resultante
-# carrega o mesmo prefixo Conventional Commits do título da PR (CLAUDE.md).
-# Critério: feat: -> minor, fix: -> patch, qualquer outro tipo (chore/docs/
-# refactor/test/build/ci) não bumpa. O salto pra 1.0.0 (primeiro lançamento
-# em produção) é sempre manual — ver seção "Versionamento" do CLAUDE.md.
+# Bumpa a versão DENTRO da própria PR de feature/fix, antes do merge — não
+# dá pra esperar uma PR de ajuste posterior porque o build da EAS
+# (.eas/workflows/preview-on-develop.yml) dispara no mesmo push que faz o
+# squash-merge em develop, e sairia com a versão antiga se o bump chegasse
+# depois. Quando esta PR é squash-mergeada, o commit único já carrega o
+# bump, e o build da EAS já sai com o número certo.
+#
+# Critério (mesmo do título de PR já exigido pelo CLAUDE.md, com o label
+# padrão do repo como fallback): feat: / label "enhancement" -> minor;
+# fix: / label "bug" -> patch; qualquer outro tipo não bumpa. Bump pra
+# 1.0.0 continua manual — ver seção "Versionamento" do CLAUDE.md.
 on:
-  push:
+  pull_request:
+    types: [opened, synchronize, reopened, edited, labeled]
     branches:
       - develop
 
 jobs:
   bump:
-    if: "!startsWith(github.event.head_commit.message, 'chore(release):')"
+    # só em PR do próprio repo (não dá pra empurrar commit em branch de fork)
+    if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ github.event.pull_request.head.ref }}
           fetch-depth: 0
 
       - uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      - name: Determina o tipo de bump pelo prefixo do commit
+      - name: Determina o tipo de bump pelo título ou label da PR
         id: tipo
         env:
-          MENSAGEM_DO_COMMIT: ${{ github.event.head_commit.message }}
+          TITULO_DA_PR: ${{ github.event.pull_request.title }}
+          LABELS_DA_PR: ${{ join(github.event.pull_request.labels.*.name, ',') }}
         run: |
-          if [[ "$MENSAGEM_DO_COMMIT" =~ ^feat(\(.+\))?:\  ]]; then
+          if [[ "$TITULO_DA_PR" =~ ^feat(\(.+\))?:\  ]] || [[ ",$LABELS_DA_PR," == *,enhancement,* ]]; then
             echo "release_as=minor" >> "$GITHUB_OUTPUT"
-          elif [[ "$MENSAGEM_DO_COMMIT" =~ ^fix(\(.+\))?:\  ]]; then
+          elif [[ "$TITULO_DA_PR" =~ ^fix(\(.+\))?:\  ]] || [[ ",$LABELS_DA_PR," == *,bug,* ]]; then
             echo "release_as=patch" >> "$GITHUB_OUTPUT"
           else
             echo "release_as=" >> "$GITHUB_OUTPUT"
@@ -42,18 +52,44 @@ jobs:
         if: steps.tipo.outputs.release_as != ''
         run: npm ci
 
-      - name: Configura identidade do git para o commit de bump
+      - name: Calcula a versão-alvo a partir da baseline em develop
         if: steps.tipo.outputs.release_as != ''
+        id: alvo
         run: |
+          git fetch origin develop --depth=1
+          BASE=$(git show origin/develop:package.json | node -e "process.stdout.write(JSON.parse(require('fs').readFileSync(0,'utf8')).version)")
+          ALVO=$(npx semver -i ${{ steps.tipo.outputs.release_as }} "$BASE")
+          ATUAL=$(node -e "process.stdout.write(require('./package.json').version)")
+          echo "base=$BASE" >> "$GITHUB_OUTPUT"
+          echo "alvo=$ALVO" >> "$GITHUB_OUTPUT"
+          if [ "$ATUAL" = "$ALVO" ]; then
+            echo "precisa=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "precisa=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Idempotente por design: se um push anterior nesta mesma PR já deixou
+      # a versão em "alvo", não há mudança pra commitar — evita commit e
+      # push infinitos a cada `synchronize` que este próprio job dispara.
+      - name: Sincroniza baseline e aplica o bump
+        if: steps.tipo.outputs.release_as != '' && steps.alvo.outputs.precisa == 'true'
+        env:
+          BASE: ${{ steps.alvo.outputs.base }}
+        run: |
+          node -e "
+            const fs = require('fs');
+            const base = process.env.BASE;
+            const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+            pkg.version = base;
+            fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
+            const app = JSON.parse(fs.readFileSync('app.json', 'utf8'));
+            app.expo.version = base;
+            fs.writeFileSync('app.json', JSON.stringify(app, null, 2) + '\n');
+          "
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          npx commit-and-tag-version --release-as ${{ steps.tipo.outputs.release_as }} --skip.tag
 
-      - name: Bump de versão (package.json + app.json)
-        if: steps.tipo.outputs.release_as != ''
-        run: npx commit-and-tag-version --release-as ${{ steps.tipo.outputs.release_as }}
-
-      - name: Publica o commit de bump e a tag
-        if: steps.tipo.outputs.release_as != ''
-        run: |
-          git push origin HEAD:develop
-          git push origin --tags
+      - name: Publica o commit de bump na própria branch da PR
+        if: steps.tipo.outputs.release_as != '' && steps.alvo.outputs.precisa == 'true'
+        run: git push origin HEAD:${{ github.event.pull_request.head.ref }}
