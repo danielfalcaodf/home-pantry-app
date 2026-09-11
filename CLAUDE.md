@@ -188,23 +188,28 @@ Dois números, dois donos — não confundir:
   qualquer momento") — hoje o Repor não tem nem o app criado no Google Play Console, então está
   claramente nessa fase.
 
-**Bump automático a cada merge em `develop`** (`.github/workflows/bump-versao.yml`, roda depois
-do squash-merge, usando `commit-and-tag-version` — sucessor mantido do `standard-version`,
-depreciado): lê o prefixo Conventional Commits do commit de merge (que é o título da PR,
-convenção já documentada acima) e decide:
+**Bump automático dentro da própria PR de `feature/*`/`fix/*`, antes do merge**
+(`.github/workflows/bump-versao.yml`, dispara em `pull_request` contra `develop`): lê o
+título da PR (convenção já documentada acima) — com o label padrão do repo (`enhancement`/
+`bug`) como fallback — e decide:
 
-| Prefixo do commit de merge | Bump |
+| Título/label da PR | Bump |
 |---|---|
-| `feat:` / `feat(escopo):` | minor (`0.1.0` → `0.2.0`) |
-| `fix:` / `fix(escopo):` | patch (`0.1.0` → `0.1.1`) |
+| `feat: ...` / label `enhancement` | minor (`0.1.0` → `0.2.0`) |
+| `fix: ...` / label `bug` | patch (`0.1.0` → `0.1.1`) |
 | `chore:`, `docs:`, `refactor:`, `test:`, `build:`, `ci:` | nenhum — não é mudança de comportamento visível |
 
-O workflow escreve em `package.json` (fonte de verdade) e replica pra `app.json` via updater
-customizado (`scripts/versao-expo-updater.js`, configurado em `.versionrc.json`). Como `develop`
-é branch protegida (só aceita mudança via PR), ele **não** dá push direto: abre uma PR própria
-(`chore(release): bump versão para X.Y.Z`) que precisa ser aprovada e mergeada como qualquer
-outra — único passo manual do fluxo, e existe só por causa da proteção de branch, não por
-decisão de design.
+Precisa ser **dentro da PR**, não depois do merge: o build da EAS
+(`.eas/workflows/preview-on-develop.yml`) dispara no mesmo push que faz o squash-merge em
+`develop`, então um bump que chegasse numa PR separada sairia tarde demais — o build já teria
+saído com a versão antiga. O workflow sincroniza a baseline com a `version` atual publicada em
+`develop`, calcula o alvo (`commit-and-tag-version`, sucessor mantido do `standard-version`,
+depreciado, via updater customizado `scripts/versao-expo-updater.js` pra também escrever
+`app.json`) e commita direto na branch da própria PR — que não é protegida, então não esbarra
+no `GH006` que a `develop` daria. Idempotente: se um push anterior na mesma PR já chegou na
+versão-alvo, não gera commit de novo (evita loop, já que o próprio push do bump dispara um
+novo `synchronize` na PR). Quando a PR é squash-mergeada, o commit único em `develop` já sai
+com a versão certa — zero passo manual no fluxo normal de `feature/*`/`fix/*`.
 
 **Bump pra `1.0.0` é sempre manual, nunca automatizado** — é uma decisão de negócio (primeiro
 lançamento real em produção na loja), não uma inferência de commit. Feito uma única vez, na
