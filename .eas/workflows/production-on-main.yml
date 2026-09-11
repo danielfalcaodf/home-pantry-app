@@ -12,11 +12,16 @@ jobs:
       platform: android
       profile: production
 
-  build_ios:
-    type: build
-    params:
-      platform: ios
-      profile: production
+  # build_ios/submit_ios pausados: sem conta Apple Developer ativa, o EAS
+  # não consegue gerar certificado/provisioning profile em modo
+  # não-interativo. Reativar rodando
+  # `eas credentials:configure-build -p ios -e production` (requer conta
+  # Apple Developer) e descomentando os jobs abaixo.
+  # build_ios:
+  #   type: build
+  #   params:
+  #     platform: ios
+  #     profile: production
 
   submit_android:
     needs: [build_android]
@@ -25,9 +30,9 @@ jobs:
       build_id: ${{ needs.build_android.outputs.build_id }}
       profile: production
 
-  submit_ios:
-    needs: [build_ios]
-    type: submit
-    params:
-      build_id: ${{ needs.build_ios.outputs.build_id }}
-      profile: production
+  # submit_ios:
+  #   needs: [build_ios]
+  #   type: submit
+  #   params:
+  #     build_id: ${{ needs.build_ios.outputs.build_id }}
+  #     profile: production
