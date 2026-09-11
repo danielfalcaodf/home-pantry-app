@@ -63,7 +63,9 @@ export function aplicarOrdemCongelada(
 export function useProdutos(
   repositorio: ProdutoRepository = produtoRepository,
   observador: ObservadorDeMudancas = observadorDoBanco,
-  modo: OrdenacaoDaDespensa = 'estado',
+  // null = preferência de ordenação ainda não carregou (evita buscar com o
+  // padrão e trocar de ordem no frame seguinte quando o valor real chegar).
+  modo: OrdenacaoDaDespensa | null = 'estado',
 ): EstadoDaDespensa {
   const [itens, setItens] = useState<ProdutoNaDespensa[]>([]);
   const [carregando, setCarregando] = useState(true);
@@ -73,6 +75,9 @@ export function useProdutos(
 
   const recarregar = useCallback(
     async (montado: () => boolean) => {
+      if (modo === null) {
+        return;
+      }
       const { casaId } = obterIdentidadeLocal();
       const produtos = await repositorio.listarDespensa(casaId, modo);
       if (!montado()) {

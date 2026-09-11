@@ -110,9 +110,17 @@ function convitePorFiltroVazio(filtro: FiltroEstado, categoria: string | null): 
 
 export default function Despensa() {
   const tema = useTheme();
-  const { modo: modoDeOrdenacao, selecionar: selecionarOrdenacao } = usePreferenciaDeOrdenacao();
+  const {
+    modo: modoDeOrdenacao,
+    carregado: ordenacaoCarregada,
+    selecionar: selecionarOrdenacao,
+  } = usePreferenciaDeOrdenacao();
   const [menuDeOrdenacaoAberto, setMenuDeOrdenacaoAberto] = useState(false);
-  const { itens, carregando } = useProdutos(undefined, undefined, modoDeOrdenacao);
+  const { itens, carregando } = useProdutos(
+    undefined,
+    undefined,
+    ordenacaoCarregada ? modoDeOrdenacao : null,
+  );
   const categorias = useCategorias();
 
   // Filtro e busca são estado efêmero de tela (ADR-05) — nada global. A

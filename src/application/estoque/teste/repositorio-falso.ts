@@ -1,3 +1,4 @@
+import { estadoDoItem } from '../../../domain/produto/estoque.rules';
 import { Produto } from '../../../domain/produto/produto';
 import { ProdutoValidado } from '../../../domain/produto/validacao';
 import { centavos } from '../../../domain/shared/dinheiro';
@@ -105,23 +106,27 @@ export class ProdutoRepositorioFalso implements ProdutoRepository {
       (p) => p.casaId === casaId && p.ativo && p.deletadoEm === null,
     );
     const nome = (a: Produto, b: Produto) => a.nome.localeCompare(b.nome, 'pt-BR');
-    const bucket = (p: Produto) =>
-      p.quantidadeAtual === 0 ? 0 : p.quantidadeAtual < p.quantidadeNecessaria ? 1 : 2;
-    const estado = (a: Produto, b: Produto) => {
-      const diferenca = bucket(a) - bucket(b);
+    const rankPorEstado: Record<ReturnType<typeof estadoDoItem>, number> = {
+      critico: 0,
+      emFalta: 1,
+      ok: 2,
+    };
+    const bucket = (p: Produto) => rankPorEstado[estadoDoItem(p)];
+    const porBucket = (sinal: 1 | -1) => (a: Produto, b: Produto) => {
+      const diferenca = sinal * (bucket(a) - bucket(b));
       return diferenca !== 0 ? diferenca : nome(a, b);
     };
-    const quantidade = (a: Produto, b: Produto) => {
-      const diferenca = a.quantidadeAtual - b.quantidadeAtual;
+    const porQuantidade = (sinal: 1 | -1) => (a: Produto, b: Produto) => {
+      const diferenca = sinal * (a.quantidadeAtual - b.quantidadeAtual);
       return diferenca !== 0 ? diferenca : nome(a, b);
     };
     const comparador: Record<OrdenacaoDaDespensa, (a: Produto, b: Produto) => number> = {
       alfabetica: nome,
       alfabeticaInversa: (a, b) => -nome(a, b),
-      estado,
-      estadoInverso: (a, b) => -(bucket(a) - bucket(b)) || nome(a, b),
-      quantidade,
-      quantidadeInversa: (a, b) => -(a.quantidadeAtual - b.quantidadeAtual) || nome(a, b),
+      estado: porBucket(1),
+      estadoInverso: porBucket(-1),
+      quantidade: porQuantidade(1),
+      quantidadeInversa: porQuantidade(-1),
     };
     return [...filtrados].sort(comparador[modo]);
   }

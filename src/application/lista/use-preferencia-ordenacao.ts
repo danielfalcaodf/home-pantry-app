@@ -11,6 +11,9 @@ export type { OrdenacaoDaDespensa } from '../../ports/configuracao.repository';
 
 export type EstadoPreferenciaDeOrdenacao = {
   modo: OrdenacaoDaDespensa;
+  /** false até a leitura do repositório resolver — evita buscar a despensa
+   *  com o padrão antes de saber a preferência real (sem flash de ordem). */
+  carregado: boolean;
   selecionar: (modo: OrdenacaoDaDespensa) => Promise<void>;
 };
 
@@ -24,6 +27,7 @@ export function usePreferenciaDeOrdenacao(
   repositorio: ConfiguracaoRepository = configuracaoRepository,
 ): EstadoPreferenciaDeOrdenacao {
   const [modo, setModo] = useState<OrdenacaoDaDespensa>(PADROES.ordenacaoDaDespensa);
+  const [carregado, setCarregado] = useState(false);
 
   useEffect(() => {
     let ativo = true;
@@ -31,6 +35,7 @@ export function usePreferenciaDeOrdenacao(
     void repositorio.ler(casaId, 'ordenacaoDaDespensa').then((salvo) => {
       if (ativo) {
         setModo(salvo);
+        setCarregado(true);
       }
     });
     return () => {
@@ -47,5 +52,5 @@ export function usePreferenciaDeOrdenacao(
     [repositorio],
   );
 
-  return { modo, selecionar };
+  return { modo, carregado, selecionar };
 }
