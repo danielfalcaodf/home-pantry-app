@@ -7,7 +7,7 @@ import { ObservadorFalso, ProdutoRepositorioFalso, produtoFalso } from './teste/
 import { useCadastrarProduto } from './use-cadastrar-produto';
 import { useCategorias } from './use-categorias';
 import { useEditarProduto, useProduto, useRemoverProduto } from './use-editar-produto';
-import { useProdutos } from './use-produtos';
+import { aplicarOrdemCongelada, enriquecer, useProdutos } from './use-produtos';
 
 jest.mock('../../composicao/repositorios', () => ({
   obterIdentidadeLocal: () => ({ casaId: 'casa-teste', usuarioId: 'usuario-teste' }),
@@ -68,6 +68,178 @@ describe('useProdutos', () => {
     const result = await montar(() => useProdutos(repo, observador));
     await waitFor(() => expect(result.current.carregando).toBe(false));
     expect(result.current.itens).toHaveLength(0);
+  });
+
+  it('modo "estado": item que muda de bucket não muda de posição, mas estado/fração/rótulo refletem o novo valor', async () => {
+    const repo = new ProdutoRepositorioFalso([
+      produtoFalso({ id: 'critico', nome: 'Acabou', quantidadeAtual: milesimos(0) }),
+      produtoFalso({ id: 'ok', nome: 'Cheio', quantidadeAtual: milesimos(3000) }),
+    ]);
+    const observador = new ObservadorFalso();
+    const result = await montar(() => useProdutos(repo, observador, 'estado'));
+    await waitFor(() => expect(result.current.itens).toHaveLength(2));
+    expect(result.current.itens.map((item) => item.produto.id)).toEqual(['critico', 'ok']);
+
+    // 'critico' passa a ter mais estoque que 'ok' — no SQL real isso o levaria
+    // para o fim do bucket "ok"; a posição congelada deve ignorar isso.
+    const indice = repo.produtos.findIndex((p) => p.id === 'critico');
+    repo.produtos[indice] = { ...repo.produtos[indice], quantidadeAtual: milesimos(5000) };
+    await act(async () => {
+      observador.notificar();
+    });
+
+    await waitFor(() =>
+      expect(result.current.itens.find((item) => item.produto.id === 'critico')?.estado).toBe(
+        'ok',
+      ),
+    );
+    expect(result.current.itens.map((item) => item.produto.id)).toEqual(['critico', 'ok']);
+  });
+
+  it('modo "alfabetica": mudança de estado não precisa de congelamento, ordem sempre segue a query', async () => {
+    const repo = new ProdutoRepositorioFalso([
+      produtoFalso({ id: 'zebra', nome: 'Zebra', quantidadeAtual: milesimos(0) }),
+      produtoFalso({ id: 'abacate', nome: 'Abacate', quantidadeAtual: milesimos(3000) }),
+    ]);
+    const observador = new ObservadorFalso();
+    const result = await montar(() => useProdutos(repo, observador, 'alfabetica'));
+    await waitFor(() => expect(result.current.itens).toHaveLength(2));
+    expect(result.current.itens.map((item) => item.produto.id)).toEqual(['abacate', 'zebra']);
+
+    const indice = repo.produtos.findIndex((p) => p.id === 'zebra');
+    repo.produtos[indice] = { ...repo.produtos[indice], quantidadeAtual: milesimos(5000) };
+    await act(async () => {
+      observador.notificar();
+    });
+
+    await waitFor(() =>
+      expect(result.current.itens.find((item) => item.produto.id === 'zebra')?.estado).toBe('ok'),
+    );
+    expect(result.current.itens.map((item) => item.produto.id)).toEqual(['abacate', 'zebra']);
+  });
+
+  it('trocar de modo durante a sessão recaptura a posição congelada imediatamente', async () => {
+    const repo = new ProdutoRepositorioFalso([
+      produtoFalso({ id: 'critico', nome: 'Acabou', quantidadeAtual: milesimos(0) }),
+      produtoFalso({ id: 'ok', nome: 'Cheio', quantidadeAtual: milesimos(3000) }),
+    ]);
+    const observador = new ObservadorFalso();
+    const { result, rerender } = await renderHook(
+      ({ modo }: { modo: 'alfabetica' | 'estado' }) => useProdutos(repo, observador, modo),
+      { initialProps: { modo: 'estado' } },
+    );
+    await waitFor(() => expect(result.current.itens).toHaveLength(2));
+
+    const indice = repo.produtos.findIndex((p) => p.id === 'critico');
+    repo.produtos[indice] = { ...repo.produtos[indice], quantidadeAtual: milesimos(5000) };
+
+    await act(async () => {
+      rerender({ modo: 'alfabetica' });
+      await Promise.resolve();
+    });
+
+    // Nova ordenação recapturada: modo alfabético reordena por nome de novo.
+    await waitFor(() =>
+      expect(result.current.itens.map((item) => item.produto.id)).toEqual(['critico', 'ok']),
+    );
+  });
+
+  it('modo "quantidade": item que muda de valor não muda de posição, mas o dado exposto reflete o novo valor', async () => {
+    const repo = new ProdutoRepositorioFalso([
+      produtoFalso({ id: 'menor', nome: 'Arroz', quantidadeAtual: milesimos(0) }),
+      produtoFalso({ id: 'maior', nome: 'Batata', quantidadeAtual: milesimos(3000) }),
+    ]);
+    const observador = new ObservadorFalso();
+    const result = await montar(() => useProdutos(repo, observador, 'quantidade'));
+    await waitFor(() => expect(result.current.itens).toHaveLength(2));
+    expect(result.current.itens.map((item) => item.produto.id)).toEqual(['menor', 'maior']);
+
+    // 'menor' passa a ter mais estoque que 'maior' — no SQL real isso o
+    // levaria para o fim da lista; a posição congelada deve ignorar isso.
+    const indice = repo.produtos.findIndex((p) => p.id === 'menor');
+    repo.produtos[indice] = { ...repo.produtos[indice], quantidadeAtual: milesimos(5000) };
+    await act(async () => {
+      observador.notificar();
+    });
+
+    await waitFor(() =>
+      expect(
+        result.current.itens.find((item) => item.produto.id === 'menor')?.produto.quantidadeAtual,
+      ).toBe(milesimos(5000)),
+    );
+    expect(result.current.itens.map((item) => item.produto.id)).toEqual(['menor', 'maior']);
+  });
+
+  it('trocar de direção dentro do mesmo par (estado → estadoInverso) recaptura a posição congelada', async () => {
+    const repo = new ProdutoRepositorioFalso([
+      produtoFalso({ id: 'critico', nome: 'Acabou', quantidadeAtual: milesimos(0) }),
+      produtoFalso({ id: 'ok', nome: 'Cheio', quantidadeAtual: milesimos(3000) }),
+    ]);
+    const observador = new ObservadorFalso();
+    const { result, rerender } = await renderHook(
+      ({ modo }: { modo: 'estado' | 'estadoInverso' }) => useProdutos(repo, observador, modo),
+      { initialProps: { modo: 'estado' as const } },
+    );
+    await waitFor(() => expect(result.current.itens).toHaveLength(2));
+    expect(result.current.itens.map((item) => item.produto.id)).toEqual(['critico', 'ok']);
+
+    await act(async () => {
+      rerender({ modo: 'estadoInverso' });
+      await Promise.resolve();
+    });
+
+    // Nova ordenação recapturada com a direção invertida: 'ok' vem primeiro.
+    await waitFor(() =>
+      expect(result.current.itens.map((item) => item.produto.id)).toEqual(['ok', 'critico']),
+    );
+  });
+
+  it('produto novo entra sem deslocar a posição congelada; produto removido some sem afetar a ordem relativa', async () => {
+    const repo = new ProdutoRepositorioFalso([
+      produtoFalso({ id: 'a', nome: 'Arroz', quantidadeAtual: milesimos(0) }),
+      produtoFalso({ id: 'b', nome: 'Batata', quantidadeAtual: milesimos(0) }),
+    ]);
+    const observador = new ObservadorFalso();
+    const result = await montar(() => useProdutos(repo, observador, 'estado'));
+    await waitFor(() => expect(result.current.itens).toHaveLength(2));
+
+    repo.produtos.push(produtoFalso({ id: 'c', nome: 'Cebola', quantidadeAtual: milesimos(0) }));
+    const indiceRemovido = repo.produtos.findIndex((p) => p.id === 'a');
+    repo.produtos[indiceRemovido] = { ...repo.produtos[indiceRemovido], deletadoEm: 1 };
+    await act(async () => {
+      observador.notificar();
+    });
+
+    await waitFor(() => expect(result.current.itens).toHaveLength(2));
+    expect(result.current.itens.map((item) => item.produto.id)).toEqual(['b', 'c']);
+  });
+});
+
+describe('aplicarOrdemCongelada (função pura)', () => {
+  it('mantém cada item na posição indicada pela ordem congelada', () => {
+    const itens = [
+      enriquecer(produtoFalso({ id: 'a', nome: 'A' })),
+      enriquecer(produtoFalso({ id: 'b', nome: 'B' })),
+      enriquecer(produtoFalso({ id: 'c', nome: 'C' })),
+    ];
+    const resultado = aplicarOrdemCongelada(itens, ['c', 'a', 'b']);
+    expect(resultado.map((item) => item.produto.id)).toEqual(['c', 'a', 'b']);
+  });
+
+  it('item ausente da ordem (novo) é anexado ao final, na posição relativa em que veio', () => {
+    const itens = [
+      enriquecer(produtoFalso({ id: 'a', nome: 'A' })),
+      enriquecer(produtoFalso({ id: 'novo', nome: 'Novo' })),
+      enriquecer(produtoFalso({ id: 'b', nome: 'B' })),
+    ];
+    const resultado = aplicarOrdemCongelada(itens, ['a', 'b']);
+    expect(resultado.map((item) => item.produto.id)).toEqual(['a', 'b', 'novo']);
+  });
+
+  it('item da ordem ausente dos itens (removido) é omitido do resultado', () => {
+    const itens = [enriquecer(produtoFalso({ id: 'a', nome: 'A' }))];
+    const resultado = aplicarOrdemCongelada(itens, ['removido', 'a']);
+    expect(resultado.map((item) => item.produto.id)).toEqual(['a']);
   });
 });
 

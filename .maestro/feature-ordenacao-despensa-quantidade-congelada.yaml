@@ -1,0 +1,131 @@
+appId: com.danielfalcaodf.repor
+---
+# Change `ordenacao-alternavel-despensa` (ordem 9) — cenário adicional (8.16).
+#
+# O QUE ESTE FLOW PROVA: no modo "Menor quantidade", um item que aumenta de
+# quantidade via stepper de reposição na LISTA (sem navegar para fora da
+# tela) NÃO muda de posição enquanto a sessão continua na tela — mesma
+# proteção já provada para o par Estado, agora estendida ao par Quantidade
+# (design D2). Executado no emulador em 2026-09-10.
+#
+# Importante: usa o botão "+" da lista, não o sheet "Outra quantidade" para
+# o item que sofre o stepper DURANTE a sessão congelada — achado ao
+# escrever este flow: navegar para a tela de detalhe do produto conta como
+# "sair e voltar" da despensa pela própria spec, o que recaptura a ordem
+# de propósito e não prova o cenário do stepper. "Outra quantidade" só é
+# usado para preparar o valor fixo de "Dois" ANTES de ativar o modo
+# "Menor quantidade" (ainda não há sessão congelada nesse momento).
+#
+# "Dois" usa unidade "kg" com valor fracionário (3,5) e "Um" usa "un"
+# (passos inteiros de 1) de propósito: assim o cruzamento de "Um" por
+# "Dois" nunca passa por um EMPATE EXATO de quantidade_atual. Achado ao
+# escrever este flow: toques em sequência MUITO mais rápida que o ritmo
+# humano real expõem uma condição de corrida (registrada em design.md,
+# Risks) que recaptura a posição congelada bem no instante em que os dois
+# valores empatam — não reproduz no ritmo humano real (validado
+# manualmente duas vezes), mas Maestro não tem como replicar esse ritmo de
+# forma confiável dentro de um único flow. Evitar o empate exato é mais
+# robusto do que tentar pausar entre toques.
+#
+# Efeito colateral real e permanente: cria "QA Qtd Congelada Um" e
+# "QA Qtd Congelada Dois" na despensa; deixa a preferência de ordenação da
+# casa em "Menor quantidade" ao final.
+
+- launchApp
+- assertVisible: "Despensa"
+# ambiente: bolha flutuante "Tools" do Expo dev-client sobrepõe os ícones do topo
+- swipe:
+    start: "970, 173"
+    end: "540, 700"
+    duration: 600
+
+# --- Preparo: dois produtos com quantidades diferentes -------------------
+- runFlow:
+    when:
+      visible: "Cadastrar do zero"
+    commands:
+      - tapOn: "Cadastrar do zero"
+- runFlow:
+    when:
+      notVisible: "Novo produto"
+    commands:
+      - tapOn: "Adicionar produto"
+- assertVisible: "Novo produto"
+- tapOn: "O que é"
+- setClipboard: "QA Qtd Congelada Um"
+- pasteText
+- tapOn: "un"
+- tapOn: "Quanto quero ter em casa"
+- inputText: "1"
+- tapOn: "Adicionar à despensa"
+- assertVisible: "Despensa"
+
+- tapOn: "Adicionar produto"
+- assertVisible: "Novo produto"
+- tapOn: "O que é"
+- setClipboard: "QA Qtd Congelada Dois"
+- pasteText
+- tapOn: "kg"
+- tapOn: "Quanto quero ter em casa"
+- inputText: "10"
+- tapOn: "Adicionar à despensa"
+- assertVisible: "Despensa"
+
+# Isola os dois itens pela busca: a despensa de QA tem muitos outros itens
+# "Acabou" que enterrariam os alvos fora da tela visível.
+- tapOn: "Buscar"
+- tapOn:
+    point: "540, 384"
+- inputText: "Congelada"
+- waitForAnimationToEnd
+
+# --- Prepara "Dois" com 3,5 kg (fixo, não editado depois) — antes de -----
+# --- ativar o modo congelado, então não conta como toque "durante a -----
+# --- sessão", só configuração inicial do cenário -------------------------
+- tapOn:
+    text: "QA Qtd Congelada Dois, 0 de 10 kg, Acabou"
+    repeat: 2
+- tapOn: "Outra quantidade"
+- assertVisible:
+    text: "Quantidade"
+    focused: true
+- inputText: "3,5"
+- tapOn: "Repus"
+- tapOn: "Voltar"
+- assertVisible: "Despensa"
+- assertVisible: "QA Qtd Congelada Dois, 3,5 de 10 kg, Falta 6,5"
+
+# --- Ativa o modo "Menor quantidade": a ordem atual (Um=0 < Dois=3,5) ----
+# --- vira a ordem congelada desta sessão de tela -------------------------
+- tapOn:
+    point: "828, 168"
+- tapOn: "Menor quantidade"
+- assertVisible: "Ordenação: Menor quantidade"
+- assertVisible:
+    text: ".*QA Qtd Congelada Dois.*"
+    below:
+      text: ".*QA Qtd Congelada Um.*"
+
+# --- Cruza a ordem: repor "Um" (1 un por toque) até 5, passando por -----
+# --- cima de "Dois" (3,5 kg) sem nunca empatar (3 -> 4 pula o 3,5) -------
+# Sem congelamento, a ordenação por quantidade recalcularia e "Um" (5)
+# passaria a vir DEPOIS de "Dois" (3,5) — o oposto do que a posição
+# congelada garante durante a sessão.
+- repeat:
+    times: 8
+    while:
+      notVisible: "QA Qtd Congelada Um, 5 de 1 un, Cheio"
+    commands:
+      - tapOn: "Repor 1 un de QA Qtd Congelada Um"
+      - swipe:
+          start: "50%, 50%"
+          end: "50%, 50%"
+          duration: 5000
+- assertVisible: "QA Qtd Congelada Um, 5 de 1 un, Cheio"
+
+# --- Prova do fix: a posição não mudou, só o número exibido -------------
+- assertVisible:
+    text: ".*QA Qtd Congelada Dois.*"
+    below:
+      text: ".*QA Qtd Congelada Um.*"
+- takeScreenshot: ordenacao-quantidade-posicao-congelada-apos-cruzar-ordem

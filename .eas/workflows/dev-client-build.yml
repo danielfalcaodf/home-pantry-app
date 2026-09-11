@@ -3,26 +3,29 @@ name: Build development client
 on:
   workflow_dispatch:
     inputs:
+      # ios/all removidos das opções: sem conta Apple Developer ativa, o
+      # build iOS falha em modo não-interativo (sem certificado/provisioning
+      # profile). Reativar rodando
+      # `eas credentials:configure-build -p ios -e development` e
+      # devolvendo as opções ios/all + o job build_ios abaixo.
       platform:
         type: choice
         options:
           - android
-          - ios
-          - all
         default: android
         required: true
 
 jobs:
   build_android:
-    if: ${{ inputs.platform == 'android' || inputs.platform == 'all' }}
+    if: ${{ inputs.platform == 'android' }}
     type: build
     params:
       platform: android
       profile: development
 
-  build_ios:
-    if: ${{ inputs.platform == 'ios' || inputs.platform == 'all' }}
-    type: build
-    params:
-      platform: ios
-      profile: development
+  # build_ios:
+  #   if: ${{ inputs.platform == 'ios' || inputs.platform == 'all' }}
+  #   type: build
+  #   params:
+  #     platform: ios
+  #     profile: development

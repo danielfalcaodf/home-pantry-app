@@ -1,0 +1,8 @@
+{
+  "packageFiles": [{ "filename": "package.json", "type": "json" }],
+  "bumpFiles": [
+    { "filename": "package.json", "type": "json" },
+    { "filename": "app.json", "updater": "scripts/versao-expo-updater.js" }
+  ],
+  "skip": { "changelog": true }
+}

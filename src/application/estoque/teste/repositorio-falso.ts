@@ -1,7 +1,9 @@
+import { estadoDoItem } from '../../../domain/produto/estoque.rules';
 import { Produto } from '../../../domain/produto/produto';
 import { ProdutoValidado } from '../../../domain/produto/validacao';
 import { centavos } from '../../../domain/shared/dinheiro';
 import { Milesimos, milesimos } from '../../../domain/shared/quantidade';
+import { OrdenacaoDaDespensa } from '../../../ports/configuracao.repository';
 import { MovimentoRepository } from '../../../ports/movimento.repository';
 import { ObservadorDeMudancas } from '../../../ports/observador-de-mudancas';
 import {
@@ -96,10 +98,37 @@ export class ProdutoRepositorioFalso implements ProdutoRepository {
     }
   }
 
-  async listarDespensa(casaId: string): Promise<Produto[]> {
-    return this.produtos.filter(
+  async listarDespensa(
+    casaId: string,
+    modo: OrdenacaoDaDespensa = 'estado',
+  ): Promise<Produto[]> {
+    const filtrados = this.produtos.filter(
       (p) => p.casaId === casaId && p.ativo && p.deletadoEm === null,
     );
+    const nome = (a: Produto, b: Produto) => a.nome.localeCompare(b.nome, 'pt-BR');
+    const rankPorEstado: Record<ReturnType<typeof estadoDoItem>, number> = {
+      critico: 0,
+      emFalta: 1,
+      ok: 2,
+    };
+    const bucket = (p: Produto) => rankPorEstado[estadoDoItem(p)];
+    const porBucket = (sinal: 1 | -1) => (a: Produto, b: Produto) => {
+      const diferenca = sinal * (bucket(a) - bucket(b));
+      return diferenca !== 0 ? diferenca : nome(a, b);
+    };
+    const porQuantidade = (sinal: 1 | -1) => (a: Produto, b: Produto) => {
+      const diferenca = sinal * (a.quantidadeAtual - b.quantidadeAtual);
+      return diferenca !== 0 ? diferenca : nome(a, b);
+    };
+    const comparador: Record<OrdenacaoDaDespensa, (a: Produto, b: Produto) => number> = {
+      alfabetica: nome,
+      alfabeticaInversa: (a, b) => -nome(a, b),
+      estado: porBucket(1),
+      estadoInverso: porBucket(-1),
+      quantidade: porQuantidade(1),
+      quantidadeInversa: porQuantidade(-1),
+    };
+    return [...filtrados].sort(comparador[modo]);
   }
 
   async listarFaltantes(casaId: string): Promise<FaltanteBruto[]> {

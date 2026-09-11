@@ -233,8 +233,47 @@ describe('consultas de leitura', () => {
     await repo.criar(casaId, usuarioId, dadosValidos('Cheio', 3));
     await repo.criar(casaId, usuarioId, dadosValidos('Baixo', 1));
     await repo.criar(casaId, usuarioId, dadosValidos('Acabando', 1));
+    const nomes = (await repo.listarDespensa(casaId, 'estado')).map((p) => p.nome);
+    expect(nomes).toEqual(['Zerado', 'Acabando', 'Baixo', 'Cheio']);
+  });
+
+  it('modo ausente mantém compatibilidade com o comportamento por estado', async () => {
+    const { repo, casaId, usuarioId } = montar();
+    await repo.criar(casaId, usuarioId, dadosValidos('Zerado', 0));
+    await repo.criar(casaId, usuarioId, dadosValidos('Cheio', 3));
+    await repo.criar(casaId, usuarioId, dadosValidos('Baixo', 1));
+    await repo.criar(casaId, usuarioId, dadosValidos('Acabando', 1));
     const nomes = (await repo.listarDespensa(casaId)).map((p) => p.nome);
     expect(nomes).toEqual(['Zerado', 'Acabando', 'Baixo', 'Cheio']);
+  });
+
+  it('modo alfabética ordena só pelo nome, ignorando caixa e o estado de cada item', async () => {
+    const { repo, casaId, usuarioId } = montar();
+    await repo.criar(casaId, usuarioId, dadosValidos('zebra', 0));
+    await repo.criar(casaId, usuarioId, dadosValidos('Abacaxi', 3));
+    await repo.criar(casaId, usuarioId, dadosValidos('banana', 1));
+    const nomes = (await repo.listarDespensa(casaId, 'alfabetica')).map((p) => p.nome);
+    expect(nomes).toEqual(['Abacaxi', 'banana', 'zebra']);
+  });
+
+  it('modo quantidade ordena crescente por quantidade_atual, com desempate alfabético', async () => {
+    const { repo, casaId, usuarioId } = montar();
+    await repo.criar(casaId, usuarioId, dadosValidos('Cheio', 3));
+    await repo.criar(casaId, usuarioId, dadosValidos('Zerado', 0));
+    await repo.criar(casaId, usuarioId, dadosValidos('BaixoB', 1));
+    await repo.criar(casaId, usuarioId, dadosValidos('BaixoA', 1));
+    const nomes = (await repo.listarDespensa(casaId, 'quantidade')).map((p) => p.nome);
+    expect(nomes).toEqual(['Zerado', 'BaixoA', 'BaixoB', 'Cheio']);
+  });
+
+  it('modo quantidadeInversa ordena decrescente por quantidade_atual, com o mesmo desempate', async () => {
+    const { repo, casaId, usuarioId } = montar();
+    await repo.criar(casaId, usuarioId, dadosValidos('Cheio', 3));
+    await repo.criar(casaId, usuarioId, dadosValidos('Zerado', 0));
+    await repo.criar(casaId, usuarioId, dadosValidos('BaixoB', 1));
+    await repo.criar(casaId, usuarioId, dadosValidos('BaixoA', 1));
+    const nomes = (await repo.listarDespensa(casaId, 'quantidadeInversa')).map((p) => p.nome);
+    expect(nomes).toEqual(['Cheio', 'BaixoA', 'BaixoB', 'Zerado']);
   });
 
   it('faltantes retorna diferença bruta sem arredondar', async () => {

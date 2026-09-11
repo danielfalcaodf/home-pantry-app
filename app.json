@@ -2,7 +2,7 @@
   "expo": {
     "name": "Repor",
     "slug": "repor",
-    "version": "1.0.0",
+    "version": "0.1.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "repor",
@@ -37,7 +37,8 @@
         {
           "style": "light"
         }
-      ]
+      ],
+      "expo-asset"
     ],
     "experiments": {
       "typedRoutes": true

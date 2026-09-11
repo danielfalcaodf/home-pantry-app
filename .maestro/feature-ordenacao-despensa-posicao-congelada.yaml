@@ -1,0 +1,90 @@
+appId: com.danielfalcaodf.repor
+---
+# Change `ordenacao-alternavel-despensa` (ordem 9) — cenário 1/6 (7.1).
+#
+# O QUE ESTE FLOW PROVA: no modo "Acabou primeiro" (par Estado), um item que
+# muda de bucket (crítico -> ok) via stepper de reposição NÃO muda de
+# posição na tela enquanto a sessão continua na tela — o bug original que a
+# change corrige (item "fugia" do lugar durante o próprio gesto de ajuste).
+#
+# Reescrito para o menu de 6 opções (era um botão de alternância binária) —
+# executado no emulador em 2026-09-09.
+#
+# Efeito colateral real e permanente: cria "QA Ordem Zulu" e "QA Ordem Alfa"
+# na despensa; deixa a preferência de ordenação da casa em "Acabou primeiro".
+
+- launchApp
+- assertVisible: "Despensa"
+# ambiente: bolha flutuante "Tools" do Expo dev-client sobrepõe os ícones do topo
+- swipe:
+    start: "970, 173"
+    end: "540, 700"
+    duration: 600
+
+# --- Preparo: dois produtos, um que ficará "cheio" antes do outro -------
+- runFlow:
+    when:
+      visible: "Cadastrar do zero"
+    commands:
+      - tapOn: "Cadastrar do zero"
+- runFlow:
+    when:
+      notVisible: "Novo produto"
+    commands:
+      - tapOn: "Adicionar produto"
+- assertVisible: "Novo produto"
+- tapOn: "O que é"
+- setClipboard: "QA Ordem Zulu"
+- pasteText
+- tapOn: "un"
+- tapOn: "Quanto quero ter em casa"
+- inputText: "1"
+- tapOn: "Adicionar à despensa"
+- assertVisible: "Despensa"
+
+- tapOn: "Adicionar produto"
+- assertVisible: "Novo produto"
+- tapOn: "O que é"
+- setClipboard: "QA Ordem Alfa"
+- pasteText
+- tapOn: "un"
+- tapOn: "Quanto quero ter em casa"
+- inputText: "1"
+- tapOn: "Adicionar à despensa"
+- assertVisible: "Despensa"
+
+# QA Ordem Alfa começa "Acabou" (0 de 1) — repor até ficar "Cheio" (1 de 1),
+# igualando ao estado que QA Ordem Zulu também terá depois.
+- tapOn: "Repor 1 un de QA Ordem Alfa"
+- assertVisible:
+    text: ".*QA Ordem Alfa, 1 de 1 un, Cheio.*"
+
+# --- Ativa o modo "Acabou primeiro": a ordem atual (Zulu crítico, Alfa --
+# --- cheio) vira a ordem congelada desta sessão de tela ------------------
+- runFlow:
+    when:
+      notVisible: "Ordenação: Acabou primeiro"
+    commands:
+      - tapOn:
+          point: "828, 168"
+      - tapOn: "Acabou primeiro"
+- assertVisible: "Ordenação: Acabou primeiro"
+- assertVisible:
+    text: ".*QA Ordem Alfa.*"
+    below:
+      text: ".*QA Ordem Zulu.*"
+
+# --- Cruza o bucket: repor QA Ordem Zulu até também virar "Cheio" ------
+# Sem congelamento, a ordenação por estado recalcularia alfabeticamente
+# dentro do bucket "ok" e Alfa passaria a vir ANTES de Zulu — o oposto do
+# que a posição congelada garante.
+- tapOn: "Repor 1 un de QA Ordem Zulu"
+- assertVisible:
+    text: ".*QA Ordem Zulu, 1 de 1 un, Cheio.*"
+
+# --- Prova do fix: a posição não mudou, só o rótulo de estado ----------
+- assertVisible:
+    text: ".*QA Ordem Alfa.*"
+    below:
+      text: ".*QA Ordem Zulu.*"
+- takeScreenshot: ordenacao-posicao-congelada-apos-cruzar-bucket

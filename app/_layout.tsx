@@ -7,6 +7,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
+import { PaperProvider } from 'react-native-paper';
 
 import { usePreferenciaDeTemaPersistida } from '@/application/tema/use-preferencia-de-tema';
 import { usePrepararBanco } from '@/composicao/banco';
@@ -92,7 +93,12 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <KeyboardProvider statusBarTranslucent navigationBarTranslucent>
         <ThemeProvider preferencia={tema.preferencia} escolher={tema.escolher}>
-          <Rotas />
+          {/* Só o Portal/tema do Paper — usado exclusivamente pelo <Menu> de
+              ordenação da despensa, estilizado 100% por tokens.ts (nenhum
+              outro componente do Paper é usado no app). */}
+          <PaperProvider>
+            <Rotas />
+          </PaperProvider>
         </ThemeProvider>
       </KeyboardProvider>
     </GestureHandlerRootView>

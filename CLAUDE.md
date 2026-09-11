@@ -16,7 +16,15 @@ Projeto ainda **não foi inicializado** (sem `package.json`, sem código — só
 - **Estado**: sem Redux/TanStack Query. SQLite é a fonte de verdade; `useLiveQuery` do Drizzle re-renderiza a UI. Estado efêmero de tela em `useState`; se precisar de estado global de UI, Zustand.
 - **Animação**: `react-native-reanimated` (spring na UI thread)
 - **Outros**: `expo-haptics`, `expo-keep-awake`, `@gorhom/bottom-sheet`, `FlashList` (listas >150 itens)
-- Sem biblioteca de design system pronta — os ~12 componentes são custom (ver design de frontend).
+- Sem biblioteca de design system pronta para os ~12 componentes visuais próprios — eles continuam
+  custom (ver design de frontend). Exceção única: **`@expo/ui`** é permitido para controles onde
+  "parecer nativo do SO" já é o objetivo (sheet, picker, slider, switch, menu) — nunca para
+  botão/input/stepper/chip, que carregam a identidade visual do app (tipografia, cor, layout) e o
+  `@expo/ui` não permite customizar. Ver regra completa e exemplos em "Design de UI" abaixo.
+- **Ícones**: `@expo/vector-icons` (já embutido no SDK do Expo, zero dependência nova) é permitido
+  para ícones novos daqui pra frente. Os ícones já existentes em `src/presentation/theme/icones.ts`
+  (paths SVG desenhados à mão, consumidos por `IconeSvg`) continuam como estão — não migrar em
+  massa só pra trocar de mecanismo. Ver critério de escolha em "Design de UI" abaixo.
 
 ## Comandos
 
@@ -120,6 +128,23 @@ Direção: **"linha d'água"**. Cada item da lista é um medidor vertical que pr
 - Tipografia com três papéis fixos, nunca intercambiáveis: **Archivo** (display — só título de tela e quantidade grande do detalhe), **IBM Plex Sans** (corpo/UI), **IBM Plex Mono tabular** (todo número: preço, quantidade, total, data — figuras tabulares evitam que a lista "pule" a cada toque). Nada acima de 34pt. Confirmar os pesos exportados pelos pacotes `@expo-google-fonts/*` antes de fixar constantes — nem toda família exporta todos os pesos.
 - Movimento é orquestrado só no gesto de dar baixa (háptico leve → stepper contrai 0.92 → linha d'água desce em spring damping 18 sobre `react-native-reanimated`, rodando na UI thread → cross-fade dos números → toast). Nada mais anima: sem entrada de tela em cascata, sem skeleton shimmer, sem contagem progressiva de números — isso adiciona latência percebida ao caminho crítico. Com `reduceMotion` do sistema ligado, o nível muda em corte seco (fade 100ms) e o háptico permanece; usar `withSpring(..., { reduceMotion: ReduceMotion.System })` para respeitar a preferência de acessibilidade automaticamente em vez de checar a flag manualmente.
 - Sem biblioteca de design system pronta — os ~12 componentes (`ItemDespensa`, stepper, teclado de quantidade em bottom sheet, toast de desfazer, chip de estado, campo de texto, item do modo compra) são custom. Ver `FRONTEND-DESIGN-app-estoque-de-casa.md` §7 antes de implementar qualquer um deles — a especificação de layout, estados e comportamento de toque já está fechada lá.
+- **Exceção controlada — `@expo/ui`**: pode ser usado, mas só para controles onde o objetivo já é
+  "parecer nativo do SO" (bottom sheet do sistema, picker, slider, switch, menu) — nunca para os
+  ~12 componentes acima. Critério de decisão: se o controle precisa de Archivo/IBM Plex, dos
+  tokens de cor de `tokens.ts`, ou de layout definido no doc de frontend, ele fica custom; o
+  `@expo/ui` não expõe fonte/cor além do que o SwiftUI/Jetpack Compose nativo permite (ex.:
+  `Switch` do `@expo/ui` nem aceita cor custom), então usá-lo ali quebraria os "três canais
+  redundantes" e a tipografia fixa. Fora essa lista, nenhuma outra lib de design system (React
+  Native Paper, Tamagui, Gluestack UI etc.) entra sem essa mesma regra ser satisfeita — visual
+  final tem que bater com o que já está prototipado nos documentos-fonte, não com o tema de
+  fábrica da lib.
+- **Ícones — dois mecanismos convivendo, de propósito**: os ícones já desenhados em
+  `src/presentation/theme/icones.ts` (path SVG, `viewBox 24x24`, `stroke 1.5`, renderizados por
+  `IconeSvg`) continuam do jeito que estão — não reescrever pra trocar de biblioteca sem motivo.
+  **Para ícone novo, usar `@expo/vector-icons`** (Ionicons, Feather, MaterialIcons etc. — já vem
+  com o SDK do Expo, sem instalar nada): `size` e `color` sempre lidos de `tokens.ts`/`espaco.ts`,
+  nunca hex literal nem número solto. Continua valendo os três canais redundantes de estado (cor
+  sozinha nunca é o único sinal) e o alvo de toque mínimo 48×48dp em qualquer botão de ícone.
 
 ## Fluxo Git — branches, commits e PRs (GitFlow)
 
@@ -148,6 +173,48 @@ imperativo (`adiciona`, não `adicionado`). Tipos: `feat`, `fix`, `chore`, `refa
 (`fix: fixa TZ do Jest`, não `change/01: fixa TZ do Jest`) — o título vira o commit de merge em
 squash, e precisa ser legível sozinho no changelog. Base é sempre `develop`, exceto `hotfix/*`
 (base `main`, com back-merge para `develop` depois).
+
+## Versionamento
+
+Dois números, dois donos — não confundir:
+
+- **`android.versionCode` / `ios.buildNumber`** — contador interno de build, nunca lido por
+  humano. Já é 100% automático: `eas.json` tem `appVersionSource: "remote"` +
+  `autoIncrement: true` nos perfis `preview`/`production`, então cada build incrementa sozinho
+  nos servidores da EAS. Não mexer manualmente nisso.
+- **`expo.version` (`app.json`) / `version` (`package.json`, mantidos em sincronia)** — SemVer
+  visível pro usuário, decisão humana sobre *quando* sobe. Fica **`0.y.z`** enquanto o app estiver
+  em teste (SemVer 1.0.0: "major zero é para desenvolvimento inicial, a API pública pode mudar a
+  qualquer momento") — hoje o Repor não tem nem o app criado no Google Play Console, então está
+  claramente nessa fase.
+
+**Bump automático a cada merge em `develop`** (`.github/workflows/bump-versao.yml`, roda depois
+do squash-merge, usando `commit-and-tag-version` — sucessor mantido do `standard-version`,
+depreciado): lê o prefixo Conventional Commits do commit de merge (que é o título da PR,
+convenção já documentada acima) e decide:
+
+| Prefixo do commit de merge | Bump |
+|---|---|
+| `feat:` / `feat(escopo):` | minor (`0.1.0` → `0.2.0`) |
+| `fix:` / `fix(escopo):` | patch (`0.1.0` → `0.1.1`) |
+| `chore:`, `docs:`, `refactor:`, `test:`, `build:`, `ci:` | nenhum — não é mudança de comportamento visível |
+
+O workflow escreve em `package.json` (fonte de verdade) e replica pra `app.json` via updater
+customizado (`scripts/versao-expo-updater.js`, configurado em `.versionrc.json`), cria a tag
+`vX.Y.Z` e faz push de volta pra `develop` — nenhuma ação manual necessária num PR normal de
+`feature/*` ou `fix/*`.
+
+**Bump pra `1.0.0` é sempre manual, nunca automatizado** — é uma decisão de negócio (primeiro
+lançamento real em produção na loja), não uma inferência de commit. Feito uma única vez, na
+`release/*` que for a estabilização desse lançamento: rodar
+`npx commit-and-tag-version --release-as major` localmente (ou editar `version` nos dois
+arquivos à mão) antes de abrir a PR pra `main`. Depois desse marco, o fluxo automático acima
+volta a valer normalmente sobre a base `1.x.y`.
+
+Evitar marcador de breaking change (`feat!:`/`fix!:` ou rodapé `BREAKING CHANGE:`) enquanto
+`version` estiver em `0.y.z` — nada no workflow os trata hoje (o `--release-as` é forçado
+explicitamente por tipo), mas rodar `commit-and-tag-version` manualmente sem `--release-as`
+detectaria esse marcador e pularia direto pra `1.0.0` fora do momento certo.
 
 ## Fluxo de changes do OpenSpec (`opsx`) — ORDEM e gate de testes
 

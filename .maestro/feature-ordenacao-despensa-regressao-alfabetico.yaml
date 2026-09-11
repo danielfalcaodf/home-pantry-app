@@ -1,0 +1,77 @@
+appId: com.danielfalcaodf.repor
+---
+# Change `ordenacao-alternavel-despensa` (ordem 9) — cenário 4/6 (7.4).
+#
+# O QUE ESTE FLOW PROVA: com o modo "Nome (A-Z)" (novo default) ativo,
+# busca, filtro por estado e agrupamento por categoria continuam
+# funcionando — nenhuma dessas specs foi tocada por esta change, mas todas
+# dependem da mesma lista que agora pode vir em outra ordem.
+#
+# Reescrito para o menu de 6 opções (era um botão de alternância binária) —
+# executado no emulador em 2026-09-09.
+#
+# Efeito colateral real e permanente: cria "QA Regressao Item" na despensa;
+# deixa a preferência de ordenação da casa em "Nome (A-Z)" ao final.
+
+- launchApp
+- assertVisible: "Despensa"
+# ambiente: bolha flutuante "Tools" do Expo dev-client sobrepõe os ícones do topo
+- swipe:
+    start: "970, 173"
+    end: "540, 700"
+    duration: 600
+
+# --- Garante o modo "Nome (A-Z)" (default) --------------------------------
+- runFlow:
+    when:
+      notVisible: "Ordenação: Nome (A-Z)"
+    commands:
+      - tapOn:
+          point: "828, 168"
+      - tapOn: "Nome (A-Z)"
+- assertVisible: "Ordenação: Nome (A-Z)"
+
+# --- Preparo: item cujo nome a busca vai isolar --------------------------
+- runFlow:
+    when:
+      visible: "Cadastrar do zero"
+    commands:
+      - tapOn: "Cadastrar do zero"
+- runFlow:
+    when:
+      notVisible: "Novo produto"
+    commands:
+      - tapOn: "Adicionar produto"
+- assertVisible: "Novo produto"
+- tapOn: "O que é"
+- setClipboard: "QA Regressao Item"
+- pasteText
+- tapOn: "un"
+- tapOn: "Quanto quero ter em casa"
+- inputText: "1"
+- tapOn: "Adicionar à despensa"
+- assertVisible: "Despensa"
+
+# --- Busca continua filtrando normalmente com o modo alfabético ativo ---
+- tapOn: "Buscar"
+- tapOn:
+    point: "540, 384"
+- inputText: "Regressao"
+- assertVisible:
+    text: ".*QA Regressao Item.*"
+- pressKey: "back"
+
+# --- Filtro por estado ("Acabou") continua funcionando -------------------
+- tapOn: "Acabou"
+- assertVisible:
+    text: ".*QA Regressao Item.*"
+- tapOn: "Tudo"
+
+# --- Limpa a busca: agrupamento por categoria só aparece sem termo ativo -
+- tapOn: "Regressao"
+- eraseText: 20
+- tapOn: "Buscar"
+
+# --- Agrupamento por categoria continua aparecendo (cabeçalho visível) --
+- assertVisible: "SEM CATEGORIA"
+- takeScreenshot: ordenacao-regressao-modo-alfabetico

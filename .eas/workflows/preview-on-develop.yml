@@ -12,8 +12,12 @@ jobs:
       platform: android
       profile: preview
 
-  build_ios:
-    type: build
-    params:
-      platform: ios
-      profile: preview
+  # build_ios pausado: sem conta Apple Developer ativa, o EAS não consegue
+  # gerar certificado/provisioning profile em modo não-interativo. Reativar
+  # rodando `eas credentials:configure-build -p ios -e preview` (requer
+  # conta Apple Developer) e descomentando o job abaixo.
+  # build_ios:
+  #   type: build
+  #   params:
+  #     platform: ios
+  #     profile: preview

@@ -1,0 +1,59 @@
+name: Bump de versão
+
+# Roda depois do merge (squash) de uma PR em develop — o commit resultante
+# carrega o mesmo prefixo Conventional Commits do título da PR (CLAUDE.md).
+# Critério: feat: -> minor, fix: -> patch, qualquer outro tipo (chore/docs/
+# refactor/test/build/ci) não bumpa. O salto pra 1.0.0 (primeiro lançamento
+# em produção) é sempre manual — ver seção "Versionamento" do CLAUDE.md.
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  bump:
+    if: "!startsWith(github.event.head_commit.message, 'chore(release):')"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Determina o tipo de bump pelo prefixo do commit
+        id: tipo
+        env:
+          MENSAGEM_DO_COMMIT: ${{ github.event.head_commit.message }}
+        run: |
+          if [[ "$MENSAGEM_DO_COMMIT" =~ ^feat(\(.+\))?:\  ]]; then
+            echo "release_as=minor" >> "$GITHUB_OUTPUT"
+          elif [[ "$MENSAGEM_DO_COMMIT" =~ ^fix(\(.+\))?:\  ]]; then
+            echo "release_as=patch" >> "$GITHUB_OUTPUT"
+          else
+            echo "release_as=" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Instala dependências
+        if: steps.tipo.outputs.release_as != ''
+        run: npm ci
+
+      - name: Configura identidade do git para o commit de bump
+        if: steps.tipo.outputs.release_as != ''
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Bump de versão (package.json + app.json)
+        if: steps.tipo.outputs.release_as != ''
+        run: npx commit-and-tag-version --release-as ${{ steps.tipo.outputs.release_as }}
+
+      - name: Publica o commit de bump e a tag
+        if: steps.tipo.outputs.release_as != ''
+        run: |
+          git push origin HEAD:develop
+          git push origin --tags

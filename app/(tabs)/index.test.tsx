@@ -60,6 +60,37 @@ jest.mock('@shopify/flash-list', () => ({
   ),
 }));
 
+// `Menu` do react-native-paper abre via Portal + Animated (posicionamento
+// medido do anchor, animação de opacidade/escala) — mecanismo real demais
+// pro RNTL simular de forma determinística. O dublê renderiza o `anchor` e,
+// quando `visible`, os `children` (Menu.Item) direto na árvore, sem Portal
+// nem animação. Verificação visual real (posição, cor, animação) fica pro
+// Maestro no emulador.
+jest.mock('react-native-paper', () => {
+  const { requireActual } = jest;
+  const actual = requireActual('react-native-paper');
+  const { Pressable, Text, View } = requireActual('react-native');
+
+  function MenuMock({ visible, anchor, children }: any) {
+    return (
+      <View>
+        {anchor}
+        {visible ? <View>{children}</View> : null}
+      </View>
+    );
+  }
+  function MenuItemMock({ title, onPress, disabled }: any) {
+    return (
+      <Pressable onPress={onPress} disabled={disabled}>
+        <Text>{title}</Text>
+      </Pressable>
+    );
+  }
+  MenuMock.Item = MenuItemMock;
+
+  return { ...actual, Menu: MenuMock };
+});
+
 const mockItemArroz = {
   produto: {
     id: 'p1',
@@ -77,6 +108,22 @@ const mockItemArroz = {
 
 jest.mock('@/application/estoque/use-produtos', () => ({
   useProdutos: () => ({ itens: [mockItemArroz], carregando: false }),
+}));
+
+type ModoOrdenacao =
+  | 'alfabetica'
+  | 'alfabeticaInversa'
+  | 'estado'
+  | 'estadoInverso'
+  | 'quantidade'
+  | 'quantidadeInversa';
+let mockModoOrdenacao: ModoOrdenacao = 'alfabetica';
+const mockSelecionarOrdenacao = jest.fn();
+jest.mock('@/application/lista/use-preferencia-ordenacao', () => ({
+  usePreferenciaDeOrdenacao: () => ({
+    modo: mockModoOrdenacao,
+    selecionar: mockSelecionarOrdenacao,
+  }),
 }));
 
 jest.mock('@/application/estoque/use-categorias', () => ({ useCategorias: () => [] }));
@@ -183,6 +230,54 @@ describe('Despensa — busca não persiste teclado/foco entre abas', () => {
     await waitFor(() => expect(Keyboard.dismiss).toHaveBeenCalled());
     expect(screen.getByPlaceholderText('Nome do item')).toHaveDisplayValue('roz');
     expect(screen.getByLabelText('Usei 1 kg de Arroz')).toBeTruthy();
+  });
+});
+
+describe('Despensa — menu de ordenação (6 opções)', () => {
+  beforeEach(() => {
+    mockModoOrdenacao = 'alfabetica';
+    mockSelecionarOrdenacao.mockClear();
+  });
+
+  it('gatilho do menu existe entre a busca e o novo produto, com rótulo do modo atual', async () => {
+    await comTema(<Despensa />);
+    expect(screen.getByLabelText('Ordenação: Nome (A-Z)')).toBeTruthy();
+  });
+
+  it('tocar no gatilho abre o menu com as 6 opções visíveis, em 3 pares', async () => {
+    await comTema(<Despensa />);
+    fireEvent.press(screen.getByLabelText('Ordenação: Nome (A-Z)'));
+    await waitFor(() => expect(screen.getByText('Nome (Z-A)')).toBeTruthy());
+    expect(screen.getByText('Acabou primeiro')).toBeTruthy();
+    expect(screen.getByText('Cheio primeiro')).toBeTruthy();
+    expect(screen.getByText('Menor quantidade')).toBeTruthy();
+    expect(screen.getByText('Maior quantidade')).toBeTruthy();
+  });
+
+  it('escolher uma opção do menu chama selecionar() com o modo correspondente', async () => {
+    await comTema(<Despensa />);
+    fireEvent.press(screen.getByLabelText('Ordenação: Nome (A-Z)'));
+    await waitFor(() => expect(screen.getByText('Cheio primeiro')).toBeTruthy());
+
+    fireEvent.press(screen.getByText('Cheio primeiro'));
+
+    expect(mockSelecionarOrdenacao).toHaveBeenCalledWith('estadoInverso');
+  });
+
+  it('escolher o critério de quantidade chama selecionar() com o modo correspondente', async () => {
+    await comTema(<Despensa />);
+    fireEvent.press(screen.getByLabelText('Ordenação: Nome (A-Z)'));
+    await waitFor(() => expect(screen.getByText('Maior quantidade')).toBeTruthy());
+
+    fireEvent.press(screen.getByText('Maior quantidade'));
+
+    expect(mockSelecionarOrdenacao).toHaveBeenCalledWith('quantidadeInversa');
+  });
+
+  it('modo "estadoInverso" ativo reflete no rótulo acessível do gatilho', async () => {
+    mockModoOrdenacao = 'estadoInverso';
+    await comTema(<Despensa />);
+    expect(screen.getByLabelText('Ordenação: Cheio primeiro')).toBeTruthy();
   });
 });
 
