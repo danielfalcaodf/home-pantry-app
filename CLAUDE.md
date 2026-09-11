@@ -174,6 +174,48 @@ imperativo (`adiciona`, não `adicionado`). Tipos: `feat`, `fix`, `chore`, `refa
 squash, e precisa ser legível sozinho no changelog. Base é sempre `develop`, exceto `hotfix/*`
 (base `main`, com back-merge para `develop` depois).
 
+## Versionamento
+
+Dois números, dois donos — não confundir:
+
+- **`android.versionCode` / `ios.buildNumber`** — contador interno de build, nunca lido por
+  humano. Já é 100% automático: `eas.json` tem `appVersionSource: "remote"` +
+  `autoIncrement: true` nos perfis `preview`/`production`, então cada build incrementa sozinho
+  nos servidores da EAS. Não mexer manualmente nisso.
+- **`expo.version` (`app.json`) / `version` (`package.json`, mantidos em sincronia)** — SemVer
+  visível pro usuário, decisão humana sobre *quando* sobe. Fica **`0.y.z`** enquanto o app estiver
+  em teste (SemVer 1.0.0: "major zero é para desenvolvimento inicial, a API pública pode mudar a
+  qualquer momento") — hoje o Repor não tem nem o app criado no Google Play Console, então está
+  claramente nessa fase.
+
+**Bump automático a cada merge em `develop`** (`.github/workflows/bump-versao.yml`, roda depois
+do squash-merge, usando `commit-and-tag-version` — sucessor mantido do `standard-version`,
+depreciado): lê o prefixo Conventional Commits do commit de merge (que é o título da PR,
+convenção já documentada acima) e decide:
+
+| Prefixo do commit de merge | Bump |
+|---|---|
+| `feat:` / `feat(escopo):` | minor (`0.1.0` → `0.2.0`) |
+| `fix:` / `fix(escopo):` | patch (`0.1.0` → `0.1.1`) |
+| `chore:`, `docs:`, `refactor:`, `test:`, `build:`, `ci:` | nenhum — não é mudança de comportamento visível |
+
+O workflow escreve em `package.json` (fonte de verdade) e replica pra `app.json` via updater
+customizado (`scripts/versao-expo-updater.js`, configurado em `.versionrc.json`), cria a tag
+`vX.Y.Z` e faz push de volta pra `develop` — nenhuma ação manual necessária num PR normal de
+`feature/*` ou `fix/*`.
+
+**Bump pra `1.0.0` é sempre manual, nunca automatizado** — é uma decisão de negócio (primeiro
+lançamento real em produção na loja), não uma inferência de commit. Feito uma única vez, na
+`release/*` que for a estabilização desse lançamento: rodar
+`npx commit-and-tag-version --release-as major` localmente (ou editar `version` nos dois
+arquivos à mão) antes de abrir a PR pra `main`. Depois desse marco, o fluxo automático acima
+volta a valer normalmente sobre a base `1.x.y`.
+
+Evitar marcador de breaking change (`feat!:`/`fix!:` ou rodapé `BREAKING CHANGE:`) enquanto
+`version` estiver em `0.y.z` — nada no workflow os trata hoje (o `--release-as` é forçado
+explicitamente por tipo), mas rodar `commit-and-tag-version` manualmente sem `--release-as`
+detectaria esse marcador e pularia direto pra `1.0.0` fora do momento certo.
+
 ## Fluxo de changes do OpenSpec (`opsx`) — ORDEM e gate de testes
 
 Os comandos `opsx` operam sempre sobre as changes **atuais** (ativas) do repositório — nunca

@@ -1,7 +1,7 @@
 {
   "name": "repor",
   "main": "expo-router/entry",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "private": true,
   "scripts": {
     "start": "expo start",
@@ -63,6 +63,7 @@
     "babel-plugin-inline-import": "^3.0.0",
     "babel-preset-expo": "^57.0.5",
     "better-sqlite3": "^13.0.2",
+    "commit-and-tag-version": "^13.2.0",
     "drizzle-kit": "^0.31.10",
     "eslint": "^9.39.5",
     "eslint-config-expo": "~57.0.2",
