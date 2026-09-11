@@ -200,9 +200,11 @@ convenção já documentada acima) e decide:
 | `chore:`, `docs:`, `refactor:`, `test:`, `build:`, `ci:` | nenhum — não é mudança de comportamento visível |
 
 O workflow escreve em `package.json` (fonte de verdade) e replica pra `app.json` via updater
-customizado (`scripts/versao-expo-updater.js`, configurado em `.versionrc.json`), cria a tag
-`vX.Y.Z` e faz push de volta pra `develop` — nenhuma ação manual necessária num PR normal de
-`feature/*` ou `fix/*`.
+customizado (`scripts/versao-expo-updater.js`, configurado em `.versionrc.json`). Como `develop`
+é branch protegida (só aceita mudança via PR), ele **não** dá push direto: abre uma PR própria
+(`chore(release): bump versão para X.Y.Z`) que precisa ser aprovada e mergeada como qualquer
+outra — único passo manual do fluxo, e existe só por causa da proteção de branch, não por
+decisão de design.
 
 **Bump pra `1.0.0` é sempre manual, nunca automatizado** — é uma decisão de negócio (primeiro
 lançamento real em produção na loja), não uma inferência de commit. Feito uma única vez, na

@@ -5,6 +5,11 @@ name: Bump de versão
 # Critério: feat: -> minor, fix: -> patch, qualquer outro tipo (chore/docs/
 # refactor/test/build/ci) não bumpa. O salto pra 1.0.0 (primeiro lançamento
 # em produção) é sempre manual — ver seção "Versionamento" do CLAUDE.md.
+#
+# `develop` é branch protegida (só aceita mudança via PR) — por isso o bump
+# não dá push direto: abre uma PR própria ("chore(release): ..."), que você
+# aprova/mergeia como qualquer outra. O guard abaixo evita que o merge dessa
+# PR dispare um novo bump (loop infinito).
 on:
   push:
     branches:
@@ -16,6 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      pull-requests: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -42,18 +48,27 @@ jobs:
         if: steps.tipo.outputs.release_as != ''
         run: npm ci
 
-      - name: Configura identidade do git para o commit de bump
+      - name: Bump de versão (só nos arquivos, sem commit/tag — a PR cuida disso)
         if: steps.tipo.outputs.release_as != ''
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+        run: npx commit-and-tag-version --release-as ${{ steps.tipo.outputs.release_as }} --skip.commit --skip.tag
 
-      - name: Bump de versão (package.json + app.json)
+      - name: Lê a versão resultante
         if: steps.tipo.outputs.release_as != ''
-        run: npx commit-and-tag-version --release-as ${{ steps.tipo.outputs.release_as }}
+        id: versao
+        run: echo "numero=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
 
-      - name: Publica o commit de bump e a tag
+      - name: Abre PR com o bump
         if: steps.tipo.outputs.release_as != ''
-        run: |
-          git push origin HEAD:develop
-          git push origin --tags
+        uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: "chore(release): bump versão para ${{ steps.versao.outputs.numero }}"
+          title: "chore(release): bump versão para ${{ steps.versao.outputs.numero }}"
+          body: >
+            Bump automático (${{ steps.tipo.outputs.release_as }}) gerado a partir do commit
+            ${{ github.sha }}. Mergear normalmente.
+          branch: chore/bump-versao-${{ steps.versao.outputs.numero }}
+          base: develop
+          delete-branch: true
+          add-paths: |
+            package.json
+            app.json
