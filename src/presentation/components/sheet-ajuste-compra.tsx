@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import { Pressable, TextInput, View } from 'react-native';
 
+import { BaseDePreco } from '../../domain/shared/dinheiro';
 import { rotuloDaUnidade, Unidade } from '../../domain/shared/unidade';
 import { ALVO_TOQUE_MINIMO, espaco } from '../theme/espaco';
 import { icones } from '../theme/icones';
@@ -9,6 +10,7 @@ import { Botao } from './botao';
 import { CampoTexto } from './campo-texto';
 import { IconeSvg } from './icone-svg';
 import { PainelInferior } from './painel-inferior';
+import { SeletorBasePreco } from './seletor-base-preco';
 import { Texto } from './texto';
 
 export type SheetAjusteCompraProps = {
@@ -19,7 +21,9 @@ export type SheetAjusteCompraProps = {
   quantidadeInicial: number;
   precoInicial: number | null;
   onFechar: () => void;
-  onSalvar: (dados: { quantidade: number; preco: number | null }) => void;
+  /** `preco` na base digitada; a conversão para centavos por kg é do
+   *  domínio (`precoPorKg`). */
+  onSalvar: (dados: { quantidade: number; preco: number | null; base: BaseDePreco }) => void;
   /**
    * Presente (não nulo) quando o produto tem fator de conversão cadastrado
    * (change conversao-unidade-de-compra) — troca os campos de
@@ -54,6 +58,7 @@ export function SheetAjusteCompra({
   // Duas casas sempre — é o formato que a máscara de dinheiro espera pra
   // reconhecer o valor semeado (CampoTexto extrai dígitos do que está aqui).
   const [preco, setPreco] = useState(precoInicial !== null ? precoInicial.toFixed(2).replace('.', ',') : '');
+  const [base, setBase] = useState<BaseDePreco>('kg');
   const [pacotes, setPacotes] = useState('1');
   const [tamanhoPacote, setTamanhoPacote] = useState(String(fatorConversaoEmbalagem ?? ''));
   const [valorTotal, setValorTotal] = useState('');
@@ -87,6 +92,7 @@ export function SheetAjusteCompra({
     onSalvar({
       quantidade: quantidadeNumerica,
       preco: precoNumerico,
+      base,
     });
     fechar();
   }
@@ -181,7 +187,7 @@ export function SheetAjusteCompra({
               onChangeText={setQuantidade}
               keyboardType="decimal-pad"
               erro={erroQuantidade}
-              tipo="quantidade"
+              tipo={unidade === 'kg' ? 'peso' : 'quantidade'}
             />
           </View>
           <View style={{ flex: 1 }}>
@@ -195,6 +201,7 @@ export function SheetAjusteCompra({
           </View>
         </View>
       )}
+      {!temEmbalagem && unidade === 'kg' ? <SeletorBasePreco base={base} aoMudar={setBase} /> : null}
       <Botao titulo="Salvar" onPress={salvar} />
     </PainelInferior>
   );

@@ -76,8 +76,8 @@ appId: com.danielfalcaodf.repor
 - scrollUntilVisible:
     element: "Ajustar quantidade e preço de Item Teste QA Screenshot"
     direction: DOWN
-    speed: 40
-    timeout: 20000
+    speed: 60
+    timeout: 60000
 - tapOn: "Ajustar quantidade e preço de Item Teste QA Screenshot"
 - assertVisible: "Quantos pacotes"
 - takeScreenshot: embalagem-sheet-ajuste-escuro
@@ -111,7 +111,7 @@ appId: com.danielfalcaodf.repor
     timeout: 15000
 - tapOn: "Mais opções"
 - scrollUntilVisible:
-    element: "Vem em pacote fechado?"
+    element: "É vendido em pacote fechado?"
     direction: DOWN
     speed: 40
     timeout: 20000
@@ -133,8 +133,8 @@ appId: com.danielfalcaodf.repor
 - scrollUntilVisible:
     element: "Ajustar quantidade e preço de Item Teste QA Screenshot"
     direction: DOWN
-    speed: 40
-    timeout: 20000
+    speed: 60
+    timeout: 60000
 - tapOn: "Ajustar quantidade e preço de Item Teste QA Screenshot"
 - assertVisible: "Quantos pacotes"
 - takeScreenshot: embalagem-sheet-ajuste-claro

@@ -22,7 +22,7 @@ afterEach(async () => {
   cleanup();
 });
 
-const arroz = { nome: 'Arroz', unidade: 'pacote' as const };
+const arroz = { nome: 'Arroz', unidade: 'un' as const };
 
 describe('useRegistroDeConsumo — a confirmação descreve o movimento certo', () => {
   it('três registros em sequência: a confirmação visível aponta o último id', async () => {
@@ -42,7 +42,7 @@ describe('useRegistroDeConsumo — a confirmação descreve o movimento certo', 
     // Substituição, não empilhamento: sobra um registro, o mais recente.
     expect(result.current.registro).toEqual({
       movimentoId: 'mov-3',
-      mensagem: 'Anotado: 1 pacote de Arroz',
+      mensagem: 'Anotado: 1 un de Arroz',
     });
   });
 
@@ -58,7 +58,7 @@ describe('useRegistroDeConsumo — a confirmação descreve o movimento certo', 
       );
     });
     const mensagem = result.current.registro?.mensagem ?? '';
-    expect(mensagem).toBe('Anotado: repus 2 pacotes de Arroz');
+    expect(mensagem).toBe('Anotado: repus 2 un de Arroz');
     expect(mensagem.toLowerCase()).not.toMatch(/baixa|movimento|estoque/);
   });
 
@@ -111,7 +111,7 @@ describe('ToastDesfazer', () => {
     const aoDesfazer = jest.fn();
     const registro: RegistroParaDesfazer = {
       movimentoId: 'mov-1',
-      mensagem: 'Anotado: 1 pacote de Arroz',
+      mensagem: 'Anotado: 1 un de Arroz',
     };
     await comTema(
       <ToastDesfazer registro={registro} onDesfazer={aoDesfazer} onFim={jest.fn()} />,
@@ -213,7 +213,7 @@ describe('TecladoQuantidade', () => {
   it('registra consumo com o valor digitado e fecha', async () => {
     const onUsei = jest.fn();
     await comTema(<Painel onUsei={onUsei} onRepus={jest.fn()} />);
-    fireEvent.changeText(screen.getByLabelText('Quantidade'), '1,5');
+    fireEvent.changeText(screen.getByLabelText('Quantidade'), '1500');
     await waitFor(() => expect(screen.getByLabelText('Usei').props.accessibilityState.disabled).toBe(false));
     fireEvent.press(screen.getByLabelText('Usei'));
     expect(onUsei).toHaveBeenCalledWith(1.5);
@@ -224,7 +224,7 @@ describe('TecladoQuantidade', () => {
   it('registra reposição com o valor digitado e fecha', async () => {
     const onRepus = jest.fn();
     await comTema(<Painel onUsei={jest.fn()} onRepus={onRepus} />);
-    fireEvent.changeText(screen.getByLabelText('Quantidade'), '1,5');
+    fireEvent.changeText(screen.getByLabelText('Quantidade'), '1500');
     await waitFor(() => expect(screen.getByLabelText('Repus').props.accessibilityState.disabled).toBe(false));
     fireEvent.press(screen.getByLabelText('Repus'));
     expect(onRepus).toHaveBeenCalledWith(1.5);

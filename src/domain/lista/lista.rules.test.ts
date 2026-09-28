@@ -10,7 +10,7 @@ function faltante(sobrescreve: Partial<FaltanteBruto> = {}): FaltanteBruto {
     id: 'p1',
     nome: 'Arroz',
     categoria: 'Grãos',
-    unidade: 'pacote',
+    unidade: 'un',
     valorUnitario: centavos(0),
     quantidadeAtual: milesimos(0),
     quantidadeNecessaria: milesimos(3000),
@@ -46,7 +46,7 @@ describe('itemDeFaltante', () => {
   it('arredonda para cima em unidade indivisível e calcula o custo sobre o arredondado', () => {
     const item = itemDeFaltante(
       faltante({
-        unidade: 'pacote',
+        unidade: 'un',
         quantidadeAtual: milesimos(2500),
         quantidadeNecessaria: milesimos(3000),
         valorUnitario: centavos(1000),

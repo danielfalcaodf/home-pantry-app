@@ -9,7 +9,7 @@ function produto(sobrescreve: Partial<Extract<ItemDaLista, { tipo: 'produto' }>>
     produtoId: 'p1',
     nome: 'Arroz',
     categoria: 'Grãos',
-    unidade: 'pacote',
+    unidade: 'un',
     quantidadeAComprar: milesimos(1000),
     valorUnitario: centavos(890),
     custo: centavos(890),

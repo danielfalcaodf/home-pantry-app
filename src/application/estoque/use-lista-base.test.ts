@@ -12,8 +12,8 @@ jest.mock('../../composicao/repositorios', () => ({
 jest.mock('../../composicao/lista-base', () => ({ itensDaListaBase: () => [] }));
 
 const BASE: ItemListaBase[] = [
-  { nome: 'Arroz', categoria: 'Grãos', unidade: 'pacote', quantidadeNecessaria: milesimos(2000) },
-  { nome: 'Feijão', categoria: 'Grãos', unidade: 'pacote', quantidadeNecessaria: milesimos(2000) },
+  { nome: 'Arroz', categoria: 'Grãos', unidade: 'un', quantidadeNecessaria: milesimos(2000) },
+  { nome: 'Feijão', categoria: 'Grãos', unidade: 'un', quantidadeNecessaria: milesimos(2000) },
   { nome: 'Sabão', categoria: 'Limpeza', unidade: 'un', quantidadeNecessaria: milesimos(1000) },
 ];
 

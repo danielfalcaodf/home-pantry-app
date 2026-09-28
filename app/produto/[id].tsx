@@ -17,7 +17,7 @@ import { useResumoHistoricoRecente } from '@/application/estoque/use-resumo-hist
 import { normalizarCategoria } from '@/domain/produto/categoria';
 import { validarFatorConversao, valorUnitarioDoPacote } from '@/domain/produto/conversao-embalagem.rules';
 import { passoDoStepper } from '@/domain/produto/estoque.rules';
-import { centavos, formatarBRL } from '@/domain/shared/dinheiro';
+import { centavos, formatarPrecoDaUnidade, precoPorKg } from '@/domain/shared/dinheiro';
 import { deDecimal, formatarNumero, paraDecimal } from '@/domain/shared/quantidade';
 import { MotivoAjuste } from '@/domain/movimento/movimento';
 import { rotuloDaUnidade } from '@/domain/shared/unidade';
@@ -66,6 +66,7 @@ function valoresDoItem(item: ProdutoNaDespensa): ValoresDoProduto {
       produto.valorReferenciaEmbalagem !== null
         ? (produto.valorReferenciaEmbalagem / 100).toFixed(2).replace('.', ',')
         : '',
+    basePreco: 'kg',
   };
 }
 
@@ -176,7 +177,7 @@ function Detalhe({ id, item }: { id: string; item: ProdutoNaDespensa }) {
     const valorUnitarioFinal =
       fatorConversaoEmbalagem !== null && valorReferenciaEmbalagem !== null
         ? valorUnitarioDoPacote(valorReferenciaEmbalagem, fatorConversaoEmbalagem)
-        : centavos(preco);
+        : precoPorKg(centavos(preco), valores.basePreco);
 
     const resultado = await editar(id, {
       nome: valores.nome.trim(),
@@ -255,7 +256,7 @@ function Detalhe({ id, item }: { id: string; item: ProdutoNaDespensa }) {
               <Texto papel="label" tom="secondary" style={{ textAlign: 'center' }}>
                 {item.rotulo}
                 {produto.valorUnitario > 0
-                  ? ` · costuma custar ${formatarBRL(produto.valorUnitario)}`
+                  ? ` · costuma custar ${formatarPrecoDaUnidade(produto.valorUnitario, produto.unidade)}`
                   : ''}
               </Texto>
             </View>

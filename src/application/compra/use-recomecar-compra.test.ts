@@ -21,7 +21,7 @@ function faltante(sobrescreve: Partial<FaltanteBruto> = {}): FaltanteBruto {
     id: 'p1',
     nome: 'Arroz',
     categoria: 'Grãos',
-    unidade: 'pacote',
+    unidade: 'un',
     valorUnitario: centavos(890),
     quantidadeAtual: milesimos(500),
     quantidadeNecessaria: milesimos(2000),

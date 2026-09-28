@@ -4,7 +4,7 @@ import { ReactNode } from 'react';
 import { milesimos } from '@/domain/shared/quantidade';
 import { ThemeProvider } from '@/presentation/theme/provider';
 import { despensa } from '@/presentation/theme/tokens';
-import HistoricoDoProduto from './historico';
+import HistoricoDoProduto from '../../../../app/produto/[id]/historico';
 
 const mockBack = jest.fn();
 
@@ -34,7 +34,7 @@ jest.mock('@/application/estoque/use-historico', () => ({
 jest.mock('@/application/estoque/use-editar-produto', () => ({
   useProduto: () => ({
     item: {
-      produto: { id: 'p1', nome: 'Arroz', unidade: 'pacote' },
+      produto: { id: 'p1', nome: 'Arroz', unidade: 'un' },
     },
     carregando: false,
   }),
@@ -74,14 +74,14 @@ describe('Histórico do produto — linha acessível', () => {
     ];
     await comTema(<HistoricoDoProduto />);
     expect(
-      screen.getByLabelText('Corrigi para 3 pacotes, 09/08/2026 às 10:30 · conferência'),
+      screen.getByLabelText('Corrigi para 3 un, 09/08/2026 às 10:30 · conferência'),
     ).toBeTruthy();
   });
 
   it('linha sem motivo (consumo comum) não pendura "· motivo" no rótulo', async () => {
     mockItens = [movimentoFake({ tipo: 'baixa', quantidadeDelta: milesimos(-1000) })];
     await comTema(<HistoricoDoProduto />);
-    expect(screen.getByLabelText('Usei 1 pacote, 09/08/2026 às 10:30')).toBeTruthy();
+    expect(screen.getByLabelText('Usei 1 un, 09/08/2026 às 10:30')).toBeTruthy();
     expect(screen.queryByLabelText(/·/)).toBeNull();
   });
 
@@ -89,7 +89,7 @@ describe('Histórico do produto — linha acessível', () => {
     mockItens = [movimentoFake({ tipo: 'baixa', quantidadeDelta: milesimos(-1000) })];
     await comTema(<HistoricoDoProduto />);
     expect(screen.getByText('Usei')).toBeTruthy();
-    expect(screen.getByText('1 pacote')).toBeTruthy();
+    expect(screen.getByText('1 un')).toBeTruthy();
     expect(screen.getByText('09/08/2026 às 10:30')).toBeTruthy();
   });
 });

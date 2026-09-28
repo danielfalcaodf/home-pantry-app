@@ -87,7 +87,8 @@ src/
 - **`movimento_estoque` é append-only.** Nunca `UPDATE`/`DELETE`. Desfazer = movimento inverso.
 - **`produto.quantidade_atual` é desnormalizado de propósito** (materializado, não derivado de `SUM(movimento_estoque)`) — é o único jeito de manter a baixa ≤ 10s (KPI K4) conforme o histórico cresce. Toda escrita que mexe nele **precisa** estar na mesma transação do `INSERT` em `movimento_estoque`. Nunca separar as duas chamadas.
 - **Campos derivados nunca são persistidos**: `valor_total_estoque`, `em_falta`, `quantidade_a_comprar`, `custo_reposicao` são sempre função pura no domínio (`domain/produto/estoque.rules.ts`), nunca coluna de tabela nem cálculo duplicado em SQL. SQL entrega valor bruto; o domínio arredonda/converte.
-- **`quantidade_a_comprar` arredonda para cima** em unidades indivisíveis (`un`, `pacote`, `caixa`) — regra testada, não inline.
+- **Unidades são só `un` e `kg`** (`g`/`ml`/`L`/`pacote`/`caixa` removidas na migration 0005 — preço por grama gerava custo 1000× maior; "vem em pacote de N" é o fator de embalagem de `un`). Preço de `kg` é sempre R$/kg; "por 100 g" é só base de digitação (`precoPorKg`).
+- **`quantidade_a_comprar` arredonda para cima** em unidade indivisível (`un`) — regra testada, não inline.
 - **`PRAGMA foreign_keys = ON`** precisa rodar a cada abertura de conexão (SQLite vem com FK desligada por padrão) — sem isso, FKs do schema viram decoração.
 - **Toda escrita passa pelo repositório.** Nenhum acesso direto ao `db` fora de `infrastructure/`.
 - Não há tabela `lista_compras` — a lista é sempre derivada por query (`quantidade_atual < quantidade_necessaria`) + itens avulsos da `compra` em status `aberta`. Não materializar.
@@ -113,6 +114,7 @@ O projeto segue SOLID, clean code e design patterns como consequência prática 
 - Casos que quebram silenciosamente e por isso exigem teste explícito: baixa que cruzaria zero (deve fixar em 0), arredondamento de `quantidade_a_comprar`, item sem preço na lista (custo 0, não corrompe total), finalizar compra com falha no meio (rollback total), desfazer (movimento inverso, nunca DELETE).
 - `infrastructure/`: Jest + SQLite em memória, cobrindo repositórios/transações/migrations.
 - `application/`: React Native Testing Library com repositório fake.
+- Testes de tela (rotas de `app/`) ficam em `__tests__/app/`, espelhando a estrutura — **nunca dentro de `app/`**: o Expo Router trata todo arquivo ali como rota (`app/_layout.test.tsx` virava o layout raiz e zerava os tipos de rota gerados).
 
 ## Design de UI — restrições que não são estéticas, são de produto
 

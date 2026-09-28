@@ -4,14 +4,14 @@ describe('validarCadastroProduto', () => {
   it('cadastro válido aplica padrões de quantidade atual 0 e valor unitário 0', () => {
     const resultado = validarCadastroProduto({
       nome: 'Arroz',
-      unidade: 'pacote',
+      unidade: 'un',
       quantidadeNecessaria: 2,
     });
     expect(resultado.ok).toBe(true);
     if (resultado.ok) {
       expect(resultado.valor).toEqual({
         nome: 'Arroz',
-        unidade: 'pacote',
+        unidade: 'un',
         quantidadeNecessaria: 2000,
         quantidadeAtual: 0,
         valorUnitario: 0,

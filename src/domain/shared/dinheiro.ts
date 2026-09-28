@@ -1,4 +1,5 @@
 import { Milesimos } from './quantidade';
+import { Unidade } from './unidade';
 
 // Dinheiro sempre em centavos inteiros: R$ 12,90 = 1290. Nunca float.
 export type Centavos = number & { readonly __marca: 'centavos' };
@@ -45,4 +46,16 @@ export function multiplicarQuantidadePorPreco(quantidade: Milesimos, preco: Cent
 // acima, que resolve uma grandeza diferente).
 export function dividirIgualmente(total: Centavos, partes: number): Centavos {
   return centavos(Math.round(total / partes));
+}
+
+export type BaseDePreco = 'kg' | '100g';
+
+// Preço de produto em kg é sempre gravado em R$/kg; "por 100 g" é só a base
+// em que o usuário digitou (etiqueta de balcão), nunca persistida.
+export function precoPorKg(valorDigitado: Centavos, base: BaseDePreco): Centavos {
+  return base === '100g' ? centavos(valorDigitado * 10) : valorDigitado;
+}
+
+export function formatarPrecoDaUnidade(c: Centavos, unidade: Unidade): string {
+  return unidade === 'kg' ? `${formatarBRL(c)}/kg` : formatarBRL(c);
 }

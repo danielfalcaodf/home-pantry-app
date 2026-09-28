@@ -36,6 +36,13 @@
       "when": 1788497677089,
       "tag": "0004_conversao-unidade-de-compra",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1790533503322,
+      "tag": "0005_reducao-unidades-un-kg",
+      "breakpoints": true
     }
   ]
 }

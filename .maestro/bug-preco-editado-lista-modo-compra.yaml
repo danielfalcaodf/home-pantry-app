@@ -44,13 +44,13 @@ appId: com.danielfalcaodf.repor
 # item-compra.tsx compõe o rótulo acessível como "{nome}, {quantidade},
 # {preço ou 'sem preço'}" — antes do fix, mostraria "sem preço" mesmo com o
 # produto já tendo R$10 (bug: valorEstimadoUnit obsoleto na compra_item).
-- assertVisible: "Arroz, 2 pacotes, R\\$ 10,00"
-- assertNotVisible: "Arroz, 2 pacotes, sem preço"
+- assertVisible: "Arroz, 2 un, R\\$ 20,00"
+- assertNotVisible: "Arroz, 2 un, sem preço"
 
 - tapOn:
-    text: "Arroz, 2 pacotes, R\\$ 10,00"
+    text: "Arroz, 2 un, R\\$ 20,00"
 - assertVisible:
-    text: "Arroz, 2 pacotes, R\\$ 10,00"
+    text: "Arroz, 2 un, R\\$ 20,00"
     checked: true
 - assertVisible: "R$ 20,00"
 - assertNotVisible: "0,00"

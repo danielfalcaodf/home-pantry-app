@@ -41,8 +41,8 @@ unidades que sobrará em estoque após a compra.
 
 #### Scenario: Falta fracionária em unidade indivisível arredonda para cima
 
-- **WHEN** a quantidade atual é 2500 e a necessária é 3000 na unidade pacote
-- **THEN** a quantidade a comprar é 1000 milésimos, ou seja, 1 pacote
+- **WHEN** a quantidade atual é 2500 e a necessária é 3000 na unidade `un`
+- **THEN** a quantidade a comprar é 1000 milésimos, ou seja, 1 un
 
 #### Scenario: Item ok não gera quantidade a comprar
 
@@ -130,7 +130,7 @@ O domínio SHALL produzir o rótulo textual do item, de forma que o estado seja 
 
 #### Scenario: Rótulo de item em falta indica quanto falta
 
-- **WHEN** a quantidade atual é 2000 e a necessária é 3000 na unidade pacote
+- **WHEN** a quantidade atual é 2000 e a necessária é 3000 na unidade `un`
 - **THEN** o rótulo é "Falta 1"
 
 #### Scenario: Rótulo de item completo

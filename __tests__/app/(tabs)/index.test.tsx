@@ -5,7 +5,7 @@ import { Keyboard, View as MockView } from 'react-native';
 import { useAvisoCompraStore } from '@/application/compra/aviso-compra-store';
 import { milesimos } from '@/domain/shared/quantidade';
 import { ThemeProvider } from '@/presentation/theme/provider';
-import Despensa from './index';
+import Despensa from '../../../app/(tabs)/index';
 
 // `mockEfeitoAtual`/`mockCleanupAtual` replicam a semântica real do
 // `useFocusEffect` do react-navigation: ele é um `useEffect(fn, [navigation,

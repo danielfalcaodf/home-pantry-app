@@ -2,6 +2,7 @@ import { ReactNode, useRef, useState } from 'react';
 import { Pressable, ScrollView, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { BaseDePreco } from '../../domain/shared/dinheiro';
 import { ehIndivisivel, UNIDADES, Unidade } from '../../domain/shared/unidade';
 import { ALVO_TOQUE_MINIMO, espaco } from '../theme/espaco';
 import { useTheme } from '../theme/provider';
@@ -10,6 +11,7 @@ import { BotaoVoltar } from './botao-voltar';
 import { CampoTexto } from './campo-texto';
 import { ChipEstado } from './chip-estado';
 import { EvitaTeclado } from './evita-teclado';
+import { SeletorBasePreco } from './seletor-base-preco';
 import { IconeSvg } from './icone-svg';
 import { Texto } from './texto';
 import { icones } from '../theme/icones';
@@ -23,9 +25,12 @@ export type ValoresDoProduto = {
   categoria: string;
   marcaPreferida: string;
   observacao: string;
-  /** Só usados quando `unidade` é indivisível (`un`, `pacote`, `caixa`). */
+  /** Só usados quando `unidade` é indivisível (`un`). */
   fatorConversaoEmbalagem: string;
   valorReferenciaEmbalagem: string;
+  /** Base em que `valorUnitario` foi digitado — só `kg` oferece "por 100 g";
+   *  nunca persistida, quem salva converte com `precoPorKg`. */
+  basePreco: BaseDePreco;
 };
 
 /** Teto de sanidade de UI (não é regra de domínio) — evita erro de digitação
@@ -45,6 +50,7 @@ export const VALORES_INICIAIS: ValoresDoProduto = {
   observacao: '',
   fatorConversaoEmbalagem: '',
   valorReferenciaEmbalagem: '',
+  basePreco: 'kg',
 };
 
 export type FormularioProdutoProps = {
@@ -105,7 +111,7 @@ export function FormularioProduto({
   const insets = useSafeAreaInsets();
   const [maisOpcoes, setMaisOpcoes] = useState(false);
   const [categoriaFocada, setCategoriaFocada] = useState(false);
-  // Chip "Vem em pacote fechado?" — unidade indivisível não implica pacote
+  // Chip "É vendido em pacote fechado?" — unidade indivisível não implica pacote
   // (sabonete vs. papel higiênico, ambos `un`); default deriva de já haver
   // fator cadastrado (edição), nunca da unidade sozinha (design.md, decisão
   // 2026-09-05).
@@ -151,11 +157,7 @@ export function FormularioProduto({
   const definir = (campo: keyof ValoresDoProduto) => (texto: string) =>
     aoMudar({ ...valores, [campo]: texto });
 
-  // `pacote`/`caixa` já SÃO a unidade de embalagem escolhida — perguntar
-  // "vem em pacote fechado?" seria redundante (design.md, decisão
-  // "só para unidade `un`", 2026-09-05). Só `un` usa o chip.
-  const embalagemObrigatoria = valores.unidade === 'pacote' || valores.unidade === 'caixa';
-  const mostrarCamposEmbalagem = embalagemObrigatoria || (valores.unidade === 'un' && pacoteFechado);
+  const mostrarCamposEmbalagem = valores.unidade === 'un' && pacoteFechado;
 
   // Sem texto digitado (mas em foco), mostra tudo que já existe — a pessoa
   // não precisa adivinhar uma categoria pra descobrir que ela já existe.
@@ -235,13 +237,7 @@ export function FormularioProduto({
                   aoMudar({ ...valores, unidade, fatorConversaoEmbalagem: '', valorReferenciaEmbalagem: '' });
                   return;
                 }
-                if (unidade === 'un') {
-                  // Recalcula a partir do fator já digitado (ex.: usuário ia
-                  // e voltava entre "un" e "pacote"/"caixa" com embalagem já
-                  // preenchida) — não pode ficar preso ao valor do mount.
-                  setPacoteFechado(valores.fatorConversaoEmbalagem !== '');
-                }
-                aoMudar({ ...valores, unidade });
+                aoMudar({ ...valores, unidade, basePreco: 'kg' });
               }}
             />
           ))}
@@ -254,7 +250,7 @@ export function FormularioProduto({
         onChangeText={definir('quantidadeNecessaria')}
         erro={erros.quantidadeNecessaria}
         keyboardType="decimal-pad"
-        tipo="quantidade"
+        tipo={valores.unidade === 'kg' ? 'peso' : 'quantidade'}
         onFocus={registrarFoco}
         onBlur={registrarDesfoque}
       />
@@ -289,7 +285,7 @@ export function FormularioProduto({
               onChangeText={definir('quantidadeAtual')}
               erro={erros.quantidadeAtual}
               keyboardType="decimal-pad"
-              tipo="quantidade"
+              tipo={valores.unidade === 'kg' ? 'peso' : 'quantidade'}
               ref={primeiroCampoExtraRef}
               onFocus={registrarFoco}
               onBlur={registrarDesfoque}
@@ -298,7 +294,10 @@ export function FormularioProduto({
           {valores.unidade === 'un' ? (
             <View style={{ gap: espaco.sm }}>
               <Texto papel="label" tom="secondary">
-                Vem em pacote fechado?
+                É vendido em pacote fechado?
+              </Texto>
+              <Texto papel="caption" tom="secondary">
+                ex.: papel higiênico em pacote de 12 rolos
               </Texto>
               <View style={{ flexDirection: 'row', gap: espaco.sm }}>
                 <ChipEstado
@@ -326,6 +325,9 @@ export function FormularioProduto({
               onBlur={registrarDesfoque}
             />
           )}
+          {valores.unidade === 'kg' ? (
+            <SeletorBasePreco base={valores.basePreco} aoMudar={(basePreco) => aoMudar({ ...valores, basePreco })} />
+          ) : null}
           {mostrarCamposEmbalagem ? (
             <View style={{ gap: espaco.lg }}>
               <CampoTexto

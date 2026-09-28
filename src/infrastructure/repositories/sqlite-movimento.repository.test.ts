@@ -13,7 +13,7 @@ async function montarComBaixa() {
   const movimentos = new SQLiteMovimentoRepository(db);
   const dados = validarCadastroProduto({
     nome: 'Arroz',
-    unidade: 'pacote',
+    unidade: 'un',
     quantidadeNecessaria: 3,
     quantidadeAtual: 3,
   });

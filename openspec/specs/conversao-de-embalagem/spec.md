@@ -11,10 +11,10 @@ pago por unidade apurado no fechamento da compra.
 
 ### Requirement: Fator de conversão opcional restrito a unidade indivisível
 
-O domínio SHALL permitir associar a um produto de unidade indivisível (`un`, `pacote`, `caixa`)
-um fator de conversão opcional: um inteiro positivo representando quantas unidades de estoque
-vêm em um pacote fechado, e um valor de referência do pacote em centavos. Produto de unidade
-divisível (`kg`, `g`, `L`, `ml`) NÃO deve aceitar fator de conversão.
+O domínio SHALL permitir associar a um produto de unidade indivisível (`un`) um fator de
+conversão opcional: um inteiro positivo representando quantas unidades de estoque vêm em um
+pacote fechado, e um valor de referência do pacote em centavos. Produto de unidade divisível
+(`kg`) NÃO deve aceitar fator de conversão.
 
 #### Scenario: Fator aceito em unidade indivisível
 

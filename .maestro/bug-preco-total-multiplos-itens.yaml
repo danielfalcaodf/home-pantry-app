@@ -22,6 +22,16 @@ appId: com.danielfalcaodf.repor
 - tapOn: "Quanto costuma custar"
 - inputText: "10,00"
 - tapOn: "Salvar"
+# Pré-condição: Açúcar (kg na lista básica) com R$ 8,90/kg, 1 kg faltando.
+- scrollUntilVisible:
+    element: "Açúcar"
+    direction: DOWN
+    speed: 60
+    timeout: 30000
+- tapOn: "Açúcar"
+- tapOn: "Quanto costuma custar"
+- inputText: "8,90"
+- tapOn: "Salvar"
 
 - tapOn:
     text: "Iniciar compra \\(\\d+\\)"
@@ -31,20 +41,30 @@ appId: com.danielfalcaodf.repor
 
 # Marca Arroz (R$10 x 2 pacotes = R$20) — total deve refletir só esse.
 - tapOn:
-    text: "Arroz, 2 pacotes, R\\$ 10,00"
+    text: "Arroz, 2 un, R\\$ 20,00"
 - assertVisible: "R$ 20,00"
 
 # Marca Açúcar (preço pré-existente R$8,90 x 1 = R$8,90) — total acumula.
+- scrollUntilVisible:
+    element: "Açúcar, 1 kg, R\\$ 8,90"
+    direction: DOWN
+    speed: 60
+    timeout: 30000
 - tapOn:
-    text: "Açúcar, 1 un, R\\$ 8,90"
+    text: "Açúcar, 1 kg, R\\$ 8,90"
 - assertVisible: "R$ 28,90"
 
 # Marca Feijão SEM preço — não deve travar, não deve mudar o total, e o
 # rótulo do próprio item continua "sem preço" mesmo marcado.
+- scrollUntilVisible:
+    element: "Feijão, 2 un, sem preço"
+    direction: UP
+    speed: 60
+    timeout: 30000
 - tapOn:
-    text: "Feijão, 2 pacotes, sem preço"
+    text: "Feijão, 2 un, sem preço"
 - assertVisible:
-    text: "Feijão, 2 pacotes, sem preço"
+    text: "Feijão, 2 un, sem preço"
     checked: true
 - assertVisible: "R$ 28,90"
 

@@ -3,7 +3,7 @@ import { ReactNode } from 'react';
 
 import { LIMITE_SANIDADE_QUANTIDADE } from '@/presentation/components/formulario-produto';
 import { ThemeProvider } from '@/presentation/theme/provider';
-import NovoProduto from './novo';
+import NovoProduto from '../../../app/produto/novo';
 
 const mockBack = jest.fn();
 const mockReplace = jest.fn();
@@ -151,5 +151,32 @@ describe('Novo produto — não-regressão de rodapé fixo e "Mais opções" (co
     fireEvent.press(screen.getByRole('button', { name: 'Mais opções' }));
 
     await waitFor(() => expect(screen.getByLabelText('Quanto costuma custar')).toBeTruthy());
+  });
+});
+
+describe('Novo produto — preço em kg digitado por 100 g (correcao-unidades-un-kg-preco)', () => {
+  beforeEach(() => {
+    mockCadastrar.mockClear();
+  });
+
+  it('queijo em kg a "5,19" por 100 g é salvo como 5190 centavos por kg', async () => {
+    await comTema(<NovoProduto />);
+
+    await fireEvent.changeText(screen.getByLabelText('O que é'), 'Queijo');
+    await fireEvent.press(screen.getByRole('button', { name: 'kg' }));
+    await await fireEvent.changeText(screen.getByLabelText('Quanto quero ter em casa'), '500');
+    await waitFor(() => expect(screen.getByLabelText('Quanto quero ter em casa').props.accessibilityValue.text).toBe('0,500'));
+    await fireEvent.press(screen.getByRole('button', { name: 'Mais opções' }));
+    await waitFor(() => expect(screen.getByLabelText('Quanto costuma custar')).toBeTruthy());
+    await fireEvent.changeText(screen.getByLabelText('Quanto costuma custar'), '5,19');
+    await waitFor(() => expect(screen.getByLabelText('Quanto costuma custar').props.accessibilityValue.text).toBe('R$ 5,19'));
+    await fireEvent.press(screen.getByRole('button', { name: 'por 100 g' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Adicionar à despensa' }));
+
+    await waitFor(() =>
+      expect(mockCadastrar).toHaveBeenCalledWith(
+        expect.objectContaining({ unidade: 'kg', quantidadeNecessaria: 0.5, valorUnitario: 5190 }),
+      ),
+    );
   });
 });

@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react-native';
 
-import RootLayout from './_layout';
+import RootLayout from '../../app/_layout';
 
 // `composicao/banco.ts` chama `fazerBackupSeMigrationPendente(sqliteBruto)`
 // no carregamento do módulo — o cliente real abriria um banco SQLite de

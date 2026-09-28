@@ -2,7 +2,7 @@ appId: com.danielfalcaodf.repor
 ---
 # Change `conversao-unidade-de-compra` (task 9.4) — regressão: produto de
 # unidade indivisível SEM fator de conversão (ex.: sabonete, mantém "Não" no
-# controle "Vem em pacote fechado?") segue o fluxo de compra idêntico ao que
+# controle "É vendido em pacote fechado?") segue o fluxo de compra idêntico ao que
 # já existia antes desta change — preço/quantidade por unidade direto, sem
 # nenhuma menção a pacotes em nenhuma tela.
 #

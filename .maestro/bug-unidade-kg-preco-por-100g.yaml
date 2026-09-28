@@ -1,0 +1,71 @@
+appId: com.danielfalcaodf.repor
+---
+# Change `correcao-unidades-un-kg-preco` (task 5.2) — prova E2E do bug de
+# preço em gramas: queijo em kg, necessária 0,5, preço "5,19" digitado por
+# 100 g → Lista mostra custo R$ 25,95 (não R$ 2.595,00) e o detalhe mostra
+# "R$ 51,90/kg".
+#
+# Efeito colateral real, permanente: cria "Queijo Teste QA Kg" na despensa
+# do dispositivo de teste (kg, necessária 0,5, atual 0, R$ 51,90/kg).
+
+- launchApp
+- assertVisible: "Despensa"
+# ambiente: bolha flutuante "Tools" do Expo dev-client sobrepõe os ícones do topo
+- swipe:
+    start: "970, 173"
+    end: "540, 700"
+    duration: 600
+
+- tapOn: "Adicionar produto"
+- assertVisible: "Novo produto"
+- assertNotVisible: "g"
+- assertNotVisible: "pacote"
+- tapOn: "O que é"
+- inputText: "Queijo Teste QA Kg"
+- hideKeyboard
+- tapOn: "kg"
+- tapOn: "Quanto quero ter em casa"
+# kg é digitado de caixa registradora: 500 → "0,500"
+- inputText: "500"
+- assertVisible: "0,500"
+- hideKeyboard
+- tapOn: "Mais opções"
+- assertNotVisible: "É vendido em pacote fechado?"
+- assertVisible:
+    text: "por kg"
+    selected: true
+- tapOn: "Quanto costuma custar"
+- inputText: "519"
+- assertVisible: "R\\$ 5,19"
+- hideKeyboard
+- tapOn: "por 100 g"
+- assertVisible:
+    text: "por 100 g"
+    selected: true
+- scrollUntilVisible:
+    element: "Adicionar à despensa"
+    direction: DOWN
+    speed: 40
+    timeout: 20000
+- tapOn: "Adicionar à despensa"
+- assertVisible: "Despensa"
+
+# --- Lista: meio quilo a R$ 51,90/kg custa R$ 25,95 -----------------------
+- tapOn: "Lista"
+- scrollUntilVisible:
+    element: "Queijo Teste QA Kg, 0,5 kg, R\\$ 25,95"
+    direction: DOWN
+    speed: 60
+    timeout: 30000
+- assertVisible: "Queijo Teste QA Kg, 0,5 kg, R\\$ 25,95"
+- assertNotVisible: ".*2\\.595,00.*"
+
+# --- Detalhe: preço de referência com o sufixo /kg ------------------------
+- tapOn: "Despensa"
+- scrollUntilVisible:
+    element: "Queijo Teste QA Kg.*"
+    direction: DOWN
+    speed: 60
+    timeout: 30000
+- tapOn: "Queijo Teste QA Kg.*"
+- assertVisible: ".*costuma custar R\\$ 51,90/kg.*"

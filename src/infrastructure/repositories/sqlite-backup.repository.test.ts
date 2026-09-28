@@ -1,4 +1,8 @@
-import { ArquivoBackup, VERSAO_SCHEMA_BACKUP_ATUAL } from '../../domain/backup/backup.schema';
+import {
+  ArquivoBackup,
+  converterParaVersaoAtual,
+  VERSAO_SCHEMA_BACKUP_ATUAL,
+} from '../../domain/backup/backup.schema';
 import { efeitosDaFinalizacao } from '../../domain/compra/compra.rules';
 import { validarCadastroProduto } from '../../domain/produto/validacao';
 import { centavos } from '../../domain/shared/dinheiro';
@@ -30,7 +34,7 @@ function arquivoDeOutroAparelho(sobrescreve: Partial<ArquivoBackup> = {}): Arqui
         casaId: 'casa-do-backup',
         nome: 'Arroz',
         categoria: 'Grãos',
-        unidade: 'pacote',
+        unidade: 'un',
         quantidadeAtual: milesimos(2000),
         quantidadeNecessaria: milesimos(3000),
         valorUnitario: centavos(890),
@@ -116,7 +120,7 @@ describe('SQLiteBackupRepository.montar', () => {
     const { backup, produtos, casaId, usuarioId } = await montar();
     const dados = validarCadastroProduto({
       nome: 'Arroz',
-      unidade: 'pacote',
+      unidade: 'un',
       quantidadeNecessaria: 3,
       quantidadeAtual: 5,
     });
@@ -139,7 +143,7 @@ describe('SQLiteBackupRepository.montar', () => {
     const { backup, produtos, compras, casaId, usuarioId } = await montar();
     const dados = validarCadastroProduto({
       nome: 'Café',
-      unidade: 'pacote',
+      unidade: 'un',
       quantidadeNecessaria: 3,
       valorUnitario: 1200,
     });
@@ -151,7 +155,7 @@ describe('SQLiteBackupRepository.montar', () => {
     if (!cancelada.ok) throw new Error('setup');
     await compras.adicionarItem(cancelada.valor.id, {
       produtoId: produto.valor.id,
-      unidade: 'pacote',
+      unidade: 'un',
       quantidadePlanejada: milesimos(3000),
       valorEstimadoUnit: centavos(1200),
     });
@@ -161,7 +165,7 @@ describe('SQLiteBackupRepository.montar', () => {
     if (!finalizada.ok) throw new Error('setup');
     await compras.adicionarItem(finalizada.valor.id, {
       produtoId: produto.valor.id,
-      unidade: 'pacote',
+      unidade: 'un',
       quantidadePlanejada: milesimos(3000),
       valorEstimadoUnit: centavos(1200),
     });
@@ -293,7 +297,7 @@ describe('SQLiteBackupRepository.restaurar', () => {
 
   it('combina com dados criados no aparelho depois do backup, sem apagar nenhum', async () => {
     const { backup, produtos, casaId, usuarioId, sqlite } = await montar();
-    const dados = validarCadastroProduto({ nome: 'Macarrão', unidade: 'pacote', quantidadeNecessaria: 2 });
+    const dados = validarCadastroProduto({ nome: 'Macarrão', unidade: 'un', quantidadeNecessaria: 2 });
     if (!dados.ok) throw new Error('setup');
     const criadoLocalmente = await produtos.criar(casaId, usuarioId, dados.valor);
     if (!criadoLocalmente.ok) throw new Error('setup');
@@ -321,7 +325,7 @@ describe('SQLiteBackupRepository.restaurar', () => {
           compraId: 'compra-que-nao-existe',
           produtoId: 'produto-do-backup',
           nomeAvulso: null,
-          unidade: 'pacote',
+          unidade: 'un',
           quantidadePlanejada: milesimos(1000),
           quantidadeComprada: null,
           valorEstimadoUnit: centavos(0),
@@ -387,7 +391,7 @@ describe('reconciliação após restaurar (tasks 4.6-4.7)', () => {
           casaId: 'casa-do-backup',
           nome: 'Arroz',
           categoria: 'Grãos',
-          unidade: 'pacote',
+          unidade: 'un',
           // adulterado: o arquivo diz 5000, mas o único movimento abaixo soma 2000.
           quantidadeAtual: milesimos(5000),
           quantidadeNecessaria: milesimos(3000),
@@ -412,5 +416,61 @@ describe('reconciliação após restaurar (tasks 4.6-4.7)', () => {
     expect(divergencias[0]).toEqual(
       expect.objectContaining({ produtoId: 'produto-do-backup', materializado: 5000, calculado: 2000 }),
     );
+  });
+});
+
+describe('restaurar backup v5 com unidades removidas (correcao-unidades-un-kg-preco)', () => {
+  it('g, caixa e L convertidos como na migration, sem divergência na reconciliação', async () => {
+    const { backup, movimentos, produtos, casaId } = await montar();
+    const base = arquivoDeOutroAparelho().produtos[0];
+    const movimentoBase = arquivoDeOutroAparelho().movimentos[0];
+    const produtoV5 = (id: string, unidade: string, atual: number, valor: number, fator: number | null) => ({
+      ...base,
+      id,
+      nome: `Produto ${id}`,
+      unidade,
+      quantidadeAtual: atual,
+      quantidadeNecessaria: atual * 2,
+      valorUnitario: valor,
+      fatorConversaoEmbalagem: fator,
+      valorReferenciaEmbalagem: fator === null ? null : 1290,
+    });
+    const movimentoV5 = (id: string, produtoId: string, delta: number, resultante: number) => ({
+      ...movimentoBase,
+      id,
+      produtoId,
+      tipo: delta < 0 ? 'baixa' : 'ajuste',
+      quantidadeDelta: delta,
+      quantidadeResultante: resultante,
+    });
+    const v5 = {
+      ...arquivoDeOutroAparelho(),
+      versaoSchema: 5,
+      produtos: [
+        produtoV5('queijo', 'g', 500000, 519, null),
+        produtoV5('sabao', 'caixa', 2000, 215, 6),
+        produtoV5('leite', 'L', 2000, 899, null),
+      ],
+      movimentos: [
+        movimentoV5('m1', 'queijo', 700000, 700000),
+        movimentoV5('m2', 'queijo', -200000, 500000),
+        movimentoV5('m3', 'sabao', 2000, 2000),
+        movimentoV5('m4', 'leite', 2000, 2000),
+      ],
+    } as unknown as ArquivoBackup;
+
+    await backup.restaurar(converterParaVersaoAtual(v5), casaId, 999);
+
+    const porId = (id: string) => produtos.obterPorId(id);
+    expect(await porId('queijo')).toEqual(
+      expect.objectContaining({ unidade: 'kg', quantidadeAtual: 500, valorUnitario: 0 }),
+    );
+    expect(await porId('sabao')).toEqual(
+      expect.objectContaining({ unidade: 'un', quantidadeAtual: 2000, valorUnitario: 215, fatorConversaoEmbalagem: 6 }),
+    );
+    expect(await porId('leite')).toEqual(
+      expect.objectContaining({ unidade: 'un', quantidadeAtual: 2000, valorUnitario: 0 }),
+    );
+    expect(await movimentos.reconciliar(casaId)).toHaveLength(0);
   });
 });

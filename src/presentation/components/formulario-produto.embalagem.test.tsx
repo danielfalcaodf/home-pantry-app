@@ -32,7 +32,66 @@ function FormularioControlado({
   );
 }
 
-describe('FormularioProduto — controle "Vem em pacote fechado?" (change conversao-unidade-de-compra)', () => {
+function FormularioQueGuarda({ valoresIniciais, guardar }: { valoresIniciais: ValoresDoProduto; guardar: (v: ValoresDoProduto) => void }) {
+  const [valores, setValores] = useState(valoresIniciais);
+  return (
+    <FormularioProduto
+      valores={valores}
+      aoMudar={(novos) => {
+        setValores(novos);
+        guardar(novos);
+      }}
+      erros={{}}
+      categoriasExistentes={[]}
+      tituloAcao="Salvar"
+      aoSalvar={() => {}}
+    />
+  );
+}
+
+describe('FormularioProduto — unidades un/kg e base de preço (correcao-unidades-un-kg-preco)', () => {
+  it('seletor de medida oferece só un e kg', async () => {
+    await comTema(<FormularioControlado categoriasExistentes={[]} />);
+    expect(screen.getByRole('button', { name: 'un' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'kg' })).toBeTruthy();
+    for (const removida of ['g', 'ml', 'L', 'pacote', 'caixa']) {
+      expect(screen.queryByRole('button', { name: removida })).toBeNull();
+    }
+  });
+
+  it('controle de pacote em un traz o exemplo do papel higiênico', async () => {
+    await comTema(
+      <FormularioControlado categoriasExistentes={[]} valoresIniciais={{ ...VALORES_INICIAIS, unidade: 'un' }} />,
+    );
+    await fireEvent.press(screen.getByRole('button', { name: 'Mais opções' }));
+
+    await waitFor(() => expect(screen.getByText('É vendido em pacote fechado?')).toBeTruthy());
+    expect(screen.getByText('ex.: papel higiênico em pacote de 12 rolos')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'por 100 g' })).toBeNull();
+  });
+
+  it('base "por kg · por 100 g" só em kg, com "por kg" como padrão', async () => {
+    const guardar = jest.fn();
+    await comTema(
+      <FormularioQueGuarda valoresIniciais={{ ...VALORES_INICIAIS, unidade: 'kg' }} guardar={guardar} />,
+    );
+    await fireEvent.press(screen.getByRole('button', { name: 'Mais opções' }));
+
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'por kg' }).props.accessibilityState.selected).toBe(true),
+    );
+    expect(screen.queryByText('É vendido em pacote fechado?')).toBeNull();
+
+    await fireEvent.press(screen.getByRole('button', { name: 'por 100 g' }));
+    expect(guardar).toHaveBeenLastCalledWith(expect.objectContaining({ basePreco: '100g' }));
+
+    await fireEvent.press(screen.getByRole('button', { name: 'un' }));
+    expect(guardar).toHaveBeenLastCalledWith(expect.objectContaining({ unidade: 'un', basePreco: 'kg' }));
+    await waitFor(() => expect(screen.queryByRole('button', { name: 'por 100 g' })).toBeNull());
+  });
+});
+
+describe('FormularioProduto — controle "É vendido em pacote fechado?" (change conversao-unidade-de-compra)', () => {
   it('default "Não": só "Quanto costuma custar" aparece para unidade indivisível', async () => {
     await comTema(
       <FormularioControlado
@@ -58,38 +117,8 @@ describe('FormularioProduto — controle "Vem em pacote fechado?" (change conver
     fireEvent.press(screen.getByRole('button', { name: 'Mais opções' }));
 
     await waitFor(() => expect(screen.getByLabelText('Quanto costuma custar')).toBeTruthy());
-    expect(screen.queryByText('Vem em pacote fechado?')).toBeNull();
+    expect(screen.queryByText('É vendido em pacote fechado?')).toBeNull();
     expect(screen.queryByLabelText('Quantas unidades vêm no pacote?')).toBeNull();
-  });
-
-  it('unidade "pacote" vai direto aos campos de embalagem, sem o controle nem o preço direto', async () => {
-    await comTema(
-      <FormularioControlado
-        categoriasExistentes={[]}
-        valoresIniciais={{ ...VALORES_INICIAIS, unidade: 'pacote' }}
-      />,
-    );
-    fireEvent.press(screen.getByRole('button', { name: 'Mais opções' }));
-
-    await waitFor(() => expect(screen.getByLabelText('Quantas unidades vêm no pacote?')).toBeTruthy());
-    expect(screen.getByLabelText('Quanto custa o pacote?')).toBeTruthy();
-    expect(screen.queryByText('Vem em pacote fechado?')).toBeNull();
-    expect(screen.queryByLabelText('Quanto costuma custar')).toBeNull();
-  });
-
-  it('unidade "caixa" vai direto aos campos de embalagem, sem o controle nem o preço direto', async () => {
-    await comTema(
-      <FormularioControlado
-        categoriasExistentes={[]}
-        valoresIniciais={{ ...VALORES_INICIAIS, unidade: 'caixa' }}
-      />,
-    );
-    fireEvent.press(screen.getByRole('button', { name: 'Mais opções' }));
-
-    await waitFor(() => expect(screen.getByLabelText('Quantas unidades vêm no pacote?')).toBeTruthy());
-    expect(screen.getByLabelText('Quanto custa o pacote?')).toBeTruthy();
-    expect(screen.queryByText('Vem em pacote fechado?')).toBeNull();
-    expect(screen.queryByLabelText('Quanto costuma custar')).toBeNull();
   });
 
   it('alternar para "Sim" esconde o preço direto e mostra os dois campos de pacote', async () => {
@@ -153,41 +182,12 @@ describe('FormularioProduto — controle "Vem em pacote fechado?" (change conver
     fireEvent.press(screen.getByText('kg'));
 
     await waitFor(() => expect(screen.queryByLabelText('Quantas unidades vêm no pacote?')).toBeNull());
-    expect(screen.queryByText('Vem em pacote fechado?')).toBeNull();
+    expect(screen.queryByText('É vendido em pacote fechado?')).toBeNull();
 
     fireEvent.press(screen.getByText('un'));
     await waitFor(() => expect(screen.getByRole('button', { name: 'Não' })).toBeTruthy());
     expect(screen.getByLabelText('Quanto costuma custar')).toBeTruthy();
     expect(screen.queryByLabelText('Quantas unidades vêm no pacote?')).toBeNull();
-  });
-
-  it('ir de "un" com fator para "pacote" e voltar mantém a embalagem visível (sem preço direto)', async () => {
-    await comTema(
-      <FormularioControlado
-        categoriasExistentes={[]}
-        valoresIniciais={{
-          ...VALORES_INICIAIS,
-          unidade: 'un',
-          fatorConversaoEmbalagem: '12',
-          valorReferenciaEmbalagem: '12,90',
-        }}
-      />,
-    );
-    fireEvent.press(screen.getByRole('button', { name: 'Mais opções' }));
-    await waitFor(() =>
-      expect(screen.getByLabelText('Quantas unidades vêm no pacote?').props.value).toBe('12'),
-    );
-
-    fireEvent.press(screen.getByText('pacote'));
-    await waitFor(() => expect(screen.queryByText('Vem em pacote fechado?')).toBeNull());
-    expect(screen.getByLabelText('Quantas unidades vêm no pacote?').props.value).toBe('12');
-
-    fireEvent.press(screen.getByText('un'));
-    await waitFor(() =>
-      expect(screen.getByRole('button', { name: 'Sim' }).props.accessibilityState.selected).toBe(true),
-    );
-    expect(screen.getByLabelText('Quantas unidades vêm no pacote?').props.value).toBe('12');
-    expect(screen.queryByLabelText('Quanto costuma custar')).toBeNull();
   });
 
   it('produto sem fator permanece com o formulário de hoje (ex.: sabonete)', async () => {
@@ -199,7 +199,7 @@ describe('FormularioProduto — controle "Vem em pacote fechado?" (change conver
     );
     fireEvent.press(screen.getByRole('button', { name: 'Mais opções' }));
 
-    await waitFor(() => expect(screen.getByLabelText('Quanto costuma custar').props.value).toBe('4,50'));
+    await waitFor(() => expect(screen.getByLabelText('Quanto costuma custar').props.accessibilityValue.text).toBe('R$ 4,50'));
     expect(screen.getByRole('button', { name: 'Não' }).props.accessibilityState.selected).toBe(true);
   });
 });

@@ -1,7 +1,7 @@
 appId: com.danielfalcaodf.repor
 ---
 # Change `conversao-unidade-de-compra` (task 9.3) — jornada completa do fator
-# de conversão de embalagem: cadastro com "Vem em pacote fechado?" → lista de
+# de conversão de embalagem: cadastro com "É vendido em pacote fechado?" → lista de
 # compras arredondando para pacotes com excedente convidativo → Modo Compra
 # com ajuste detalhado (pacotes/tamanho/valor total) usando um tamanho de
 # pacote DIFERENTE do cadastrado → fechamento → confirma que o estoque final
@@ -37,7 +37,7 @@ appId: com.danielfalcaodf.repor
 - inputText: "13"
 - hideKeyboard
 - tapOn: "Mais opções"
-- assertVisible: "Vem em pacote fechado?"
+- assertVisible: "É vendido em pacote fechado?"
 - assertVisible: "Quanto costuma custar"
 - tapOn: "Sim"
 - assertNotVisible: "Quanto costuma custar"
@@ -159,7 +159,7 @@ appId: com.danielfalcaodf.repor
     timeout: 15000
 - tapOn: "Mais opções"
 - scrollUntilVisible:
-    element: "Vem em pacote fechado?"
+    element: "É vendido em pacote fechado?"
     direction: DOWN
     speed: 40
     timeout: 20000

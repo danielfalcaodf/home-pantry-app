@@ -63,7 +63,7 @@ describe('quantidadeAComprar', () => {
   });
 
   it('falta fracionária em unidade indivisível arredonda para cima', () => {
-    expect(quantidadeAComprar(dados(2500, 3000, 'pacote'))).toBe(1000);
+    expect(quantidadeAComprar(dados(2500, 3000, 'un'))).toBe(1000);
   });
 
   it('item ok não gera quantidade a comprar', () => {
@@ -81,7 +81,7 @@ describe('quantidadeAComprar', () => {
 
 describe('detalheDaQuantidadeAComprar', () => {
   it('produto sem fator não indica pacotes nem excedente', () => {
-    expect(detalheDaQuantidadeAComprar(dados(2500, 3000, 'pacote'))).toEqual({
+    expect(detalheDaQuantidadeAComprar(dados(2500, 3000, 'un'))).toEqual({
       quantidade: 1000,
       pacotes: null,
       excedente: 0,
@@ -106,6 +106,14 @@ describe('detalheDaQuantidadeAComprar', () => {
 });
 
 describe('custoReposicao e valorEmEstoque', () => {
+  // Bug original (correcao-unidades-un-kg-preco): em `g` o preço era por
+  // grama e meio quilo de queijo custava R$ 2.595,00.
+  it('queijo em kg com 500 milésimos a comprar a R$ 51,90/kg custa R$ 25,95', () => {
+    const { custo, semPreco } = custoReposicao(dados(500, 1000, 'kg', 5190));
+    expect(custo).toBe(2595);
+    expect(semPreco).toBe(false);
+  });
+
   it('custo com preço cadastrado', () => {
     const { custo, semPreco } = custoReposicao(dados(0, 2000, 'un', 890));
     expect(custo).toBe(1780);
@@ -175,7 +183,7 @@ describe('rotuloDoItem', () => {
   });
 
   it('em falta indica quanto falta: "Falta 1" para 1000 milésimos de pacote', () => {
-    expect(rotuloDoItem(dados(2000, 3000, 'pacote'))).toBe('Falta 1');
+    expect(rotuloDoItem(dados(2000, 3000, 'un'))).toBe('Falta 1');
   });
 
   it('em falta com unidade divisível formata a fração: "Falta 0,5"', () => {

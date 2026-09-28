@@ -23,8 +23,9 @@ describe('TecladoQuantidade', () => {
       />,
     );
 
-    fireEvent.changeText(screen.getByLabelText('Quantidade'), '1,5');
-    await waitFor(() => expect(screen.getByLabelText('Quantidade').props.value).toBe('1,5'));
+    // kg: dígitos entram pela direita, 3 casas (1500 → "1,500").
+    fireEvent.changeText(screen.getByLabelText('Quantidade'), '1500');
+    await waitFor(() => expect(screen.getByLabelText('Quantidade').props.accessibilityValue.text).toBe('1,500'));
     fireEvent.press(screen.getByRole('button', { name: 'Usei' }));
 
     expect(onUsei).toHaveBeenCalledWith(1.5);

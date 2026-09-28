@@ -3,7 +3,7 @@ import { ReactNode } from 'react';
 
 import { milesimos } from '@/domain/shared/quantidade';
 import { ThemeProvider } from '@/presentation/theme/provider';
-import Conferencia from './conferencia';
+import Conferencia from '../../app/conferencia';
 
 const mockBack = jest.fn();
 const mockConfirmar = jest.fn().mockResolvedValue(undefined);

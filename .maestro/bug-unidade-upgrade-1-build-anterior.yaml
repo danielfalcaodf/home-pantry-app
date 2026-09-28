@@ -1,0 +1,71 @@
+appId: com.danielfalcaodf.repor
+---
+# Change `correcao-unidades-un-kg-preco` (task 5.3), PARTE 1 de 2 — roda no
+# BUILD ANTERIOR à migration 0005 (ainda com g/pacote no seletor de medida).
+#
+# Roteiro completo do upgrade:
+#   1. Instalar o build anterior (develop antes desta change) e rodar ESTE flow.
+#   2. Instalar o build novo POR CIMA (adb install -r, sem desinstalar — o
+#      banco precisa sobreviver para a migration rodar sobre ele).
+#   3. Rodar `bug-unidade-upgrade-2-build-novo.yaml`.
+#
+# Efeito colateral real, permanente: cria "Queijo Upgrade QA" (g, necessária
+# 500, atual 300, R$ 5,19) e "Papel Upgrade QA" (pacote, necessária 2) e uma
+# baixa de 100 g no queijo.
+
+- launchApp
+- assertVisible: "Despensa"
+- swipe:
+    start: "970, 173"
+    end: "540, 700"
+    duration: 600
+
+# --- Produto em gramas, com preço e um movimento --------------------------
+# Banco vazio (roteiro começa de uma instalação limpa): a Despensa mostra
+# "Cadastrar do zero" em vez do botão do topo.
+- tapOn: "Cadastrar do zero"
+- tapOn: "O que é"
+- inputText: "Queijo Upgrade QA"
+- hideKeyboard
+- tapOn: "g"
+- tapOn: "Quanto quero ter em casa"
+- inputText: "500"
+- hideKeyboard
+- tapOn: "Mais opções"
+- tapOn: "Quanto tenho agora"
+- inputText: "300"
+- hideKeyboard
+- tapOn: "Quanto costuma custar"
+- inputText: "519"
+- hideKeyboard
+- scrollUntilVisible:
+    element: "Adicionar à despensa"
+    direction: DOWN
+    timeout: 20000
+- tapOn: "Adicionar à despensa"
+- assertVisible: "Despensa"
+- scrollUntilVisible:
+    element: "Queijo Upgrade QA.*"
+    direction: DOWN
+    timeout: 30000
+- tapOn: "Queijo Upgrade QA.*"
+- tapOn: "Outra quantidade"
+- inputText: "100"
+- tapOn: "Usei"
+- back
+
+# --- Produto em pacote ------------------------------------------------------
+- tapOn: "Adicionar produto"
+- tapOn: "O que é"
+- inputText: "Papel Upgrade QA"
+- hideKeyboard
+- tapOn: "pacote"
+- tapOn: "Quanto quero ter em casa"
+- inputText: "2"
+- hideKeyboard
+- scrollUntilVisible:
+    element: "Adicionar à despensa"
+    direction: DOWN
+    timeout: 20000
+- tapOn: "Adicionar à despensa"
+- assertVisible: "Despensa"

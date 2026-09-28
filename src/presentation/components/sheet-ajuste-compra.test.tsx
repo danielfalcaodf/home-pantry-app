@@ -9,6 +9,43 @@ async function comTema(no: ReactNode) {
 }
 
 describe('SheetAjusteCompra', () => {
+  it('produto em kg: preço por 100 g sai com a base escolhida (correcao-unidades-un-kg-preco)', async () => {
+    const onSalvar = jest.fn();
+    await comTema(
+      <SheetAjusteCompra
+        visivel
+        nome="Queijo"
+        unidade="kg"
+        quantidadeInicial={0.5}
+        precoInicial={null}
+        onFechar={jest.fn()}
+        onSalvar={onSalvar}
+      />,
+    );
+
+    await fireEvent.changeText(screen.getByLabelText('Preço pago (opcional)'), '5,19');
+    await waitFor(() => expect(screen.getByLabelText('Preço pago (opcional)').props.accessibilityValue.text).toBe('R$ 5,19'));
+    await fireEvent.press(screen.getByRole('button', { name: 'por 100 g' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Salvar' }));
+
+    expect(onSalvar).toHaveBeenCalledWith({ quantidade: 0.5, preco: 5.19, base: '100g' });
+  });
+
+  it('produto em un não mostra a escolha de base', async () => {
+    await comTema(
+      <SheetAjusteCompra
+        visivel
+        nome="Arroz"
+        unidade="un"
+        quantidadeInicial={1}
+        precoInicial={null}
+        onFechar={jest.fn()}
+        onSalvar={jest.fn()}
+      />,
+    );
+    expect(screen.queryByRole('button', { name: 'por 100 g' })).toBeNull();
+  });
+
   it('salva a quantidade e o preço digitados, e fecha o painel', async () => {
     const onSalvar = jest.fn();
     const onFechar = jest.fn();
@@ -27,10 +64,10 @@ describe('SheetAjusteCompra', () => {
     fireEvent.changeText(screen.getByLabelText(/Quantidade/), '1,5');
     await waitFor(() => expect(screen.getByLabelText(/Quantidade/).props.value).toBe('1,5'));
     fireEvent.changeText(screen.getByLabelText('Preço pago (opcional)'), '9,50');
-    await waitFor(() => expect(screen.getByLabelText('Preço pago (opcional)').props.value).toBe('9,50'));
+    await waitFor(() => expect(screen.getByLabelText('Preço pago (opcional)').props.accessibilityValue.text).toBe('R$ 9,50'));
     fireEvent.press(screen.getByRole('button', { name: 'Salvar' }));
 
-    expect(onSalvar).toHaveBeenCalledWith({ quantidade: 1.5, preco: 9.5 });
+    expect(onSalvar).toHaveBeenCalledWith({ quantidade: 1.5, preco: 9.5, base: 'kg' });
     expect(onFechar).toHaveBeenCalledTimes(1);
   });
 
@@ -52,7 +89,7 @@ describe('SheetAjusteCompra', () => {
     await waitFor(() => expect(screen.getByLabelText('Preço pago (opcional)').props.value).toBe(''));
     fireEvent.press(screen.getByRole('button', { name: 'Salvar' }));
 
-    expect(onSalvar).toHaveBeenCalledWith({ quantidade: 3, preco: null });
+    expect(onSalvar).toHaveBeenCalledWith({ quantidade: 3, preco: null, base: 'kg' });
   });
 
   it('quantidade zero é rejeitada com erro em texto, sem chamar onSalvar (Error Prevention)', async () => {
@@ -97,7 +134,7 @@ describe('SheetAjusteCompra', () => {
     await waitFor(() => expect(screen.getByLabelText('Preço pago (opcional)').props.value).toBe(''));
     fireEvent.press(screen.getByRole('button', { name: 'Salvar' }));
 
-    await waitFor(() => expect(onSalvar).toHaveBeenCalledWith({ quantidade: 3, preco: null }));
+    await waitFor(() => expect(onSalvar).toHaveBeenCalledWith({ quantidade: 3, preco: null, base: 'kg' }));
   });
 
   it('tem um controle de fechar visível, além do toque fora (affordance)', async () => {
@@ -183,7 +220,7 @@ describe('SheetAjusteCompra', () => {
       fireEvent.changeText(screen.getByLabelText('Unidades no pacote'), '16');
       await waitFor(() => expect(screen.getByLabelText('Unidades no pacote').props.value).toBe('16'));
       fireEvent.changeText(screen.getByLabelText('Valor total pago'), '16,00');
-      await waitFor(() => expect(screen.getByLabelText('Valor total pago').props.value).toBe('16,00'));
+      await waitFor(() => expect(screen.getByLabelText('Valor total pago').props.accessibilityValue.text).toBe('R$ 16,00'));
       fireEvent.press(screen.getByRole('button', { name: 'Salvar' }));
 
       expect(onSalvarPacotes).toHaveBeenCalledWith({ pacotes: 1, tamanhoPacote: 16, valorTotal: 16 });

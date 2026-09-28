@@ -25,12 +25,12 @@ appId: com.danielfalcaodf.repor
 - assertVisible: "R$ 20,00"
 - tapOn:
     text: "Iniciar compra \\(\\d+\\)"
-- assertVisible: "Arroz, 2 pacotes, R\\$ 10,00"
+- assertVisible: "Arroz, 2 un, R\\$ 20,00"
 
 - tapOn:
-    text: "Arroz, 2 pacotes, R\\$ 10,00"
+    text: "Arroz, 2 un, R\\$ 20,00"
 - assertVisible:
-    text: "Arroz, 2 pacotes, R\\$ 10,00"
+    text: "Arroz, 2 un, R\\$ 20,00"
     checked: true
 - assertVisible: "R$ 20,00"
 - assertNotVisible: "0,00"

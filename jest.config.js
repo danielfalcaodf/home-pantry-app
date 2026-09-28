@@ -49,7 +49,7 @@ module.exports = {
       testMatch: [
         '<rootDir>/src/application/**/*.test.{ts,tsx}',
         '<rootDir>/src/presentation/**/*.test.{ts,tsx}',
-        '<rootDir>/app/**/*.test.{ts,tsx}',
+        '<rootDir>/__tests__/app/**/*.test.{ts,tsx}',
       ],
       // pnpm instala tudo achatado dentro de node_modules/.pnpm/<pkg>@<versão>/;
       // sem tolerar esse segmento aqui, a checagem original (escrita pro

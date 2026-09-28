@@ -12,7 +12,13 @@ import { usePreferenciaDeAgrupamento } from '@/application/lista/use-preferencia
 import { totalPago } from '@/domain/compra/compra.rules';
 import { passoRapido } from '@/domain/compra/quantidade-compra.rules';
 import { custoEstimadoComFator, fatorConversao } from '@/domain/produto/conversao-embalagem.rules';
-import { centavos, formatarBRL, multiplicarQuantidadePorPreco } from '@/domain/shared/dinheiro';
+import {
+  BaseDePreco,
+  centavos,
+  formatarBRL,
+  multiplicarQuantidadePorPreco,
+  precoPorKg,
+} from '@/domain/shared/dinheiro';
 import { deDecimal, paraDecimal } from '@/domain/shared/quantidade';
 import { Botao } from '@/presentation/components/botao';
 import { BotaoVoltar } from '@/presentation/components/botao-voltar';
@@ -188,14 +194,14 @@ export default function ModoCompra() {
     ]);
   }
 
-  function salvarAjuste(dados: { quantidade: number; preco: number | null }) {
+  function salvarAjuste(dados: { quantidade: number; preco: number | null; base: BaseDePreco }) {
     if (!itemEmAjuste) {
       return;
     }
     void ajustarQuantidade(itemEmAjuste.item.id, deDecimal(dados.quantidade));
     void ajustarPreco(
       itemEmAjuste.item.id,
-      dados.preco === null ? null : centavos(Math.round(dados.preco * 100)),
+      dados.preco === null ? null : precoPorKg(centavos(Math.round(dados.preco * 100)), dados.base),
     );
   }
 

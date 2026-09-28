@@ -330,6 +330,20 @@ describe.each(ARQUIVOS_DE_MIGRATION.slice(1).map((_arquivo, indice) => indice + 
            VALUES ('produto-intermediario', 'casa-intermediaria', 'Arroz', 'un', 1000, 0, 0)`,
         )
         .run();
+      // Antes da 0005, dados nas 7 unidades antigas: a redução precisa
+      // convertê-los venha o aparelho de qualquer versão anterior.
+      const antesDaReducao = !ARQUIVOS_DE_MIGRATION.slice(0, n).includes(
+        '0005_reducao-unidades-un-kg.sql',
+      );
+      if (antesDaReducao) {
+        const inserirUnidadeAntiga = parcial.prepare(
+          `INSERT INTO produto (id, casa_id, nome, unidade, quantidade_necessaria, criado_em, atualizado_em)
+           VALUES (?, 'casa-intermediaria', ?, ?, 1500, 0, 0)`,
+        );
+        for (const unidade of ['kg', 'g', 'L', 'ml', 'pacote', 'caixa']) {
+          inserirUnidadeAntiga.run(`produto-${unidade}`, `Produto ${unidade}`, unidade);
+        }
+      }
       // configuracao só existe a partir da migration 0001.
       const configuracaoDisponivel = ARQUIVOS_DE_MIGRATION.slice(0, n).includes(
         '0001_configuracao.sql',
@@ -355,6 +369,9 @@ describe.each(ARQUIVOS_DE_MIGRATION.slice(1).map((_arquivo, indice) => indice + 
       expect(
         parcial.prepare('SELECT * FROM produto WHERE id = ?').get('produto-intermediario'),
       ).toEqual(expect.objectContaining({ nome: 'Arroz' }));
+      expect(
+        parcial.prepare("SELECT COUNT(*) AS n FROM produto WHERE unidade NOT IN ('un','kg')").get(),
+      ).toEqual({ n: 0 });
       if (configuracaoDisponivel) {
         expect(
           parcial

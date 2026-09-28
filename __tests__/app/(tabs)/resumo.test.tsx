@@ -3,7 +3,7 @@ import { ReactNode } from 'react';
 
 import { ALVO_TOQUE_MINIMO } from '@/presentation/theme/espaco';
 import { ThemeProvider } from '@/presentation/theme/provider';
-import Resumo from './resumo';
+import Resumo from '../../../app/(tabs)/resumo';
 
 const mockPush = jest.fn();
 

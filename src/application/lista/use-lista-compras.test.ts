@@ -64,7 +64,7 @@ describe('useListaDeCompras', () => {
     const aberta = await compras.obterAberta('casa-teste');
     await compras.adicionarItem(aberta!.id, {
       produtoId: 'p1',
-      unidade: 'pacote',
+      unidade: 'un',
       quantidadePlanejada: milesimos(1000),
       excluido: true,
     });
@@ -84,7 +84,7 @@ describe('useListaDeCompras', () => {
     const aberta = await compras.obterAberta('casa-teste');
     const excluido = await compras.adicionarItem(aberta!.id, {
       produtoId: 'p1',
-      unidade: 'pacote',
+      unidade: 'un',
       quantidadePlanejada: milesimos(1000),
       excluido: true,
     });
@@ -118,7 +118,7 @@ describe('useListaDeCompras', () => {
       produtoFalso({
         id: 'p1',
         nome: 'Café',
-        unidade: 'pacote',
+        unidade: 'un',
         quantidadeAtual: milesimos(500),
         quantidadeNecessaria: milesimos(1000),
         valorUnitario: centavos(1000),
@@ -145,7 +145,7 @@ describe('useListaDeCompras', () => {
     }
     await compras.adicionarItem(aberta.valor.id, {
       produtoId: 'p1',
-      unidade: 'pacote',
+      unidade: 'un',
       quantidadePlanejada: milesimos(2000),
       valorEstimadoUnit: centavos(0),
     });

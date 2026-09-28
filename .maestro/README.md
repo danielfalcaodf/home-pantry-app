@@ -48,3 +48,7 @@ todos os dados do dispositivo; `bug-exclusao-produto-historico-compra-fechada` f
 de verdade). Rodar por último, em dispositivo de QA. `maestro test .maestro/` roda a pasta
 inteira em ordem alfabética — o que executa os destrutivos no meio da bateria; prefira rodar
 por grupo.
+- `bug-unidade-kg-preco-por-100g.yaml`, `bug-unidade-upgrade-1-build-anterior.yaml` +
+  `bug-unidade-upgrade-2-build-novo.yaml` (change `correcao-unidades-un-kg-preco`) — o par de
+  upgrade exige instalar o build anterior, rodar a parte 1, instalar o build novo por cima
+  (`adb install -r`) e rodar a parte 2.

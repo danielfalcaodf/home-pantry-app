@@ -4,7 +4,7 @@ import { ReactNode } from 'react';
 import { centavos } from '@/domain/shared/dinheiro';
 import { ThemeProvider } from '@/presentation/theme/provider';
 import { despensa } from '@/presentation/theme/tokens';
-import HistoricoDeCompras from './historico';
+import HistoricoDeCompras from '../../../app/compra/historico';
 
 const mockBack = jest.fn();
 const mockPush = jest.fn();

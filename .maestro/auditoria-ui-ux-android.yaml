@@ -35,6 +35,12 @@ tags:
     commands:
       - tapOn: "Continue"
 - assertVisible: "Despensa"
+# ambiente: bolha flutuante "Tools" do Expo dev-client sobrepõe "Adicionar
+# produto" e abre o menu de desenvolvedor no lugar do formulário.
+- swipe:
+    start: "970, 173"
+    end: "540, 700"
+    duration: 600
 
 # ─────────────────────────────────────────────────────────────────────
 # 1) CHIPS DE FILTRO — estado selecionado, contagem e scroll horizontal.
@@ -122,20 +128,20 @@ tags:
 - tapOn: "Adicionar produto"
 - assertVisible: "Novo produto"
 
-# 3a) Chips de unidade: 7 opções, wrap, seleção exclusiva
+# 3a) Chips de unidade: só un e kg (correcao-unidades-un-kg-preco), seleção exclusiva
 - assertVisible:
     text: "un"
     selected: true
     label: "Unidade default é 'un'"
-- tapOn: "pacote"
+- tapOn: "kg"
 - assertVisible:
-    text: "pacote"
+    text: "kg"
     selected: true
 - assertVisible:
     text: "un"
     selected: false
-- assertVisible: "kg"
-- assertVisible: "caixa"
+- assertNotVisible: "pacote"
+- assertNotVisible: "caixa"
 - takeScreenshot: "qa/audit-03a-chips-unidade" # MEDIR: wrap sem corte na borda direita
 - assertNoDefectsWithAI
 - tapOn: "un"
@@ -146,6 +152,11 @@ tags:
 #     é ScrollView — mas assertVisible sem rolar falha, então rola.
 - assertNotVisible: "Quanto costuma custar"
 - tapOn: "Mais opções"
+# Abrir rola o formulário até os campos extras — o rótulo invertido fica acima.
+- scrollUntilVisible:
+    element: "Menos opções"
+    direction: UP
+    speed: 40
 - assertVisible: "Menos opções"
 - scrollUntilVisible:
     element: "Onde guardo"

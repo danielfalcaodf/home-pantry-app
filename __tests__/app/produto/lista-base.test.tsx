@@ -2,7 +2,7 @@ import { fireEvent, render, screen } from '@testing-library/react-native';
 import { ReactNode } from 'react';
 
 import { ThemeProvider } from '@/presentation/theme/provider';
-import ListaBase from './lista-base';
+import ListaBase from '../../../app/produto/lista-base';
 
 const mockBack = jest.fn();
 // Ref mutável lida pelo mock de `expo-router` a cada chamada de `back()` —

@@ -57,9 +57,7 @@ export const produto = sqliteTable(
       .references(() => casa.id, { onDelete: 'cascade' }),
     nome: text('nome').notNull(),
     categoria: text('categoria'),
-    unidade: text('unidade', {
-      enum: ['un', 'kg', 'g', 'L', 'ml', 'pacote', 'caixa'],
-    }).notNull(),
+    unidade: text('unidade', { enum: ['un', 'kg'] }).notNull(),
     /** milésimos: 1.5 kg = 1500 */
     quantidadeAtual: integer('quantidade_atual').notNull().default(0),
     /** milésimos */
@@ -95,6 +93,9 @@ export const produto = sqliteTable(
       .on(t.casaId, sql`${t.categoria} COLLATE NOCASE`)
       .where(sql`${t.deletadoEm} IS NULL`),
     check('ck_produto_nome', sql`length(trim(${t.nome})) > 0`),
+    // CHECK antigo mantido de propósito: trocá-lo exigiria recriar `produto`,
+    // e o DROP implícito apagaria `movimento_estoque` em cascata. A regra real
+    // (só un/kg) são os triggers da migration 0005_reducao-unidades-un-kg.
     check(
       'ck_produto_unidade',
       sql`${t.unidade} IN ('un','kg','g','L','ml','pacote','caixa')`,

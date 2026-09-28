@@ -1,6 +1,8 @@
 import { useRef, useState } from 'react';
 import { Pressable, TextInput, View } from 'react-native';
 
+import { BaseDePreco } from '../../domain/shared/dinheiro';
+import { Unidade } from '../../domain/shared/unidade';
 import { ALVO_TOQUE_MINIMO, espaco } from '../theme/espaco';
 import { icones } from '../theme/icones';
 import { useTheme } from '../theme/provider';
@@ -8,17 +10,20 @@ import { Botao } from './botao';
 import { CampoTexto } from './campo-texto';
 import { IconeSvg } from './icone-svg';
 import { PainelInferior } from './painel-inferior';
+import { SeletorBasePreco } from './seletor-base-preco';
 import { Texto } from './texto';
 
 export type SheetPrecoProdutoProps = {
   visivel: boolean;
   nome: string;
+  unidade: Unidade;
   /** Preço atual em decimal (reais), já convertido pela apresentação — `null`
    *  quando o produto ainda não tem preço de referência. */
   precoInicial: number | null;
   onFechar: () => void;
-  /** Preço em decimal (reais); a conversão para centavos é do domínio. */
-  onSalvar: (preco: number) => void;
+  /** Preço em decimal (reais) na base digitada; a conversão para centavos
+   *  por kg é do domínio (`precoPorKg`). */
+  onSalvar: (preco: number, base: BaseDePreco) => void;
 };
 
 /**
@@ -27,21 +32,30 @@ export type SheetPrecoProdutoProps = {
  * correcao-lista-de-compras, decisão 4). Grava via `useEditarProduto`
  * (edição parcial), nunca em `compra_item` — aqui ainda não existe compra.
  */
-export function SheetPrecoProduto({ visivel, nome, precoInicial, onFechar, onSalvar }: SheetPrecoProdutoProps) {
+export function SheetPrecoProduto({
+  visivel,
+  nome,
+  unidade,
+  precoInicial,
+  onFechar,
+  onSalvar,
+}: SheetPrecoProdutoProps) {
   const tema = useTheme();
   const campoPrecoRef = useRef<TextInput>(null);
   // Duas casas sempre — é o formato que a máscara de dinheiro espera pra
   // reconhecer o valor semeado (CampoTexto extrai dígitos do que está aqui).
   const [preco, setPreco] = useState(precoInicial !== null ? precoInicial.toFixed(2).replace('.', ',') : '');
+  const [base, setBase] = useState<BaseDePreco>('kg');
 
   function fechar() {
     setPreco(precoInicial !== null ? precoInicial.toFixed(2).replace('.', ',') : '');
+    setBase('kg');
     onFechar();
   }
 
   function salvar() {
     const precoNumerico = preco.trim() === '' ? 0 : Number(preco.replace(',', '.'));
-    onSalvar(precoNumerico);
+    onSalvar(precoNumerico, base);
     onFechar();
   }
 
@@ -78,6 +92,7 @@ export function SheetPrecoProduto({ visivel, nome, precoInicial, onFechar, onSal
         keyboardType="decimal-pad"
         tipo="dinheiro"
       />
+      {unidade === 'kg' ? <SeletorBasePreco base={base} aoMudar={setBase} /> : null}
       <Botao titulo="Salvar" onPress={salvar} />
     </PainelInferior>
   );

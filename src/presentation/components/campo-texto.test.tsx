@@ -1,5 +1,5 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
-import { ReactNode } from 'react';
+import { ReactNode, useState } from 'react';
 
 import { ThemeProvider } from '../theme/provider';
 import { CampoTexto } from './campo-texto';
@@ -54,16 +54,15 @@ describe('CampoTexto — tipo="dinheiro" (máscara "de caixa registradora")', ()
     await comTema(<CampoTexto rotulo="Preço" value="" onChangeText={onChangeText} tipo="dinheiro" />);
 
     const campo = screen.getByLabelText('Preço');
-    // react-native-mask-input só insere a vírgula quando há dígitos
-    // suficientes pra preencher as casas decimais — 1º e 2º dígito ainda
-    // aparecem crus, o ajuste "de caixa registradora" começa no 3º.
+    // Desde o 1º dígito: cada tecla entra como centavo pela direita (o
+    // campo exibe "R$ 0,01", o TextInput entrega o exibido + a nova tecla).
     fireEvent.changeText(campo, '1');
-    await waitFor(() => expect(onChangeText).toHaveBeenLastCalledWith('1'));
-    fireEvent.changeText(campo, '1' + '2');
-    await waitFor(() => expect(onChangeText).toHaveBeenLastCalledWith('12'));
-    fireEvent.changeText(campo, '12' + '9');
+    await waitFor(() => expect(onChangeText).toHaveBeenLastCalledWith('0,01'));
+    fireEvent.changeText(campo, 'R$ 0,01' + '2');
+    await waitFor(() => expect(onChangeText).toHaveBeenLastCalledWith('0,12'));
+    fireEvent.changeText(campo, 'R$ 0,12' + '9');
     await waitFor(() => expect(onChangeText).toHaveBeenLastCalledWith('1,29'));
-    fireEvent.changeText(campo, '1,29' + '0');
+    fireEvent.changeText(campo, 'R$ 1,29' + '0');
     await waitFor(() => expect(onChangeText).toHaveBeenLastCalledWith('12,90'));
   });
 
@@ -97,6 +96,73 @@ describe('CampoTexto — tipo="dinheiro" (máscara "de caixa registradora")', ()
   });
 });
 
+describe('CampoTexto — dinheiro com R$ e peso em kg (caixa registradora)', () => {
+  it('exibe o valor controlado com o prefixo R$ e milhar', async () => {
+    await comTema(<CampoTexto rotulo="Preço" value="1234,5" onChangeText={() => {}} tipo="dinheiro" />);
+    expect(screen.getByLabelText('Preço').props.accessibilityValue.text).toBe('R$ 1.234,50');
+  });
+
+  it('entrega o valor sem prefixo nem separador de milhar (parseável por Number)', async () => {
+    const onChangeText = jest.fn();
+    await comTema(<CampoTexto rotulo="Preço" value="" onChangeText={onChangeText} tipo="dinheiro" />);
+
+    await fireEvent.changeText(screen.getByLabelText('Preço'), 'R$ 1.234,567');
+
+    expect(onChangeText).toHaveBeenCalledWith('12345,67');
+  });
+
+  it('peso: gramas entram pela direita com 3 casas (5 → 0,005, 500 → 0,500)', async () => {
+    const onChangeText = jest.fn();
+    await comTema(<CampoTexto rotulo="Peso" value="" onChangeText={onChangeText} tipo="peso" />);
+    const campo = screen.getByLabelText('Peso');
+
+    await fireEvent.changeText(campo, '5');
+    expect(onChangeText).toHaveBeenLastCalledWith('0,005');
+    await fireEvent.changeText(campo, '500');
+    expect(onChangeText).toHaveBeenLastCalledWith('0,500');
+    await fireEvent.changeText(campo, '1500');
+    expect(onChangeText).toHaveBeenLastCalledWith('1,500');
+  });
+
+  it('peso: valor semeado com menos casas é lido como número, não como dígitos', async () => {
+    await comTema(<CampoTexto rotulo="Peso" value="0,5" onChangeText={() => {}} tipo="peso" />);
+    expect(screen.getByLabelText('Peso').props.accessibilityValue.text).toBe('0,500');
+  });
+
+  it('peso: apagar o último dígito desloca para a direita', async () => {
+    const onChangeText = jest.fn();
+    await comTema(<CampoTexto rotulo="Peso" value="0,500" onChangeText={onChangeText} tipo="peso" />);
+
+    await fireEvent.changeText(screen.getByLabelText('Peso'), '0,50');
+
+    expect(onChangeText).toHaveBeenCalledWith('0,050');
+  });
+});
+
+describe('CampoTexto — sem piscar no TextInput controlado', () => {
+  function PesoControlado() {
+    const [valor, setValor] = useState('');
+    return <CampoTexto rotulo="Peso" value={valor} onChangeText={setValor} tipo="peso" />;
+  }
+
+  // O piscar "5 → 0,005" vem do nativo aplicar a tecla antes do JS devolver
+  // o valor formatado. Se o valor nativo é exatamente o que foi digitado,
+  // não há correção a aplicar — o formatado só aparece no texto sobreposto.
+  it('o TextInput guarda só os dígitos digitados; o formatado vai para o texto por cima', async () => {
+    await comTema(<PesoControlado />);
+    const campo = screen.getByLabelText('Peso');
+
+    await fireEvent.changeText(campo, '5');
+    expect(screen.getByLabelText('Peso').props.value).toBe('5');
+    expect(screen.getByText('0,005')).toBeTruthy();
+
+    await fireEvent.changeText(campo, '50');
+    expect(screen.getByLabelText('Peso').props.value).toBe('50');
+    expect(screen.getByText('0,050')).toBeTruthy();
+    expect(screen.getByLabelText('Peso').props.accessibilityValue.text).toBe('0,050');
+  });
+});
+
 describe('CampoTexto — placeholder padrão por tipo', () => {
   it('usa "0,000" para tipo="quantidade" quando nenhum placeholder é passado', async () => {
     await comTema(<CampoTexto rotulo="Quantidade" value="" onChangeText={() => {}} tipo="quantidade" />);
@@ -105,7 +171,7 @@ describe('CampoTexto — placeholder padrão por tipo', () => {
 
   it('usa "0,00" para tipo="dinheiro" quando nenhum placeholder é passado', async () => {
     await comTema(<CampoTexto rotulo="Preço" value="" onChangeText={() => {}} tipo="dinheiro" />);
-    expect(screen.getByLabelText('Preço').props.placeholder).toBe('0,00');
+    expect(screen.getByLabelText('Preço').props.placeholder).toBe('R$ 0,00');
   });
 
   it('um placeholder explícito sobrescreve o padrão do tipo', async () => {
