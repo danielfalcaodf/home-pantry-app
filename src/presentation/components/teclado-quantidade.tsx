@@ -6,7 +6,7 @@ import { espaco, ALVO_TOQUE_MINIMO } from '../theme/espaco';
 import { icones } from '../theme/icones';
 import { useTheme } from '../theme/provider';
 import { tipografia } from '../theme/tipografia';
-import { aplicarMascaraQuantidade } from './campo-texto';
+import { aplicarMascaraQuantidade, EntradaNumerica } from './campo-texto';
 import { Botao } from './botao';
 import { IconeSvg } from './icone-svg';
 import { PainelInferior } from './painel-inferior';
@@ -39,6 +39,12 @@ export function TecladoQuantidade({
   const [texto, setTexto] = useState('');
 
   const divisivel = !ehIndivisivel(unidade);
+  const estiloNumero = {
+    color: tema.text.primary,
+    fontFamily: tipografia['display.lg'].fontFamily,
+    fontSize: tipografia['display.lg'].fontSize,
+  };
+  const estiloCampo = { borderBottomWidth: 2, borderBottomColor: tema.action.azulejo };
   const quantidade = Number(texto.replace(',', '.'));
   const valida = quantidade > 0;
 
@@ -82,23 +88,33 @@ export function TecladoQuantidade({
         </Pressable>
       </View>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: espaco.md }}>
-        <TextInput
-          ref={campoQuantidadeRef}
-          value={texto}
-          onChangeText={(valor) => setTexto(aplicarMascaraQuantidade(valor))}
-          accessibilityLabel="Quantidade"
-          keyboardType={divisivel ? 'decimal-pad' : 'number-pad'}
-          placeholder="0"
-          placeholderTextColor={tema.text.secondary}
-          style={{
-            flex: 1,
-            color: tema.text.primary,
-            fontFamily: tipografia['display.lg'].fontFamily,
-            fontSize: tipografia['display.lg'].fontSize,
-            borderBottomWidth: 2,
-            borderBottomColor: tema.action.azulejo,
-          }}
-        />
+        {divisivel ? (
+          <View style={{ flex: 1 }}>
+            <EntradaNumerica
+              ref={campoQuantidadeRef}
+              tipo="peso"
+              valor={texto}
+              aoMudar={setTexto}
+              accessibilityLabel="Quantidade"
+              keyboardType="number-pad"
+              placeholder="0,000"
+              placeholderTextColor={tema.text.secondary}
+              estiloTexto={estiloNumero}
+              estilo={estiloCampo}
+            />
+          </View>
+        ) : (
+          <TextInput
+            ref={campoQuantidadeRef}
+            value={texto}
+            onChangeText={(valor) => setTexto(aplicarMascaraQuantidade(valor))}
+            accessibilityLabel="Quantidade"
+            keyboardType="number-pad"
+            placeholder="0"
+            placeholderTextColor={tema.text.secondary}
+            style={[estiloNumero, estiloCampo, { flex: 1 }]}
+          />
+        )}
         <Texto papel="body.lg" tom="secondary">
           {rotuloDaUnidade(unidade, quantidade !== 1)}
         </Texto>

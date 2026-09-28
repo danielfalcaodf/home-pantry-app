@@ -19,7 +19,7 @@ const ITEM: ItemListaProduto = {
   produtoId: 'p1',
   nome: 'Arroz',
   categoria: 'Grãos',
-  unidade: 'pacote',
+  unidade: 'un',
   quantidadeAComprar: milesimos(2000),
   valorUnitario: centavos(890),
   custo: centavos(1780),

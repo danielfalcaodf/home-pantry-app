@@ -16,7 +16,7 @@ describe('SheetAjusteEstoque', () => {
       <SheetAjusteEstoque
         visivel
         nome="Arroz"
-        unidade="pacote"
+        unidade="un"
         quantidadeAtual={2}
         onFechar={onFechar}
         onSalvar={onSalvar}
@@ -56,7 +56,7 @@ describe('SheetAjusteEstoque', () => {
       <SheetAjusteEstoque
         visivel
         nome="Arroz"
-        unidade="pacote"
+        unidade="un"
         quantidadeAtual={2}
         onFechar={jest.fn()}
         onSalvar={onSalvar}
@@ -76,7 +76,7 @@ describe('SheetAjusteEstoque', () => {
       <SheetAjusteEstoque
         visivel
         nome="Arroz"
-        unidade="pacote"
+        unidade="un"
         quantidadeAtual={2}
         onFechar={jest.fn()}
         onSalvar={onSalvar}
@@ -97,7 +97,7 @@ describe('SheetAjusteEstoque', () => {
       <SheetAjusteEstoque
         visivel
         nome="Arroz"
-        unidade="pacote"
+        unidade="un"
         quantidadeAtual={2}
         onFechar={onFechar}
         onSalvar={jest.fn()}
@@ -114,7 +114,7 @@ describe('SheetAjusteEstoque', () => {
       <SheetAjusteEstoque
         visivel
         nome="Arroz"
-        unidade="pacote"
+        unidade="un"
         quantidadeAtual={2}
         onFechar={jest.fn()}
         onSalvar={jest.fn()}
@@ -131,7 +131,7 @@ describe('SheetAjusteEstoque', () => {
       <SheetAjusteEstoque
         visivel
         nome="Arroz"
-        unidade="pacote"
+        unidade="un"
         quantidadeAtual={2}
         onFechar={jest.fn()}
         onSalvar={jest.fn()}

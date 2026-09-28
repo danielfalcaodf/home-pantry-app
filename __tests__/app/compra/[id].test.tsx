@@ -5,7 +5,7 @@ import { Alert } from 'react-native';
 
 import { useAvisoCompraStore } from '@/application/compra/aviso-compra-store';
 import { ThemeProvider } from '@/presentation/theme/provider';
-import ModoCompra from './[id]';
+import ModoCompra from '../../../app/compra/[id]';
 
 const mockBack = jest.fn();
 const mockPush = jest.fn();

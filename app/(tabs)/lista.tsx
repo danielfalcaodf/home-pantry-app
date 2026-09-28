@@ -14,7 +14,7 @@ import { useResumoCompraAberta } from '@/application/compra/use-resumo-compra-ab
 import { useEditarProduto } from '@/application/estoque/use-editar-produto';
 import { DadosDoAvulso, ItemDaLista } from '@/domain/lista/lista';
 import { totalDaListaDeCompras } from '@/domain/lista/lista.rules';
-import { centavos } from '@/domain/shared/dinheiro';
+import { BaseDePreco, centavos, precoPorKg } from '@/domain/shared/dinheiro';
 import { paraDecimal } from '@/domain/shared/quantidade';
 import { Botao } from '@/presentation/components/botao';
 import { ChipEstado } from '@/presentation/components/chip-estado';
@@ -78,12 +78,12 @@ export default function Lista() {
     setProdutoEmEdicaoDePreco(item);
   }
 
-  async function salvarPrecoDoProduto(preco: number) {
+  async function salvarPrecoDoProduto(preco: number, base: BaseDePreco) {
     if (!produtoEmEdicaoDePreco) {
       return;
     }
     await editarProduto(produtoEmEdicaoDePreco.produtoId, {
-      valorUnitario: centavos(Math.round(preco * 100)),
+      valorUnitario: precoPorKg(centavos(Math.round(preco * 100)), base),
     });
   }
 
@@ -341,13 +341,14 @@ export default function Lista() {
         key={produtoEmEdicaoDePreco?.produtoId}
         visivel={produtoEmEdicaoDePreco !== null}
         nome={produtoEmEdicaoDePreco?.nome ?? ''}
+        unidade={produtoEmEdicaoDePreco?.unidade ?? 'un'}
         precoInicial={
           produtoEmEdicaoDePreco && !produtoEmEdicaoDePreco.semPreco
             ? produtoEmEdicaoDePreco.valorUnitario / 100
             : null
         }
         onFechar={() => setProdutoEmEdicaoDePreco(null)}
-        onSalvar={(preco) => void salvarPrecoDoProduto(preco)}
+        onSalvar={(preco, base) => void salvarPrecoDoProduto(preco, base)}
       />
 
       <SheetAvulso

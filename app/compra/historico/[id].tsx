@@ -3,7 +3,7 @@ import { FlatList, View } from 'react-native';
 
 import { ItemComProduto, useDetalheDaCompra } from '@/application/resumo/use-detalhe-compra';
 import { dataDeReferencia } from '@/domain/compra/compra.rules';
-import { centavos, formatarBRL } from '@/domain/shared/dinheiro';
+import { centavos, formatarBRL, formatarPrecoDaUnidade } from '@/domain/shared/dinheiro';
 import { formatarQuantidade } from '@/domain/shared/quantidade';
 import { BotaoVoltar } from '@/presentation/components/botao-voltar';
 import { EstadoVazio } from '@/presentation/components/estado-vazio';
@@ -65,7 +65,7 @@ export default function DetalheDaCompra() {
           </Texto>
         </View>
         <Texto papel="data.md" tom={item.comprado ? 'primary' : 'secondary'}>
-          {item.comprado && item.valorPagoUnitario !== null ? formatarBRL(item.valorPagoUnitario) : '—'}
+          {item.comprado && item.valorPagoUnitario !== null ? formatarPrecoDaUnidade(item.valorPagoUnitario, item.unidade) : '—'}
         </Texto>
       </View>
     );

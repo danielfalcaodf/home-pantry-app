@@ -1,0 +1,35 @@
+appId: com.danielfalcaodf.repor
+---
+# Change `correcao-unidades-un-kg-preco` (task 5.3), PARTE 2 de 2 — roda no
+# BUILD NOVO instalado por cima do anterior, depois de
+# `bug-unidade-upgrade-1-build-anterior.yaml`. Prova que a migration 0005
+# converteu os dados reais do aparelho: g → kg sem preço, pacote → un, e o
+# histórico do queijo em kg (não "Você anotou 100 kg").
+
+- launchApp
+- assertVisible: "Despensa"
+- swipe:
+    start: "970, 173"
+    end: "540, 700"
+    duration: 600
+
+# --- Queijo: 200 g viraram 0,2 kg, sem preço --------------------------------
+- scrollUntilVisible:
+    element: "Queijo Upgrade QA, 0,2 de 0,5 kg.*"
+    direction: DOWN
+    timeout: 30000
+- assertVisible: "Queijo Upgrade QA, 0,2 de 0,5 kg.*"
+- tapOn: "Queijo Upgrade QA.*"
+- assertNotVisible: ".*costuma custar.*"
+- tapOn: ".*usos? nos últimos 30 dias.*"
+- assertVisible: ".*Usei 0,1 kg.*"
+- assertNotVisible: ".*100 kg.*"
+- back
+- back
+
+# --- Papel: pacote virou un -------------------------------------------------
+- scrollUntilVisible:
+    element: "Papel Upgrade QA, 0 de 2 un.*"
+    direction: DOWN
+    timeout: 30000
+- assertVisible: "Papel Upgrade QA, 0 de 2 un.*"

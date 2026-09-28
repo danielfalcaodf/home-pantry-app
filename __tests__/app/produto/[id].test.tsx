@@ -10,7 +10,7 @@ import { ALVO_TOQUE_MINIMO } from '@/presentation/theme/espaco';
 import { despensa } from '@/presentation/theme/tokens';
 import { ThemeProvider } from '@/presentation/theme/provider';
 import { tipografia } from '@/presentation/theme/tipografia';
-import DetalheProduto from './[id]';
+import DetalheProduto from '../../../app/produto/[id]';
 
 // Testa o contrato do botão "Tirar da despensa" com IconeSvg (path/cor
 // recebidos) em vez de inspecionar o SVG nativo já processado.
@@ -158,10 +158,10 @@ describe('Detalhe do produto — teto de sanidade em "Quanto quero ter em casa" 
   it('valor acima do teto é rejeitado com erro em texto, sem chamar editar', async () => {
     await comTema(<DetalheProduto />);
 
-    fireEvent.changeText(screen.getByLabelText('Quanto quero ter em casa'), String(LIMITE_SANIDADE_QUANTIDADE + 1));
+    // Produto em kg: dígitos entram pela direita com 3 casas.
+    fireEvent.changeText(screen.getByLabelText('Quanto quero ter em casa'), `${LIMITE_SANIDADE_QUANTIDADE + 1}000`);
     await waitFor(() =>
-      expect(screen.getByLabelText('Quanto quero ter em casa').props.value).toBe(
-        String(LIMITE_SANIDADE_QUANTIDADE + 1),
+      expect(screen.getByLabelText('Quanto quero ter em casa').props.accessibilityValue.text).toBe('100.000,000',
       ),
     );
     fireEvent.press(screen.getByRole('button', { name: 'Salvar' }));
@@ -175,8 +175,8 @@ describe('Detalhe do produto — teto de sanidade em "Quanto quero ter em casa" 
   it('valor dentro do teto continua sendo salvo normalmente', async () => {
     await comTema(<DetalheProduto />);
 
-    fireEvent.changeText(screen.getByLabelText('Quanto quero ter em casa'), '10');
-    await waitFor(() => expect(screen.getByLabelText('Quanto quero ter em casa').props.value).toBe('10'));
+    fireEvent.changeText(screen.getByLabelText('Quanto quero ter em casa'), '10000');
+    await waitFor(() => expect(screen.getByLabelText('Quanto quero ter em casa').props.accessibilityValue.text).toBe('10,000'));
     fireEvent.press(screen.getByRole('button', { name: 'Salvar' }));
 
     await waitFor(() => expect(mockEditar).toHaveBeenCalled());

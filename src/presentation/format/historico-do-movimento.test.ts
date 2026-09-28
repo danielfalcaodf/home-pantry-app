@@ -13,15 +13,15 @@ describe('descreverMovimento', () => {
   it('reposição sem compra usa o verbo Repus', () => {
     const descricao = descreverMovimento(
       { tipo: 'reposicao', quantidadeDelta: milesimos(2000), quantidadeResultante: milesimos(3000), compraId: null },
-      'pacote',
+      'un',
     );
-    expect(descricao).toEqual({ verbo: 'Repus', quantidade: '2 pacotes' });
+    expect(descricao).toEqual({ verbo: 'Repus', quantidade: '2 un' });
   });
 
   it('reposição vinda de compra usa o verbo Comprei (task 5.4)', () => {
     const descricao = descreverMovimento(
       { tipo: 'reposicao', quantidadeDelta: milesimos(2000), quantidadeResultante: milesimos(3000), compraId: 'compra-1' },
-      'pacote',
+      'un',
     );
     expect(descricao.verbo).toBe('Comprei');
   });

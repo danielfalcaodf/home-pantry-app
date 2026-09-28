@@ -24,7 +24,7 @@ export function produtoFalso(sobrescreve: Partial<Produto> = {}): Produto {
     casaId: 'casa-teste',
     nome: 'Arroz',
     categoria: 'Grãos',
-    unidade: 'pacote',
+    unidade: 'un',
     quantidadeAtual: milesimos(2000),
     quantidadeNecessaria: milesimos(3000),
     valorUnitario: centavos(890),

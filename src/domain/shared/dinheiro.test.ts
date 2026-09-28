@@ -4,7 +4,9 @@ import {
   converterValorBruto,
   deTextoDigitado,
   formatarBRL,
+  formatarPrecoDaUnidade,
   multiplicarQuantidadePorPreco,
+  precoPorKg,
 } from './dinheiro';
 
 describe('formatação BRL', () => {
@@ -81,5 +83,25 @@ describe('converterValorBruto — a única divisão de um bruto já somado por S
 
   it('bruto zero produz zero', () => {
     expect(converterValorBruto(0)).toBe(0);
+  });
+});
+
+describe('precoPorKg — preço de kg digitado por kg ou por 100 g', () => {
+  it('por 100 g multiplica por 10', () => {
+    expect(precoPorKg(centavos(519), '100g')).toBe(5190);
+  });
+
+  it('por kg grava o valor digitado', () => {
+    expect(precoPorKg(centavos(5190), 'kg')).toBe(5190);
+  });
+});
+
+describe('formatarPrecoDaUnidade', () => {
+  it('kg ganha o sufixo /kg', () => {
+    expect(formatarPrecoDaUnidade(centavos(5190), 'kg')).toBe('R$ 51,90/kg');
+  });
+
+  it('un não ganha sufixo', () => {
+    expect(formatarPrecoDaUnidade(centavos(890), 'un')).toBe('R$ 8,90');
   });
 });

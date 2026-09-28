@@ -3,8 +3,10 @@ import {
   deDecimal,
   formatarNumero,
   formatarQuantidade,
+  gramasParaKg,
   milesimos,
   paraDecimal,
+  variacaoGramasParaKg,
 } from './quantidade';
 
 describe('conversão decimal ↔ milésimos', () => {
@@ -30,11 +32,6 @@ describe('formatação de quantidade', () => {
     expect(formatarQuantidade(milesimos(2000), 'un')).toBe('2 un');
   });
 
-  it('pluraliza pacote e caixa', () => {
-    expect(formatarQuantidade(milesimos(2000), 'pacote')).toBe('2 pacotes');
-    expect(formatarQuantidade(milesimos(1000), 'caixa')).toBe('1 caixa');
-  });
-
   it('formata fração sem zeros à direita', () => {
     expect(formatarNumero(milesimos(500))).toBe('0,5');
     expect(formatarNumero(milesimos(1234))).toBe('1,234');
@@ -43,8 +40,8 @@ describe('formatação de quantidade', () => {
 });
 
 describe('arredondamento por unidade', () => {
-  it('meio pacote vira um pacote', () => {
-    expect(arredondarParaUnidade(milesimos(500), 'pacote')).toBe(1000);
+  it('meia unidade vira uma unidade', () => {
+    expect(arredondarParaUnidade(milesimos(500), 'un')).toBe(1000);
   });
 
   it('uma unidade e um pouco vira duas unidades', () => {
@@ -52,7 +49,7 @@ describe('arredondamento por unidade', () => {
   });
 
   it('valor já inteiro não é inflado', () => {
-    expect(arredondarParaUnidade(milesimos(2000), 'caixa')).toBe(2000);
+    expect(arredondarParaUnidade(milesimos(2000), 'un')).toBe(2000);
   });
 
   it('unidade divisível preserva a fração', () => {
@@ -60,8 +57,27 @@ describe('arredondamento por unidade', () => {
   });
 
   it('é idempotente: arredondar um valor já arredondado não o altera', () => {
-    const primeira = arredondarParaUnidade(milesimos(500), 'pacote');
-    const segunda = arredondarParaUnidade(primeira, 'pacote');
+    const primeira = arredondarParaUnidade(milesimos(500), 'un');
+    const segunda = arredondarParaUnidade(primeira, 'un');
     expect(segunda).toBe(primeira);
+  });
+});
+
+describe('escala g → kg da redução de unidades', () => {
+  it('divide por mil: 500 g (500000) viram 0,5 kg (500)', () => {
+    expect(gramasParaKg(500000)).toBe(500);
+    expect(gramasParaKg(-200000)).toBe(-200);
+  });
+
+  it('metade arredonda para longe do zero, igual ao ROUND() do SQLite', () => {
+    expect(gramasParaKg(1500)).toBe(2);
+    expect(gramasParaKg(-1500)).toBe(-2);
+    expect(gramasParaKg(400)).toBe(0);
+  });
+
+  it('variação que arredondaria a zero vira 1 milésimo no mesmo sentido', () => {
+    expect(variacaoGramasParaKg(-400)).toBe(-1);
+    expect(variacaoGramasParaKg(400)).toBe(1);
+    expect(variacaoGramasParaKg(-200000)).toBe(-200);
   });
 });

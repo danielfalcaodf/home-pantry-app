@@ -4,7 +4,7 @@ import { ReactNode } from 'react';
 import { milesimos } from '@/domain/shared/quantidade';
 import { ALVO_TOQUE_MINIMO } from '@/presentation/theme/espaco';
 import { ThemeProvider } from '@/presentation/theme/provider';
-import Lista from './lista';
+import Lista from '../../../app/(tabs)/lista';
 
 jest.mock('expo-router', () => ({
   router: { push: jest.fn() },
@@ -182,7 +182,7 @@ describe('Lista — editar preço de produto direto na lista', () => {
     await waitFor(() => expect(screen.getByText('Preço de Arroz')).toBeTruthy());
 
     fireEvent.changeText(screen.getByLabelText('Quanto costuma custar'), '990');
-    await waitFor(() => expect(screen.getByLabelText('Quanto costuma custar').props.value).toBe('9,90'));
+    await waitFor(() => expect(screen.getByLabelText('Quanto costuma custar').props.accessibilityValue.text).toBe('R$ 9,90'));
     fireEvent.press(screen.getByRole('button', { name: 'Salvar' }));
 
     await waitFor(() =>
@@ -198,7 +198,7 @@ describe('Lista — editar preço de produto direto na lista', () => {
     expect(screen.getByLabelText('Quanto costuma custar').props.value).toBe('');
 
     fireEvent.changeText(screen.getByLabelText('Quanto costuma custar'), '350');
-    await waitFor(() => expect(screen.getByLabelText('Quanto costuma custar').props.value).toBe('3,50'));
+    await waitFor(() => expect(screen.getByLabelText('Quanto costuma custar').props.accessibilityValue.text).toBe('R$ 3,50'));
     fireEvent.press(screen.getByRole('button', { name: 'Salvar' }));
 
     await waitFor(() =>
@@ -212,7 +212,7 @@ describe('Lista — editar preço de produto direto na lista', () => {
     fireEvent.press(screen.getByText('Arroz'));
     await waitFor(() => expect(screen.getByText('Preço de Arroz')).toBeTruthy());
     fireEvent.changeText(screen.getByLabelText('Quanto costuma custar'), '990');
-    await waitFor(() => expect(screen.getByLabelText('Quanto costuma custar').props.value).toBe('9,90'));
+    await waitFor(() => expect(screen.getByLabelText('Quanto costuma custar').props.accessibilityValue.text).toBe('R$ 9,90'));
     fireEvent.press(screen.getByRole('button', { name: 'Salvar' }));
     await waitFor(() => expect(mockEditarProduto).toHaveBeenCalledWith('p1', { valorUnitario: 990 }));
 

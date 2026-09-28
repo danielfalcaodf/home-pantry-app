@@ -4,7 +4,7 @@ import { ReactNode } from 'react';
 
 import { ThemeProvider } from '@/presentation/theme/provider';
 import { ALVO_TOQUE_MINIMO } from '@/presentation/theme/espaco';
-import Configuracoes from './configuracoes';
+import Configuracoes from '../../../app/(tabs)/configuracoes';
 
 const mockPush = jest.fn();
 const mockEscolherTema = jest.fn();

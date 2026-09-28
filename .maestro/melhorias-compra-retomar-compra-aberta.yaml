@@ -16,13 +16,13 @@ appId: com.danielfalcaodf.repor
 - tapOn:
     text: "Iniciar compra \\(\\d+\\)"
 - scrollUntilVisible:
-    element: "Feijão, 2 pacotes, sem preço"
+    element: "Feijão, 2 un, sem preço"
     direction: DOWN
     timeout: 15000
     speed: 40
-- tapOn: "Feijão, 2 pacotes, sem preço"
+- tapOn: "Feijão, 2 un, sem preço"
 - assertVisible:
-    text: "Feijão, 2 pacotes, sem preço"
+    text: "Feijão, 2 un, sem preço"
     checked: true
 - tapOn: "Voltar"
 - tapOn: "Sair"
@@ -35,10 +35,10 @@ appId: com.danielfalcaodf.repor
 - assertVisible: "Começar nova lista"
 - tapOn: "Continuar compra"
 - scrollUntilVisible:
-    element: "Feijão, 2 pacotes, sem preço"
+    element: "Feijão, 2 un, sem preço"
     direction: DOWN
     timeout: 15000
     speed: 40
 - assertVisible:
-    text: "Feijão, 2 pacotes, sem preço"
+    text: "Feijão, 2 un, sem preço"
     checked: true

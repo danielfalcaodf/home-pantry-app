@@ -10,7 +10,7 @@ function produto(sobrescreve: Partial<Extract<ItemDaLista, { tipo: 'produto' }>>
     produtoId: 'p1',
     nome: 'Arroz',
     categoria: 'Grãos',
-    unidade: 'pacote',
+    unidade: 'un',
     quantidadeAComprar: milesimos(1000),
     valorUnitario: centavos(890),
     custo: centavos(890),
@@ -45,7 +45,7 @@ describe('gerarTextoDaLista', () => {
     const itens = [produto()];
     const texto = gerarTextoDaLista(itens, false, totalDaListaDeCompras(itens));
     expect(texto).toContain('Arroz');
-    expect(texto).toContain('1 pacote');
+    expect(texto).toContain('1 un');
     expect(texto).toContain('Total estimado: R$ 8,90');
   });
 
@@ -55,7 +55,7 @@ describe('gerarTextoDaLista', () => {
       produto({ produtoId: 'p2', nome: 'Sabão', semPreco: true, custo: centavos(0) }),
     ];
     const texto = gerarTextoDaLista(itens, false, totalDaListaDeCompras(itens));
-    expect(texto).toContain('Sabão — 1 pacote — sem preço');
+    expect(texto).toContain('Sabão — 1 un — sem preço');
     expect(texto).toContain('sem preço cadastrado');
   });
 

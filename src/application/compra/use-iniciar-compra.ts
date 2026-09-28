@@ -52,23 +52,34 @@ export function useIniciarCompra(
           })),
         );
         // Item já materializado numa compra aberta residual (ex.: "Iniciar
-        // compra" chamado de novo sem finalizar a anterior) fica com
-        // `valorEstimadoUnit` congelado no preço de quando a linha foi
-        // criada — editar o preço do produto na Lista depois disso nunca
-        // atualiza essa linha sozinho. Reabrir a compra é o único momento
-        // em que dá pra sincronizar sem mexer em nada durante o Modo Compra
-        // em si (D1: só aqui a tela materializa/atualiza o que está exibindo).
+        // compra" chamado de novo sem finalizar a anterior) fica com preço e
+        // quantidade congelados em quando a linha foi criada — editar o
+        // preço na Lista, ou a falta mudar, nunca atualiza essa linha
+        // sozinho. Pior: um produto removido da Lista e devolvido reaproveita
+        // a linha-marcador da exclusão, criada com quantidade de espaço
+        // reservado (1 un no lugar dos 2 que faltam). Reabrir a compra é o
+        // único momento em que dá pra sincronizar sem mexer em nada durante o
+        // Modo Compra em si (D1: só aqui a tela materializa/atualiza o que
+        // está exibindo). Só a quantidade planejada é ressincronizada — o
+        // ajuste manual do Modo Compra fica em `quantidadeComprada`, intacto.
         for (const item of itens) {
           if (item.tipo !== 'produto') {
             continue;
           }
           const existente = jaMaterializados.get(item.produtoId);
-          if (
-            existente &&
-            !existente.comprado &&
-            existente.valorEstimadoUnit !== item.valorUnitario
-          ) {
-            await compras.editarItem(existente.id, { valorEstimadoUnit: item.valorUnitario });
+          if (!existente || existente.comprado) {
+            continue;
+          }
+          const mudancas = {
+            ...(existente.valorEstimadoUnit !== item.valorUnitario && {
+              valorEstimadoUnit: item.valorUnitario,
+            }),
+            ...(existente.quantidadePlanejada !== item.quantidadeAComprar && {
+              quantidadePlanejada: item.quantidadeAComprar,
+            }),
+          };
+          if (Object.keys(mudancas).length > 0) {
+            await compras.editarItem(existente.id, mudancas);
           }
         }
         return compra.id;

@@ -185,6 +185,8 @@ CREATE TABLE produto (
   categoria              TEXT,
   unidade                TEXT    NOT NULL
                                  CHECK (unidade IN ('un','kg','g','L','ml','pacote','caixa')),
+                                 -- CHECK histórico: a regra real (só 'un','kg') são os
+                                 -- triggers da migration 0005 (§9.5).
   quantidade_atual       INTEGER NOT NULL DEFAULT 0 CHECK (quantidade_atual >= 0),
   quantidade_necessaria  INTEGER NOT NULL           CHECK (quantidade_necessaria > 0),
   valor_unitario         INTEGER NOT NULL DEFAULT 0 CHECK (valor_unitario >= 0),
@@ -394,7 +396,7 @@ WHERE p.casa_id = ?1
 ORDER BY p.categoria COLLATE NOCASE, p.nome COLLATE NOCASE;
 ```
 
-⚠️ **`falta_bruta` não é a quantidade a comprar.** Está em milésimos e ainda não passou pelo arredondamento para cima em unidades indivisíveis (`un`, `pacote`, `caixa`). Esse arredondamento é regra de negócio e mora em `domain/shared/quantidade.ts`, não no SQL — replicá-lo em SQL criaria duas implementações da mesma regra, que é como o total do app começa a divergir do total da tela. O mesmo vale para o custo: o SQL entrega o bruto, o domínio arredonda e só então multiplica.
+⚠️ **`falta_bruta` não é a quantidade a comprar.** Está em milésimos e ainda não passou pelo arredondamento para cima em unidades indivisíveis (`un`). Esse arredondamento é regra de negócio e mora em `domain/shared/quantidade.ts`, não no SQL — replicá-lo em SQL criaria duas implementações da mesma regra, que é como o total do app começa a divergir do total da tela. O mesmo vale para o custo: o SQL entrega o bruto, o domínio arredonda e só então multiplica.
 
 Verifique o uso do índice parcial com:
 
@@ -551,9 +553,7 @@ export const produto = sqliteTable('produto', {
   casaId: text('casa_id').notNull().references(() => casa.id, { onDelete: 'cascade' }),
   nome: text('nome').notNull(),
   categoria: text('categoria'),
-  unidade: text('unidade', {
-    enum: ['un', 'kg', 'g', 'L', 'ml', 'pacote', 'caixa'],
-  }).notNull(),
+  unidade: text('unidade', { enum: ['un', 'kg'] }).notNull(), // regra real: triggers da 0005
   /** milésimos: 1.5 kg = 1500 */
   quantidadeAtual: integer('quantidade_atual').notNull().default(0),
   /** milésimos */
@@ -705,6 +705,31 @@ Sem backend, este é o único mecanismo contra perda total. Exportar como **JSON
 ```
 
 O restore importa dentro de uma transação, aplica upsert por `id` (UUID torna isso seguro), e ao final roda a query de reconciliação da seção 6.6.
+
+### 9.5 Redução de unidades a `un`/`kg` (migration 0005)
+
+`g`, `ml`, `L`, `pacote` e `caixa` foram removidas: preço em `g`/`ml` era centavos **por grama**
+e produzia custo 1000× maior. A migration `0005_reducao-unidades-un-kg` (custom, gerada com
+`drizzle-kit generate --custom`):
+
+- **Não recria `produto`.** Recriar exigiria `DROP TABLE produto`, que apagaria
+  `movimento_estoque` em cascata se o `PRAGMA foreign_keys=OFF` fosse ignorado dentro da
+  transação do migrator. O `CHECK ck_produto_unidade` antigo fica como superconjunto e a regra
+  nova são dois triggers (`tg_produto_unidade_insert`, `tg_produto_unidade_update`) com
+  `RAISE(ABORT)` para unidade fora de `('un','kg')`. **O drizzle-kit não modela triggers** —
+  migrations geradas depois não os conhecem nem os removem.
+- Converte dados: `g` → `kg` com quantidades ÷ 1000 e preço do produto zerado (ambíguo entre
+  R$/kg e R$/100 g); `pacote`/`caixa` → `un` sem mudar números; `ml`/`L` → `un` arredondado para
+  cima, preço zerado. Itens de compra em `g` de compra aberta têm o estimado zerado; valor pago de
+  compra fechada é histórico e fica.
+- **Única exceção ao append-only:** reescreve `quantidade_delta`/`quantidade_resultante` de
+  movimentos de produtos em `g`. É mudança de escala de medida, não de fato registrado. Variação
+  que arredondaria a 0 vira ±1 milésimo (`ck_movimento_delta_nao_zero`).
+- O backup JSON subiu para v6; `converterV5ParaV6` (`domain/backup/backup.schema.ts`) aplica as
+  mesmas regras em TypeScript.
+
+Preço de produto em `kg` é sempre R$/kg; "por 100 g" é só base de digitação na UI
+(`precoPorKg`), nunca persistida.
 
 ---
 

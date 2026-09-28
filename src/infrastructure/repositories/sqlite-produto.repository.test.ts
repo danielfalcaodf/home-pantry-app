@@ -27,7 +27,7 @@ function montarComCompra() {
 function dadosValidos(nome = 'Arroz', quantidadeAtual = 0) {
   const resultado = validarCadastroProduto({
     nome,
-    unidade: 'pacote',
+    unidade: 'un',
     quantidadeNecessaria: 3,
     quantidadeAtual,
     valorUnitario: 890,
@@ -211,7 +211,7 @@ describe('consultas de leitura', () => {
       casaId,
       nome: 'Arroz',
       categoria: null,
-      unidade: 'pacote',
+      unidade: 'un',
       quantidadeAtual: expect.any(Number),
       quantidadeNecessaria: expect.any(Number),
       valorUnitario: expect.any(Number),
@@ -681,7 +681,7 @@ describe('removerLogicamente — limpeza de compra_item pendente', () => {
     if (!compra.ok) throw new Error('setup');
     const item = await compras.adicionarItem(compra.valor.id, {
       produtoId: produto.valor.id,
-      unidade: 'pacote',
+      unidade: 'un',
       quantidadePlanejada: milesimos(1000),
     });
     await compras.editarItem(item.id, { excluido: true });
@@ -704,7 +704,7 @@ describe('removerLogicamente — limpeza de compra_item pendente', () => {
     if (!compra.ok) throw new Error('setup');
     const item = await compras.adicionarItem(compra.valor.id, {
       produtoId: produto.valor.id,
-      unidade: 'pacote',
+      unidade: 'un',
       quantidadePlanejada: milesimos(1000),
     });
 
@@ -730,7 +730,7 @@ describe('removerLogicamente — limpeza de compra_item pendente', () => {
     if (!compra.ok) throw new Error('setup');
     const item = await compras.adicionarItem(compra.valor.id, {
       produtoId: produto.valor.id,
-      unidade: 'pacote',
+      unidade: 'un',
       quantidadePlanejada: milesimos(1000),
     });
     await compras.editarItem(item.id, {
@@ -763,7 +763,7 @@ describe('removerLogicamente — limpeza de compra_item pendente', () => {
     if (!compra.ok) throw new Error('setup');
     const item = await compras.adicionarItem(compra.valor.id, {
       produtoId: comItem.valor.id,
-      unidade: 'pacote',
+      unidade: 'un',
       quantidadePlanejada: milesimos(1000),
     });
 

@@ -12,8 +12,8 @@ import { ThemeProvider } from '@/presentation/theme/provider';
 // application (useModoCompra) + presentation (ItemCompra) — application/
 // não pode importar presentation/ (regra de dependência do CLAUDE.md), e
 // rotas em app/ podem importar as duas.
-jest.mock('../../src/composicao/repositorios', () => ({ compraRepository: undefined }));
-jest.mock('../../src/composicao/observador', () => ({ observadorDoBanco: undefined }));
+jest.mock('../../../src/composicao/repositorios', () => ({ compraRepository: undefined }));
+jest.mock('../../../src/composicao/observador', () => ({ observadorDoBanco: undefined }));
 
 function ListaDeTeste({ itens, marcar }: { itens: ItemDaCompra[]; marcar: (item: ItemDaCompra) => void }) {
   return (

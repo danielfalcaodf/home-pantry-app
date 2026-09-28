@@ -11,6 +11,7 @@ import {
   ValoresDoProduto,
   VALORES_INICIAIS,
 } from '@/presentation/components/formulario-produto';
+import { centavos, precoPorKg } from '@/domain/shared/dinheiro';
 import { TelaBase } from '@/presentation/components/tela-base';
 import { normalizarParaBusca } from '@/presentation/format/normalizar-busca';
 
@@ -75,7 +76,10 @@ export default function NovoProduto() {
       unidade: valores.unidade,
       quantidadeNecessaria,
       quantidadeAtual,
-      valorUnitario: valorUnitario !== undefined ? Math.round(valorUnitario * 100) : undefined,
+      valorUnitario:
+        valorUnitario !== undefined
+          ? precoPorKg(centavos(Math.round(valorUnitario * 100)), valores.basePreco)
+          : undefined,
       categoria: valores.categoria || undefined,
       fatorConversaoEmbalagem,
       valorReferenciaEmbalagem,

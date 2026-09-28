@@ -14,14 +14,14 @@ appId: com.danielfalcaodf.repor
 # visualmente que a leitura textual do item mudou.
 #
 # Efeito colateral real: incrementa 1 pacote de Macarrão no banco do
-# dispositivo de teste (0 → 1 de 2 pacotes, item passa de "Acabou" para
+# dispositivo de teste (0 → 1 de 2 un, item passa de "Acabou" para
 # "Falta 1"). Rode só em build de desenvolvimento/QA.
 - launchApp
 - assertVisible: "Despensa"
-- assertVisible: "Macarrão, 0 de 2 pacotes, Acabou"
-- tapOn: "Repor 1 pacote de Macarrão"
+- assertVisible: "Macarrão, 0 de 2 un, Acabou"
+- tapOn: "Repor 1 un de Macarrão"
 # toast de confirmação usa o mesmo vocabulário do consumo ("Anotado"),
 # mas com o verbo específico de reposição ("repus"), nunca termo de
 # domínio como "movimento"/"entrada de estoque".
-- assertVisible: "Anotado: repus 1 pacote de Macarrão"
-- assertVisible: "Macarrão, 1 de 2 pacotes, Falta 1"
+- assertVisible: "Anotado: repus 1 un de Macarrão"
+- assertVisible: "Macarrão, 1 de 2 un, Falta 1"

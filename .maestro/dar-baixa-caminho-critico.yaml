@@ -13,7 +13,11 @@ appId: com.danielfalcaodf.repor
 # dispositivo de teste. Rode só em build de desenvolvimento/QA.
 - launchApp
 - assertVisible: "Despensa"
+# Pré-condição: a lista básica entra zerada (Acabou) — sem estoque o "-"
+# fica desabilitado. Repor 1 un antes de medir o gesto de consumo.
+- tapOn: "Repor 1 un de Arroz"
+- assertVisible: "Anotado: repus 1 un de Arroz"
 # toque 1: registrar consumo de 1 unidade
-- tapOn: "Registrar consumo de 1 pacote de Arroz"
+- tapOn: "Usei 1 un de Arroz"
 # toque "2" não existe — o toast aparece sozinho, sem confirmação extra
-- assertVisible: "Anotado"
+- assertVisible: "Anotado: 1 un de Arroz"

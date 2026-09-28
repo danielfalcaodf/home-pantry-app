@@ -24,7 +24,7 @@ appId: com.danielfalcaodf.repor
 # 1. Materializa o item SEM preço — valorEstimadoUnit nasce 0.
 - tapOn:
     text: "Iniciar compra \\(\\d+\\)"
-- assertVisible: "Arroz, 2 pacotes, sem preço"
+- assertVisible: "Arroz, 2 un, sem preço"
 
 # 2. Volta pra Lista SEM fechar/cancelar a compra — ela continua "aberta".
 - tapOn: "Voltar"
@@ -42,13 +42,19 @@ appId: com.danielfalcaodf.repor
 # 4. Reabre a MESMA compra aberta residual — é aqui que o bug vivia.
 - tapOn:
     text: "Iniciar compra \\(\\d+\\)"
-- assertVisible: "Arroz, 2 pacotes, R\\$ 10,00"
-- assertNotVisible: "Arroz, 2 pacotes, sem preço"
+# Já existe compra aberta (rascunho): o app pergunta antes de abrir.
+- runFlow:
+    when:
+      visible: "Continuar compra"
+    commands:
+      - tapOn: "Continuar compra"
+- assertVisible: "Arroz, 2 un, R\\$ 20,00"
+- assertNotVisible: "Arroz, 2 un, sem preço"
 
 - tapOn:
-    text: "Arroz, 2 pacotes, R\\$ 10,00"
+    text: "Arroz, 2 un, R\\$ 20,00"
 - assertVisible:
-    text: "Arroz, 2 pacotes, R\\$ 10,00"
+    text: "Arroz, 2 un, R\\$ 20,00"
     checked: true
 - assertVisible: "R$ 20,00"
 - assertNotVisible: "0,00"

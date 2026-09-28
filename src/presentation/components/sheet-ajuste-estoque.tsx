@@ -102,7 +102,7 @@ export function SheetAjusteEstoque({
         }}
         erro={erro}
         keyboardType="decimal-pad"
-        tipo="quantidade"
+        tipo={unidade === 'kg' ? 'peso' : 'quantidade'}
       />
       <View style={{ gap: espaco.sm }}>
         <Texto papel="label" tom="secondary">

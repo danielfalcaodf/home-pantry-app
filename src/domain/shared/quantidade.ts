@@ -38,3 +38,17 @@ export function arredondarParaUnidade(m: Milesimos, unidade: Unidade): Milesimos
   }
   return milesimos(Math.ceil(m / 1000) * 1000);
 }
+
+// Escala g → kg da redução de unidades (migration 0005 e backup v6): 1 g =
+// 1000 milésimos de grama = 1 milésimo de kg. Arredonda metade para longe do
+// zero, igual ao ROUND() do SQLite — a migration replica esta conta em SQL.
+export function gramasParaKg(m: number): Milesimos {
+  return milesimos(Math.sign(m) * Math.round(Math.abs(m) / 1000));
+}
+
+// Variação de movimento nunca pode virar 0 (ck_movimento_delta_nao_zero):
+// fração de grama arredondada a zero vira 1 milésimo de kg no mesmo sentido.
+export function variacaoGramasParaKg(m: number): Milesimos {
+  const convertida = gramasParaKg(m);
+  return convertida === 0 ? milesimos(Math.sign(m)) : convertida;
+}

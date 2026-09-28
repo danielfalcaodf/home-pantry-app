@@ -120,7 +120,7 @@ export function SheetAvulso({ visivel, inicial, onFechar, onSalvar }: SheetAvuls
             onChangeText={setQuantidade}
             keyboardType="decimal-pad"
             erro={erroQuantidade}
-            tipo="quantidade"
+            tipo={unidade === 'kg' ? 'peso' : 'quantidade'}
           />
         </View>
         <View style={{ flex: 1 }}>

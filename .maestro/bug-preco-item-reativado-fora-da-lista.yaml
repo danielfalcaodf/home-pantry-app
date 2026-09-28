@@ -42,11 +42,17 @@ appId: com.danielfalcaodf.repor
 
 - tapOn:
     text: "Iniciar compra \\(\\d+\\)"
-- assertVisible: "Feijão, 2 pacotes, R\\$ 5,50"
-- assertNotVisible: "Feijão, 2 pacotes, sem preço"
+# Já existe compra aberta (rascunho): o app pergunta antes de abrir.
+- runFlow:
+    when:
+      visible: "Continuar compra"
+    commands:
+      - tapOn: "Continuar compra"
+- assertVisible: "Feijão, 2 un, R\\$ 11,00"
+- assertNotVisible: "Feijão, 2 un, sem preço"
 
 - tapOn:
-    text: "Feijão, 2 pacotes, R\\$ 5,50"
+    text: "Feijão, 2 un, R\\$ 11,00"
 - assertVisible:
-    text: "Feijão, 2 pacotes, R\\$ 5,50"
+    text: "Feijão, 2 un, R\\$ 11,00"
     checked: true

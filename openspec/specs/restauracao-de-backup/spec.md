@@ -47,7 +47,7 @@ A restauração SHALL combinar registros por identificador, atualizando os exist
 
 ### Requirement: Verificação de versão de schema
 
-A restauração SHALL recusar backups cuja versão de schema seja **mais nova** que a suportada pelo app, e SHALL aceitar versões anteriores, migrando o conteúdo quando necessário.
+A restauração SHALL recusar backups cuja versão de schema seja **mais nova** que a suportada pelo app, e SHALL aceitar versões anteriores, migrando o conteúdo quando necessário. Backups de versão anterior à redução de unidades SHALL ter produtos e itens de compra nas unidades removidas convertidos com as mesmas regras da migration do banco local (`g` → `kg` com quantidades ÷ 1000 e preço do produto zerado; `pacote`/`caixa` → `un` sem mudar números; `ml`/`L` → `un` arredondado para cima e preço zerado), inclusive nos movimentos de estoque.
 
 #### Scenario: Backup de versão mais nova é recusado
 
@@ -63,6 +63,18 @@ A restauração SHALL recusar backups cuja versão de schema seja **mais nova** 
 
 - **WHEN** o arquivo não declara versão de schema
 - **THEN** a restauração é recusada com mensagem clara
+
+#### Scenario: Backup v5 com produto em gramas é convertido
+
+- **WHEN** um backup v5 contém um produto `g` com quantidade atual 500000, valor unitário 519 e
+  um movimento de -200000
+- **THEN** após a restauração o produto está em `kg` com quantidade atual 500, valor unitário 0,
+  movimento de -200, e a reconciliação não encontra divergência
+
+#### Scenario: Backup v5 com pacote é convertido para unidade
+
+- **WHEN** um backup v5 contém um produto `caixa` com fator de embalagem 6
+- **THEN** após a restauração o produto está em `un` com as mesmas quantidades, preço e fator
 
 ### Requirement: Reconciliação após restaurar
 

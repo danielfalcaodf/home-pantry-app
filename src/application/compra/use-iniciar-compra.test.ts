@@ -5,6 +5,7 @@ import { FaltanteBruto } from '../../domain/produto/produto';
 import { centavos } from '../../domain/shared/dinheiro';
 import { milesimos } from '../../domain/shared/quantidade';
 import { CompraRepositorioFalso } from '../lista/teste/repositorio-compra-falso';
+import { useRemoverItemDaLista } from '../lista/use-remover-item-lista';
 import { useIniciarCompra } from './use-iniciar-compra';
 
 jest.mock('../../composicao/repositorios', () => ({
@@ -20,7 +21,7 @@ function faltante(sobrescreve: Partial<FaltanteBruto> = {}): FaltanteBruto {
     id: 'p1',
     nome: 'Arroz',
     categoria: 'Grãos',
-    unidade: 'pacote',
+    unidade: 'un',
     valorUnitario: centavos(890),
     quantidadeAtual: milesimos(500),
     quantidadeNecessaria: milesimos(2000),
@@ -148,5 +149,97 @@ describe('useIniciarCompra', () => {
 
     expect(compras.itens[0].valorEstimadoUnit).toBe(500);
     expect(compras.itens[0].compraId).toBe(compraId);
+  });
+
+  // Bug achado pelo E2E (correcao-unidades-un-kg-preco, task 6.5): produto
+  // removido da Lista e devolvido reaproveita a linha-marcador da exclusão,
+  // criada com quantidade de espaço reservado — entrava na compra com 1 un
+  // no lugar dos 2 que faltavam (o preço já era ressincronizado).
+  it('produto removido e devolvido à Lista entra na compra com a falta atual, não com a quantidade reservada', async () => {
+    const compras = new CompraRepositorioFalso();
+    const feijao = itemDeFaltante(
+      faltante({ id: 'p1', nome: 'Feijão', valorUnitario: centavos(0), quantidadeAtual: milesimos(0), faltaBruta: milesimos(2000) }),
+    );
+    const { result: remocao } = await renderHook(() => useRemoverItemDaLista(compras));
+    await act(async () => {
+      await remocao.current.remover(feijao as Extract<typeof feijao, { tipo: 'produto' }>);
+    });
+    await act(async () => {
+      await remocao.current.reativar(compras.itens[0].id);
+    });
+    const comPreco = itemDeFaltante(
+      faltante({ id: 'p1', nome: 'Feijão', valorUnitario: centavos(550), quantidadeAtual: milesimos(0), faltaBruta: milesimos(2000) }),
+    );
+    const { result } = await renderHook(() => useIniciarCompra(compras));
+
+    await act(async () => {
+      await result.current.iniciar([comPreco]);
+    });
+
+    expect(compras.itens).toHaveLength(1);
+    expect(compras.itens[0]).toMatchObject({ quantidadePlanejada: 2000, valorEstimadoUnit: 550, excluido: false });
+  });
+
+  it('reabrir a compra acompanha a falta que mudou desde a materialização', async () => {
+    const compras = new CompraRepositorioFalso();
+    const { result } = await renderHook(() => useIniciarCompra(compras));
+
+    await act(async () => {
+      await result.current.iniciar([itemDeFaltante(faltante({ quantidadeAtual: milesimos(1000), faltaBruta: milesimos(1000) }))]);
+    });
+    expect(compras.itens[0].quantidadePlanejada).toBe(1000);
+
+    await act(async () => {
+      await result.current.iniciar([itemDeFaltante(faltante({ quantidadeAtual: milesimos(0), faltaBruta: milesimos(2000) }))]);
+    });
+
+    expect(compras.itens).toHaveLength(1);
+    expect(compras.itens[0].quantidadePlanejada).toBe(2000);
+  });
+
+  it('ressincronizar a quantidade planejada preserva o ajuste manual feito no Modo Compra', async () => {
+    const compras = new CompraRepositorioFalso();
+    const { result } = await renderHook(() => useIniciarCompra(compras));
+    await act(async () => {
+      await result.current.iniciar([itemDeFaltante(faltante({ quantidadeAtual: milesimos(1000), faltaBruta: milesimos(1000) }))]);
+    });
+    await compras.editarItem(compras.itens[0].id, { quantidadeComprada: milesimos(5000) });
+
+    await act(async () => {
+      await result.current.iniciar([itemDeFaltante(faltante({ quantidadeAtual: milesimos(0), faltaBruta: milesimos(2000) }))]);
+    });
+
+    expect(compras.itens[0]).toMatchObject({ quantidadePlanejada: 2000, quantidadeComprada: 5000 });
+  });
+
+  it('reabrir a compra não mexe na quantidade de item já marcado como comprado', async () => {
+    const compras = new CompraRepositorioFalso();
+    const { result } = await renderHook(() => useIniciarCompra(compras));
+    await act(async () => {
+      await result.current.iniciar([itemDeFaltante(faltante({ quantidadeAtual: milesimos(1000), faltaBruta: milesimos(1000) }))]);
+    });
+    await compras.editarItem(compras.itens[0].id, { comprado: true, quantidadeComprada: milesimos(1000) });
+
+    await act(async () => {
+      await result.current.iniciar([itemDeFaltante(faltante({ quantidadeAtual: milesimos(0), faltaBruta: milesimos(2000) }))]);
+    });
+
+    expect(compras.itens[0].quantidadePlanejada).toBe(1000);
+  });
+
+  it('item já em dia (mesmo preço e mesma falta) não gera escrita ao reabrir', async () => {
+    const compras = new CompraRepositorioFalso();
+    const item = itemDeFaltante(faltante());
+    const { result } = await renderHook(() => useIniciarCompra(compras));
+    await act(async () => {
+      await result.current.iniciar([item]);
+    });
+    const edicoes = jest.spyOn(compras, 'editarItem');
+
+    await act(async () => {
+      await result.current.iniciar([item]);
+    });
+
+    expect(edicoes).not.toHaveBeenCalled();
   });
 });

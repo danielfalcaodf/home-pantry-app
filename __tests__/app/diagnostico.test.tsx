@@ -2,7 +2,7 @@ import { fireEvent, render, screen } from '@testing-library/react-native';
 import { ReactNode } from 'react';
 
 import { ThemeProvider } from '@/presentation/theme/provider';
-import Diagnostico from './diagnostico';
+import Diagnostico from '../../app/diagnostico';
 
 const mockBack = jest.fn();
 const mockVerificar = jest.fn();

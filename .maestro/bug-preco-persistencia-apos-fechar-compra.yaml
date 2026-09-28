@@ -22,14 +22,14 @@ appId: com.danielfalcaodf.repor
 - tapOn:
     text: "Iniciar compra \\(\\d+\\)"
 - tapOn:
-    text: "Arroz, 2 pacotes, R\\$ 10,00"
+    text: "Arroz, 2 un, R\\$ 20,00"
 - assertVisible: "R$ 20,00"
 - tapOn: "Fechar compra"
 - assertVisible: "Despensa"
 
-# Histórico de compras (Resumo > Compras, ou rota equivalente) precisa
+# Histórico de compras (Resumo > Ver histórico) precisa
 # mostrar o mesmo total R$ 20,00 — não 0,00.
 - tapOn: "Resumo"
-- tapOn: "Compras"
+- tapOn: "Ver histórico"
 - assertVisible: "R$ 20,00"
 - assertNotVisible: "R$ 0,00"

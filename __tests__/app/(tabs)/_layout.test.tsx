@@ -3,7 +3,7 @@ import { render } from '@testing-library/react-native';
 import { ThemeProvider } from '@/presentation/theme/provider';
 import { despensa } from '@/presentation/theme/tokens';
 import { icones } from '@/presentation/theme/icones';
-import TabsLayout from './_layout';
+import TabsLayout from '../../../app/(tabs)/_layout';
 
 const mockTabs = jest.fn();
 const mockScreen = jest.fn();
