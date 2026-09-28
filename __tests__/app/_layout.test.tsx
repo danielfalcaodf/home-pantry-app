@@ -30,6 +30,7 @@ jest.mock('expo-font', () => ({ useFonts: () => [true, null] }));
 const mockHideAsync = jest.fn(() => Promise.resolve());
 jest.mock('expo-splash-screen', () => ({
   preventAutoHideAsync: jest.fn(() => Promise.resolve()),
+  setOptions: jest.fn(),
   hideAsync: () => mockHideAsync(),
 }));
 

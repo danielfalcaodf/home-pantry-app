@@ -18,6 +18,9 @@ import { ThemeProvider, useModoDeTema, useTheme } from '@/presentation/theme/pro
 // A splash só sai quando banco, tema e fontes estiverem prontos — é o que
 // impede o quadro branco antes do tema escuro aparecer (FRONTEND §12.4).
 void SplashScreen.preventAutoHideAsync();
+// Só o fade nativo (iOS) — animação própria de abertura atrasaria o caminho
+// crítico, e o FRONTEND restringe movimento ao gesto de dar baixa.
+SplashScreen.setOptions({ duration: 250, fade: true });
 
 /**
  * Único `<StatusBar>` do app, montado aqui em vez de por tela — nunca
